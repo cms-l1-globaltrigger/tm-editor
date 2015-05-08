@@ -1,0 +1,3 @@
+include Makefile
+include resource/*.qrc
+include scripts/tm-editor
