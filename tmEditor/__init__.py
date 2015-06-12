@@ -6,3 +6,5 @@
 # Last changed date : $Date: $
 #
 
+from AlgorithmFormatter import AlgorithmFormatter
+from AlgorithmEditor import AlgorithmEditor
