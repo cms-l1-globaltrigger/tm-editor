@@ -10,9 +10,23 @@ class AlgorithmFormatter(object):
     """Formatter class used to format user input to the (currently very)
     restrictive algorithm equation syntax.
     """
+    Functions = ('comb', 'delta', 'mass', )
+    Operators = ('AND', 'OR', 'XOR', 'NOT', )
+    Paranthesis = ('(', ')', '{', '}', '[', ']', )
+    Separators = (',', )
+    def free(self, token):
+        return " {0} ".format(token)
     def machinize(self, algorithm):
-        for keyword in ("AND", "OR", "XOR", "NOT", "(", ")", "[", "]", "{", "}", ",", ):
-            algorithm = algorithm.replace(keyword, " {keyword} ".format(keyword = keyword))
+        def separate(keyword, algorithm):
+            return algorithm.replace(keyword, " {keyword} ".format(keyword = keyword))
+        for keyword in self.Functions:
+            algorithm = separate(keyword, algorithm)
+        for keyword in self.Operators:
+            algorithm = separate(keyword, algorithm)
+        for keyword in self.Paranthesis:
+            algorithm = separate(keyword, algorithm)
+        for keyword in self.Separators:
+            algorithm = separate(keyword, algorithm)
         algorithm = ' '.join(algorithm.split())
         # TODO: now that's way not the best approach at all, use regular expressions instead...
         algorithm = algorithm.replace(" , ", ",")
@@ -22,8 +36,8 @@ class AlgorithmFormatter(object):
         algorithm = algorithm.replace(" ]", "]")
         algorithm = algorithm.replace(" { ", "{")
         algorithm = algorithm.replace(" }", "}")
-        for keyword in ("AND", "OR", "XOR", "NOT", ):
-            algorithm = algorithm.replace(keyword, " {keyword} ".format(keyword = keyword))
+        for keyword in self.Operators:
+            algorithm = separate(keyword, algorithm)
         return algorithm.replace("  ", " ") # TODO: that's not efficient...
     def humanize(self, algorithm):
         algorithm = self.machinize(algorithm)
