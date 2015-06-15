@@ -19,6 +19,11 @@ EXIT_FAIL = 1
 
 def parse():
     parser = argparse.ArgumentParser()
+    parser.add_argument('filenames',
+        metavar = '<file>',
+        nargs = '*',
+        help = "trigger menu XML file",
+    )
     return parser.parse_args()
 
 def main():
@@ -27,6 +32,8 @@ def main():
     try:
         app = QApplication(sys.argv)
         window = tmEditor.MainWindow()
+        for filename in args.filenames:
+            window.loadDocument(filename)
         window.show()
         return app.exec_()
     except RuntimeError, message:

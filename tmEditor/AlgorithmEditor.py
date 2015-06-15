@@ -10,8 +10,10 @@
 """
 
 from tmEditor import AlgorithmFormatter
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
 from collections import namedtuple
 import sys, os
 
@@ -23,17 +25,10 @@ class AlgorithmEditor(QMainWindow):
         self.resize(640, 480)
         # Setup helper
         self.formatter = AlgorithmFormatter()
-        # Setup actions
-        self.formatCompactAct = QAction("&Compact", self)
-        self.formatCompactAct.triggered.connect(self.onFormatCompact)
-        self.formatExpandAct = QAction("&Expand", self)
-        self.formatExpandAct.triggered.connect(self.onFormatExpand)
-        # Setup menus
-        self.editMenu = self.menuBar().addMenu(self.tr("&Edit"))
-        self.formatMenu = self.menuBar().addMenu(self.tr("&Format"))
-        self.formatMenu.addAction(self.formatCompactAct)
-        self.formatMenu.addAction(self.formatExpandAct)
-        self.helpMenu = self.menuBar().addMenu(self.tr("&Help"))
+        # Create actions and toolbars.
+        self.createActions()
+        self.createMenus()
+        self.createToolbar()
         # Setup widgets
         self.textEdit = QTextEdit(self)
         font = self.textEdit.font()
@@ -60,11 +55,30 @@ class AlgorithmEditor(QMainWindow):
              << "JET-PHI_TOP_L2PR")
         dock.setWidget(customerList)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
+
+    def createActions(self):
+        self.formatCompactAct = QAction(self.tr("&Compact"), self)
+        self.formatCompactAct.triggered.connect(self.onFormatCompact)
+        self.formatExpandAct = QAction(self.tr("&Expand"), self)
+        self.formatExpandAct.triggered.connect(self.onFormatExpand)
+
+    def createMenus(self):
+        self.editMenu = self.menuBar().addMenu(self.tr("&Edit"))
+        self.formatMenu = self.menuBar().addMenu(self.tr("&Format"))
+        self.formatMenu.addAction(self.formatCompactAct)
+        self.formatMenu.addAction(self.formatExpandAct)
+        self.helpMenu = self.menuBar().addMenu(self.tr("&Help"))
+
+    def createToolbar(self):
+        pass
+
     def algorithm(self):
         """Returns a machine readable formatted version of the loaded algorithm."""
         return self.formatter.machinize(str(self.textEdit.toPlainText()))
+
     def onFormatCompact(self):
         self.textEdit.setPlainText(self.formatter.humanize(self.algorithm()))
+
     def onFormatExpand(self):
         self.textEdit.setPlainText(self.formatter.expanded(self.algorithm()))
 
