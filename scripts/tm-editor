@@ -9,6 +9,7 @@
 
 import tmEditor
 
+from PyQt4.QtGui import QApplication
 import argparse
 import logging
 import sys, os
@@ -24,7 +25,10 @@ def main():
     """Main routine."""
     args = parse()
     try:
-        pass
+        app = QApplication(sys.argv)
+        window = tmEditor.MainWindow()
+        window.show()
+        return app.exec_()
     except RuntimeError, message:
         logging.error(message)
         return EXIT_FAIL

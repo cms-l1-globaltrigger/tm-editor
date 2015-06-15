@@ -8,3 +8,4 @@
 
 from AlgorithmFormatter import AlgorithmFormatter
 from AlgorithmEditor import AlgorithmEditor
+from MainWindow import MainWindow
