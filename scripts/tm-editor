@@ -29,6 +29,17 @@ def parse():
 def main():
     """Main routine."""
     args = parse()
+
+    # Setup console logging
+    logging.basicConfig(format = '%(levelname)s: %(message)s', level = logging.DEBUG)
+
+        # As things are getting serious let's start logging to file.
+    handler = logging.FileHandler('tm-editor.log', mode = 'a')
+    handler.setFormatter(logging.Formatter(fmt = '%(asctime)s %(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+    handler.setLevel(logging.DEBUG)
+    logging.getLogger().addHandler(handler)
+
+
     try:
         app = QApplication(sys.argv)
         window = tmEditor.MainWindow()

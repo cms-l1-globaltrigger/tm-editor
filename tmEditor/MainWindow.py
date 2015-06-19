@@ -40,17 +40,6 @@ class MainWindow(QMainWindow):
         self.mdiArea = MdiArea()
         self.mdiArea.currentChanged.connect(self.updateStatusBar)
         self.setCentralWidget(self.mdiArea)
-
-        #d = Document("L1Menu_Sample")
-        #d.algorithms = 6
-        #d.cuts = 1
-        #d.objects = 7
-        #self.mdiArea.addDocument(d)
-        #d = Document("L1Menu_MuonsCastor")
-        #d.algorithms = 42
-        #d.cuts = 13
-        #d.objects = 124
-        #self.mdiArea.addDocument(d)
         # Initialize
         self.updateStatusBar()
 
@@ -94,17 +83,20 @@ class MainWindow(QMainWindow):
     def updateStatusBar(self, index = None):
         """Update status bar labels."""
         document = self.mdiArea.currentDocument()
-        self.statusAlgorithms.setText(QString(" Algorithms: %1 ").arg(document.algorithms if document else '--'))
-        self.statusCuts.setText(QString(" Cuts: %1 ").arg(document.cuts if document else '--'))
-        self.statusObjects.setText(QString(" Objects: %1 ").arg(document.objects if document else '--'))
+        self.statusAlgorithms.setText(QString(" Algorithms: %1 ").arg(len(document.menu.algorithms) if document else '--'))
+        self.statusCuts.setText(QString(" Cuts: %1 ").arg(len(document.menu.cuts) if document else '--'))
+        self.statusObjects.setText(QString(" Objects: %1 ").arg(len(document.menu.objects) if document else '--'))
         self.statusBar().showMessage("Ready")
 
     def loadDocument(self, filename):
         menu = Toolbox.loadXml(filename)
         document = Document(os.path.basename(filename))
-        document.algorithms = random.randint(0,512)
-        document.cuts = random.randint(0,512)
-        document.objects = random.randint(0,512)
+        for algorithm in menu[0].algorithms:
+            document.menu.algorithms.append(dict(algorithm.items()))
+        for cut in menu[0].cuts:
+            document.menu.cuts.append(cut)
+        for object in menu[0].objects:
+            document.menu.objects.append(object)
         index = self.mdiArea.addDocument(document)
         self.mdiArea.setCurrentIndex(index)
 

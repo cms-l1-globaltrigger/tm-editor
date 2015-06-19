@@ -34,14 +34,15 @@ class AlgorithmEditor(QMainWindow):
         font = self.textEdit.font()
         font.setFamily("Monospace")
         self.textEdit.setFont(font)
-        self.textEdit.setPlainText(self.formatter.humanize(algorithm))
+        self.textEdit.setFrameShape(QFrame.NoFrame)
+        self.setAlgorithm(algorithm)
         self.highlighter = SyntaxHighlighter(self.textEdit)
         # Setup layout
-        gridLayout = QGridLayout()
-        gridLayout.addWidget(self.textEdit, 0, 0)
-        centralWidget = QWidget(self)
-        centralWidget.setLayout(gridLayout)
-        self.setCentralWidget(centralWidget)
+        # gridLayout = QGridLayout()
+        # gridLayout.addWidget(self.textEdit, 0, 0)
+        # centralWidget = QWidget(self)
+        # centralWidget.setLayout(gridLayout)
+        self.setCentralWidget(self.textEdit)
         # Setup dock widgets
         dock = QDockWidget(self.tr("Cuts"), self)
         dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
@@ -55,6 +56,10 @@ class AlgorithmEditor(QMainWindow):
              << "JET-PHI_TOP_L2PR")
         dock.setWidget(customerList)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        dock = QDockWidget(self.tr("Preview"), self)
+        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        dock.setWidget(QWidget())
+        self.addDockWidget(Qt.BottomDockWidgetArea, dock)
 
     def createActions(self):
         self.formatCompactAct = QAction(self.tr("&Compact"), self)
@@ -75,6 +80,9 @@ class AlgorithmEditor(QMainWindow):
     def algorithm(self):
         """Returns a machine readable formatted version of the loaded algorithm."""
         return self.formatter.machinize(str(self.textEdit.toPlainText()))
+
+    def setAlgorithm(self, algorithm):
+        self.textEdit.setPlainText(self.formatter.humanize(algorithm))
 
     def onFormatCompact(self):
         self.textEdit.setPlainText(self.formatter.humanize(self.algorithm()))
