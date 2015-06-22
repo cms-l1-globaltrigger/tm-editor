@@ -24,6 +24,10 @@ def parse():
         nargs = '*',
         help = "trigger menu XML file",
     )
+    parser.add_argument('-v', '--verbose',
+        action = 'count',
+        help = "increase output verbosity",
+    )
     return parser.parse_args()
 
 def main():
@@ -31,14 +35,15 @@ def main():
     args = parse()
 
     # Setup console logging
-    logging.basicConfig(format = '%(levelname)s: %(message)s', level = logging.DEBUG)
+    loggingLevel = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(format = '%(levelname)s: %(message)s', level = loggingLevel)
 
         # As things are getting serious let's start logging to file.
     handler = logging.FileHandler('tm-editor.log', mode = 'a')
     handler.setFormatter(logging.Formatter(fmt = '%(asctime)s %(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
-    handler.setLevel(logging.DEBUG)
+    handler.setLevel(loggingLevel)
     logging.getLogger().addHandler(handler)
-
+    print args.verbose
 
     try:
         app = QApplication(sys.argv)
