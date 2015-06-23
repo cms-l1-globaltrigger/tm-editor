@@ -50,6 +50,11 @@ class Document(QWidget):
         # Table view
         self.itemsTableView = QTableView(self)
         self.itemsTableView.doubleClicked.connect(self.editItem)
+        horizontalHeader = self.itemsTableView.horizontalHeader()
+        horizontalHeader.setResizeMode(QHeaderView.Stretch)
+        horizontalHeader.setStretchLastSection(True)
+        verticalHeader = self.itemsTableView.verticalHeader()
+        verticalHeader.setResizeMode(QHeaderView.ResizeToContents)
         self.setStyleSheet("border: 0;")
         self.itemPreview = QTextEdit(self)
         self.itemPreview.setObjectName("P")
@@ -96,6 +101,7 @@ class Document(QWidget):
             self.itemsTableView.setModel(self.cutsModel)
         elif item is self.objectsItem:
             self.itemsTableView.setModel(self.objectsModel)
+        self.itemsTableView.resizeColumnsToContents()
 
     def editItem(self, index):
         if self.itemsTableView.model() is self.algorithmsModel:
