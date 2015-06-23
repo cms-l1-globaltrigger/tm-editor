@@ -156,3 +156,39 @@ def saveXml(filename, menu, scale, ext_signal, location = getenv('TMGUI_DIR')):
     # Handle errors only after removing the temporary files.
     if warnings:
         raise RuntimeError("Failed to save XML menu {filename}\n{warnings}".format(**locals()))
+
+class Menu(object):
+    def __init__(self, filename = None):
+        self.meta = []
+        self.algorithms = []
+        self.cuts = []
+        self.objects = []
+        self.scales = None
+        self.externals = None
+        if filename:
+            self.loadXml(filename)
+    def loadXml(self, filename):
+        menu, scale, ext_signal = loadXml(filename)
+        self.meta = dict(menu.menu.items())
+        self.algorithms = [dict(algorithm) for algorithm in menu.algorithms]
+        buffer = []
+        for cuts in menu.cuts.values():
+            for cut in cuts:
+                cut = dict(cut.items())
+                if not cut in buffer:
+                    buffer.append(cut)
+        self.cuts = buffer
+        buffer = []
+        for objs in menu.objects.values():
+            for obj in objs:
+                obj = dict(obj.items())
+                if not obj in buffer:
+                    buffer.append(obj)
+        self.objects = buffer
+        self.scales = scale
+        self.externals = ext_signal
+    def saveXml(self, filename):
+        menu = tmTable.Menu()
+        for key, value in self.meta.items():
+            menu[key] = str(value)
+        saveXml(filename, menu, self.scales, self.externals)

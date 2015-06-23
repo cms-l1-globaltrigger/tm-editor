@@ -89,14 +89,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Ready")
 
     def loadDocument(self, filename):
-        menu = Toolbox.loadXml(filename)
         document = Document(os.path.basename(filename))
-        for algorithm in menu[0].algorithms:
-            document.menu.algorithms.append(dict(algorithm.items()))
-        for cut in menu[0].cuts:
-            document.menu.cuts.append(cut)
-        for object in menu[0].objects:
-            document.menu.objects.append(object)
         index = self.mdiArea.addDocument(document)
         self.mdiArea.setCurrentIndex(index)
 

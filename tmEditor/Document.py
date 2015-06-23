@@ -10,38 +10,35 @@
 """
 
 from tmEditor import AlgorithmEditor
+from tmEditor import Toolbox
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-
-class Menu(object):
-    def __init__(self):
-        self.algorithms = []
-        self.cuts = []
-        self.objects = []
+import sys, os
 
 class Document(QWidget):
     """Document container widget used by MDI area."""
 
-    def __init__(self, name, parent = None):
+    def __init__(self, filename, parent = None):
         super(Document, self).__init__(parent)
-        self.setName(name)
+        self.setName(os.path.basename(filename))
         self.setModified(False)
         self.setContentsMargins(0, 0, 0, 0)
-        self.editor = AlgorithmEditor("")
-        self.editor.setWindowModality(Qt.ApplicationModal)
-        self.editor.setWindowFlags(self.editor.windowFlags() | Qt.Dialog)
-        self.editor.hide()
-        # menu
-        self.menu = Menu()
+        # Menu setup
+        self.menu = Toolbox.Menu(filename)
         self.algorithmsModel = AlgorithmsModel(self.menu)
         self.cutsModel = CutsModel(self.menu)
         self.objectsModel = ObjectsModel(self.menu)
+        # Editor field
+        self.editor = AlgorithmEditor("", self.menu)
+        self.editor.setWindowModality(Qt.ApplicationModal)
+        self.editor.setWindowFlags(self.editor.windowFlags() | Qt.Dialog)
+        self.editor.hide()
         # Navigation tree
         self.navigationTreeWidget = QTreeWidget(self)
         self.navigationTreeWidget.setObjectName("navigationTreeWidget")
         self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { background: #eee; }")
-        item = QTreeWidgetItem(self.navigationTreeWidget,[name])
+        item = QTreeWidgetItem(self.navigationTreeWidget,[self.name()])
         self.algorithmsItem = QTreeWidgetItem(item, ["Algorithms"])
         self.cutsItem = QTreeWidgetItem(item, ["Cuts"])
         self.objectsItem = QTreeWidgetItem(item, ["Objects"])
@@ -107,6 +104,7 @@ class Document(QWidget):
         if self.itemsTableView.model() is self.algorithmsModel:
             if index.isValid():
                 self.editor.setAlgorithm(self.menu.algorithms[index.row()]['expression'])
+                self.editor.reloadLibrary()
                 self.editor.show()
 
 class SlimSplitter(QSplitter):
@@ -169,6 +167,10 @@ class CutsModel(QAbstractTableModel):
     def columnCount(self, parent):
         return len(self.ColumnTitles)
     def data(self, index, role):
+        if role == Qt.DisplayRole:
+            if index.isValid():
+                if index.column() == 0:
+                    return self.menu.cuts[index.row()]['name']
         return QVariant()
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal:
@@ -189,6 +191,10 @@ class ObjectsModel(QAbstractTableModel):
     def columnCount(self, parent):
         return len(self.ColumnTitles)
     def data(self, index, role):
+        if role == Qt.DisplayRole:
+            if index.isValid():
+                if index.column() == 0:
+                    return self.menu.objects[index.row()]['name']
         return QVariant()
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal:

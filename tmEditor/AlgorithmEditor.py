@@ -10,6 +10,7 @@
 """
 
 from tmEditor import AlgorithmFormatter
+from tmEditor import Toolbox
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -18,12 +19,13 @@ from collections import namedtuple
 import sys, os
 
 class AlgorithmEditor(QMainWindow):
-    def __init__(self, algorithm, parent = None):
+    def __init__(self, algorithm, menu = Toolbox.Menu(), parent = None):
         super(AlgorithmEditor, self).__init__(parent)
         # Setup window
         self.setWindowTitle(self.tr("Algorithm Editor"))
         self.resize(640, 480)
         # Setup helper
+        self.menu = menu
         self.formatter = AlgorithmFormatter()
         # Create actions and toolbars.
         self.createActions()
@@ -44,22 +46,15 @@ class AlgorithmEditor(QMainWindow):
         # centralWidget.setLayout(gridLayout)
         self.setCentralWidget(self.textEdit)
         # Setup dock widgets
-        dock = QDockWidget(self.tr("Cuts"), self)
+        dock = QDockWidget(self.tr("Library"), self)
         dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        customerList = QListWidget(dock)
-        customerList.addItems(QStringList()
-             << "MU-PHI_TOP"
-             << "MU-PHI_BOTTOM"
-             << "EG-PHI_TOP"
-             << "JET-ETA_FORWARD"
-             << "JET-PHI_MANGLE"
-             << "JET-PHI_TOP_L2PR")
-        dock.setWidget(customerList)
+        self.libraryWidget = LibraryWidget(self.menu, dock)
+        self.libraryWidget.insertItem.connect(self.insertItem)
+        dock.setWidget(self.libraryWidget)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
-        dock = QDockWidget(self.tr("Preview"), self)
-        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        dock.setWidget(QWidget())
-        self.addDockWidget(Qt.BottomDockWidgetArea, dock)
+
+    def insertItem(self, text):
+        self.textEdit.textCursor().insertText(text)
 
     def createActions(self):
         self.formatCompactAct = QAction(self.tr("&Compact"), self)
@@ -89,6 +84,9 @@ class AlgorithmEditor(QMainWindow):
 
     def onFormatExpand(self):
         self.textEdit.setPlainText(self.formatter.expanded(self.algorithm()))
+
+    def reloadLibrary(self):
+        self.libraryWidget.reloadMenu()
 
 class SyntaxHighlighter(QSyntaxHighlighter):
     """Syntax highighter class for algorithm equations."""
@@ -121,6 +119,79 @@ class SyntaxHighlighter(QSyntaxHighlighter):
                 length = expression.matchedLength()
                 self.setFormat(index, length, rule.format)
                 index = expression.indexIn(text, index + length)
+
+class LibraryWidget(QWidget):
+    insertItem = pyqtSignal(str)
+    def __init__(self, menu, parent = None):
+        super(LibraryWidget, self).__init__(parent)
+        self.menu = menu
+        self.tabWidget = QTabWidget(self)
+        # Build list of objects.
+        self.objectsList = QListWidget(self)
+        # Build list of cuts.
+        self.tabWidget.addTab(self.objectsList, "&Objects")
+        self.cutsList = QListWidget(self)
+        # Build list of function templates.
+        self.tabWidget.addTab(self.cutsList, "&Cuts")
+        self.functionsList = QListWidget(self)
+        self.functionsList.addItems([
+            "comb{obj, obj}",
+            "comb{obj, obj, obj}",
+            "comb{obj, obj, obj, obj}",
+            "dist{obj, obj}[cut]",
+            "dist{obj, obj}[cut, cut]",
+            "mass{obj, obj}[cut]",
+        ])
+        self.tabWidget.addTab(self.functionsList, "&Functions")
+        gridLayout = QGridLayout()
+        gridLayout.setContentsMargins(1, 1, 1, 1)
+        gridLayout.addWidget(self.tabWidget, 0, 0, 1, 2)
+        self.previewLabel = QTextEdit("&Preview")
+        self.previewLabel.setReadOnly(True)
+        gridLayout.addWidget(self.previewLabel, 1, 0, 1, 2)
+        # gridLayout.addWidget(QPushButton("<< &Insert"), 2, 0, 1, 1)
+        # gridLayout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum), 2, 1, 1, 1)
+        self.setLayout(gridLayout)
+        self.objectsList.currentRowChanged.connect(self.setPreview)
+        self.objectsList.itemDoubleClicked.connect(self.insertObject)
+        self.cutsList.currentRowChanged.connect(self.setPreview)
+        self.cutsList.itemDoubleClicked.connect(self.insertCut)
+        self.functionsList.itemDoubleClicked.connect(self.insertFunction)
+        self.tabWidget.currentChanged.connect(self.setPreview)
+
+    def setPreview(self):
+        # TODO clean up, not effective
+        if self.tabWidget.currentIndex() == 0: # Objects
+            row = self.objectsList.currentRow()
+            self.previewLabel.setText('<br/>'.join(["<strong>{0}</strong>: {1}".format(key, value) for key, value in self.menu.objects[row].items()]))
+        elif self.tabWidget.currentIndex() == 1: # Cuts
+            row = self.cutsList.currentRow()
+            self.previewLabel.setText('<br/>'.join(["<strong>{0}</strong>: {1}".format(key, value) for key, value in self.menu.cuts[row].items()]))
+        else:
+            self.previewLabel.setText("")
+
+    def insertObject(self):
+        # TODO clean up, not effective
+        row = self.objectsList.currentRow()
+        self.insertItem.emit(self.menu.objects[row]['name'])
+
+    def insertCut(self):
+        # TODO clean up, not effective
+        row = self.cutsList.currentRow()
+        self.insertItem.emit(self.menu.cuts[row]['name'])
+
+    def insertFunction(self):
+        # TODO clean up, not effective
+        self.insertItem.emit(self.functionsList.currentItem().text())
+
+    def reloadMenu(self):
+        # TODO clean up
+        # Build list of objects.
+        self.objectsList.clear()
+        self.objectsList.addItems([obj['name'] for obj in self.menu.objects])
+        # Build list of cuts.
+        self.cutsList.clear()
+        self.cutsList.addItems([cut['name'] for cut in self.menu.cuts])
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
