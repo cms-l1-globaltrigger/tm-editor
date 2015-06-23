@@ -99,6 +99,9 @@ class Document(QWidget):
         elif item is self.objectsItem:
             self.itemsTableView.setModel(self.objectsModel)
         self.itemsTableView.resizeColumnsToContents()
+        horizontalHeader = self.itemsTableView.horizontalHeader()
+        horizontalHeader.setResizeMode(QHeaderView.Stretch)
+        horizontalHeader.setStretchLastSection(True)
 
     def editItem(self, index):
         if self.itemsTableView.model() is self.algorithmsModel:
@@ -156,8 +159,11 @@ class AlgorithmsModel(QAbstractTableModel):
 class CutsModel(QAbstractTableModel):
     ColumnTitles = (
         "Name",
+        "Type",
+        "Object",
         "Min",
         "Max",
+        "Data",
     )
     def __init__(self, menu, parent = None):
         super(CutsModel, self).__init__(parent)
@@ -171,6 +177,16 @@ class CutsModel(QAbstractTableModel):
             if index.isValid():
                 if index.column() == 0:
                     return self.menu.cuts[index.row()]['name']
+                if index.column() == 1:
+                    return self.menu.cuts[index.row()]['type']
+                if index.column() == 2:
+                    return self.menu.cuts[index.row()]['object']
+                if index.column() == 3:
+                    return format(float(self.menu.cuts[index.row()]['minimum']), '+.3f')
+                if index.column() == 4:
+                    return format(float(self.menu.cuts[index.row()]['maximum']), '+.3f')
+                if index.column() == 5:
+                    return self.menu.cuts[index.row()]['data']
         return QVariant()
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal:
@@ -182,6 +198,9 @@ class ObjectsModel(QAbstractTableModel):
     ColumnTitles = (
         "Name",
         "Type",
+        "Threshold",
+        "Comp",
+        "BX Offset",
     )
     def __init__(self, menu, parent = None):
         super(ObjectsModel, self).__init__(parent)
@@ -195,6 +214,14 @@ class ObjectsModel(QAbstractTableModel):
             if index.isValid():
                 if index.column() == 0:
                     return self.menu.objects[index.row()]['name']
+                if index.column() == 1:
+                    return self.menu.objects[index.row()]['type']
+                if index.column() == 2:
+                    return format(float(self.menu.objects[index.row()]['threshold']), '.1f')
+                if index.column() == 3:
+                    return self.menu.objects[index.row()]['comparison_operator']
+                if index.column() == 4:
+                    return format(int(self.menu.objects[index.row()]['bx_offset']), '+d')
         return QVariant()
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal:

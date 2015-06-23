@@ -89,7 +89,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Ready")
 
     def loadDocument(self, filename):
-        document = Document(os.path.basename(filename))
+        document = Document(os.path.basename(filename), self)
         index = self.mdiArea.addDocument(document)
         self.mdiArea.setCurrentIndex(index)
 
