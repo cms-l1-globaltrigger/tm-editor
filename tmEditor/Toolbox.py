@@ -34,6 +34,8 @@ def createIcon(category, name):
         icon.addFile("/usr/share/icons/gnome/{size}x{size}/{category}/{name}.png".format(**locals()))
     return icon
 
+# TODO take care of creation/destruction of virtual environment by dedicated class.
+
 def loadXml(filename, location = getenv('TMGUI_DIR')):
     """Creates a temporary directory, copies the XML and creates symbolic
     links to the XSD files, then loads and validates the menu. Returns a
@@ -157,9 +159,10 @@ def saveXml(filename, menu, scale, ext_signal, location = getenv('TMGUI_DIR')):
     if warnings:
         raise RuntimeError("Failed to save XML menu {filename}\n{warnings}".format(**locals()))
 
-class Menu(object):
+class L1MenuContainer(object):
+
     def __init__(self, filename = None):
-        self.meta = []
+        self.menu = []
         self.algorithms = []
         self.cuts = []
         self.objects = []
@@ -167,9 +170,33 @@ class Menu(object):
         self.externals = None
         if filename:
             self.loadXml(filename)
+
+    def addObject(self, name, offset = 0):
+        """Provided for convenience."""
+        self.objects.append(dict(
+            name = name,
+            bx_offset = offset,
+        ))
+
+    def addCut(self, name, minimum, maximum):
+        """Provided for convenience."""
+        self.objects.append(dict(
+            name = name,
+            minimum = minimum,
+            maximum = maximum,
+        ))
+
+    def addAlgorithm(self, name, expression):
+        """Provided for convenience."""
+        self.objects.append(dict(
+            name = name,
+            expression = expression,
+        ))
+
     def loadXml(self, filename):
+        """Provided for convenience."""
         menu, scale, ext_signal = loadXml(filename)
-        self.meta = dict(menu.menu.items())
+        self.menu = dict(menu.menu.items())
         self.algorithms = [dict(algorithm) for algorithm in menu.algorithms]
         buffer = []
         for cuts in menu.cuts.values():
@@ -187,8 +214,10 @@ class Menu(object):
         self.objects = buffer
         self.scales = scale
         self.externals = ext_signal
+
     def saveXml(self, filename):
+        """Provided for convenience."""
         menu = tmTable.Menu()
-        for key, value in self.meta.items():
+        for key, value in self.menu.items():
             menu[key] = str(value)
         saveXml(filename, menu, self.scales, self.externals)

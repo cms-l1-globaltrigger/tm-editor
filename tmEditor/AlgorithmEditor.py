@@ -19,7 +19,7 @@ from collections import namedtuple
 import sys, os
 
 class AlgorithmEditor(QMainWindow):
-    def __init__(self, algorithm, menu = Toolbox.Menu(), parent = None):
+    def __init__(self, algorithm, menu = Toolbox.L1MenuContainer(), parent = None):
         super(AlgorithmEditor, self).__init__(parent)
         # Setup window
         self.setWindowTitle(self.tr("Algorithm Editor"))
