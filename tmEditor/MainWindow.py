@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         self.createToolbar()
         self.createStatusBar()
         # Create MDI area
-        self.mdiArea = MdiArea()
+        self.mdiArea = MdiArea(self)
         self.mdiArea.currentChanged.connect(self.updateStatusBar)
         self.setCentralWidget(self.mdiArea)
         # Initialize
@@ -83,9 +83,9 @@ class MainWindow(QMainWindow):
     def updateStatusBar(self, index = None):
         """Update status bar labels."""
         document = self.mdiArea.currentDocument()
-        self.statusAlgorithms.setText(QString(" Algorithms: %1 ").arg(len(document.menu.algorithms) if document else '--'))
-        self.statusCuts.setText(QString(" Cuts: %1 ").arg(len(document.menu.cuts) if document else '--'))
-        self.statusObjects.setText(QString(" Objects: %1 ").arg(len(document.menu.objects) if document else '--'))
+        self.statusAlgorithms.setText(QString(" Algorithms: %1 ").arg(len(document.menu().algorithms) if document else '--'))
+        self.statusCuts.setText(QString(" Cuts: %1 ").arg(len(document.menu().cuts) if document else '--'))
+        self.statusObjects.setText(QString(" Objects: %1 ").arg(len(document.menu().objects) if document else '--'))
         self.statusBar().showMessage("Ready")
 
     def loadDocument(self, filename):

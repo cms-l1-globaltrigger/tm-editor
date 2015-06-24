@@ -34,11 +34,11 @@ def main():
     """Main routine."""
     args = parse()
 
-    # Setup console logging
+    # Setup console logging and debug level.
     loggingLevel = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(format = '%(levelname)s: %(message)s', level = loggingLevel)
 
-        # As things are getting serious let's start logging to file.
+    # As things are getting serious let's start logging to file.
     handler = logging.FileHandler('tm-editor.log', mode = 'a')
     handler.setFormatter(logging.Formatter(fmt = '%(asctime)s %(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
     handler.setLevel(loggingLevel)
@@ -47,6 +47,7 @@ def main():
     try:
         app = QApplication(sys.argv)
         window = tmEditor.MainWindow()
+        # Load documents from command line (optional).
         for filename in args.filenames:
             window.loadDocument(filename)
         window.show()

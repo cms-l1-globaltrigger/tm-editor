@@ -46,11 +46,14 @@ class AlgorithmFormatter(object):
     def expanded(self, algorithm):
         algorithm = self.machinize(algorithm)
         # TODO: now that's way not the best approach at all, use regular expressions instead...
-        algorithm = algorithm.replace("{", "{\n  ")
-        algorithm = algorithm.replace("}", "\n}")
-        algorithm = algorithm.replace("[", "[\n  ")
-        algorithm = algorithm.replace("]", "\n]")
-        algorithm = algorithm.replace("(", "(\n  ")
-        algorithm = algorithm.replace(")", "\n)")
-        algorithm = algorithm.replace(",", ",\n  ")
+        # algorithm = algorithm.replace("{", "{\n  ")
+        # algorithm = algorithm.replace("}", "\n}")
+        # algorithm = algorithm.replace("[", "[\n  ")
+        # algorithm = algorithm.replace("]", "\n]")
+        # algorithm = algorithm.replace("(", "(\n  ")
+        # algorithm = algorithm.replace(")", "\n)")
+        # algorithm = algorithm.replace(",", ",\n  ")
+        algorithm = algorithm.replace(" AND ", "\n AND \n")
+        algorithm = algorithm.replace(" OR ", "\n OR \n")
+        algorithm = algorithm.replace(" XOR ", "\n XOR \n")
         return algorithm

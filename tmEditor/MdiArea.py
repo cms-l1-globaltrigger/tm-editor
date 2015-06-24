@@ -29,10 +29,23 @@ class MdiArea(QTabWidget):
         # Close document by clicking on the tab close button.
         self.tabCloseRequested.connect(self.removeDocument)
 
+    def documents(self):
+        """Returns list containing all documents. Provided for convenience."""
+        return [self.widget(index) for index in range(self.count())]
+
     def addDocument(self, document):
+        """Adds document to MDI area. Prevents adding the same document twice.
+        Returns index of tab of added document.
+        """
+        # Do no re-open a document, just raise its tab.
+        result = filter(lambda doc: document.filename() == doc.filename(), self.documents())
+        if result:
+            self.setCurrentWidget(result[0])
+            return self.currentIndex()
         return self.addTab(document, Toolbox.createIcon("mimetypes", "document"), document.name())
 
     def currentDocument(self):
+        """Returns current document. Provided for convenience."""
         return self.currentWidget()
 
     def removeDocument(self, index):

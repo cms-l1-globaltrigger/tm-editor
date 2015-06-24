@@ -23,7 +23,7 @@ class AlgorithmEditor(QMainWindow):
         super(AlgorithmEditor, self).__init__(parent)
         # Setup window
         self.setWindowTitle(self.tr("Algorithm Editor"))
-        self.resize(640, 480)
+        self.resize(720, 480)
         # Setup helper
         self.menu = menu
         self.formatter = AlgorithmFormatter()
@@ -37,6 +37,7 @@ class AlgorithmEditor(QMainWindow):
         font.setFamily("Monospace")
         self.textEdit.setFont(font)
         self.textEdit.setFrameShape(QFrame.NoFrame)
+        self.textEdit.setCursorWidth(2)
         self.setAlgorithm(algorithm)
         self.highlighter = SyntaxHighlighter(self.textEdit)
         # Setup layout
@@ -55,6 +56,7 @@ class AlgorithmEditor(QMainWindow):
 
     def insertItem(self, text):
         self.textEdit.textCursor().insertText(text)
+        self.textEdit.ensureCursorVisible()
 
     def createActions(self):
         self.formatCompactAct = QAction(self.tr("&Compact"), self)
