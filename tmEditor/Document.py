@@ -37,38 +37,44 @@ AlignRight = Qt.AlignRight | Qt.AlignVCenter
 #  Document widget
 # ------------------------------------------------------------------------------
 
+def createProxyTableView(name, model, parent):
+    proxyModel = QSortFilterProxyModel(parent)
+    proxyModel.setSourceModel(model)
+    tableView = TableView(parent)
+    tableView.setObjectName(name)
+    tableView.setStyleSheet("#{name} {{ border: 0; }}".format(**locals()))
+    tableView.setModel(proxyModel)
+    tableView.doubleClicked.connect(parent.editItem)
+    tableView.selectionModel().selectionChanged.connect(parent.updatePreview)
+    return tableView
+
 class Document(QWidget):
     """Document container widget used by MDI area."""
 
     def __init__(self, filename, parent = None):
         super(Document, self).__init__(parent)
         # Attributes
-        self.setFilename(filename)
-        self.setName(os.path.basename(filename))
-        self.setModified(False)
         self.loadMenu(filename)
         self.formatter = AlgorithmFormatter()
         # Layout
         self.setContentsMargins(0, 0, 0, 0)
-        # Setup models
-        self.menuModel = MenuModel(self.menu(), self)
-        self.algorithmsModel = AlgorithmsModel(self.menu(), self)
-        self.cutsModel = CutsModel(self.menu(), self)
-        self.objectsModel = ObjectsModel(self.menu(), self)
-        self.binsModel = {} #BinsModel(self.menu(), self)
+        # Create table views.
+        menuTableView = createProxyTableView("menuTableView", MenuModel(self.menu(), self), self)
+        algorithmsTableView = createProxyTableView("algorithmsTableView", AlgorithmsModel(self.menu(), self), self)
+        cutsTableView = createProxyTableView("cutsTableView", CutsModel(self.menu(), self), self)
+        objectsTableView = createProxyTableView("objectsTableView", ObjectsModel(self.menu(), self), self)
+        binsTableViews = {}
+        for scale in self.menu().scales.bins.keys():
+            binsTableViews[scale] = createProxyTableView("{scale}TableView".format(**locals()), BinsModel(self.menu(), scale, self), self)
+        extSignalsTableView = createProxyTableView("externalsTableView", ExternalsModel(self.menu(), self), self)
         # Editor window (persistent instance)
         self.editorWindow = AlgorithmEditor("", self.menu())
         self.editorWindow.setWindowModality(Qt.ApplicationModal)
         self.editorWindow.setWindowFlags(self.editorWindow.windowFlags() | Qt.Dialog)
         self.editorWindow.hide()
-        # Creating a proxy model for sort function
-        self.proxyModel = QSortFilterProxyModel(self)
         # Table view
-        self.tableView = TableView(self)
-        self.tableView.setObjectName("tableView")
-        self.tableView.setStyleSheet("#tableView { border: 0; }")
-        self.tableView.setModel(self.proxyModel)
-        self.tableView.doubleClicked.connect(self.editItem)
+        self.dataViewStack = QStackedWidget(self)
+        ### self.dataViewStack.addWidget(QTextEdit(self))
         # Preview
         self.previewWidget = QTextEdit(self)
         self.previewWidget.setReadOnly(True)
@@ -84,28 +90,21 @@ class Document(QWidget):
         self.navigationTreeWidget.headerItem().setHidden(True)
         self.navigationTreeWidget.setObjectName("navigationTreeWidget")
         self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee;}")
-        self.menuItem = NavigationItem(self.navigationTreeWidget, "Menu", QPushButton("push", self), QTextEdit(self))
-        self.menuItem.previewWidget.setPlainText("so far...")
-        font = self.menuItem.font(0)
-        font.setBold(True)
-        self.menuItem.setFont(0, font)
-        self.algorithmsItem = NavigationItem(self.menuItem, "Algorithms", self.tableView, self.previewWidget)
-        self.cutsItem = NavigationItem(self.menuItem, "Cuts", self.tableView, self.previewWidget)
-        self.objectsItem = NavigationItem(self.menuItem, "Objects", self.tableView, self.previewWidget)
-        self.scalesItem = NavigationItem(self.navigationTreeWidget, "Scales", self.tableView, self.previewWidget)
+        # Add navigation items.
+        self.menuItem = NavigationItem(self.navigationTreeWidget, "Menu", menuTableView, QTextEdit(self))
+        self.menuItem.preview.setPlainText("so far...")
+        self.algorithmsItem = NavigationItem(self.menuItem, "Algorithms", algorithmsTableView, self.previewWidget)
+        self.cutsItem = NavigationItem(self.menuItem, "Cuts", cutsTableView, self.previewWidget)
+        self.objectsItem = NavigationItem(self.menuItem, "Objects", objectsTableView, self.previewWidget)
+        self.scalesItem = NavigationItem(self.navigationTreeWidget, "Scales", QLabel("Select a scale set...", self), self.previewWidget)
         self.scalesTypeItem = {}
-        for name in self.menu().scales.bins.keys():
-            self.scalesTypeItem[name] = NavigationItem(self.scalesItem, name, self.tableView, self.previewWidget)
-            self.binsModel[name] = BinsModel(self.menu(), name, self)
-        self.extSignalsItem = NavigationItem(self.navigationTreeWidget, "External Signals", self.tableView, self.previewWidget)
-        font = self.scalesItem.font(0)
-        font.setBold(True)
-        self.scalesItem.setFont(0, font)
-        font = self.extSignalsItem.font(0)
-        font.setBold(True)
-        self.extSignalsItem.setFont(0, font)
+        for scale in self.menu().scales.bins.keys():
+            self.scalesTypeItem[scale] = NavigationItem(self.scalesItem, scale, binsTableViews[scale], self.previewWidget)
+        self.extSignalsItem = NavigationItem(self.navigationTreeWidget, "External Signals", extSignalsTableView, self.previewWidget)
+        # Finsish navigation setup.
         self.navigationTreeWidget.expandAll()
         self.navigationTreeWidget.itemSelectionChanged.connect(self.updateViews)
+        self.navigationTreeWidget.setCurrentItem(self.menuItem)
         # Splitters
         self.vsplitter = SlimSplitter(Qt.Horizontal, self)
         self.vsplitter.setObjectName("vsplitter")
@@ -113,7 +112,7 @@ class Document(QWidget):
         self.vsplitter.addWidget(self.navigationTreeWidget)
         self.vsplitter.setOpaqueResize(False)
         self.hsplitter = SlimSplitter(Qt.Vertical, self)
-        self.hsplitter.addWidget(self.tableView)
+        self.hsplitter.addWidget(self.dataViewStack)
         self.hsplitter.addWidget(self.previewWidget)
         self.vsplitter.addWidget(self.hsplitter)
         self.vsplitter.setStretchFactor(0, 0)
@@ -148,45 +147,48 @@ class Document(QWidget):
         return self._menu
 
     def loadMenu(self, filename):
+        """Load menu from filename, setup new document."""
+        self.setModified(False)
+        self.setFilename(filename)
+        self.setName(os.path.basename(filename))
         self._menu = Menu(filename)
 
+    def getSelection(self):
+        items = self.navigationTreeWidget.selectedItems()
+        if not len(items):
+            return None, None
+        item = items[0]
+        index = item.view.currentMappedIndex()
+        return index, item
+
     def updateViews(self):
-        item = self.navigationTreeWidget.selectedItems()
-        if not len(item): return
-        item = item[0]
-        if item is self.menuItem:
-            self.tableView.showModel(self.menuModel)
-        elif item is self.algorithmsItem:
-            self.tableView.showModel(self.algorithmsModel)
-        elif item is self.cutsItem:
-            self.tableView.showModel(self.cutsModel)
-        elif item is self.objectsItem:
-            self.tableView.showModel(self.objectsModel)
-        elif item in self.scalesTypeItem.values():
-            if item.name in self.scalesTypeItem.keys():
-                self.tableView.showModel(self.binsModel[item.name])
-        else:
-            self.tableView.showModel(None)
+        index, item = self.getSelection()
+        if 0 > self.dataViewStack.indexOf(item.view):
+            self.dataViewStack.addWidget(item.view)
+            if hasattr(item.view, 'sortByColumn'):
+                item.view.sortByColumn(0, Qt.AscendingOrder)
+        self.dataViewStack.setCurrentWidget(item.view)
 
     def updatePreview(self):
-        index = self.tableView.currentMappedIndex()
-        item = self.navigationTreeWidget.selectedItems()
-        if not len(item):
-            return
-        item = item[0]
+        index, item = self.getSelection()
+        # Specialized preview...
         if item is self.algorithmsItem:
-            self.previewWidget.setPlainText(self.formatter.humanize(self.menu().algorithms[index.row()]['expression']))
-        elif item is self.cutsItem:
-            self.previewWidget.setPlainText(self.menu().cuts[index.row()]['name'])
+             self.previewWidget.setPlainText(self.formatter.humanize(self.menu().algorithms[index.row()]['expression']))
         else:
-            self.previewWidget.setPlainText("")
+            # Generic preview...
+            try:
+                data = item.view.model().sourceModel().values[index.row()]
+                self.previewWidget.setText('<br/>'.join(["<strong>{0}:</strong> {1}".format(key, value) for key, value in data.items()]))
+            except:
+                item.preview.setPlainText("")
 
     def editItem(self, index):
-        model = self.tableView.model()
+        _, item = self.getSelection()
+        model = item.view.model()
         index = model.mapToSource(index)
         if not index.isValid():
             return
-        if model.sourceModel() is self.algorithmsModel:
+        if item is self.algorithmsItem:
             self.editorWindow.setAlgorithm(self.menu().algorithms[index.row()]['expression'])
             self.editorWindow.reloadLibrary()
             self.editorWindow.show()
@@ -220,11 +222,16 @@ class SlimSplitterHandle(QSplitterHandle):
 # ------------------------------------------------------------------------------
 
 class NavigationItem(QTreeWidgetItem):
-    def __init__(self, parent, name, dataWidget, previewWidget):
+    def __init__(self, parent, name, view, preview):
         super(NavigationItem, self).__init__(parent, [name])
         self.name = name
-        self.dataWidget = dataWidget
-        self.previewWidget = previewWidget
+        self.view = view
+        self.preview = preview
+        if not isinstance(parent, NavigationItem):
+            # Hilight root items in bold text.
+            font = self.font(0)
+            font.setBold(True)
+            self.setFont(0, font)
 
 # ------------------------------------------------------------------------------
 #  Common table view widget
@@ -264,24 +271,6 @@ class TableView(QTableView):
         if index:
             # Use the assigned proxy model to map the index.
             return self.model().mapToSource(index[0])
-
-    def getColumnWidths(self):
-        horizontalHeader = self.horizontalHeader()
-        count = horizontalHeader.count()
-        return [horizontalHeader.sectionSize(i) for i in range(count)]
-
-    def showModel(self, model):
-        if self.model() and self.model().sourceModel():
-            self.horizontalSectionWidths[self.model().sourceModel()] = self.getColumnWidths()
-        self.model().setSourceModel(model)
-        if model not in self.horizontalSectionWidths.keys():
-            self.resizeColumnsToContents()
-            self.horizontalSectionWidths[model] = self.getColumnWidths()
-            self.sortByColumn(0)
-        else:
-            horizontalHeader = self.horizontalHeader()
-            for i, width in enumerate(self.horizontalSectionWidths[model]):
-                horizontalHeader.resizeSection(i, width)
 
 # From http://stackoverflow.com/questions/1956542/how-to-make-item-view-render-rich-html-text-in-qt
 class HTMLDelegate(QStyledItemDelegate):
@@ -336,6 +325,8 @@ class BaseTableModel(QAbstractTableModel):
         row, column = index.row(), index.column()
         if role == Qt.DisplayRole:
             spec = self.columnSpecs[column]
+            if spec.key not in self.values[row].keys():
+                return QVariant()
             return spec.format(self.values[row][spec.key])
         if role == Qt.TextAlignmentRole:
             return self.columnSpecs[column].alignment
@@ -380,6 +371,7 @@ class AlgorithmsModel(BaseTableModel):
         self.addColumnSpec("Index", 'index', int, AlignRight)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Expression", 'expression', fAlgorithm)
+        self.addColumnSpec("ID", 'algorithm_id', int, AlignRight)
 
 class CutsModel(BaseTableModel):
 
@@ -391,6 +383,7 @@ class CutsModel(BaseTableModel):
         self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
         self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
         self.addColumnSpec("Data", 'data')
+        self.addColumnSpec("ID", 'cut_id', int, AlignRight)
 
 class ObjectsModel(BaseTableModel):
 
@@ -401,12 +394,26 @@ class ObjectsModel(BaseTableModel):
         self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
         self.addColumnSpec("Comparison", 'comparison_operator', fComparison, AlignRight)
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
+        self.addColumnSpec("ID", 'object_id', int, AlignRight)
 
 class BinsModel(BaseTableModel):
 
-    def __init__(self, menu, type_, parent = None):
-        super(BinsModel, self).__init__(menu.scales.bins[type_])
-        self.type_ = type_
+    def __init__(self, menu, name, parent = None):
+        super(BinsModel, self).__init__(menu.scales.bins[name])
+        self.name = name
         self.addColumnSpec("Number", 'number', int, AlignRight)
         self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
         self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
+        self.addColumnSpec("ID", 'scale_id', int, AlignRight)
+
+class ExternalsModel(BaseTableModel):
+
+    def __init__(self, menu, parent = None):
+        super(ExternalsModel, self).__init__(menu.externals.extSignals, parent)
+        self.addColumnSpec("Name", 'name')
+        self.addColumnSpec("Label", 'label')
+        self.addColumnSpec("System", 'system')
+        self.addColumnSpec("Cable", 'cable')
+        self.addColumnSpec("Channel", 'channel')
+        self.addColumnSpec("Description", 'description')
+        self.addColumnSpec("ID", 'ext_signal_id', int, AlignRight)
