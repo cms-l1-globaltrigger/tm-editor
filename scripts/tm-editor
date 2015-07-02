@@ -10,9 +10,12 @@
 import tmEditor
 
 from PyQt4.QtGui import QApplication
+
 import argparse
 import logging
 import sys, os
+
+__version__ = '0.1.0'
 
 EXIT_OK = 0
 EXIT_FAIL = 1
@@ -27,6 +30,11 @@ def parse():
     parser.add_argument('-v', '--verbose',
         action = 'count',
         help = "increase output verbosity",
+    )
+    parser.add_argument('-V', '--version',
+        action = 'version',
+        version = "%(prog)s {0}".format(__version__),
+        help = "show the application's version",
     )
     return parser.parse_args()
 
@@ -44,6 +52,7 @@ def main():
     handler.setLevel(loggingLevel)
     logging.getLogger().addHandler(handler)
 
+    # Create application window.
     try:
         app = QApplication(sys.argv)
         window = tmEditor.MainWindow()

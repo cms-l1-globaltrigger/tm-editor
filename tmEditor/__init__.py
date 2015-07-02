@@ -8,6 +8,8 @@
 
 import Toolbox
 
+from Menu import Menu
+
 from AlgorithmFormatter import AlgorithmFormatter
 from AlgorithmEditor import AlgorithmEditor
 

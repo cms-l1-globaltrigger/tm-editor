@@ -12,36 +12,30 @@
 """
 
 from tmEditor import AlgorithmEditor
-from tmEditor import Toolbox
+from tmEditor import AlgorithmFormatter
+from tmEditor.AlgorithmEditor import SyntaxHighlighter
+from tmEditor import Menu
+
+from tmEditor.Toolbox import (
+    fAlgorithm,
+    fCut,
+    fThreshold,
+    fComparison,
+    fBxOffset,
+)
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
 from collections import namedtuple
 import sys, os
 
 AlignLeft = Qt.AlignLeft | Qt.AlignVCenter
 AlignRight = Qt.AlignRight | Qt.AlignVCenter
 
-def fAlgorithm(expr):
-    """Experimental HTML syntax highlighting for algorithm expressions."""
-    for function in ('comb', 'dist', 'mass'):
-        expr = expr.replace('{0}'.format(function), '<span style="color: blue; font-weight: bold;">{0}</span>'.format(function))
-    for op in ('AND', 'OR', 'NOT'):
-        expr = expr.replace(' {0} '.format(op), ' <span style="color: darkblue; font-weight: bold;">{0}</span> '.format(op))
-    return expr
-
-def fCut(value):
-    return format(float(value), '+.3f')
-
-def fThreshold(value):
-    value = str(value).replace('p', '.') # Replace 'p' by comma.
-    return "{0:.1f} GeV".format(float(value))
-
-def fComparison(value):
-    return str(value).strip('.')
-
-def fBxOffset(value):
-    return '0' if int(value) == 0 else format(int(value), '+d')
+# ------------------------------------------------------------------------------
+#  Document widget
+# ------------------------------------------------------------------------------
 
 class Document(QWidget):
     """Document container widget used by MDI area."""
@@ -53,6 +47,7 @@ class Document(QWidget):
         self.setName(os.path.basename(filename))
         self.setModified(False)
         self.loadMenu(filename)
+        self.formatter = AlgorithmFormatter()
         # Layout
         self.setContentsMargins(0, 0, 0, 0)
         # Setup models
@@ -60,55 +55,57 @@ class Document(QWidget):
         self.algorithmsModel = AlgorithmsModel(self.menu(), self)
         self.cutsModel = CutsModel(self.menu(), self)
         self.objectsModel = ObjectsModel(self.menu(), self)
-        # Editor field
-        self.editor = AlgorithmEditor("", self.menu())
-        self.editor.setWindowModality(Qt.ApplicationModal)
-        self.editor.setWindowFlags(self.editor.windowFlags() | Qt.Dialog)
-        self.editor.hide()
-        # Navigation tree
-        self.navigationTreeWidget = QTreeWidget(self)
-        self.navigationTreeWidget.headerItem().setHidden(True)
-        self.navigationTreeWidget.setObjectName("navigationTreeWidget")
-        self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee;}")
-        self.menuItem = QTreeWidgetItem(self.navigationTreeWidget, ["Menu"])
-        font = self.menuItem.font(0)
-        font.setBold(True)
-        self.menuItem.setFont(0, font)
-        self.algorithmsItem = QTreeWidgetItem(self.menuItem, ["Algorithms"])
-        self.cutsItem = QTreeWidgetItem(self.menuItem, ["Cuts"])
-        self.objectsItem = QTreeWidgetItem(self.menuItem, ["Objects"])
-        self.environmentItem = QTreeWidgetItem(self.navigationTreeWidget, ["Settings"])
-        font = self.environmentItem.font(0)
-        font.setBold(True)
-        self.environmentItem.setFont(0, font)
-        QTreeWidgetItem(self.environmentItem, ["Scales"])
-        QTreeWidgetItem(self.environmentItem, ["External Signals"])
-        self.navigationTreeWidget.expandAll()
-        self.navigationTreeWidget.itemSelectionChanged.connect(self.updateViews)
+        self.binsModel = {} #BinsModel(self.menu(), self)
+        # Editor window (persistent instance)
+        self.editorWindow = AlgorithmEditor("", self.menu())
+        self.editorWindow.setWindowModality(Qt.ApplicationModal)
+        self.editorWindow.setWindowFlags(self.editorWindow.windowFlags() | Qt.Dialog)
+        self.editorWindow.hide()
+        # Creating a proxy model for sort function
+        self.proxyModel = QSortFilterProxyModel(self)
         # Table view
-        self.itemsTableView = QTableView(self)
-        self.itemsTableView.setAlternatingRowColors(True)
-        self.itemsTableView.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.itemsTableView.setSelectionBehavior(QAbstractItemView.SelectRows)
-        delegate = HTMLDelegate()
-        self.itemsTableView.setItemDelegate(delegate)
-        # self.itemsTableView.setSortingEnabled(True) # TODO use sort-filter-proxy
-        self.itemsTableView.setObjectName("itemsTableView")
-        self.itemsTableView.setStyleSheet("#itemsTableView { border: 0; }")
-        self.itemsTableView.doubleClicked.connect(self.editItem)
-        horizontalHeader = self.itemsTableView.horizontalHeader()
-        horizontalHeader.setResizeMode(QHeaderView.Stretch)
-        horizontalHeader.setStretchLastSection(True)
-        verticalHeader = self.itemsTableView.verticalHeader()
-        verticalHeader.setResizeMode(QHeaderView.ResizeToContents)
-        verticalHeader.setVisible(False)
+        self.tableView = TableView(self)
+        self.tableView.setObjectName("tableView")
+        self.tableView.setStyleSheet("#tableView { border: 0; }")
+        self.tableView.setModel(self.proxyModel)
+        self.tableView.doubleClicked.connect(self.editItem)
+        # Preview
         self.previewWidget = QTextEdit(self)
+        self.previewWidget.setReadOnly(True)
+        self.previewWidgetHighlighter = SyntaxHighlighter(self.previewWidget)
         self.previewWidget.setObjectName("previewWidget")
         self.previewWidget.setStyleSheet("""#previewWidget {
             border: 0;
             background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
                 stop:0 rgba(203, 222, 238, 255), stop:1 rgba(233, 233, 233, 255));
         }""")
+        # Navigation tree
+        self.navigationTreeWidget = QTreeWidget(self)
+        self.navigationTreeWidget.headerItem().setHidden(True)
+        self.navigationTreeWidget.setObjectName("navigationTreeWidget")
+        self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee;}")
+        self.menuItem = NavigationItem(self.navigationTreeWidget, "Menu", QPushButton("push", self), QTextEdit(self))
+        self.menuItem.previewWidget.setPlainText("so far...")
+        font = self.menuItem.font(0)
+        font.setBold(True)
+        self.menuItem.setFont(0, font)
+        self.algorithmsItem = NavigationItem(self.menuItem, "Algorithms", self.tableView, self.previewWidget)
+        self.cutsItem = NavigationItem(self.menuItem, "Cuts", self.tableView, self.previewWidget)
+        self.objectsItem = NavigationItem(self.menuItem, "Objects", self.tableView, self.previewWidget)
+        self.scalesItem = NavigationItem(self.navigationTreeWidget, "Scales", self.tableView, self.previewWidget)
+        self.scalesTypeItem = {}
+        for name in self.menu().scales.bins.keys():
+            self.scalesTypeItem[name] = NavigationItem(self.scalesItem, name, self.tableView, self.previewWidget)
+            self.binsModel[name] = BinsModel(self.menu(), name, self)
+        self.extSignalsItem = NavigationItem(self.navigationTreeWidget, "External Signals", self.tableView, self.previewWidget)
+        font = self.scalesItem.font(0)
+        font.setBold(True)
+        self.scalesItem.setFont(0, font)
+        font = self.extSignalsItem.font(0)
+        font.setBold(True)
+        self.extSignalsItem.setFont(0, font)
+        self.navigationTreeWidget.expandAll()
+        self.navigationTreeWidget.itemSelectionChanged.connect(self.updateViews)
         # Splitters
         self.vsplitter = SlimSplitter(Qt.Horizontal, self)
         self.vsplitter.setObjectName("vsplitter")
@@ -116,7 +113,7 @@ class Document(QWidget):
         self.vsplitter.addWidget(self.navigationTreeWidget)
         self.vsplitter.setOpaqueResize(False)
         self.hsplitter = SlimSplitter(Qt.Vertical, self)
-        self.hsplitter.addWidget(self.itemsTableView)
+        self.hsplitter.addWidget(self.tableView)
         self.hsplitter.addWidget(self.previewWidget)
         self.vsplitter.addWidget(self.hsplitter)
         self.vsplitter.setStretchFactor(0, 0)
@@ -151,33 +148,52 @@ class Document(QWidget):
         return self._menu
 
     def loadMenu(self, filename):
-        self._menu = Toolbox.L1MenuContainer(filename)
+        self._menu = Menu(filename)
 
     def updateViews(self):
         item = self.navigationTreeWidget.selectedItems()
         if not len(item): return
         item = item[0]
         if item is self.menuItem:
-            self.itemsTableView.setModel(self.menuModel)
+            self.tableView.showModel(self.menuModel)
         elif item is self.algorithmsItem:
-            self.itemsTableView.setModel(self.algorithmsModel)
+            self.tableView.showModel(self.algorithmsModel)
         elif item is self.cutsItem:
-            self.itemsTableView.setModel(self.cutsModel)
+            self.tableView.showModel(self.cutsModel)
         elif item is self.objectsItem:
-            self.itemsTableView.setModel(self.objectsModel)
+            self.tableView.showModel(self.objectsModel)
+        elif item in self.scalesTypeItem.values():
+            if item.name in self.scalesTypeItem.keys():
+                self.tableView.showModel(self.binsModel[item.name])
         else:
-            self.itemsTableView.setModel(None)
-        self.itemsTableView.resizeColumnsToContents()
-        horizontalHeader = self.itemsTableView.horizontalHeader()
-        horizontalHeader.setResizeMode(QHeaderView.Stretch)
-        horizontalHeader.setStretchLastSection(True)
+            self.tableView.showModel(None)
+
+    def updatePreview(self):
+        index = self.tableView.currentMappedIndex()
+        item = self.navigationTreeWidget.selectedItems()
+        if not len(item):
+            return
+        item = item[0]
+        if item is self.algorithmsItem:
+            self.previewWidget.setPlainText(self.formatter.humanize(self.menu().algorithms[index.row()]['expression']))
+        elif item is self.cutsItem:
+            self.previewWidget.setPlainText(self.menu().cuts[index.row()]['name'])
+        else:
+            self.previewWidget.setPlainText("")
 
     def editItem(self, index):
-        if self.itemsTableView.model() is self.algorithmsModel:
-            if index.isValid():
-                self.editor.setAlgorithm(self.menu().algorithms[index.row()]['expression'])
-                self.editor.reloadLibrary()
-                self.editor.show()
+        model = self.tableView.model()
+        index = model.mapToSource(index)
+        if not index.isValid():
+            return
+        if model.sourceModel() is self.algorithmsModel:
+            self.editorWindow.setAlgorithm(self.menu().algorithms[index.row()]['expression'])
+            self.editorWindow.reloadLibrary()
+            self.editorWindow.show()
+
+# ------------------------------------------------------------------------------
+#  Splitter and custom handle
+# ------------------------------------------------------------------------------
 
 class SlimSplitter(QSplitter):
     """Slim splitter with a decent narrow splitter handle."""
@@ -199,11 +215,79 @@ class SlimSplitterHandle(QSplitterHandle):
     def paintEvent(self, event):
         pass
 
+# ------------------------------------------------------------------------------
+#  Navigation tree item
+# ------------------------------------------------------------------------------
+
+class NavigationItem(QTreeWidgetItem):
+    def __init__(self, parent, name, dataWidget, previewWidget):
+        super(NavigationItem, self).__init__(parent, [name])
+        self.name = name
+        self.dataWidget = dataWidget
+        self.previewWidget = previewWidget
+
+# ------------------------------------------------------------------------------
+#  Common table view widget
+# ------------------------------------------------------------------------------
+
+class TableView(QTableView):
+    """Common sortable table view wiget."""
+
+    def __init__(self, parent = None):
+        """@param parent optional parent widget.
+        """
+        super(TableView, self).__init__(parent)
+        # Setup table view.
+        self.setShowGrid(False)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setAlternatingRowColors(True)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        # Setup horizontal column appearance.
+        horizontalHeader = self.horizontalHeader()
+        horizontalHeader.setHighlightSections(False)
+        horizontalHeader.setResizeMode(QHeaderView.Interactive)
+        horizontalHeader.setStretchLastSection(True)
+        # Setup vertical row appearance.
+        verticalHeader = self.verticalHeader()
+        verticalHeader.setResizeMode(QHeaderView.Fixed)
+        verticalHeader.setDefaultSectionSize(20)
+        verticalHeader.hide()
+        self.setSortingEnabled(True)
+        #
+        self.horizontalSectionWidths = {}
+
+    def currentMappedIndex(self):
+        """@returns current selected proxy mapped index, else None."""
+        # Get the current selected table view index.
+        index = self.selectedIndexes()
+        if index:
+            # Use the assigned proxy model to map the index.
+            return self.model().mapToSource(index[0])
+
+    def getColumnWidths(self):
+        horizontalHeader = self.horizontalHeader()
+        count = horizontalHeader.count()
+        return [horizontalHeader.sectionSize(i) for i in range(count)]
+
+    def showModel(self, model):
+        if self.model() and self.model().sourceModel():
+            self.horizontalSectionWidths[self.model().sourceModel()] = self.getColumnWidths()
+        self.model().setSourceModel(model)
+        if model not in self.horizontalSectionWidths.keys():
+            self.resizeColumnsToContents()
+            self.horizontalSectionWidths[model] = self.getColumnWidths()
+            self.sortByColumn(0)
+        else:
+            horizontalHeader = self.horizontalHeader()
+            for i, width in enumerate(self.horizontalSectionWidths[model]):
+                horizontalHeader.resizeSection(i, width)
+
 # From http://stackoverflow.com/questions/1956542/how-to-make-item-view-render-rich-html-text-in-qt
 class HTMLDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         options = QStyleOptionViewItemV4(option)
-        self.initStyleOption(options,index)
+        self.initStyleOption(options, index)
         style = QApplication.style() if options.widget is None else options.widget.style()
         doc = QTextDocument()
         doc.setHtml(options.text)
@@ -254,7 +338,7 @@ class BaseTableModel(QAbstractTableModel):
             spec = self.columnSpecs[column]
             return spec.format(self.values[row][spec.key])
         if role == Qt.TextAlignmentRole:
-            return self.columnSpecs[column].alignment or QVariant()
+            return self.columnSpecs[column].alignment
         return QVariant()
 
     def headerData(self, section, orientation, role):
@@ -293,6 +377,7 @@ class AlgorithmsModel(BaseTableModel):
 
     def __init__(self, menu, parent = None):
         super(AlgorithmsModel, self).__init__(menu.algorithms, parent)
+        self.addColumnSpec("Index", 'index', int, AlignRight)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Expression", 'expression', fAlgorithm)
 
@@ -316,3 +401,12 @@ class ObjectsModel(BaseTableModel):
         self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
         self.addColumnSpec("Comparison", 'comparison_operator', fComparison, AlignRight)
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
+
+class BinsModel(BaseTableModel):
+
+    def __init__(self, menu, type_, parent = None):
+        super(BinsModel, self).__init__(menu.scales.bins[type_])
+        self.type_ = type_
+        self.addColumnSpec("Number", 'number', int, AlignRight)
+        self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
+        self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)

@@ -11,6 +11,7 @@
 
 from tmEditor import AlgorithmFormatter
 from tmEditor import Toolbox
+from tmEditor import Menu
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -19,7 +20,7 @@ from collections import namedtuple
 import sys, os
 
 class AlgorithmEditor(QMainWindow):
-    def __init__(self, algorithm, menu = Toolbox.L1MenuContainer(), parent = None):
+    def __init__(self, algorithm, menu = Menu(), parent = None):
         super(AlgorithmEditor, self).__init__(parent)
         # Setup window
         self.setWindowTitle(self.tr("Algorithm Editor"))
@@ -190,10 +191,10 @@ class LibraryWidget(QWidget):
         # TODO clean up
         # Build list of objects.
         self.objectsList.clear()
-        self.objectsList.addItems([obj['name'] for obj in self.menu.objects])
+        self.objectsList.addItems(sorted([obj['name'] for obj in self.menu.objects]))
         # Build list of cuts.
         self.cutsList.clear()
-        self.cutsList.addItems([cut['name'] for cut in self.menu.cuts])
+        self.cutsList.addItems(sorted([cut['name'] for cut in self.menu.cuts]))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
