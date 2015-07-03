@@ -27,12 +27,13 @@ class MdiArea(QTabWidget):
         self.setDocumentMode(True)
         self.setContentsMargins(0, 0, 0, 0)
         # Close document by clicking on the tab close button.
-        self.tabCloseRequested.connect(self.removeDocument)
+        self.tabCloseRequested.connect(self.closeDocument)
 
     def documents(self):
         """Returns list containing all documents. Provided for convenience."""
         return [self.widget(index) for index in range(self.count())]
 
+    @pyqtSlot(str)
     def addDocument(self, document):
         """Adds document to MDI area. Prevents adding the same document twice.
         Returns index of tab of added document.
@@ -44,12 +45,16 @@ class MdiArea(QTabWidget):
             return self.currentIndex()
         return self.addTab(document, Toolbox.createIcon("mimetypes", "document"), document.name())
 
+    @pyqtSlot()
     def currentDocument(self):
         """Returns current document. Provided for convenience."""
         return self.currentWidget()
 
-    def removeDocument(self, index):
-        """Close document and ask to save changes."""
+    @pyqtSlot(int)
+    def closeDocument(self, index):
+        """Close document and ask to save changes. Returns False if aborted."""
+        if not self.count():
+            return False
         document = self.widget(index)
         if document.isModified():
             reply = QMessageBox.warning(self, "Close document",
@@ -59,5 +64,11 @@ class MdiArea(QTabWidget):
             if reply == QMessageBox.Cancel:
                 return False
             if reply == QMessageBox.Save:
-                pass # save
+                document.saveMenu()
         self.removeTab(index)
+        return True
+
+    @pyqtSlot()
+    def closeCurrentDocument(self):
+        """Close current document and ask to save changes. Provided for convenience."""
+        return self.closeDocument(self.currentIndex())

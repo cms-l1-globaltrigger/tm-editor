@@ -15,8 +15,6 @@ import argparse
 import logging
 import sys, os
 
-__version__ = '0.1.0'
-
 EXIT_OK = 0
 EXIT_FAIL = 1
 
@@ -33,7 +31,7 @@ def parse():
     )
     parser.add_argument('-V', '--version',
         action = 'version',
-        version = "%(prog)s {0}".format(__version__),
+        version = "%(prog)s {0}".format(tmEditor.MainWindow.Version),
         help = "show the application's version",
     )
     return parser.parse_args()
@@ -55,9 +53,11 @@ def main():
     # Create application window.
     try:
         app = QApplication(sys.argv)
+        logging.debug("launching L1-Trigger Menu Editor, version %s", tmEditor.MainWindow.Version)
         window = tmEditor.MainWindow()
         # Load documents from command line (optional).
         for filename in args.filenames:
+            logging.debug("loading file %s", filename)
             window.loadDocument(filename)
         window.show()
         return app.exec_()

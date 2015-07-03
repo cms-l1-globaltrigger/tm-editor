@@ -37,17 +37,6 @@ AlignRight = Qt.AlignRight | Qt.AlignVCenter
 #  Document widget
 # ------------------------------------------------------------------------------
 
-def createProxyTableView(name, model, parent):
-    proxyModel = QSortFilterProxyModel(parent)
-    proxyModel.setSourceModel(model)
-    tableView = TableView(parent)
-    tableView.setObjectName(name)
-    tableView.setStyleSheet("#{name} {{ border: 0; }}".format(**locals()))
-    tableView.setModel(proxyModel)
-    tableView.doubleClicked.connect(parent.editItem)
-    tableView.selectionModel().selectionChanged.connect(parent.updatePreview)
-    return tableView
-
 class Document(QWidget):
     """Document container widget used by MDI area."""
 
@@ -59,14 +48,15 @@ class Document(QWidget):
         # Layout
         self.setContentsMargins(0, 0, 0, 0)
         # Create table views.
-        menuTableView = createProxyTableView("menuTableView", MenuModel(self.menu(), self), self)
-        algorithmsTableView = createProxyTableView("algorithmsTableView", AlgorithmsModel(self.menu(), self), self)
-        cutsTableView = createProxyTableView("cutsTableView", CutsModel(self.menu(), self), self)
-        objectsTableView = createProxyTableView("objectsTableView", ObjectsModel(self.menu(), self), self)
+        menuTableView = self.createProxyTableView("menuTableView", MenuModel(self.menu()))
+        algorithmsTableView = self.createProxyTableView("algorithmsTableView", AlgorithmsModel(self.menu(), self))
+        cutsTableView = self.createProxyTableView("cutsTableView", CutsModel(self.menu(), self))
+        objectsTableView = self.createProxyTableView("objectsTableView", ObjectsModel(self.menu(), self))
+        externalsTableView = self.createProxyTableView("externalsTableView", ExternalsModel(self.menu(), self))
         binsTableViews = {}
         for scale in self.menu().scales.bins.keys():
-            binsTableViews[scale] = createProxyTableView("{scale}TableView".format(**locals()), BinsModel(self.menu(), scale, self), self)
-        extSignalsTableView = createProxyTableView("externalsTableView", ExternalsModel(self.menu(), self), self)
+            binsTableViews[scale] = self.createProxyTableView("{scale}TableView".format(**locals()), BinsModel(self.menu(), scale, self))
+        extSignalsTableView = self.createProxyTableView("externalsTableView", ExtSignalsModel(self.menu(), self))
         # Editor window (persistent instance)
         self.editorWindow = AlgorithmEditor("", self.menu())
         self.editorWindow.setWindowModality(Qt.ApplicationModal)
@@ -96,6 +86,7 @@ class Document(QWidget):
         self.algorithmsItem = NavigationItem(self.menuItem, "Algorithms", algorithmsTableView, self.previewWidget)
         self.cutsItem = NavigationItem(self.menuItem, "Cuts", cutsTableView, self.previewWidget)
         self.objectsItem = NavigationItem(self.menuItem, "Objects", objectsTableView, self.previewWidget)
+        self.externalsItem = NavigationItem(self.menuItem, "Externals", externalsTableView, self.previewWidget)
         self.scalesItem = NavigationItem(self.navigationTreeWidget, "Scales", QLabel("Select a scale set...", self), self.previewWidget)
         self.scalesTypeItem = {}
         for scale in self.menu().scales.bins.keys():
@@ -125,6 +116,17 @@ class Document(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
+    def createProxyTableView(self, name, model):
+        proxyModel = QSortFilterProxyModel(self)
+        proxyModel.setSourceModel(model)
+        tableView = TableView(self)
+        tableView.setObjectName(name)
+        tableView.setStyleSheet("#{name} {{ border: 0; }}".format(**locals()))
+        tableView.setModel(proxyModel)
+        tableView.doubleClicked.connect(self.editItem)
+        tableView.selectionModel().selectionChanged.connect(self.updatePreview)
+        return tableView
+
     def filename(self):
         return self._filename
 
@@ -151,7 +153,18 @@ class Document(QWidget):
         self.setModified(False)
         self.setFilename(filename)
         self.setName(os.path.basename(filename))
-        self._menu = Menu(filename)
+        self._menu = Menu()
+        self._menu.loadXml(filename)
+
+    def saveMenu(self, filename = None):
+        """Save menu to filename."""
+        filename = filename or self.filename()
+        self.setFilename(filename)
+        self.setName(os.path.basename(filename))
+        self._menu.saveXml(filename)
+        self.setModified(False)
+        index, item = self.getSelection()
+        item.view.update()
 
     def getSelection(self):
         items = self.navigationTreeWidget.selectedItems()
@@ -183,11 +196,11 @@ class Document(QWidget):
                 item.preview.setPlainText("")
 
     def editItem(self, index):
+        if not index.isValid():
+            return
         _, item = self.getSelection()
         model = item.view.model()
         index = model.mapToSource(index)
-        if not index.isValid():
-            return
         if item is self.algorithmsItem:
             self.editorWindow.setAlgorithm(self.menu().algorithms[index.row()]['expression'])
             self.editorWindow.reloadLibrary()
@@ -371,7 +384,7 @@ class AlgorithmsModel(BaseTableModel):
         self.addColumnSpec("Index", 'index', int, AlignRight)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Expression", 'expression', fAlgorithm)
-        self.addColumnSpec("ID", 'algorithm_id', int, AlignRight)
+        # self.addColumnSpec("ID", 'algorithm_id', int, AlignRight)
 
 class CutsModel(BaseTableModel):
 
@@ -383,7 +396,7 @@ class CutsModel(BaseTableModel):
         self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
         self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
         self.addColumnSpec("Data", 'data')
-        self.addColumnSpec("ID", 'cut_id', int, AlignRight)
+        # self.addColumnSpec("ID", 'cut_id', int, AlignRight)
 
 class ObjectsModel(BaseTableModel):
 
@@ -394,7 +407,18 @@ class ObjectsModel(BaseTableModel):
         self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
         self.addColumnSpec("Comparison", 'comparison_operator', fComparison, AlignRight)
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
-        self.addColumnSpec("ID", 'object_id', int, AlignRight)
+        # self.addColumnSpec("ID", 'object_id', int, AlignRight)
+
+class ExternalsModel(BaseTableModel):
+
+    def __init__(self, menu, parent = None):
+        super(ExternalsModel, self).__init__(menu.externals, parent)
+        self.addColumnSpec("Name", 'name')
+        self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
+        self.addColumnSpec("Comment", 'comment')
+        self.addColumnSpec("Timestamp", 'datetime')
+        # self.addColumnSpec("ID", 'requirement_id', int, AlignRight)
+        # self.addColumnSpec("ID2", 'ext_signal_id', int, AlignRight)
 
 class BinsModel(BaseTableModel):
 
@@ -404,16 +428,16 @@ class BinsModel(BaseTableModel):
         self.addColumnSpec("Number", 'number', int, AlignRight)
         self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
         self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
-        self.addColumnSpec("ID", 'scale_id', int, AlignRight)
+        # self.addColumnSpec("ID", 'scale_id', int, AlignRight)
 
-class ExternalsModel(BaseTableModel):
+class ExtSignalsModel(BaseTableModel):
 
     def __init__(self, menu, parent = None):
-        super(ExternalsModel, self).__init__(menu.externals.extSignals, parent)
+        super(ExtSignalsModel, self).__init__(menu.extSignals.extSignals, parent)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Label", 'label')
         self.addColumnSpec("System", 'system')
         self.addColumnSpec("Cable", 'cable')
         self.addColumnSpec("Channel", 'channel')
         self.addColumnSpec("Description", 'description')
-        self.addColumnSpec("ID", 'ext_signal_id', int, AlignRight)
+        # self.addColumnSpec("ID", 'ext_signal_id', int, AlignRight)

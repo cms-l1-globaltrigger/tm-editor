@@ -13,6 +13,7 @@ from Menu import Menu
 from AlgorithmFormatter import AlgorithmFormatter
 from AlgorithmEditor import AlgorithmEditor
 
+from AboutDialog import AboutDialog
 from Document import Document
 from MdiArea import MdiArea
 from MainWindow import MainWindow

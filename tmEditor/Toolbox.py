@@ -67,6 +67,13 @@ def fBxOffset(value):
 def createIcon(category, name):
     """Factory function, creates a multi resolution gnome theme icon."""
     icon = QIcon()
-    for size in 16, 24, 32, 64, 128:
-        icon.addFile("/usr/share/icons/gnome/{size}x{size}/{category}/{name}.png".format(**locals()))
+    for size in 16, 22, 24, 32, 64, 128:
+        filename = "/usr/share/icons/gnome/{size}x{size}/{category}/{name}.png".format(**locals())
+        if os.path.isfile(filename):
+            icon.addFile(filename)
     return icon
+
+# TODO transitional resource fetcher
+def resource(filename):
+    root = getenv('UTM_ROOT')
+    return os.path.abspath("{root}/tmEditor/resource/{filename}".format(**locals()))

@@ -10,6 +10,7 @@
 """
 
 from tmEditor import (
+    AboutDialog,
     Document,
     MdiArea,
     Toolbox,
@@ -19,17 +20,23 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import random
+import webbrowser
 import sys, os
+
+__version__ = '0.1.0'
+"""Applciation Version (edit this to increment the release version)."""
+
+L1ContentsURL = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/GlobalTriggerUpgradeL1T-uTme"
 
 class MainWindow(QMainWindow):
 
-    ApplicationTitle = "L1-Trigger Menu Editor"
+    Version = __version__
 
     def __init__(self, parent = None):
         super(MainWindow, self).__init__(parent)
         # Setup window.
         self.setWindowIcon(Toolbox.createIcon("apps", "text-editor"))
-        self.setWindowTitle(self.ApplicationTitle)
+        self.setWindowTitle(self.tr("L1-Trigger Menu Editor"))
         self.resize(800, 600)
         # Create actions and toolbars.
         self.createActions()
@@ -42,19 +49,66 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.mdiArea)
         # Initialize
         self.updateStatusBar()
+        self.syncActions()
+        # Setup connections.
+        self.mdiArea.currentChanged.connect(self.syncActions)
 
     def createActions(self):
-        # Action for opening a new connections file.
+        # Action for opening an existing file.
         self.openAct = QAction(self.tr("&Open..."), self)
         self.openAct.setShortcut(QKeySequence.Open)
         self.openAct.setStatusTip(self.tr("Open an existing file"))
         self.openAct.setIcon(Toolbox.createIcon("actions", "document-open"))
-        self.openAct.triggered.connect(self.onFileOpen)
+        self.openAct.triggered.connect(self.onOpen)
+        # Action for saving the current file.
+        self.saveAct = QAction(self.tr("&Save"), self)
+        self.saveAct.setShortcut(QKeySequence.Save)
+        self.saveAct.setStatusTip(self.tr("Save the current file"))
+        self.saveAct.setIcon(Toolbox.createIcon("actions", "document-save"))
+        self.saveAct.triggered.connect(self.onSave)
+        # Action for saving the current file with a different name.
+        self.saveAsAct = QAction(self.tr("&Save As..."), self)
+        self.saveAsAct.setShortcut(QKeySequence.SaveAs)
+        self.saveAsAct.setStatusTip(self.tr("Save the current file with a different name"))
+        self.saveAsAct.setIcon(Toolbox.createIcon("actions", "document-save-as"))
+        self.saveAsAct.triggered.connect(self.onSaveAs)
+        # Action for closing the current file.
+        self.closeAct = QAction(self.tr("&Close"), self)
+        self.closeAct.setShortcut(QKeySequence.Close)
+        self.closeAct.setStatusTip(self.tr("Close the current file"))
+        self.closeAct.setIcon(Toolbox.createIcon("actions", "window-close"))
+        self.closeAct.triggered.connect(self.onClose)
+        # Action for quitting the program.
+        self.quitAct = QAction(self.tr("&Quit"), self)
+        self.quitAct.setShortcut(QKeySequence.Quit)
+        self.quitAct.setStatusTip(self.tr("Quit the programm"))
+        self.quitAct.setIcon(Toolbox.createIcon("actions", "application-exit"))
+        self.quitAct.triggered.connect(self.close)
+        # Open contents help URL.
+        self.contentsAction = QAction(self.tr("&Contents"), self)
+        self.contentsAction.setShortcut(QKeySequence(Qt.Key_F1))
+        self.contentsAction.setStatusTip(self.tr("Open L1 Trigger Menu online manual"))
+        self.contentsAction.setIcon(Toolbox.createIcon("actions", "help-about"))
+        self.contentsAction.triggered.connect(self.onShowContents)
+        # Action to raise about dialog.
+        self.aboutAction = QAction(self.tr("&About"), self)
+        self.aboutAction.setStatusTip(self.tr("About this application"))
+        self.aboutAction.triggered.connect(self.onShowAbout)
 
     def createMenus(self):
+        # File menu
         self.fileMenu = self.menuBar().addMenu(self.tr("&File"))
         self.fileMenu.addAction(self.openAct)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.saveAct)
+        self.fileMenu.addAction(self.saveAsAct)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.closeAct)
+        self.fileMenu.addAction(self.quitAct)
+        # Help menu
         self.helpMenu = self.menuBar().addMenu(self.tr("&Help"))
+        self.helpMenu.addAction(self.contentsAction)
+        self.helpMenu.addAction(self.aboutAction)
 
     def createToolbar(self):
         """Create main toolbar and pin to top area."""
@@ -62,16 +116,19 @@ class MainWindow(QMainWindow):
         self.toolbar.setMovable(False)
         self.toolbar.setFloatable(False)
         self.toolbar.addAction(self.openAct)
+        self.toolbar.addAction(self.saveAct)
 
     def createStatusBar(self):
         """Create status bar and populate with status labels."""
         self.statusBar()
-        self.statusAlgorithms = QLabel()
-        self.statusCuts = QLabel()
-        self.statusObjects = QLabel()
+        self.statusAlgorithms = QLabel(self)
+        self.statusCuts = QLabel(self)
+        self.statusObjects = QLabel(self)
+        self.statusExternals = QLabel(self)
         self.statusBar().addPermanentWidget(self.statusAlgorithms)
         self.statusBar().addPermanentWidget(self.statusCuts)
         self.statusBar().addPermanentWidget(self.statusObjects)
+        self.statusBar().addPermanentWidget(self.statusExternals)
 
     def createStatusBarLabel(self):
         """Create labels for status bar."""
@@ -83,23 +140,62 @@ class MainWindow(QMainWindow):
     def updateStatusBar(self, index = None):
         """Update status bar labels."""
         document = self.mdiArea.currentDocument()
-        self.statusAlgorithms.setText(QString(" Algorithms: %1 ").arg(len(document.menu().algorithms) if document else '--'))
-        self.statusCuts.setText(QString(" Cuts: %1 ").arg(len(document.menu().cuts) if document else '--'))
-        self.statusObjects.setText(QString(" Objects: %1 ").arg(len(document.menu().objects) if document else '--'))
-        self.statusBar().showMessage("Ready")
+        self.statusAlgorithms.setText(QString(" %1: %2 ").arg(self.tr("Algorithms")).arg(len(document.menu().algorithms) if document else '--'))
+        self.statusCuts.setText(QString(" %1: %2 ").arg(self.tr("Cuts")).arg(len(document.menu().cuts) if document else '--'))
+        self.statusObjects.setText(QString(" %1: %2 ").arg(self.tr("Objects")).arg(len(document.menu().objects) if document else '--'))
+        self.statusExternals.setText(QString(" %1: %2 ").arg(self.tr("Externals")).arg(len(document.menu().externals) if document else '--'))
+        self.statusBar().showMessage(self.tr("Ready"))
+
+    def syncActions(self):
+        """Disable some actions if no document is opened."""
+        enabled = bool(self.mdiArea.count())
+        self.saveAct.setEnabled(enabled)
+        self.saveAsAct.setEnabled(enabled)
+        self.closeAct.setEnabled(enabled)
 
     def loadDocument(self, filename):
         document = Document(os.path.basename(filename), self)
         index = self.mdiArea.addDocument(document)
         self.mdiArea.setCurrentIndex(index)
 
-    def onFileOpen(self):
+    def onOpen(self):
         """Select a XML menu file using an dialog."""
-        filename = str(QFileDialog.getOpenFileName(self, "Open connection file",
+        filenames = QFileDialog.getOpenFileNames(self, self.tr("Open files..."),
+            os.getcwd(), "L1-Trigger Menus (*.xml)")
+        for filename in filenames:
+            self.loadDocument(str(filename))
+
+    def onSave(self):
+        document = self.mdiArea.currentDocument()
+        document.saveMenu()
+
+    def onSaveAs(self):
+        filename = str(QFileDialog.getSaveFileName(self, self.tr("Save as..."),
             os.getcwd(), "L1-Trigger Menus (*.xml)"))
-        if not filename:
-            return
-        self.loadDocument(filename)
+        if filename:
+            document = self.mdiArea.currentDocument()
+            document.saveMenu(filename)
+
+    def onClose(self):
+        index = self.mdiArea.currentIndex()
+        self.mdiArea.closeDocument(index)
+
+    def onShowContents(self):
+        """Raise remote contents help."""
+        webbrowser.open_new_tab(L1ContentsURL)
+
+    def onShowAbout(self):
+        """Raise about this application dialog."""
+        dialog = AboutDialog(self.windowTitle(), self.Version, self)
+        dialog.exec_()
+
+    def closeEvent(self, event):
+        """On window close event, close all open documents."""
+        while self.mdiArea.count():
+            if not self.mdiArea.closeCurrentDocument():
+                event.ignore()
+                return
+        event.accept()
 
 # -----------------------------------------------------------------------------
 #  Main application routine
