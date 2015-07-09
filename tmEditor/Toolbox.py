@@ -31,6 +31,9 @@ def getenv(name):
         raise RuntimeError("`{name}' environment not set".format(**locals()))
     return value
 
+def getRootDir():
+    return getenv('UTM_ROOT')
+
 # ------------------------------------------------------------------------------
 #  String formatting functions
 # ------------------------------------------------------------------------------
