@@ -37,7 +37,8 @@ class AlgorithmFormatter(object):
         algorithm = algorithm.replace(" { ", "{")
         algorithm = algorithm.replace(" }", "}")
         for keyword in self.Operators:
-            algorithm = separate(keyword, algorithm)
+            algorithm = algorithm.replace(keyword, keyword)
+            algorithm = algorithm.replace(keyword.lower(), keyword)
         return algorithm.replace("  ", " ") # TODO: that's not efficient...
     def humanize(self, algorithm):
         algorithm = self.machinize(algorithm)

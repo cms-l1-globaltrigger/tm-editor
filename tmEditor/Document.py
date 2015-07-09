@@ -15,6 +15,8 @@ from tmEditor import AlgorithmEditor
 from tmEditor import AlgorithmFormatter
 from tmEditor.AlgorithmEditor import SyntaxHighlighter
 from tmEditor import Menu
+from tmEditor.Menu import Algorithm
+
 
 from tmEditor.Toolbox import (
     fAlgorithm,
@@ -58,10 +60,12 @@ class Document(QWidget):
             binsTableViews[scale] = self.createProxyTableView("{scale}TableView".format(**locals()), BinsModel(self.menu(), scale, self))
         extSignalsTableView = self.createProxyTableView("externalsTableView", ExtSignalsModel(self.menu(), self))
         # Editor window (persistent instance)
-        self.editorWindow = AlgorithmEditor("", self.menu())
+        self.editorWindow = AlgorithmEditor()
+        self.editorWindow.setMenu(self.menu())
         self.editorWindow.setWindowModality(Qt.ApplicationModal)
         self.editorWindow.setWindowFlags(self.editorWindow.windowFlags() | Qt.Dialog)
         self.editorWindow.hide()
+        self.editorWindow.accepted.connect(self.onEditAlgorithm)
         # Table view
         self.dataViewStack = QStackedWidget(self)
         ### self.dataViewStack.addWidget(QTextEdit(self))
@@ -202,9 +206,14 @@ class Document(QWidget):
         model = item.view.model()
         index = model.mapToSource(index)
         if item is self.algorithmsItem:
-            self.editorWindow.setAlgorithm(self.menu().algorithms[index.row()]['expression'])
+            self.editorWindow.setAlgorithm(self.menu().algorithms[index.row()])
             self.editorWindow.reloadLibrary()
             self.editorWindow.show()
+
+    def onEditAlgorithm(self):
+        print self.editorWindow.algorithm()
+        self.updateViews()
+        self.updatePreview()
 
 # ------------------------------------------------------------------------------
 #  Splitter and custom handle
