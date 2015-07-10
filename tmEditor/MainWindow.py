@@ -80,7 +80,7 @@ class MainWindow(QMainWindow):
         self.closeAct.triggered.connect(self.onClose)
         # Action for quitting the program.
         self.quitAct = QAction(self.tr("&Quit"), self)
-        self.quitAct.setShortcut(QKeySequence.Quit)
+        self.quitAct.setShortcut(QKeySequence.Quit if hasattr(QKeySequence, 'Quit') else QKeySequence(Qt.CTRL + Qt.Key_Q)) # NOTE: Bugfix for PyQt4.6
         self.quitAct.setStatusTip(self.tr("Quit the programm"))
         self.quitAct.setIcon(Toolbox.createIcon("actions", "application-exit"))
         self.quitAct.triggered.connect(self.close)
