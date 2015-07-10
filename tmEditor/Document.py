@@ -67,6 +67,7 @@ class Document(QWidget):
         self.bottomWidget = BottomWidget(self)
         self.bottomWidget.addTriggered.connect(self.addItem)
         self.bottomWidget.editTriggered.connect(self.editItem)
+        self.bottomWidget.removeTriggered.connect(self.removeItem)
         # Navigation tree
         self.navigationTreeWidget = QTreeWidget(self)
         self.navigationTreeWidget.headerItem().setHidden(True)
@@ -213,14 +214,38 @@ class Document(QWidget):
             dialog = AlgorithmEditorDialog(self.menu(), self)
             dialog.setModal(True)
             dialog.setIndex(self.menu().algorithms[index.row()].index)
+            dialog.setName(self.menu().algorithms[index.row()].name)
             dialog.setExpression(self.menu().algorithms[index.row()].expression)
             dialog.exec_()
             if dialog.result() == QDialog.Accepted:
                 self.setModified(True)
                 self.menu().algorithms[index.row()]['expression'] = dialog.expression()
                 self.menu().algorithms[index.row()]['index'] = str(dialog.index())
+                self.menu().algorithms[index.row()]['name'] = str(dialog.name())
                 # REBUILD INDEX
                 self.updatePreview()
+
+    def removeItem(self):
+        index, item = self.getSelection()
+        if item is self.algorithmsItem:
+            algorithm = self.menu().algorithms[index.row()]
+            self.menu().algorithms.remove(algorithm)
+            item.view.model().setSourceModel(item.view.model().sourceModel())
+            # REBUILD INDEX
+            self.updatePreview()
+        elif item is self.cutsItem:
+            cut = self.menu().cuts[index.row()]
+            for algorithm in self.menu().algorithms:
+                if cut.name in algorithm.cuts():
+                    QMessageBox.warning(self,
+                        "Cut is used",
+                        "Cut {cut.name} is used by algorithm {algorithm.name}".format(**locals()),
+                    )
+                    return
+            self.menu().cuts.remove(cut)
+            item.view.model().setSourceModel(item.view.model().sourceModel())
+            # REBUILD INDEX
+            self.updatePreview()
 
 # ------------------------------------------------------------------------------
 #  Splitter and custom handle
@@ -335,6 +360,7 @@ class BottomWidget(QWidget):
 
     addTriggered = pyqtSignal()
     editTriggered = pyqtSignal()
+    removeTriggered = pyqtSignal()
 
     def __init__(self, parent = None):
         super(BottomWidget, self).__init__(parent)
@@ -350,7 +376,9 @@ class BottomWidget(QWidget):
         editButton.clicked.connect(self.onEdit)
         layout.addWidget(editButton)
         layout.addWidget(QPushButton(Toolbox.createIcon('actions', 'edit-copy'), "Copy...", self))
-        layout.addWidget(QPushButton(Toolbox.createIcon('actions', 'list-remove'), "Delete", self))
+        removeBotton = QPushButton(Toolbox.createIcon('actions', 'list-remove'), "Delete", self)
+        removeBotton.clicked.connect(self.onRemove)
+        layout.addWidget(removeBotton)
         self.toolbar.setLayout(layout)
         self.textEdit = QTextEdit(self)
         self.textEdit.setReadOnly(True)
@@ -373,6 +401,8 @@ class BottomWidget(QWidget):
         self.addTriggered.emit()
     def onEdit(self):
         self.editTriggered.emit()
+    def onRemove(self):
+        self.removeTriggered.emit()
 
 # ------------------------------------------------------------------------------
 #  Models

@@ -20,7 +20,12 @@ from PyQt4.QtGui import *
 
 import sys, os
 
+# -----------------------------------------------------------------------------
+#  Algorithm editor window
+# -----------------------------------------------------------------------------
+
 class AlgorithmEditor(QMainWindow):
+    """Algorithm editor class."""
 
     def __init__(self, menu, parent = None):
         super(AlgorithmEditor, self).__init__(parent)
@@ -29,10 +34,18 @@ class AlgorithmEditor(QMainWindow):
         self.resize(720, 480)
         self.menu = menu
         self.formatter = AlgorithmFormatter()
+        #
+        self.indexComboBox = QComboBox(self)
+        self.indexComboBox.setEditable(True)
+        self.indexComboBox.setMinimumWidth(50)
+        self.nameComboBox = QComboBox(self)
+        self.nameComboBox.setEditable(True)
+        self.nameComboBox.setMinimumWidth(300)
         # Create actions and toolbars.
         self.createActions()
         self.createMenus()
         self.createToolbar()
+        self.createDocks()
         # Setup main widgets
         self.textEdit = QTextEdit(self)
         font = self.textEdit.font()
@@ -44,24 +57,6 @@ class AlgorithmEditor(QMainWindow):
         self.highlighter = AlgorithmSyntaxHighlighter(self.textEdit)
         # Setup layout
         self.setCentralWidget(self.textEdit)
-        # Setup dock widgets
-        dock = QDockWidget(self.tr("Settings"), self)
-        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        self.settingsWidget = QWidget(self)
-        self.indexComboBox = QComboBox(self)
-        self.indexComboBox.setEditable(True)
-        layout = QVBoxLayout()
-        layout.addWidget(self.indexComboBox)
-        self.settingsWidget.setLayout(layout)
-        dock.setWidget(self.settingsWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, dock)
-        #
-        dock = QDockWidget(self.tr("Library"), self)
-        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        self.libraryWidget = LibraryWidget(self.menu, dock)
-        self.libraryWidget.selected.connect(self.insertItem)
-        dock.setWidget(self.libraryWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, dock)
         # Setup properties (as last step).
         self.setIndex(0)
         self.setName(self.tr("L1_Unnamed"))
@@ -73,6 +68,7 @@ class AlgorithmEditor(QMainWindow):
         self.textEdit.ensureCursorVisible()
 
     def createActions(self):
+        """Create actions."""
         self.formatCompactAct = QAction(self.tr("&Compact"), self)
         self.formatCompactAct.setIcon(Toolbox.createIcon('actions', 'zoom-out'))
         self.formatCompactAct.triggered.connect(self.onFormatCompact)
@@ -81,19 +77,37 @@ class AlgorithmEditor(QMainWindow):
         self.formatExpandAct.triggered.connect(self.onFormatExpand)
 
     def createMenus(self):
-        self.editMenu = self.menuBar().addMenu(self.tr("&Edit"))
+        """Create menus."""
+        # self.editMenu = self.menuBar().addMenu(self.tr("&Edit"))
         self.formatMenu = self.menuBar().addMenu(self.tr("&Format"))
         self.formatMenu.addAction(self.formatCompactAct)
         self.formatMenu.addAction(self.formatExpandAct)
-        self.helpMenu = self.menuBar().addMenu(self.tr("&Help"))
+        # self.helpMenu = self.menuBar().addMenu(self.tr("&Help"))
 
     def createToolbar(self):
+        """Create toolbars."""
+        # Setup toolbars
         self.toolbar = self.addToolBar("Toolbar")
         self.toolbar.setMovable(False)
         self.toolbar.setFloatable(False)
         # self.toolbar.addSeparator()
         self.toolbar.addAction(self.formatCompactAct)
         self.toolbar.addAction(self.formatExpandAct)
+        self.toolbar.addSeparator()
+        self.toolbar.addWidget(QLabel(self.tr("  Name "), self))
+        self.toolbar.addWidget(self.nameComboBox)
+        self.toolbar.addWidget(QLabel(self.tr("  Index "), self))
+        self.toolbar.addWidget(self.indexComboBox)
+
+    def createDocks(self):
+        """Create dock widgets."""
+        # Setup library
+        dock = QDockWidget(self.tr("Library"), self)
+        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        self.libraryWidget = LibraryWidget(self.menu, dock)
+        self.libraryWidget.selected.connect(self.insertItem)
+        dock.setWidget(self.libraryWidget)
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
 
     def index(self):
         return int(self.indexComboBox.currentText())
@@ -102,10 +116,10 @@ class AlgorithmEditor(QMainWindow):
         self.indexComboBox.setEditText(str(index))
 
     def name(self):
-        return ""
+        return self.nameComboBox.currentText()
 
     def setName(self, name):
-        pass
+        self.nameComboBox.setEditText(name)
 
     def expression(self):
         """Returns a machine readable formatted version of the loaded algorithm."""
@@ -128,23 +142,27 @@ class AlgorithmEditor(QMainWindow):
 
     def closeEvent(self, event):
         """On window close event."""
-        #event.ignore()
         event.accept()
 
+# -----------------------------------------------------------------------------
+#  Algorithm editor dialog (modal)
+# -----------------------------------------------------------------------------
+
 class AlgorithmEditorDialog(QDialog):
-    """Dialog wrapper for algorithm editor main window."""
+    """Algorithm editor dialog class."""
 
     def __init__(self, menu, parent = None):
         super(AlgorithmEditorDialog, self).__init__(parent)
-        self.algorithmEditor = AlgorithmEditor(menu)
-        self.setWindowTitle(self.algorithmEditor.windowTitle())
+        self.editor = AlgorithmEditor(menu)
+        self.setWindowTitle(self.editor.windowTitle())
         self.resize(720, 480)
+        self.setSizeGripEnabled(True)
         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.algorithmEditor)
+        layout.addWidget(self.editor)
         bottomLayout = QVBoxLayout()
         bottomLayout.addWidget(buttonBox)
         bottomLayout.setContentsMargins(10, 0, 10, 10)
@@ -152,28 +170,40 @@ class AlgorithmEditorDialog(QDialog):
         self.setLayout(layout)
 
     def index(self):
-        return self.algorithmEditor.index()
+        """Provided for convenience."""
+        return self.editor.index()
 
     def setIndex(self, index):
-        self.algorithmEditor.setIndex(index)
+        """Provided for convenience."""
+        self.editor.setIndex(index)
 
     def name(self):
-        return self.algorithmEditor.name()
+        """Provided for convenience."""
+        return self.editor.name()
 
     def setName(self, name):
-        self.algorithmEditor.setName(name)
+        """Provided for convenience."""
+        self.editor.setName(name)
 
     def expression(self):
-        return self.algorithmEditor.expression()
+        """Provided for convenience."""
+        return self.editor.expression()
 
     def setExpression(self, expression):
-        self.algorithmEditor.setExpression(expression)
+        """Provided for convenience."""
+        self.editor.setExpression(expression)
 
     def comment(self):
-        return self.algorithmEditor.comment()
+        """Provided for convenience."""
+        return self.editor.comment()
 
     def setComment(self, comment):
-        self.algorithmEditor.setComment(comment)
+        """Provided for convenience."""
+        self.editor.setComment(comment)
+
+# -----------------------------------------------------------------------------
+#  Library widget
+# -----------------------------------------------------------------------------
 
 class LibraryWidget(QWidget):
 
@@ -211,35 +241,100 @@ class LibraryWidget(QWidget):
             "NOT",
         ])
         self.tabWidget.addTab(self.operatorsList, "O&ps")
+        # Create list contents.
+        self.initContents()
         # Layout
         gridLayout = QGridLayout()
         gridLayout.setContentsMargins(1, 1, 1, 1)
         gridLayout.addWidget(self.tabWidget, 0, 0, 1, 2)
-        self.previewLabel = QTextEdit("&Preview")
+        self.previewLabel = QTextEdit(self)
         self.previewLabel.setReadOnly(True)
         gridLayout.addWidget(self.previewLabel, 1, 0, 1, 2)
         # gridLayout.addWidget(QPushButton("<< &Insert"), 2, 0, 1, 1)
         # gridLayout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum), 2, 1, 1, 1)
         self.setLayout(gridLayout)
-        self.objectsList.currentRowChanged.connect(self.setPreview)
+        # Setup connections.
+        self.objectsList.currentRowChanged.connect(self.showPreview)
         self.objectsList.itemDoubleClicked.connect(self.insertObject)
-        self.cutsList.currentRowChanged.connect(self.setPreview)
+        self.cutsList.currentRowChanged.connect(self.showPreview)
         self.cutsList.itemDoubleClicked.connect(self.insertCut)
-        self.externalsList.currentRowChanged.connect(self.setPreview)
+        self.externalsList.currentRowChanged.connect(self.showPreview)
         self.externalsList.itemDoubleClicked.connect(self.insertExternal)
+        self.functionsList.currentRowChanged.connect(self.showPreview)
         self.functionsList.itemDoubleClicked.connect(self.insertFunction)
+        self.operatorsList.currentRowChanged.connect(self.showPreview)
         self.operatorsList.itemDoubleClicked.connect(self.insertOperator)
-        self.tabWidget.currentChanged.connect(self.setPreview)
-        self.reloadMenu()
+        self.tabWidget.currentChanged.connect(self.showPreview)
 
-    def setPreview(self):
-        # TODO clean up, not effective
-        if self.tabWidget.currentIndex() == 0: # Objects
+    def initContents(self):
+        # Build list of objects.
+        self.objectsList.clear()
+        self.objectsList.addItems(sorted([obj['name'] for obj in self.menu.objects]))
+        # Build list of cuts.
+        self.cutsList.clear()
+        self.cutsList.addItems(sorted([cut['name'] for cut in self.menu.cuts]))
+        # Build list of externals.
+        self.externalsList.clear()
+        self.externalsList.addItems(sorted([external['name'] for external in self.menu.externals]))
+
+    def showPreview(self):
+        """Updates preview widget with current selected library item."""
+        index = self.tabWidget.currentIndex()
+        if index == 0: # Objects
             row = self.objectsList.currentRow()
-            self.previewLabel.setText('<br/>'.join(["<strong>{0}</strong>: {1}".format(key, value) for key, value in self.menu.objects[row].items()]))
-        elif self.tabWidget.currentIndex() == 1: # Cuts
+            if row < 0:
+                self.previewLabel.setText("")
+                return
+            items = dict(**self.menu.objects[row])
+            items['threshold'] = Toolbox.fThreshold(items['threshold'])
+            items['bx_offset'] = Toolbox.fBxOffset(items['bx_offset'])
+            self.previewLabel.setText("""
+                <strong>Name:</strong> {name}<br/>
+                <strong>Type:</strong> {type}<br/>
+                <strong>Comp. operator:</strong> {comparison_operator}<br/>
+                <strong>Threshold:</strong> {threshold}<br/>
+                <strong>BX offset:</strong> {bx_offset}
+            """.format(**items))
+        elif index == 1: # Cuts
             row = self.cutsList.currentRow()
-            self.previewLabel.setText('<br/>'.join(["<strong>{0}</strong>: {1}".format(key, value) for key, value in self.menu.cuts[row].items()]))
+            if row < 0:
+                self.previewLabel.setText("")
+                return
+            items = dict(**self.menu.cuts[row])
+            items['minimum'] = Toolbox.fCut(items['minimum'])
+            items['maximum'] = Toolbox.fCut(items['maximum'])
+            items['data'] = items['data'] or '-'
+            self.previewLabel.setText("""
+                <strong>Name:</strong> {name}<br/>
+                <strong>Object:</strong> {object}<br/>
+                <strong>Type:</strong> {type}<br/>
+                <strong>Minimum:</strong> {minimum}<br/>
+                <strong>Maximum:</strong> {maximum}<br/>
+                <strong>Data:</strong> {data}
+            """.format(**items))
+        elif index == 2: # Externals
+            row = self.externalsList.currentRow()
+            if row < 0:
+                self.previewLabel.setText("")
+                return
+            self.previewLabel.setText('<br/>'.join(["<strong>{0}</strong>: {1}".format(key, value) for key, value in self.menu.externals[row].items()]))
+        elif index == 3: # Functions
+            row = self.functionsList.currentRow()
+            self.previewLabel.setText([
+                "Double combination function, returns true if both object requirements are fulfilled.",
+                "Triple combination function, returns true if all three object requirements are fulfilled.",
+                "Quad combination function, returns true if all four object requirements are fulfilled.",
+                "Correlation function, retruns true if correlation of both object requirements is within the given cut.",
+                "Correlation function, retruns true if correlation of both object requirements is within the given cuts.",
+                "Invariant mass function, returns true if the invariant mass of two object requirements is between the given cut.",
+            ][row])
+        elif index == 4: # Operators
+            row = self.operatorsList.currentRow()
+            self.previewLabel.setText([
+                "Logical AND operator.",
+                "Logical OR operator.",
+                "Logical NOT operator.",
+            ][row])
         else:
             self.previewLabel.setText("")
 
@@ -257,12 +352,3 @@ class LibraryWidget(QWidget):
 
     def insertOperator(self):
         self.selected.emit(Toolbox.fSeparate(self.operatorsList.currentItem().text()))
-
-    def reloadMenu(self):
-        # TODO clean up
-        # Build list of objects.
-        self.objectsList.clear()
-        self.objectsList.addItems(sorted([obj['name'] for obj in self.menu.objects]))
-        # Build list of cuts.
-        self.cutsList.clear()
-        self.cutsList.addItems(sorted([cut['name'] for cut in self.menu.cuts]))

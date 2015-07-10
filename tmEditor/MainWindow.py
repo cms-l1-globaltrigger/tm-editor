@@ -28,6 +28,14 @@ __version__ = '0.1.0'
 
 L1ContentsURL = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/GlobalTriggerUpgradeL1T-uTme"
 
+# NOTE: Bugfix for PyQt4.6
+if not hasattr(QKeySequence, 'Quit'):
+    QKeySequence.Quit = QKeySequence(Qt.CTRL + Qt.Key_Q)
+
+# -----------------------------------------------------------------------------
+#  Main window class
+# -----------------------------------------------------------------------------
+
 class MainWindow(QMainWindow):
 
     Version = __version__
@@ -80,7 +88,7 @@ class MainWindow(QMainWindow):
         self.closeAct.triggered.connect(self.onClose)
         # Action for quitting the program.
         self.quitAct = QAction(self.tr("&Quit"), self)
-        self.quitAct.setShortcut(QKeySequence.Quit if hasattr(QKeySequence, 'Quit') else QKeySequence(Qt.CTRL + Qt.Key_Q)) # NOTE: Bugfix for PyQt4.6
+        self.quitAct.setShortcut(QKeySequence.Quit)
         self.quitAct.setStatusTip(self.tr("Quit the programm"))
         self.quitAct.setIcon(Toolbox.createIcon("actions", "application-exit"))
         self.quitAct.triggered.connect(self.close)
@@ -96,6 +104,7 @@ class MainWindow(QMainWindow):
         self.aboutAction.triggered.connect(self.onShowAbout)
 
     def createMenus(self):
+        """Create menus."""
         # File menu
         self.fileMenu = self.menuBar().addMenu(self.tr("&File"))
         self.fileMenu.addAction(self.openAct)
