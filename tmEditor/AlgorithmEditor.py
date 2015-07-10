@@ -6,10 +6,11 @@
 # Last changed date : $Date: $
 #
 
-"""Algorithm editor window.
+"""Algorithm editor main window and dialog.
 """
 
 from tmEditor import AlgorithmFormatter
+from tmEditor import AlgorithmSyntaxHighlighter
 from tmEditor import Toolbox
 from tmEditor import Menu
 from tmEditor.Menu import Algorithm
@@ -17,70 +18,69 @@ from tmEditor.Menu import Algorithm
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-from collections import namedtuple
 import sys, os
 
 class AlgorithmEditor(QMainWindow):
 
-    accepted = pyqtSignal()
-
-    def __init__(self, parent = None):
+    def __init__(self, menu, parent = None):
         super(AlgorithmEditor, self).__init__(parent)
         # Setup window
         self.setWindowTitle(self.tr("Algorithm Editor"))
         self.resize(720, 480)
-        # Setup helper
-        self._algorithm = Algorithm(dict(
-            index = 0,
-            name = "L1_Unnamed",
-            expression = "",
-        ))
-        self._menu = Menu()
+        self.menu = menu
         self.formatter = AlgorithmFormatter()
         # Create actions and toolbars.
         self.createActions()
         self.createMenus()
         self.createToolbar()
-        # Setup widgets
+        # Setup main widgets
         self.textEdit = QTextEdit(self)
         font = self.textEdit.font()
         font.setFamily("Monospace")
         self.textEdit.setFont(font)
         self.textEdit.setFrameShape(QFrame.NoFrame)
         self.textEdit.setCursorWidth(2)
-        self.highlighter = SyntaxHighlighter(self.textEdit)
+        # Setup editor syntax highlighter.
+        self.highlighter = AlgorithmSyntaxHighlighter(self.textEdit)
         # Setup layout
-        # gridLayout = QGridLayout()
-        # gridLayout.addWidget(self.textEdit, 0, 0)
-        # centralWidget = QWidget(self)
-        # centralWidget.setLayout(gridLayout)
         self.setCentralWidget(self.textEdit)
         # Setup dock widgets
+        dock = QDockWidget(self.tr("Settings"), self)
+        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        self.settingsWidget = QWidget(self)
+        self.indexComboBox = QComboBox(self)
+        self.indexComboBox.setEditable(True)
+        layout = QVBoxLayout()
+        layout.addWidget(self.indexComboBox)
+        self.settingsWidget.setLayout(layout)
+        dock.setWidget(self.settingsWidget)
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        #
         dock = QDockWidget(self.tr("Library"), self)
         dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        self.libraryWidget = LibraryWidget(self.menu(), dock)
-        self.libraryWidget.insertItem.connect(self.insertItem)
+        self.libraryWidget = LibraryWidget(self.menu, dock)
+        self.libraryWidget.selected.connect(self.insertItem)
         dock.setWidget(self.libraryWidget)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        # Setup properties (as last step).
+        self.setIndex(0)
+        self.setName(self.tr("L1_Unnamed"))
+        self.setExpression("")
+        self.setComment("")
 
     def insertItem(self, text):
         self.textEdit.textCursor().insertText(text)
         self.textEdit.ensureCursorVisible()
 
     def createActions(self):
-        self.exitApplyAct = QAction(self.tr("&Apply"), self)
-        self.exitApplyAct.triggered.connect(self.onExitApply)
-        self.exitCancelAct = QAction(self.tr("&Cancel"), self)
-        self.exitCancelAct.triggered.connect(self.onExitCancel)
         self.formatCompactAct = QAction(self.tr("&Compact"), self)
+        self.formatCompactAct.setIcon(Toolbox.createIcon('actions', 'zoom-out'))
         self.formatCompactAct.triggered.connect(self.onFormatCompact)
         self.formatExpandAct = QAction(self.tr("&Expand"), self)
+        self.formatExpandAct.setIcon(Toolbox.createIcon('actions', 'zoom-in'))
         self.formatExpandAct.triggered.connect(self.onFormatExpand)
 
     def createMenus(self):
-        self.exitMenu = self.menuBar().addMenu(self.tr("&Action"))
-        self.exitMenu.addAction(self.exitApplyAct)
-        self.exitMenu.addAction(self.exitCancelAct)
         self.editMenu = self.menuBar().addMenu(self.tr("&Edit"))
         self.formatMenu = self.menuBar().addMenu(self.tr("&Format"))
         self.formatMenu.addAction(self.formatCompactAct)
@@ -91,94 +91,108 @@ class AlgorithmEditor(QMainWindow):
         self.toolbar = self.addToolBar("Toolbar")
         self.toolbar.setMovable(False)
         self.toolbar.setFloatable(False)
-        self.toolbar.addAction(self.exitApplyAct)
-        self.toolbar.addAction(self.exitCancelAct)
+        # self.toolbar.addSeparator()
+        self.toolbar.addAction(self.formatCompactAct)
+        self.toolbar.addAction(self.formatExpandAct)
 
-    def algorithm(self):
+    def index(self):
+        return int(self.indexComboBox.currentText())
+
+    def setIndex(self, index):
+        self.indexComboBox.setEditText(str(index))
+
+    def name(self):
+        return ""
+
+    def setName(self, name):
+        pass
+
+    def expression(self):
         """Returns a machine readable formatted version of the loaded algorithm."""
-        #self._algorithm['index'] = ''
-        #self._algorithm['name'] = ''
-        self._algorithm['expression'] = self.formatter.machinize(str(self.textEdit.toPlainText()))
-        return self._algorithm
+        return self.formatter.machinize(str(self.textEdit.toPlainText()))
 
-    def setAlgorithm(self, algorithm):
-        self._algorithm = algorithm
-        # set index... name...
-        self.textEdit.setPlainText(self.formatter.humanize(algorithm.expression))
+    def comment(self):
+        return ""
 
-    def menu(self):
-        return self._menu
+    def setComment(self, comment):
+        pass
 
-    def setMenu(self, menu):
-        self._menu = menu
-        self.libraryWidget.menu = menu
-
-    def onExitApply(self):
-        self.accepted.emit()
-        self.hide()
-
-    def onExitCancel(self):
-        self.hide()
+    def setExpression(self, expression):
+        self.textEdit.setPlainText(self.formatter.humanize(expression))
 
     def onFormatCompact(self):
-        self.textEdit.setPlainText(self.formatter.humanize(self.algorithm().expression))
+        self.textEdit.setPlainText(self.formatter.humanize(self.expression()))
 
     def onFormatExpand(self):
-        self.textEdit.setPlainText(self.formatter.expanded(self.algorithm().expression))
+        self.textEdit.setPlainText(self.formatter.expanded(self.expression()))
 
     def closeEvent(self, event):
         """On window close event."""
         #event.ignore()
         event.accept()
 
-    def reloadLibrary(self):
-        self.libraryWidget.reloadMenu()
+class AlgorithmEditorDialog(QDialog):
+    """Dialog wrapper for algorithm editor main window."""
 
-class SyntaxHighlighter(QSyntaxHighlighter):
-    """Syntax highighter class for algorithm equations."""
-    HighlightingRule = namedtuple('HighlightingRule', 'format, pattern')
-    def __init__(self, document):
-        """Attribute *document* requires a text document instance or a text
-        edit widget instance to apply syntax highlighting on.
-        """
-        super(SyntaxHighlighter, self).__init__(document)
-        self.highlightingRules = []
-        # Keywords: AND, OR, XOR, NOT
-        keywordFormat = QTextCharFormat()
-        keywordFormat.setForeground(Qt.darkBlue)
-        keywordFormat.setFontWeight(QFont.Bold)
-        keywordPatterns = QStringList()
-        keywordPatterns << "\\bAND\\b" << "\\bOR\\b" << "\\bXOR\\b" << "\\bNOT\\b"
-        for pattern in keywordPatterns:
-            self.highlightingRules.append(
-                self.HighlightingRule(keywordFormat, QRegExp(pattern)))
-        functionFormat = QTextCharFormat()
-        functionFormat.setForeground(Qt.blue)
-        functionFormat.setFontWeight(QFont.Bold)
-        rule = self.HighlightingRule(functionFormat, QRegExp("\\bcomb|delta|mass+(?=\\{)"))
-        self.highlightingRules.append(rule)
-    def highlightBlock(self, text):
-        for rule in self.highlightingRules:
-            expression = QRegExp(rule.pattern)
-            index = expression.indexIn(text)
-            while index >= 0:
-                length = expression.matchedLength()
-                self.setFormat(index, length, rule.format)
-                index = expression.indexIn(text, index + length)
+    def __init__(self, menu, parent = None):
+        super(AlgorithmEditorDialog, self).__init__(parent)
+        self.algorithmEditor = AlgorithmEditor(menu)
+        self.setWindowTitle(self.algorithmEditor.windowTitle())
+        self.resize(720, 480)
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.algorithmEditor)
+        bottomLayout = QVBoxLayout()
+        bottomLayout.addWidget(buttonBox)
+        bottomLayout.setContentsMargins(10, 0, 10, 10)
+        layout.addLayout(bottomLayout)
+        self.setLayout(layout)
+
+    def index(self):
+        return self.algorithmEditor.index()
+
+    def setIndex(self, index):
+        self.algorithmEditor.setIndex(index)
+
+    def name(self):
+        return self.algorithmEditor.name()
+
+    def setName(self, name):
+        self.algorithmEditor.setName(name)
+
+    def expression(self):
+        return self.algorithmEditor.expression()
+
+    def setExpression(self, expression):
+        self.algorithmEditor.setExpression(expression)
+
+    def comment(self):
+        return self.algorithmEditor.comment()
+
+    def setComment(self, comment):
+        self.algorithmEditor.setComment(comment)
 
 class LibraryWidget(QWidget):
-    insertItem = pyqtSignal(str)
+
+    selected = pyqtSignal(str)
+
     def __init__(self, menu, parent = None):
         super(LibraryWidget, self).__init__(parent)
         self.menu = menu
         self.tabWidget = QTabWidget(self)
         # Build list of objects.
         self.objectsList = QListWidget(self)
-        # Build list of cuts.
         self.tabWidget.addTab(self.objectsList, "&Objects")
+        # Build list of cuts.
         self.cutsList = QListWidget(self)
-        # Build list of function templates.
         self.tabWidget.addTab(self.cutsList, "&Cuts")
+        # Build list of externals.
+        self.externalsList = QListWidget(self)
+        self.tabWidget.addTab(self.externalsList, "&Exts")
+        # Build list of function templates.
         self.functionsList = QListWidget(self)
         self.functionsList.addItems([
             "comb{obj, obj}",
@@ -188,7 +202,16 @@ class LibraryWidget(QWidget):
             "dist{obj, obj}[cut, cut]",
             "mass{obj, obj}[cut]",
         ])
-        self.tabWidget.addTab(self.functionsList, "&Functions")
+        self.tabWidget.addTab(self.functionsList, "&Funcs")
+        # Build list of operators.
+        self.operatorsList = QListWidget(self)
+        self.operatorsList.addItems([
+            "AND",
+            "OR",
+            "NOT",
+        ])
+        self.tabWidget.addTab(self.operatorsList, "O&ps")
+        # Layout
         gridLayout = QGridLayout()
         gridLayout.setContentsMargins(1, 1, 1, 1)
         gridLayout.addWidget(self.tabWidget, 0, 0, 1, 2)
@@ -202,8 +225,12 @@ class LibraryWidget(QWidget):
         self.objectsList.itemDoubleClicked.connect(self.insertObject)
         self.cutsList.currentRowChanged.connect(self.setPreview)
         self.cutsList.itemDoubleClicked.connect(self.insertCut)
+        self.externalsList.currentRowChanged.connect(self.setPreview)
+        self.externalsList.itemDoubleClicked.connect(self.insertExternal)
         self.functionsList.itemDoubleClicked.connect(self.insertFunction)
+        self.operatorsList.itemDoubleClicked.connect(self.insertOperator)
         self.tabWidget.currentChanged.connect(self.setPreview)
+        self.reloadMenu()
 
     def setPreview(self):
         # TODO clean up, not effective
@@ -217,18 +244,19 @@ class LibraryWidget(QWidget):
             self.previewLabel.setText("")
 
     def insertObject(self):
-        # TODO clean up, not effective
-        row = self.objectsList.currentRow()
-        self.insertItem.emit(self.menu.objects[row]['name'])
+        self.selected.emit(self.objectsList.currentItem().text())
 
     def insertCut(self):
-        # TODO clean up, not effective
-        row = self.cutsList.currentRow()
-        self.insertItem.emit(self.menu.cuts[row]['name'])
+        self.selected.emit(self.cutsList.currentItem().text())
+
+    def insertExternal(self):
+        self.selected.emit(self.externalsList.currentItem().text())
 
     def insertFunction(self):
-        # TODO clean up, not effective
-        self.insertItem.emit(self.functionsList.currentItem().text())
+        self.selected.emit(self.functionsList.currentItem().text())
+
+    def insertOperator(self):
+        self.selected.emit(Toolbox.fSeparate(self.operatorsList.currentItem().text()))
 
     def reloadMenu(self):
         # TODO clean up
@@ -238,9 +266,3 @@ class LibraryWidget(QWidget):
         # Build list of cuts.
         self.cutsList.clear()
         self.cutsList.addItems(sorted([cut['name'] for cut in self.menu.cuts]))
-
-# if __name__ == '__main__':
-#     app = QApplication(sys.argv)
-#     window = AlgorithmEditor(sys.argv[1] if len(sys.argv) > 1 else "MU10 AND MU20[PHI_TOP] OR comb{MU10, MU20}")
-#     window.show()
-#     sys.exit(app.exec_())

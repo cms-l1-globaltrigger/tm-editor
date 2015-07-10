@@ -154,9 +154,16 @@ class MainWindow(QMainWindow):
         self.closeAct.setEnabled(enabled)
 
     def loadDocument(self, filename):
-        document = Document(os.path.basename(filename), self)
-        index = self.mdiArea.addDocument(document)
-        self.mdiArea.setCurrentIndex(index)
+        try:
+            document = Document(os.path.basename(filename), self)
+        except RuntimeError, e:
+            box = QMessageBox.critical(self,
+                "Failed to open XML menu",
+                str(e),
+            )
+        else:
+            index = self.mdiArea.addDocument(document)
+            self.mdiArea.setCurrentIndex(index)
 
     def onOpen(self):
         """Select a XML menu file using an dialog."""
@@ -167,14 +174,28 @@ class MainWindow(QMainWindow):
 
     def onSave(self):
         document = self.mdiArea.currentDocument()
-        document.saveMenu()
+        try:
+            document.saveMenu()
+        except RuntimeError, e:
+            box = QMessageBox.critical(self,
+                "Failed to write XML menu",
+                str(e),
+            )
 
     def onSaveAs(self):
         filename = str(QFileDialog.getSaveFileName(self, self.tr("Save as..."),
             os.getcwd(), "L1-Trigger Menus (*.xml)"))
         if filename:
             document = self.mdiArea.currentDocument()
-            document.saveMenu(filename)
+            try:
+                document.saveMenu(filename)
+                # TODO
+                self.mdiArea.setTabText(self.mdiArea.currentIndex(), os.path.basename(filename))
+            except RuntimeError, e:
+                box = QMessageBox.critical(self,
+                    "Failed to write XML menu",
+                    str(e),
+                )
 
     def onClose(self):
         index = self.mdiArea.currentIndex()

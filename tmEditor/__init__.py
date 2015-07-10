@@ -12,7 +12,9 @@ from TempFileEnvironment import TempFileEnvironment
 from Menu import Menu
 
 from AlgorithmFormatter import AlgorithmFormatter
+from AlgorithmSyntaxHighlighter import AlgorithmSyntaxHighlighter
 from AlgorithmEditor import AlgorithmEditor
+from AlgorithmEditor import AlgorithmEditorDialog
 
 from AboutDialog import AboutDialog
 from Document import Document

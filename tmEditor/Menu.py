@@ -42,41 +42,72 @@ class Menu(object):
         if filename:
             self.loadXml(filename)
 
-    def addObject(self, name, offset = 0):
+    def addObject(self, name, type, threshold, requirement_id = 0, comparison_operator = '.ge.', bx_offset = 0, comment = ""):
         """Provided for convenience."""
         self.objects.append(Object(
+            requirement_id = requirement_id,
             name = name,
-            bx_offset = offset,
+            type = type,
+            threshold = threshold,
+            comparison_operator = comparison_operator,
+            bx_offset = bx_offset,
+            comment = comment,
         ))
 
-    def addCut(self, name, minimum, maximum):
+    def addCut(self, name, object, type, minimum, maximum, cut_id = 0, data = "", comment = ""):
         """Provided for convenience."""
-        self.objects.append(Cut(
+        self.cuts.append(Cut(
+            cut_id = cut_id,
             name = name,
+            object = object,
+            type = type,
             minimum = minimum,
             maximum = maximum,
+            data = data,
+            comment = comment,
         ))
 
-    def addAlgorithm(self, name, expression):
+    def addExternal(self, name, requirement_id = 0, ext_signal_id = 0, bx_offset = 0, comment = ""):
         """Provided for convenience."""
-        self.objects.append(Algorithm(
+        self.externals.append(External(
+            requirement_id = requirement_id,
+            ext_signal_id = ext_signal_id,
+            name = name,
+            bx_offset = bx_offset,
+            comment = comment,
+        ))
+
+    def addAlgorithm(self, index, name, expression, algorithm_id = 0, module_id = 0, module_index = 0, comment = ""):
+        """Provided for convenience."""
+        self.algorithms.append(Algorithm(
+            algorithm_id = algorithm_id,
+            index = index,
             name = name,
             expression = expression,
+            module_id = module_id,
+            module_index = module_index,
+            comment = comment,
         ))
 
+    def algorithmByName(self, name):
+        """Returns algorithm item by its name or None if no such algorithm exists."""
+        return (filter(lambda item: item.name == name, self.algorithms) or [None])[0]
+
     def objectByName(self, name):
-        return (filter(lambda o: o.name == name, self.objects) or [None])[0]
+        """Returns object requirement item by its name or None if no such object requirement exists."""
+        return (filter(lambda item: item.name == name, self.objects) or [None])[0]
 
     def cutByName(self, name):
-        return (filter(lambda o: o.name == name, self.cuts) or [None])[0]
+        """Returns cut item by its name or None if no such cut exists."""
+        return (filter(lambda item: item.name == name, self.cuts) or [None])[0]
 
     def externalByName(self, name):
-        return (filter(lambda o: o.name == name, self.externals) or [None])[0]
+        """Returns external signal item by its name or None if no such external signal exists."""
+        return (filter(lambda item: item.name == name, self.externals) or [None])[0]
 
     def loadXml(self, filename):
         """Read XML menu from file. Provided for convenience."""
         filename = os.path.abspath(filename)
-        logging.debug("loading XML file `%s'", filename)
 
         # Create virtual filesystem environment.
         with TempFileEnvironment(filename) as env:
@@ -92,32 +123,43 @@ class Menu(object):
 
             # Handle errors only after removing the temporary files.
             if warnings:
-                raise RuntimeError("Failed to read XML menu {filename}\n{warnings}".format(**locals()))
+                messange = "Failed to read XML menu {filename}\n{warnings}".format(**locals())
+                logging.error(messange)
+                raise RuntimeError(messange)
 
             # Populate the containers.
             self.menu = dict(menu.menu.items())
-            self.algorithms = [Algorithm(algorithm) for algorithm in menu.algorithms]
+            for algorithm in menu.algorithms:
+                algorithm = Algorithm(algorithm.items())
+                logging.debug("adding algorithm `%s'", algorithm)
+                self.addAlgorithm(**algorithm)
             buffer = []
             for cuts in menu.cuts.values():
                 for cut in cuts:
                     cut = Cut(cut.items())
                     if not cut in buffer:
                         buffer.append(cut)
-            self.cuts = buffer
+            for cut in buffer:
+                logging.debug("adding cut `%s'", cut)
+                self.addCut(**cut)
             buffer = []
             for objs in menu.objects.values():
                 for obj in objs:
                     obj = Object(obj.items())
                     if not obj in buffer:
                         buffer.append(obj)
-            self.objects = buffer
+            for obj in buffer:
+                logging.debug("adding object requirements `%s'", obj)
+                self.addObject(**obj)
             buffer = []
             for externals in menu.externals.values():
                 for external in externals:
                     external = External(external.items())
                     if not external in buffer:
                         buffer.append(external)
-            self.externals = buffer
+            for ext in buffer:
+                logging.debug("adding externals signal `%s'", ext)
+                self.addExternal(**ext)
             self.scales = scale
             self.extSignals = ext_signal
 
@@ -189,7 +231,9 @@ class Menu(object):
 
             # Handle errors only after removing the temporary files.
             if warnings:
-                raise RuntimeError("Failed to write XML menu {filename}\n{warnings}".format(**locals()))
+                messange = "Failed to write XML menu {filename}\n{warnings}".format(**locals())
+                logging.error(messange)
+                raise RuntimeError(messange)
 
 # ------------------------------------------------------------------------------
 #  Abstract base container class.

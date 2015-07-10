@@ -38,6 +38,9 @@ def getRootDir():
 #  String formatting functions
 # ------------------------------------------------------------------------------
 
+def fSeparate(text, separator = ' '):
+    return ''.join([str(token) for token in (separator, text, separator)])
+
 def fAlgorithm(expr):
     return expr
     # """Experimental HTML syntax highlighting for algorithm expressions."""

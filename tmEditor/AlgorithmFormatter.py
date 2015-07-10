@@ -6,6 +6,14 @@
 # Last changed date : $Date: $
 #
 
+"""Algorithm formatter class.
+"""
+
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+__all__ = ['AlgorithmFormatter', ]
+
 class AlgorithmFormatter(object):
     """Formatter class used to format user input to the (currently very)
     restrictive algorithm equation syntax.

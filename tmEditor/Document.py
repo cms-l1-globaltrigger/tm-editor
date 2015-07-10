@@ -11,12 +11,13 @@
 """Document widget.
 """
 
-from tmEditor import AlgorithmEditor
+from tmEditor import Toolbox
+
+from tmEditor import AlgorithmEditorDialog
 from tmEditor import AlgorithmFormatter
-from tmEditor.AlgorithmEditor import SyntaxHighlighter
+from tmEditor import AlgorithmSyntaxHighlighter
 from tmEditor import Menu
 from tmEditor.Menu import Algorithm
-
 
 from tmEditor.Toolbox import (
     fAlgorithm,
@@ -59,45 +60,31 @@ class Document(QWidget):
         for scale in self.menu().scales.bins.keys():
             binsTableViews[scale] = self.createProxyTableView("{scale}TableView".format(**locals()), BinsModel(self.menu(), scale, self))
         extSignalsTableView = self.createProxyTableView("externalsTableView", ExtSignalsModel(self.menu(), self))
-        # Editor window (persistent instance)
-        self.editorWindow = AlgorithmEditor()
-        self.editorWindow.setMenu(self.menu())
-        self.editorWindow.setWindowModality(Qt.ApplicationModal)
-        self.editorWindow.setWindowFlags(self.editorWindow.windowFlags() | Qt.Dialog)
-        self.editorWindow.hide()
-        self.editorWindow.accepted.connect(self.onEditAlgorithm)
         # Table view
         self.dataViewStack = QStackedWidget(self)
         ### self.dataViewStack.addWidget(QTextEdit(self))
         # Preview
-        self.previewWidget = QTextEdit(self)
-        self.previewWidget.setReadOnly(True)
-        self.previewWidgetHighlighter = SyntaxHighlighter(self.previewWidget)
-        self.previewWidget.setObjectName("previewWidget")
-        self.previewWidget.setStyleSheet("""#previewWidget {
-            border: 0;
-            background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
-                stop:0 rgba(203, 222, 238, 255), stop:1 rgba(233, 233, 233, 255));
-        }""")
+        self.bottomWidget = BottomWidget(self)
+        self.bottomWidget.addTriggered.connect(self.addItem)
+        self.bottomWidget.editTriggered.connect(self.editItem)
         # Navigation tree
         self.navigationTreeWidget = QTreeWidget(self)
         self.navigationTreeWidget.headerItem().setHidden(True)
         self.navigationTreeWidget.setObjectName("navigationTreeWidget")
         self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee;}")
         # Add navigation items.
-        self.menuItem = NavigationItem(self.navigationTreeWidget, "Menu", menuTableView, QTextEdit(self))
-        self.menuItem.preview.setPlainText("so far...")
-        self.algorithmsItem = NavigationItem(self.menuItem, "Algorithms", algorithmsTableView, self.previewWidget)
-        self.cutsItem = NavigationItem(self.menuItem, "Cuts", cutsTableView, self.previewWidget)
-        self.objectsItem = NavigationItem(self.menuItem, "Objects", objectsTableView, self.previewWidget)
-        self.externalsItem = NavigationItem(self.menuItem, "Externals", externalsTableView, self.previewWidget)
-        self.scalesItem = NavigationItem(self.navigationTreeWidget, "Scales", QLabel("Select a scale set...", self), self.previewWidget)
+        self.menuItem = NavigationItem(self.navigationTreeWidget, "Menu", menuTableView, self.bottomWidget)
+        self.algorithmsItem = NavigationItem(self.menuItem, "Algorithms", algorithmsTableView, self.bottomWidget)
+        self.cutsItem = NavigationItem(self.menuItem, "Cuts", cutsTableView, self.bottomWidget)
+        self.objectsItem = NavigationItem(self.menuItem, "Objects", objectsTableView, self.bottomWidget)
+        self.externalsItem = NavigationItem(self.menuItem, "Externals", externalsTableView, self.bottomWidget)
+        self.scalesItem = NavigationItem(self.navigationTreeWidget, "Scales", QLabel("Select a scale set...", self), self.bottomWidget)
         self.scalesTypeItem = {}
         for scale in self.menu().scales.bins.keys():
-            self.scalesTypeItem[scale] = NavigationItem(self.scalesItem, scale, binsTableViews[scale], self.previewWidget)
-        self.extSignalsItem = NavigationItem(self.navigationTreeWidget, "External Signals", extSignalsTableView, self.previewWidget)
+            self.scalesTypeItem[scale] = NavigationItem(self.scalesItem, scale, binsTableViews[scale], self.bottomWidget)
+        self.extSignalsItem = NavigationItem(self.navigationTreeWidget, "External Signals", extSignalsTableView, self.bottomWidget)
         # Finsish navigation setup.
-        self.navigationTreeWidget.expandAll()
+        self.navigationTreeWidget.expandItem(self.menuItem)
         self.navigationTreeWidget.itemSelectionChanged.connect(self.updateViews)
         self.navigationTreeWidget.setCurrentItem(self.menuItem)
         # Splitters
@@ -108,7 +95,7 @@ class Document(QWidget):
         self.vsplitter.setOpaqueResize(False)
         self.hsplitter = SlimSplitter(Qt.Vertical, self)
         self.hsplitter.addWidget(self.dataViewStack)
-        self.hsplitter.addWidget(self.previewWidget)
+        self.hsplitter.addWidget(self.bottomWidget)
         self.vsplitter.addWidget(self.hsplitter)
         self.vsplitter.setStretchFactor(0, 0)
         self.vsplitter.setStretchFactor(1, 1)
@@ -163,9 +150,9 @@ class Document(QWidget):
     def saveMenu(self, filename = None):
         """Save menu to filename."""
         filename = filename or self.filename()
+        self._menu.saveXml(filename)
         self.setFilename(filename)
         self.setName(os.path.basename(filename))
-        self._menu.saveXml(filename)
         self.setModified(False)
         index, item = self.getSelection()
         item.view.update()
@@ -185,35 +172,55 @@ class Document(QWidget):
             if hasattr(item.view, 'sortByColumn'):
                 item.view.sortByColumn(0, Qt.AscendingOrder)
         self.dataViewStack.setCurrentWidget(item.view)
+        self.updatePreview()
 
     def updatePreview(self):
         index, item = self.getSelection()
-        # Specialized preview...
-        if item is self.algorithmsItem:
-             self.previewWidget.setPlainText(self.formatter.humanize(self.menu().algorithms[index.row()]['expression']))
-        else:
-            # Generic preview...
-            try:
-                data = item.view.model().sourceModel().values[index.row()]
-                self.previewWidget.setText('<br/>'.join(["<strong>{0}:</strong> {1}".format(key, value) for key, value in data.items()]))
-            except:
-                item.preview.setPlainText("")
+        # Generic preview...
+        try:
+            data = item.view.model().sourceModel().values[index.row()]
+            item.preview.setText('<br/>'.join(["<strong>{0}:</strong> {1}".format(key, value) for key, value in data.items()]))
+        except:
+            item.preview.setText("")
+        try:
+            if item is self.algorithmsItem:
+                item.preview.toolbar.show()
+            elif item is self.cutsItem:
+                item.preview.toolbar.show()
+            else:
+                item.preview.toolbar.hide()
+        except:
+            item.preview.setText("")
+            item.preview.toolbar.hide()
 
-    def editItem(self, index):
-        if not index.isValid():
-            return
-        _, item = self.getSelection()
-        model = item.view.model()
-        index = model.mapToSource(index)
-        if item is self.algorithmsItem:
-            self.editorWindow.setAlgorithm(self.menu().algorithms[index.row()])
-            self.editorWindow.reloadLibrary()
-            self.editorWindow.show()
 
-    def onEditAlgorithm(self):
-        print self.editorWindow.algorithm()
-        self.updateViews()
-        self.updatePreview()
+    def addItem(self):
+        index, item = self.getSelection()
+        if item is self.algorithmsItem:
+            dialog = AlgorithmEditorDialog(self.menu(), self)
+            dialog.setModal(True)
+            dialog.exec_()
+            if dialog.result() == QDialog.Accepted:
+                self.setModified(True)
+                algorithm = self.menu().addAlgorithm(dialog.index(), "L1_Unnamed", dialog.expression())
+                item.view.model().setSourceModel(item.view.model().sourceModel())
+                # REBUILD INDEX
+                self.updatePreview()
+
+    def editItem(self):
+        index, item = self.getSelection()
+        if item is self.algorithmsItem:
+            dialog = AlgorithmEditorDialog(self.menu(), self)
+            dialog.setModal(True)
+            dialog.setIndex(self.menu().algorithms[index.row()].index)
+            dialog.setExpression(self.menu().algorithms[index.row()].expression)
+            dialog.exec_()
+            if dialog.result() == QDialog.Accepted:
+                self.setModified(True)
+                self.menu().algorithms[index.row()]['expression'] = dialog.expression()
+                self.menu().algorithms[index.row()]['index'] = str(dialog.index())
+                # REBUILD INDEX
+                self.updatePreview()
 
 # ------------------------------------------------------------------------------
 #  Splitter and custom handle
@@ -319,6 +326,57 @@ class HTMLDelegate(QStyledItemDelegate):
         doc.setHtml(options.text)
         doc.setTextWidth(options.rect.width())
         return QSize(doc.idealWidth(), doc.size().height())
+
+# ------------------------------------------------------------------------------
+#
+# ------------------------------------------------------------------------------
+
+class BottomWidget(QWidget):
+
+    addTriggered = pyqtSignal()
+    editTriggered = pyqtSignal()
+
+    def __init__(self, parent = None):
+        super(BottomWidget, self).__init__(parent)
+        self.toolbar = QWidget(self)
+        self.toolbar.setAutoFillBackground(True)
+        layout = QHBoxLayout()
+        layout.setContentsMargins(5, 5, 5, 5)
+        addButton = QPushButton(Toolbox.createIcon('actions', 'list-add'), "Add...", self)
+        addButton.clicked.connect(self.onAdd)
+        layout.addWidget(addButton)
+        layout.addStretch(10)
+        editButton = QPushButton(Toolbox.createIcon('apps', 'text-editor'), "Edit...", self)
+        editButton.clicked.connect(self.onEdit)
+        layout.addWidget(editButton)
+        layout.addWidget(QPushButton(Toolbox.createIcon('actions', 'edit-copy'), "Copy...", self))
+        layout.addWidget(QPushButton(Toolbox.createIcon('actions', 'list-remove'), "Delete", self))
+        self.toolbar.setLayout(layout)
+        self.textEdit = QTextEdit(self)
+        self.textEdit.setReadOnly(True)
+        self.textEdit.setObjectName("BottomWidgetTextEdit")
+        self.textEdit.setStyleSheet("""#BottomWidgetTextEdit {
+            border: 0;
+            background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
+                stop:0 rgba(203, 222, 238, 255), stop:1 rgba(233, 233, 233, 255));
+        }""")
+        self.textEditHighlighter = AlgorithmSyntaxHighlighter(self.textEdit)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self.toolbar)
+        layout.addWidget(self.textEdit)
+        self.setLayout(layout)
+    def setText(self, message):
+        self.textEdit.setText(message)
+    def onAdd(self):
+        self.addTriggered.emit()
+    def onEdit(self):
+        self.editTriggered.emit()
+
+# ------------------------------------------------------------------------------
+#  Models
+# ------------------------------------------------------------------------------
 
 class BaseTableModel(QAbstractTableModel):
     """Abstract table model class to be inherited to display table data."""
