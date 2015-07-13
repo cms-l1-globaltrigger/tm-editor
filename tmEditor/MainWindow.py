@@ -54,6 +54,7 @@ class MainWindow(QMainWindow):
         # Create MDI area
         self.mdiArea = MdiArea(self)
         self.mdiArea.currentChanged.connect(self.updateStatusBar)
+        self.mdiArea.currentUpdated.connect(self.updateStatusBar)
         self.setCentralWidget(self.mdiArea)
         # Initialize
         self.updateStatusBar()
@@ -138,13 +139,6 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(self.statusCuts)
         self.statusBar().addPermanentWidget(self.statusObjects)
         self.statusBar().addPermanentWidget(self.statusExternals)
-
-    def createStatusBarLabel(self):
-        """Create labels for status bar."""
-        label = QLabel(self)
-        label.setFrameShadow(QFrame.Sunken)
-        label.setFrameShape(QFrame.Panel)
-        return label
 
     def updateStatusBar(self, index = None):
         """Update status bar labels."""

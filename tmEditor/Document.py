@@ -43,6 +43,8 @@ AlignRight = Qt.AlignRight | Qt.AlignVCenter
 class Document(QWidget):
     """Document container widget used by MDI area."""
 
+    modified = pyqtSignal()
+
     def __init__(self, filename, parent = None):
         super(Document, self).__init__(parent)
         # Attributes
@@ -166,6 +168,12 @@ class Document(QWidget):
         index = item.view.currentMappedIndex()
         return index, item
 
+    def getUnusedAlgorithmIndices(self):
+        free = range(512)
+        for algorithm in self.menu().algorithms:
+            free.remove(int(algorithm.index))
+        return free
+
     def updateViews(self):
         index, item = self.getSelection()
         if 0 > self.dataViewStack.indexOf(item.view):
@@ -200,13 +208,16 @@ class Document(QWidget):
         if item is self.algorithmsItem:
             dialog = AlgorithmEditorDialog(self.menu(), self)
             dialog.setModal(True)
+            dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
+            dialog.setName("L1_Unnamed")
             dialog.exec_()
             if dialog.result() == QDialog.Accepted:
                 self.setModified(True)
-                algorithm = self.menu().addAlgorithm(dialog.index(), "L1_Unnamed", dialog.expression())
+                algorithm = self.menu().addAlgorithm(dialog.index(), dialog.name(), dialog.expression())
                 item.view.model().setSourceModel(item.view.model().sourceModel())
                 # REBUILD INDEX
                 self.updatePreview()
+                self.modified.emit()
 
     def editItem(self):
         index, item = self.getSelection()
@@ -224,6 +235,26 @@ class Document(QWidget):
                 self.menu().algorithms[index.row()]['name'] = str(dialog.name())
                 # REBUILD INDEX
                 self.updatePreview()
+                self.modified.emit()
+
+    def copyItem(self):
+        index, item = self.getSelection()
+        if item is self.algorithmsItem:
+            algorithm = self.menu().algorithms[index.row()]
+            dialog = AlgorithmEditorDialog(self.menu(), self)
+            dialog.setModal(True)
+            dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
+            dialog.setName(algorithm.name + "_copy")
+            dialog.setExpression(algorithm.expression)
+            dialog.exec_()
+            if dialog.result() == QDialog.Accepted:
+                self.setModified(True)
+                self.menu().algorithms[index.row()]['expression'] = dialog.expression()
+                self.menu().algorithms[index.row()]['index'] = str(dialog.index())
+                self.menu().algorithms[index.row()]['name'] = str(dialog.name())
+                # REBUILD INDEX
+                self.updatePreview()
+                self.modified.emit()
 
     def removeItem(self):
         index, item = self.getSelection()
@@ -233,6 +264,8 @@ class Document(QWidget):
             item.view.model().setSourceModel(item.view.model().sourceModel())
             # REBUILD INDEX
             self.updatePreview()
+            self.modified.emit()
+            self.setModified(True)
         elif item is self.cutsItem:
             cut = self.menu().cuts[index.row()]
             for algorithm in self.menu().algorithms:
@@ -246,6 +279,8 @@ class Document(QWidget):
             item.view.model().setSourceModel(item.view.model().sourceModel())
             # REBUILD INDEX
             self.updatePreview()
+            self.modified.emit()
+            self.setModified(True)
 
 # ------------------------------------------------------------------------------
 #  Splitter and custom handle
