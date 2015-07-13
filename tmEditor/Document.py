@@ -13,6 +13,7 @@
 
 from tmEditor import Toolbox
 
+from tmEditor import CutEditorDialog
 from tmEditor import AlgorithmEditorDialog
 from tmEditor import AlgorithmFormatter
 from tmEditor import AlgorithmSyntaxHighlighter
@@ -218,6 +219,13 @@ class Document(QWidget):
                 # REBUILD INDEX
                 self.updatePreview()
                 self.modified.emit()
+        if item is self.cutsItem:
+            dialog = CutEditorDialog(self.menu(), self)
+            dialog.setModal(True)
+            dialog.setName("Unnamed")
+            dialog.exec_()
+            if dialog.result() == QDialog.Accepted:
+                pass
 
     def editItem(self):
         index, item = self.getSelection()
@@ -236,6 +244,13 @@ class Document(QWidget):
                 # REBUILD INDEX
                 self.updatePreview()
                 self.modified.emit()
+        if item is self.cutsItem:
+            dialog = CutEditorDialog(self.menu(), self)
+            dialog.setModal(True)
+            dialog.setName(self.menu().cuts[index.row()]['name'])
+            dialog.exec_()
+            if dialog.result() == QDialog.Accepted:
+                pass
 
     def copyItem(self):
         index, item = self.getSelection()
@@ -255,6 +270,13 @@ class Document(QWidget):
                 # REBUILD INDEX
                 self.updatePreview()
                 self.modified.emit()
+        if item is self.cutsItem:
+            dialog = CutEditorDialog(self.menu(), self)
+            dialog.setModal(True)
+            dialog.setName(self.menu().cuts[index.row()]['name'])
+            dialog.exec_()
+            if dialog.result() == QDialog.Accepted:
+                pass
 
     def removeItem(self):
         index, item = self.getSelection()

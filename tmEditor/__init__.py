@@ -16,6 +16,8 @@ from AlgorithmSyntaxHighlighter import AlgorithmSyntaxHighlighter
 from AlgorithmEditor import AlgorithmEditor
 from AlgorithmEditor import AlgorithmEditorDialog
 
+from CutEditor import CutEditorDialog
+
 from AboutDialog import AboutDialog
 from Document import Document
 from MdiArea import MdiArea
