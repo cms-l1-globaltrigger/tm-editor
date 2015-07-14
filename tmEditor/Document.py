@@ -70,6 +70,7 @@ class Document(QWidget):
         self.bottomWidget = BottomWidget(self)
         self.bottomWidget.addTriggered.connect(self.addItem)
         self.bottomWidget.editTriggered.connect(self.editItem)
+        self.bottomWidget.copyTriggered.connect(self.copyItem)
         self.bottomWidget.removeTriggered.connect(self.removeItem)
         # Navigation tree
         self.navigationTreeWidget = QTreeWidget(self)
@@ -190,8 +191,10 @@ class Document(QWidget):
         try:
             data = item.view.model().sourceModel().values[index.row()]
             item.preview.setText('<br/>'.join(["<strong>{0}:</strong> {1}".format(key, value) for key, value in data.items()]))
+            item.preview.setButtonsEnabled(True)
         except:
             item.preview.setText("")
+            item.preview.setButtonsEnabled(False)
         try:
             if item is self.algorithmsItem:
                 item.preview.toolbar.show()
@@ -255,7 +258,7 @@ class Document(QWidget):
     def copyItem(self):
         index, item = self.getSelection()
         if item is self.algorithmsItem:
-            algorithm = self.menu().algorithms[index.row()]
+            algorithm = Algorithm(**self.menu().algorithms[index.row()])
             dialog = AlgorithmEditorDialog(self.menu(), self)
             dialog.setModal(True)
             dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
@@ -264,9 +267,11 @@ class Document(QWidget):
             dialog.exec_()
             if dialog.result() == QDialog.Accepted:
                 self.setModified(True)
-                self.menu().algorithms[index.row()]['expression'] = dialog.expression()
-                self.menu().algorithms[index.row()]['index'] = str(dialog.index())
-                self.menu().algorithms[index.row()]['name'] = str(dialog.name())
+                algorithm['expression'] = dialog.expression()
+                algorithm['index'] = str(dialog.index())
+                algorithm['name'] = str(dialog.name())
+                self.menu().algorithms.append(algorithm)
+                item.view.model().setSourceModel(item.view.model().sourceModel())
                 # REBUILD INDEX
                 self.updatePreview()
                 self.modified.emit()
@@ -417,6 +422,7 @@ class BottomWidget(QWidget):
 
     addTriggered = pyqtSignal()
     editTriggered = pyqtSignal()
+    copyTriggered = pyqtSignal()
     removeTriggered = pyqtSignal()
 
     def __init__(self, parent = None):
@@ -425,17 +431,19 @@ class BottomWidget(QWidget):
         self.toolbar.setAutoFillBackground(True)
         layout = QHBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
-        addButton = QPushButton(Toolbox.createIcon('actions', 'list-add'), "Add...", self)
-        addButton.clicked.connect(self.onAdd)
-        layout.addWidget(addButton)
+        self.addButton = QPushButton(Toolbox.createIcon('actions', 'list-add'), "Add...", self)
+        self.addButton.clicked.connect(self.onAdd)
+        layout.addWidget(self.addButton)
         layout.addStretch(10)
-        editButton = QPushButton(Toolbox.createIcon('apps', 'text-editor'), "Edit...", self)
-        editButton.clicked.connect(self.onEdit)
-        layout.addWidget(editButton)
-        layout.addWidget(QPushButton(Toolbox.createIcon('actions', 'edit-copy'), "Copy...", self))
-        removeBotton = QPushButton(Toolbox.createIcon('actions', 'list-remove'), "Delete", self)
-        removeBotton.clicked.connect(self.onRemove)
-        layout.addWidget(removeBotton)
+        self.editButton = QPushButton(Toolbox.createIcon('apps', 'text-editor'), "Edit...", self)
+        self.editButton.clicked.connect(self.onEdit)
+        layout.addWidget(self.editButton)
+        self.copyButton = QPushButton(Toolbox.createIcon('actions', 'edit-copy'), "Copy...", self)
+        self.copyButton.clicked.connect(self.onCopy)
+        layout.addWidget(self.copyButton)
+        self.removeBotton = QPushButton(Toolbox.createIcon('actions', 'list-remove'), "Delete", self)
+        self.removeBotton.clicked.connect(self.onRemove)
+        layout.addWidget(self.removeBotton)
         self.toolbar.setLayout(layout)
         self.textEdit = QTextEdit(self)
         self.textEdit.setReadOnly(True)
@@ -452,12 +460,19 @@ class BottomWidget(QWidget):
         layout.addWidget(self.toolbar)
         layout.addWidget(self.textEdit)
         self.setLayout(layout)
+    def setButtonsEnabled(self, enabled):
+        self.addButton.setEnabled(enabled)
+        self.editButton.setEnabled(enabled)
+        self.copyButton.setEnabled(enabled)
+        self.removeBotton.setEnabled(enabled)
     def setText(self, message):
         self.textEdit.setText(message)
     def onAdd(self):
         self.addTriggered.emit()
     def onEdit(self):
         self.editTriggered.emit()
+    def onCopy(self):
+        self.copyTriggered.emit()
     def onRemove(self):
         self.removeTriggered.emit()
 

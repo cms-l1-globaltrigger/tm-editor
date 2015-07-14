@@ -38,8 +38,7 @@ class AlgorithmEditor(QMainWindow):
         self.indexComboBox = QComboBox(self)
         self.indexComboBox.setEditable(True)
         self.indexComboBox.setMinimumWidth(50)
-        self.nameComboBox = QComboBox(self)
-        self.nameComboBox.setEditable(True)
+        self.nameComboBox = QLineEdit(self)
         self.nameComboBox.setMinimumWidth(300)
         # Create actions and toolbars.
         self.createActions()
@@ -116,10 +115,10 @@ class AlgorithmEditor(QMainWindow):
         self.indexComboBox.setEditText(str(index))
 
     def name(self):
-        return self.nameComboBox.currentText()
+        return self.nameComboBox.text()
 
     def setName(self, name):
-        self.nameComboBox.setEditText(name)
+        self.nameComboBox.setText(name)
 
     def expression(self):
         """Returns a machine readable formatted version of the loaded algorithm."""
@@ -285,7 +284,7 @@ class LibraryWidget(QWidget):
             if row < 0:
                 self.previewLabel.setText("")
                 return
-            items = dict(**self.menu.objects[row])
+            items = dict(**self.menu.objectByName(self.objectsList.currentItem().text()))
             items['threshold'] = Toolbox.fThreshold(items['threshold'])
             items['bx_offset'] = Toolbox.fBxOffset(items['bx_offset'])
             self.previewLabel.setText("""
@@ -300,7 +299,7 @@ class LibraryWidget(QWidget):
             if row < 0:
                 self.previewLabel.setText("")
                 return
-            items = dict(**self.menu.cuts[row])
+            items = dict(**self.menu.cutByName(self.cutsList.currentItem().text()))
             items['minimum'] = Toolbox.fCut(items['minimum'])
             items['maximum'] = Toolbox.fCut(items['maximum'])
             items['data'] = items['data'] or '-'
@@ -320,6 +319,9 @@ class LibraryWidget(QWidget):
             self.previewLabel.setText('<br/>'.join(["<strong>{0}</strong>: {1}".format(key, value) for key, value in self.menu.externals[row].items()]))
         elif index == 3: # Functions
             row = self.functionsList.currentRow()
+            if row < 0:
+                self.previewLabel.setText("")
+                return
             self.previewLabel.setText([
                 "Double combination function, returns true if both object requirements are fulfilled.",
                 "Triple combination function, returns true if all three object requirements are fulfilled.",
@@ -330,6 +332,9 @@ class LibraryWidget(QWidget):
             ][row])
         elif index == 4: # Operators
             row = self.operatorsList.currentRow()
+            if row < 0:
+                self.previewLabel.setText("")
+                return
             self.previewLabel.setText([
                 "Logical AND operator.",
                 "Logical OR operator.",
