@@ -38,7 +38,7 @@ class AlgorithmFormatter(object):
         algorithm = ' '.join(algorithm.split())
         # TODO: now that's way not the best approach at all, use regular expressions instead...
         algorithm = algorithm.replace(" , ", ",")
-        algorithm = algorithm.replace(" ( ", "(")
+        algorithm = algorithm.replace("( ", "(")
         algorithm = algorithm.replace(" )", ")")
         algorithm = algorithm.replace(" [ ", "[")
         algorithm = algorithm.replace(" ]", "]")
@@ -55,14 +55,47 @@ class AlgorithmFormatter(object):
     def expanded(self, algorithm):
         algorithm = self.machinize(algorithm)
         # TODO: now that's way not the best approach at all, use regular expressions instead...
-        # algorithm = algorithm.replace("{", "{\n  ")
-        # algorithm = algorithm.replace("}", "\n}")
-        # algorithm = algorithm.replace("[", "[\n  ")
-        # algorithm = algorithm.replace("]", "\n]")
-        # algorithm = algorithm.replace("(", "(\n  ")
-        # algorithm = algorithm.replace(")", "\n)")
-        # algorithm = algorithm.replace(",", ",\n  ")
-        algorithm = algorithm.replace(" AND ", "\n AND \n")
-        algorithm = algorithm.replace(" OR ", "\n OR \n")
-        algorithm = algorithm.replace(" XOR ", "\n XOR \n")
-        return algorithm
+        algorithm = algorithm.replace(",", ", ")
+        temp = []
+        i = 0
+        level = 0
+        while i < len(algorithm):
+            if algorithm[i].startswith('('):
+                level += 1
+                temp.append(algorithm[i])
+                temp.append("\n")
+                temp.append("  " * level)
+                i += 1
+            elif algorithm[i:i+2].startswith('OR'):
+                temp.append("\n")
+                temp.append("  " * level)
+                temp.append(algorithm[i:i+2])
+                temp.append("\n")
+                temp.append("  " * level)
+                i += 3
+            elif algorithm[i:i+3].startswith('AND'):
+                temp.append("\n")
+                temp.append("  " * level)
+                temp.append(algorithm[i:i+3])
+                temp.append("\n")
+                temp.append("  " * level)
+                i += 4
+            elif algorithm[i:i+3].startswith('XOR'):
+                temp.append("\n")
+                temp.append("  " * level)
+                temp.append(algorithm[i:i+3])
+                temp.append("\n")
+                temp.append("  " * (level - 1))
+                i += 4
+            elif algorithm[i].startswith(')'):
+                if level: level -= 1
+                temp.append("\n")
+                temp.append("  " * level)
+                temp.append(algorithm[i])
+                i += 1
+            else:
+                temp.append(algorithm[i])
+                i += 1
+
+        # algorithm = temp
+        return ''.join(temp)

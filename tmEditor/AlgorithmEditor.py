@@ -63,7 +63,24 @@ class AlgorithmEditor(QMainWindow):
         self.setComment("")
 
     def insertItem(self, text):
-        self.textEdit.textCursor().insertText(text)
+        """Inserts text. Automatically adds spaces to separate tokens in a
+        convenient and helpful maner.
+        """
+        cursor = self.textEdit.textCursor()
+        ref = str(self.textEdit.toPlainText()) # to python string
+        # Get text cursor position/selection slice.
+        start, end = sorted((cursor.position(), cursor.anchor()))
+        # If selection does not start at begin of document
+        if start > 0:
+            # Check previous character and add required whitespace
+            if not ref[start - 1] in " [\t\r\n":
+                text = " " + text
+        # If selection does not end at end of document
+        if end < (len(ref) - 1):
+            # Check following character and add required whitespace
+            if not ref[end] in " ,][\t\r\n":
+                text = text + " "
+        cursor.insertText(text)
         self.textEdit.ensureCursorVisible()
 
     def createActions(self):
@@ -208,6 +225,41 @@ class LibraryWidget(QWidget):
 
     selected = pyqtSignal(str)
 
+    Functions = (
+        ("comb{obj, obj}", "Double combination function, returns true if both object requirements are fulfilled.",),
+        ("comb{obj, obj, obj}", "Triple combination function, returns true if all three object requirements are fulfilled.",),
+        ("comb{obj, obj, obj, obj}", "Quad combination function, returns true if all four object requirements are fulfilled.",),
+        ("dist{obj, obj}[cut]", "Correlation function, retruns true if correlation of both object requirements is within the given cut.",),
+        ("dist{obj, obj}[cut, cut]", "Correlation function, retruns true if correlation of both object requirements is within the given cuts.",),
+        ("mass{obj, obj}[cut]", "Invariant mass function, returns true if the invariant mass of two object requirements is between the given cut.",),
+    )
+    Operators = (
+        ("AND", "Logical AND operator.",),
+        ("OR", "Logical OR operator.",),
+        ("XOR", "Logical XOR operator.",),
+        ("NOT", "Logical NOT operator.",),
+    )
+    ObjectPreview = "<br/>".join((
+        "<strong>Name:</strong> {name}",
+        "<strong>Type:</strong> {type}",
+        "<strong>Comp. operator:</strong> {comparison_operator}",
+        "<strong>Threshold:</strong> {threshold}",
+        "<strong>BX offset:</strong> {bx_offset}",
+    ))
+    CutPreview = "<br/>".join((
+        "<strong>Name:</strong> {name}",
+        "<strong>Object:</strong> {object}",
+        "<strong>Type:</strong> {type}",
+        "<strong>Minimum:</strong> {minimum}",
+        "<strong>Maximum:</strong> {maximum}",
+        "<strong>Data:</strong> {data}",
+    ))
+    ExternalPreview = "<br/>".format((
+        "<strong>Name:</strong> {name}",
+        "<strong>BX offset:</strong> {bx_offset}",
+        "<strong>Comment:</strong> {bx_offset}",
+    ))
+
     def __init__(self, menu, parent = None):
         super(LibraryWidget, self).__init__(parent)
         self.menu = menu
@@ -223,22 +275,11 @@ class LibraryWidget(QWidget):
         self.tabWidget.addTab(self.externalsList, "&Exts")
         # Build list of function templates.
         self.functionsList = QListWidget(self)
-        self.functionsList.addItems([
-            "comb{obj, obj}",
-            "comb{obj, obj, obj}",
-            "comb{obj, obj, obj, obj}",
-            "dist{obj, obj}[cut]",
-            "dist{obj, obj}[cut, cut]",
-            "mass{obj, obj}[cut]",
-        ])
+        self.functionsList.addItems([name for name, _ in self.Functions])
         self.tabWidget.addTab(self.functionsList, "&Funcs")
         # Build list of operators.
         self.operatorsList = QListWidget(self)
-        self.operatorsList.addItems([
-            "AND",
-            "OR",
-            "NOT",
-        ])
+        self.operatorsList.addItems([name for name, _ in self.Operators])
         self.tabWidget.addTab(self.operatorsList, "O&ps")
         # Create list contents.
         self.initContents()
@@ -246,12 +287,18 @@ class LibraryWidget(QWidget):
         gridLayout = QGridLayout()
         gridLayout.setContentsMargins(1, 1, 1, 1)
         gridLayout.addWidget(self.tabWidget, 0, 0, 1, 2)
+        self.insertButton = QPushButton(self.tr("<< &Insert"), self)
+        self.insertButton.clicked.connect(self.insert)
+        gridLayout.addWidget(self.insertButton, 1, 0)
+        self.wizardCheckBox = QCheckBox(self.tr("Use &wizard"), self)
+        gridLayout.addWidget(self.wizardCheckBox, 1, 1)
         self.previewLabel = QTextEdit(self)
         self.previewLabel.setReadOnly(True)
-        gridLayout.addWidget(self.previewLabel, 1, 0, 1, 2)
+        gridLayout.addWidget(self.previewLabel, 2, 0, 1, 2)
         # gridLayout.addWidget(QPushButton("<< &Insert"), 2, 0, 1, 1)
         # gridLayout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum), 2, 1, 1, 1)
         self.setLayout(gridLayout)
+        self.showPreview()
         # Setup connections.
         self.objectsList.currentRowChanged.connect(self.showPreview)
         self.objectsList.itemDoubleClicked.connect(self.insertObject)
@@ -268,80 +315,65 @@ class LibraryWidget(QWidget):
     def initContents(self):
         # Build list of objects.
         self.objectsList.clear()
-        self.objectsList.addItems(sorted([obj['name'] for obj in self.menu.objects]))
+        self.objectsList.addItems(sorted([obj.name for obj in self.menu.objects]))
         # Build list of cuts.
         self.cutsList.clear()
-        self.cutsList.addItems(sorted([cut['name'] for cut in self.menu.cuts]))
+        self.cutsList.addItems(sorted([cut.name for cut in self.menu.cuts]))
         # Build list of externals.
         self.externalsList.clear()
-        self.externalsList.addItems(sorted([external['name'] for external in self.menu.externals]))
+        self.externalsList.addItems(sorted([external.name for external in self.menu.externals]))
 
     def showPreview(self):
         """Updates preview widget with current selected library item."""
-        index = self.tabWidget.currentIndex()
-        if index == 0: # Objects
-            row = self.objectsList.currentRow()
-            if row < 0:
-                self.previewLabel.setText("")
-                return
-            items = dict(**self.menu.objectByName(self.objectsList.currentItem().text()))
-            items['threshold'] = Toolbox.fThreshold(items['threshold'])
-            items['bx_offset'] = Toolbox.fBxOffset(items['bx_offset'])
-            self.previewLabel.setText("""
-                <strong>Name:</strong> {name}<br/>
-                <strong>Type:</strong> {type}<br/>
-                <strong>Comp. operator:</strong> {comparison_operator}<br/>
-                <strong>Threshold:</strong> {threshold}<br/>
-                <strong>BX offset:</strong> {bx_offset}
-            """.format(**items))
-        elif index == 1: # Cuts
-            row = self.cutsList.currentRow()
-            if row < 0:
-                self.previewLabel.setText("")
-                return
-            items = dict(**self.menu.cutByName(self.cutsList.currentItem().text()))
-            items['minimum'] = Toolbox.fCut(items['minimum'])
-            items['maximum'] = Toolbox.fCut(items['maximum'])
-            items['data'] = items['data'] or '-'
-            self.previewLabel.setText("""
-                <strong>Name:</strong> {name}<br/>
-                <strong>Object:</strong> {object}<br/>
-                <strong>Type:</strong> {type}<br/>
-                <strong>Minimum:</strong> {minimum}<br/>
-                <strong>Maximum:</strong> {maximum}<br/>
-                <strong>Data:</strong> {data}
-            """.format(**items))
-        elif index == 2: # Externals
-            row = self.externalsList.currentRow()
-            if row < 0:
-                self.previewLabel.setText("")
-                return
-            self.previewLabel.setText('<br/>'.join(["<strong>{0}</strong>: {1}".format(key, value) for key, value in self.menu.externals[row].items()]))
-        elif index == 3: # Functions
+        self.previewLabel.setText("")
+        self.insertButton.setEnabled(False)
+        self.wizardCheckBox.setEnabled(False)
+        tab = self.tabWidget.currentWidget()
+        # Objects
+        if tab == self.objectsList:
+            if not self.objectsList.currentItem(): return # empty list
+            item = self.menu.objectByName(self.objectsList.currentItem().text())
+            self.wizardCheckBox.setEnabled(True)
+            if not item: return
+            item = dict(**item) # Copy
+            item['threshold'] = Toolbox.fThreshold(item['threshold'])
+            item['bx_offset'] = Toolbox.fBxOffset(item['bx_offset'])
+            self.previewLabel.setText(self.ObjectPreview.format(**item))
+            self.insertButton.setEnabled(True)
+        # Cuts
+        elif tab == self.cutsList:
+            if not self.cutsList.currentItem(): return # empty list
+            item = self.menu.cutByName(self.cutsList.currentItem().text())
+            if not item: return
+            item = dict(**item) # Copy
+            item['minimum'] = Toolbox.fCut(item['minimum'])
+            item['maximum'] = Toolbox.fCut(item['maximum'])
+            item['data'] = item['data'] or '-'
+            self.previewLabel.setText(self.CutPreview.format(**item))
+            self.insertButton.setEnabled(True)
+        # Externals
+        elif tab == self.externalsList:
+            if not self.externalsList.currentItem(): return # empty list
+            item = self.menu.externalByName(self.externalsList.currentItem().text())
+            if not item: return
+            self.previewLabel.setText(self.ExternalPreview.format(**item))
+            self.insertButton.setEnabled(True)
+        # Functions
+        elif tab == self.functionsList:
             row = self.functionsList.currentRow()
-            if row < 0:
-                self.previewLabel.setText("")
-                return
-            self.previewLabel.setText([
-                "Double combination function, returns true if both object requirements are fulfilled.",
-                "Triple combination function, returns true if all three object requirements are fulfilled.",
-                "Quad combination function, returns true if all four object requirements are fulfilled.",
-                "Correlation function, retruns true if correlation of both object requirements is within the given cut.",
-                "Correlation function, retruns true if correlation of both object requirements is within the given cuts.",
-                "Invariant mass function, returns true if the invariant mass of two object requirements is between the given cut.",
-            ][row])
-        elif index == 4: # Operators
+            self.wizardCheckBox.setEnabled(True)
+            if row < 0: return
+            self.previewLabel.setText(self.Functions[row][1])
+            self.insertButton.setEnabled(True)
+        # Operators
+        elif tab == self.operatorsList:
             row = self.operatorsList.currentRow()
-            if row < 0:
-                self.previewLabel.setText("")
-                return
-            self.previewLabel.setText([
-                "Logical AND operator.",
-                "Logical OR operator.",
-                "Logical NOT operator.",
-            ][row])
-        else:
-            self.previewLabel.setText("")
+            if row < 0: return
+            self.previewLabel.setText(self.Operators[row][1])
+            self.insertButton.setEnabled(True)
+
+    def insert(self):
+        self.selected.emit(self.tabWidget.currentWidget().currentItem().text())
 
     def insertObject(self):
         self.selected.emit(self.objectsList.currentItem().text())
@@ -356,4 +388,4 @@ class LibraryWidget(QWidget):
         self.selected.emit(self.functionsList.currentItem().text())
 
     def insertOperator(self):
-        self.selected.emit(Toolbox.fSeparate(self.operatorsList.currentItem().text()))
+        self.selected.emit(self.operatorsList.currentItem().text())
