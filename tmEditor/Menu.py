@@ -28,6 +28,14 @@ __all__ = ['Menu', ]
 
 FORMAT_FLOAT = '+23.16E'
 
+OBJECT_CODES = {
+    tmGrammar.Muon: tmGrammar.MU,
+    tmGrammar.Egamma: tmGrammar.EG,
+    tmGrammar.Jet: tmGrammar.JET,
+    tmGrammar.Tau: tmGrammar.TAU,
+    tmGrammar.External: tmGrammar.EXT,
+}
+
 class Menu(object):
     """L1-Trigger Menu container class."""
 
@@ -242,9 +250,11 @@ class Menu(object):
 class AbstractDict(dict):
 
     def isValid(self):
+        """To be implemented in derived class."""
         raise NotImplementedError()
 
     def toRow(self):
+        """Returns a table row object."""
         row = tmTable.Row()
         for key, value in self.items():
             row[key] = str(value)
@@ -255,87 +265,106 @@ class AbstractDict(dict):
 # ------------------------------------------------------------------------------
 
 class Algorithm(AbstractDict):
+
     @property
     def index(self):
         return self['index']
+
     @property
     def name(self):
         return self['name']
+
     @property
     def expression(self):
         return self['expression']
 
-    def tokens(self):
-        """Returns list of tokens of algorithm expression."""
-        tmGrammar.Algorithm_Logic.clear()
-        if not tmGrammar.Algorithm_parser(self.expression):
-            raise NotImplementedError
-        return tmGrammar.Algorithm_Logic.getTokens()
+    @property
+    def module_index(self):
+        return self['module_index']
 
-    def objects(self):
-        # TODO ...come on, that's crazy insane!! >_<'''
-        objects = set()
-        for token in self.tokens():
-            for name in tmGrammar.objectName:
-                if token.startswith(name):
-                    o = tmGrammar.Object_Item()
-                    if not tmGrammar.Object_parser(token, o):
-                        raise NotImplementedError
-                    # Re-Constructing the items name.
-                    comparison = o.comparison if o.comparison != ".ge." else ''
-                    threshold = o.threshold
-                    bx_offset = o.bx_offset if int(o.bx_offset) else ''
-                    objects.add("{name}{comparison}{threshold}{bx_offset}".format(**locals()))
-            for name in tmGrammar.functionName:
-                if token.startswith(name):
-                    o = tmGrammar.Function_Item()
-                    if not tmGrammar.Function_parser(token, o):
-                        raise NotImplementedError
-                    for object in tmGrammar.Function_getObjects(o):
-                        objects.add(object)
-        return list(objects)
-
-    def cuts(self):
-        # TODO ...come on, that's crazy insane!! >_<'''
-        cuts = set()
-        for token in self.tokens():
-            for name in tmGrammar.objectName:
-                if token.startswith(name):
-                    o = tmGrammar.Object_Item()
-                    if not tmGrammar.Object_parser(token, o):
-                        raise NotImplementedError
-                    # Re-Constructing the items name.
-                    for cut in o.cuts:
-                        if cut:
-                            cuts.add(cut)
-            for name in tmGrammar.functionName:
-                if token.startswith(name):
-                    o = tmGrammar.Function_Item()
-                    if not tmGrammar.Function_parser(token, o):
-                        raise NotImplementedError
-                    for cut in tmGrammar.Function_getObjectCuts(o):
-                        if cut:
-                            cuts.add(cut)
-        return list(cuts)
-
-    def externals(self):
-        # TODO ...come on, that's crazy insane!! >_<'''
-        externals = set()
-        for token in self.tokens():
-            pass
-        return list(externals)
+    @property
+    def module_id(self):
+        return self['module_id']
 
     def isValid(self):
         return tmTable.isAlgorithm(self.toRow())
+
+    def tokens(self):
+        """Returns list of tokens of algorithm expression. Paranthesis is not included."""
+        tmGrammar.Algorithm_Logic.clear()
+        if not tmGrammar.Algorithm_parser(self.expression):
+            raise ValueError()
+        return list(tmGrammar.Algorithm_Logic.getTokens())
+
+    def objects(self):
+        """Returns list of object names used in the algorithm's expression."""
+        objects = set()
+        for token in self.tokens():
+            if isObject(token):
+                object = toObject(token) # Cast to object required to fetch complete name.
+                if not object.name in objects:
+                    objects.add(object.name)
+            if isFunction(token):
+                for object in functionObjects(token): # Cast to objects required to fetch complete name.
+                    if not object.name in objects:
+                        objects.add(object.name)
+        return list(objects)
+
+    def cuts(self):
+        """Returns list of cut names used in the algorithm's expression."""
+        cuts = set()
+        for token in self.tokens():
+            if isObject(token):
+                for cut in objectCuts(token):
+                    if not cut in cuts:
+                        cuts.add(cut)
+            if isFunction(token):
+                for cut in functionCuts(token):
+                    if not cut in cuts:
+                        cuts.add(cut)
+                for cut in functionObjectsCuts(token):
+                    if not cut in cuts:
+                        cuts.add(cut)
+        return list(cuts)
+
+    def externals(self):
+        externals = set()
+        for token in self.tokens():
+            if isOperator(token):
+                continue
+            if isObject(token):
+                continue
+            if isFunction(token):
+                continue
+            # Must be an external I would guess...
+            externals.add(token)
+        return list(externals)
 
 # ------------------------------------------------------------------------------
 #  Cut's container class.
 # ------------------------------------------------------------------------------
 
 class Cut(AbstractDict):
+
     @property
     def name(self):
         return self['name']
+
+    @name.setter
+    def name(self, name):
+        self['name'] = str(name)
+
+    @property
+    def minimum(self):
+        return self['minimum']
+
+    @property
+    def maximum(self):
+        return self['maximum']
+
+    @property
+    def data(self):
+        return self['data']
 
     def isValid(self):
         return tmTable.isCut(self.toRow())
@@ -351,6 +380,7 @@ class Cut(AbstractDict):
 # ------------------------------------------------------------------------------
 
 class Object(AbstractDict):
+
     @property
     def name(self):
         return self['name']
@@ -364,7 +394,7 @@ class Object(AbstractDict):
 
     def toRow(self):
         row = super(Object, self).toRow()
-        row['threshold'] = format(float(row['threshold']), FORMAT_FLOAT)
+        row['threshold'] = format(float(row['threshold'].replace('p', '.')), FORMAT_FLOAT)
         return row
 
 # ------------------------------------------------------------------------------
@@ -378,3 +408,78 @@ class External(AbstractDict):
 
     def isValid(self):
         return tmTable.isExternalRequirement(self.toRow())
+
+def isOperator(token):
+    """Retruns True if token is an logical operator."""
+    return token in tmGrammar.gateName
+
+def isObject(token):
+    """Retruns True if token is an object."""
+    return filter(lambda item: token.startswith(item), tmGrammar.objectName) != []
+
+def isCut(token):
+    """Retruns True if token is a cut."""
+    return filter(lambda item: token.startswith(item), tmGrammar.cutName) != []
+
+def isFunction(token):
+    """Retruns True if token is a function."""
+    return filter(lambda item: token.startswith(item), tmGrammar.functionName) != []
+
+def toObject(token):
+    """Returns an object dict."""
+    o = tmGrammar.Object_Item()
+    if not tmGrammar.Object_parser(token, o):
+        raise ValueError(token)
+    return Object(
+        name = o.getObjectName(),
+        threshold = o.threshold,
+        type = OBJECT_CODES[o.type],
+        comparison_operator = o.comparison,
+        bx_offset = o.bx_offset,
+        comment = "",
+    )
+
+def functionObjects(token):
+    """Returns list of object dicts assigned to a function."""
+    objects = []
+    f = tmGrammar.Function_Item()
+    if not tmGrammar.Function_parser(token, f):
+        raise ValueError(token)
+    for token in tmGrammar.Function_getObjects(f):
+        if isObject(token):
+            objects.append(toObject(token))
+    return objects
+
+def functionCuts(token):
+    """Returns list of cut names assigned to a function."""
+    cuts = []
+    f = tmGrammar.Function_Item()
+    if not tmGrammar.Function_parser(token, f):
+        raise ValueError(token)
+    for name in tmGrammar.Function_getCuts(f):
+        cuts.append(name)
+        print name
+    return cuts
+
+def functionObjectsCuts(token):
+    """Returns list of cut names assigned to function objects."""
+    cuts = []
+    f = tmGrammar.Function_Item()
+    if not tmGrammar.Function_parser(token, f):
+        raise ValueError(token)
+    for token in tmGrammar.Function_getObjects(f):
+        o = tmGrammar.Object_Item()
+        if not tmGrammar.Object_parser(token, o):
+            raise ValueError(token)
+        for name in o.cuts:
+            cuts.append(name)
+            print name
+    return cuts
+
+def objectCuts(token):
+    """Returns list of cut names assigned to an object."""
+    cuts = []
+    o = tmGrammar.Object_Item()
+    if not tmGrammar.Object_parser(token, o):
+        raise ValueError(token)
+    return list(o.cuts)

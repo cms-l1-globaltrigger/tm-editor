@@ -34,6 +34,7 @@ class AlgorithmEditor(QMainWindow):
         self.resize(720, 480)
         self.menu = menu
         self.formatter = AlgorithmFormatter()
+        self.setModified(False)
         #
         self.indexComboBox = QComboBox(self)
         self.indexComboBox.setEditable(True)
@@ -61,27 +62,7 @@ class AlgorithmEditor(QMainWindow):
         self.setName(self.tr("L1_Unnamed"))
         self.setExpression("")
         self.setComment("")
-
-    def insertItem(self, text):
-        """Inserts text. Automatically adds spaces to separate tokens in a
-        convenient and helpful maner.
-        """
-        cursor = self.textEdit.textCursor()
-        ref = str(self.textEdit.toPlainText()) # to python string
-        # Get text cursor position/selection slice.
-        start, end = sorted((cursor.position(), cursor.anchor()))
-        # If selection does not start at begin of document
-        if start > 0:
-            # Check previous character and add required whitespace
-            if not ref[start - 1] in " [\t\r\n":
-                text = " " + text
-        # If selection does not end at end of document
-        if end < (len(ref) - 1):
-            # Check following character and add required whitespace
-            if not ref[end] in " ,][\t\r\n":
-                text = text + " "
-        cursor.insertText(text)
-        self.textEdit.ensureCursorVisible()
+        self.textEdit.textChanged.connect(self.onTextChanged)
 
     def createActions(self):
         """Create actions."""
@@ -121,7 +102,7 @@ class AlgorithmEditor(QMainWindow):
         dock = QDockWidget(self.tr("Library"), self)
         dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
         self.libraryWidget = LibraryWidget(self.menu, dock)
-        self.libraryWidget.selected.connect(self.insertItem)
+        self.libraryWidget.selected.connect(self.onInsertItem)
         dock.setWidget(self.libraryWidget)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
 
@@ -141,24 +122,54 @@ class AlgorithmEditor(QMainWindow):
         """Returns a machine readable formatted version of the loaded algorithm."""
         return self.formatter.machinize(str(self.textEdit.toPlainText()))
 
+    def setExpression(self, expression):
+        self.textEdit.setPlainText(self.formatter.humanize(expression))
+
     def comment(self):
         return ""
 
     def setComment(self, comment):
         pass
 
-    def setExpression(self, expression):
-        self.textEdit.setPlainText(self.formatter.humanize(expression))
+    def isModified(self):
+        return self._isModified
+
+    def setModified(self, modified):
+        self._isModified = bool(modified)
+
+    def onTextChanged(self):
+        self.setModified(True)
 
     def onFormatCompact(self):
+        modified = self.isModified() # Foramtting does not count as change.
         self.textEdit.setPlainText(self.formatter.humanize(self.expression()))
+        self.setModified(modified)
 
     def onFormatExpand(self):
+        modified = self.isModified() # Foramtting does not count as change.
         self.textEdit.setPlainText(self.formatter.expanded(self.expression()))
+        self.setModified(modified)
 
-    def closeEvent(self, event):
-        """On window close event."""
-        event.accept()
+    def onInsertItem(self, text):
+        """Inserts text. Automatically adds spaces to separate tokens in a
+        convenient and helpful maner.
+        """
+        cursor = self.textEdit.textCursor()
+        ref = str(self.textEdit.toPlainText()) # to python string
+        # Get text cursor position/selection slice.
+        start, end = sorted((cursor.position(), cursor.anchor()))
+        # If selection does not start at begin of document
+        if start > 0:
+            # Check previous character and add required whitespace
+            if not ref[start - 1] in " [\t\r\n":
+                text = " " + text
+        # If selection does not end at end of document
+        if end < (len(ref) - 1):
+            # Check following character and add required whitespace
+            if not ref[end] in " ,][\t\r\n":
+                text = text + " "
+        cursor.insertText(text)
+        self.textEdit.ensureCursorVisible()
 
 # -----------------------------------------------------------------------------
 #  Algorithm editor dialog (modal)
@@ -216,6 +227,23 @@ class AlgorithmEditorDialog(QDialog):
     def setComment(self, comment):
         """Provided for convenience."""
         self.editor.setComment(comment)
+
+    def closeEvent(self, event):
+        """On window close event."""
+        if self.editor.isModified():
+            reply = QMessageBox.warning(self, "Close algorithm editor",
+                QString("The algorithm \"%1\" has been modified.\n" \
+                        "Do you want to apply your changes or discard them?").arg(self.name()),
+                QMessageBox.Cancel | QMessageBox.Close | QMessageBox.Apply, QMessageBox.Cancel)
+            if reply == QMessageBox.Cancel:
+                event.ignore()
+                return
+            if reply == QMessageBox.Apply:
+                event.accept()
+                self.accept()
+                return
+        event.accept()
+        self.reject()
 
 # -----------------------------------------------------------------------------
 #  Library widget
@@ -281,38 +309,40 @@ class LibraryWidget(QWidget):
         self.operatorsList = QListWidget(self)
         self.operatorsList.addItems([name for name, _ in self.Operators])
         self.tabWidget.addTab(self.operatorsList, "O&ps")
+        # Insert button.
+        self.insertButton = QPushButton(self.tr("<< &Insert"), self)
+        self.insertButton.clicked.connect(self.onInsert)
+        self.insertButton.setDefault(False)
+        # Wizard option.
+        self.wizardCheckBox = QCheckBox(self.tr("Use &wizard"), self)
+        # Preview widget.
+        self.previewLabel = QTextEdit(self)
+        self.previewLabel.setReadOnly(True)
         # Create list contents.
         self.initContents()
         # Layout
         gridLayout = QGridLayout()
         gridLayout.setContentsMargins(1, 1, 1, 1)
         gridLayout.addWidget(self.tabWidget, 0, 0, 1, 2)
-        self.insertButton = QPushButton(self.tr("<< &Insert"), self)
-        self.insertButton.clicked.connect(self.insert)
         gridLayout.addWidget(self.insertButton, 1, 0)
-        self.wizardCheckBox = QCheckBox(self.tr("Use &wizard"), self)
         gridLayout.addWidget(self.wizardCheckBox, 1, 1)
-        self.previewLabel = QTextEdit(self)
-        self.previewLabel.setReadOnly(True)
         gridLayout.addWidget(self.previewLabel, 2, 0, 1, 2)
-        # gridLayout.addWidget(QPushButton("<< &Insert"), 2, 0, 1, 1)
-        # gridLayout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum), 2, 1, 1, 1)
         self.setLayout(gridLayout)
-        self.showPreview()
         # Setup connections.
-        self.objectsList.currentRowChanged.connect(self.showPreview)
-        self.objectsList.itemDoubleClicked.connect(self.insertObject)
-        self.cutsList.currentRowChanged.connect(self.showPreview)
-        self.cutsList.itemDoubleClicked.connect(self.insertCut)
-        self.externalsList.currentRowChanged.connect(self.showPreview)
-        self.externalsList.itemDoubleClicked.connect(self.insertExternal)
-        self.functionsList.currentRowChanged.connect(self.showPreview)
-        self.functionsList.itemDoubleClicked.connect(self.insertFunction)
-        self.operatorsList.currentRowChanged.connect(self.showPreview)
-        self.operatorsList.itemDoubleClicked.connect(self.insertOperator)
-        self.tabWidget.currentChanged.connect(self.showPreview)
+        self.objectsList.currentRowChanged.connect(self.onPreview)
+        self.objectsList.itemDoubleClicked.connect(self.onInsert)
+        self.cutsList.currentRowChanged.connect(self.onPreview)
+        self.cutsList.itemDoubleClicked.connect(self.onInsert)
+        self.externalsList.currentRowChanged.connect(self.onPreview)
+        self.externalsList.itemDoubleClicked.connect(self.onInsert)
+        self.functionsList.currentRowChanged.connect(self.onPreview)
+        self.functionsList.itemDoubleClicked.connect(self.onInsert)
+        self.operatorsList.currentRowChanged.connect(self.onPreview)
+        self.operatorsList.itemDoubleClicked.connect(self.onInsert)
+        self.tabWidget.currentChanged.connect(self.onPreview)
 
     def initContents(self):
+        """Populate library lists with content from menu."""
         # Build list of objects.
         self.objectsList.clear()
         self.objectsList.addItems(sorted([obj.name for obj in self.menu.objects]))
@@ -322,8 +352,10 @@ class LibraryWidget(QWidget):
         # Build list of externals.
         self.externalsList.clear()
         self.externalsList.addItems(sorted([external.name for external in self.menu.externals]))
+        # Refresh UI.
+        self.onPreview()
 
-    def showPreview(self):
+    def onPreview(self):
         """Updates preview widget with current selected library item."""
         self.previewLabel.setText("")
         self.insertButton.setEnabled(False)
@@ -372,20 +404,6 @@ class LibraryWidget(QWidget):
             self.previewLabel.setText(self.Operators[row][1])
             self.insertButton.setEnabled(True)
 
-    def insert(self):
+    def onInsert(self):
+        """Insert selected item from active library list."""
         self.selected.emit(self.tabWidget.currentWidget().currentItem().text())
-
-    def insertObject(self):
-        self.selected.emit(self.objectsList.currentItem().text())
-
-    def insertCut(self):
-        self.selected.emit(self.cutsList.currentItem().text())
-
-    def insertExternal(self):
-        self.selected.emit(self.externalsList.currentItem().text())
-
-    def insertFunction(self):
-        self.selected.emit(self.functionsList.currentItem().text())
-
-    def insertOperator(self):
-        self.selected.emit(self.operatorsList.currentItem().text())

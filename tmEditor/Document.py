@@ -18,7 +18,7 @@ from tmEditor import AlgorithmEditorDialog
 from tmEditor import AlgorithmFormatter
 from tmEditor import AlgorithmSyntaxHighlighter
 from tmEditor import Menu
-from tmEditor.Menu import Algorithm
+from tmEditor.Menu import Algorithm, Object, toObject
 
 from tmEditor.Toolbox import (
     fAlgorithm,
@@ -56,9 +56,13 @@ class Document(QWidget):
         # Create table views.
         menuTableView = self.createProxyTableView("menuTableView", MenuModel(self.menu()))
         algorithmsTableView = self.createProxyTableView("algorithmsTableView", AlgorithmsModel(self.menu(), self))
+        algorithmsTableView.resizeColumnsToContents()
         cutsTableView = self.createProxyTableView("cutsTableView", CutsModel(self.menu(), self))
+        cutsTableView.resizeColumnsToContents()
         objectsTableView = self.createProxyTableView("objectsTableView", ObjectsModel(self.menu(), self))
+        objectsTableView.resizeColumnsToContents()
         externalsTableView = self.createProxyTableView("externalsTableView", ExternalsModel(self.menu(), self))
+        externalsTableView.resizeColumnsToContents()
         binsTableViews = {}
         for scale in self.menu().scales.bins.keys():
             binsTableViews[scale] = self.createProxyTableView("{scale}TableView".format(**locals()), BinsModel(self.menu(), scale, self))
@@ -214,14 +218,26 @@ class Document(QWidget):
             dialog.setModal(True)
             dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
             dialog.setName("L1_Unnamed")
+            dialog.editor.setModified(False)
             dialog.exec_()
             if dialog.result() == QDialog.Accepted:
                 self.setModified(True)
-                algorithm = self.menu().addAlgorithm(dialog.index(), dialog.name(), dialog.expression())
+                self.menu().addAlgorithm(dialog.index(), dialog.name(), dialog.expression())
                 item.view.model().setSourceModel(item.view.model().sourceModel())
                 # REBUILD INDEX
                 self.updatePreview()
                 self.modified.emit()
+                algorithm = self.menu().algorithms[-1]
+                for name in algorithm.objects():
+                    if not filter(lambda item: item.name == name, self.menu().objects):
+                        self.menu().addObject(**toObject(name))
+                self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
+                for name in algorithm.cuts():
+                    if not filter(lambda item: item.name == name, self.menu().cuts):
+                        raise RuntimeError("NO SUCH CUT AVAILABLE")
+                for name in algorithm.externals():
+                    if not filter(lambda item: item.name == name, self.menu().externals):
+                        raise RuntimeError("NO SUCH CUT AVAILABLE")
         if item is self.cutsItem:
             dialog = CutEditorDialog(self.menu(), self)
             dialog.setModal(True)
@@ -238,6 +254,7 @@ class Document(QWidget):
             dialog.setIndex(self.menu().algorithms[index.row()].index)
             dialog.setName(self.menu().algorithms[index.row()].name)
             dialog.setExpression(self.menu().algorithms[index.row()].expression)
+            dialog.editor.setModified(False)
             dialog.exec_()
             if dialog.result() == QDialog.Accepted:
                 self.setModified(True)
@@ -247,6 +264,17 @@ class Document(QWidget):
                 # REBUILD INDEX
                 self.updatePreview()
                 self.modified.emit()
+                algorithm = self.menu().algorithms[index.row()]
+                for name in algorithm.objects():
+                    if not filter(lambda item: item.name == name, self.menu().objects):
+                        self.menu().addObject(**toObject(name))
+                self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
+                for name in algorithm.cuts():
+                    if not filter(lambda item: item.name == name, self.menu().cuts):
+                        raise RuntimeError("NO SUCH CUT AVAILABLE")
+                for name in algorithm.externals():
+                    if not filter(lambda item: item.name == name, self.menu().externals):
+                        raise RuntimeError("NO SUCH CUT AVAILABLE")
         if item is self.cutsItem:
             dialog = CutEditorDialog(self.menu(), self)
             dialog.setModal(True)
@@ -264,6 +292,7 @@ class Document(QWidget):
             dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
             dialog.setName(algorithm.name + "_copy")
             dialog.setExpression(algorithm.expression)
+            dialog.editor.setModified(False)
             dialog.exec_()
             if dialog.result() == QDialog.Accepted:
                 self.setModified(True)
@@ -275,6 +304,16 @@ class Document(QWidget):
                 # REBUILD INDEX
                 self.updatePreview()
                 self.modified.emit()
+                for name in algorithm.objects():
+                    if not filter(lambda item: item.name == name, self.menu().objects):
+                        self.menu().addObject(**toObject(name))
+                self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
+                for name in algorithm.cuts():
+                    if not filter(lambda item: item.name == name, self.menu().cuts):
+                        raise RuntimeError("NO SUCH CUT AVAILABLE")
+                for name in algorithm.externals():
+                    if not filter(lambda item: item.name == name, self.menu().externals):
+                        raise RuntimeError("NO SUCH CUT AVAILABLE")
         if item is self.cutsItem:
             dialog = CutEditorDialog(self.menu(), self)
             dialog.setModal(True)

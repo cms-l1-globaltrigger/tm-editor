@@ -18,11 +18,15 @@ import sys, os
 EXIT_OK = 0
 EXIT_FAIL = 1
 
+def abspath_t(path):
+    return os.path.abspath(path)
+
 def parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('filenames',
         metavar = '<file>',
         nargs = '*',
+        type = abspath_t,
         help = "trigger menu XML file",
     )
     parser.add_argument('-v', '--verbose',
