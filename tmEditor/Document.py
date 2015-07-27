@@ -193,10 +193,36 @@ class Document(QWidget):
         index, item = self.getSelection()
         # Generic preview...
         try:
-            data = item.view.model().sourceModel().values[index.row()]
-            item.preview.setText('<br/>'.join(["<strong>{0}:</strong> {1}".format(key, value) for key, value in data.items()]))
+            data = dict([(key, value) for key, value in item.view.model().sourceModel().values[index.row()].items()]) # Local copy
+            text = []
+            if item is self.algorithmsItem:
+                text.append("<h2>{name} ({index})</h2>")
+                text.append("<p><strong>Expression:</strong></p><p><code>{expression}</code></p>")
+            elif item is self.cutsItem:
+                data['maximum'], data['minimum'] = fCut(data['maximum']), fCut(data['minimum'])
+                text.append("<h2>{name}</h2>")
+                text.append("<p><strong>Type:</strong> {object}</p>")
+                if data['data']:
+                    text.append("<p><strong>Data:</strong> {data}</p>")
+                else:
+                    text.append("<p><strong>Minimum:</strong> {minimum}</p>")
+                    text.append("<p><strong>Maximum:</strong> {maximum}</p>")
+            elif item is self.objectsItem:
+                data['threshold'] = fThreshold(str(data['threshold']))
+                data['bx_offset'] = fBxOffset(data['bx_offset'])
+                text.append("<h2>{name}</h2>")
+                text.append("<p><strong>Type:</strong> {type}</p>")
+                text.append("<p><strong>Threshold:</strong> {threshold}</p>")
+                text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
+            elif item is self.externalsItem:
+                data['bx_offset'] = fBxOffset(data['bx_offset'])
+                text.append("<h2>{name}</h2>")
+                text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
+            if 'comment' in data.keys():
+                text.append("<p><strong>Comment:</strong></p><p><code>{comment}</code></p>")
+            item.preview.setText(''.join(text).format(**data))
             item.preview.setButtonsEnabled(True)
-        except:
+        except AttributeError:
             item.preview.setText("")
             item.preview.setButtonsEnabled(False)
         try:
@@ -210,117 +236,127 @@ class Document(QWidget):
             item.preview.setText("")
             item.preview.toolbar.hide()
 
-
     def addItem(self):
         index, item = self.getSelection()
         if item is self.algorithmsItem:
-            dialog = AlgorithmEditorDialog(self.menu(), self)
-            dialog.setModal(True)
-            dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
-            dialog.setName("L1_Unnamed")
-            dialog.editor.setModified(False)
-            dialog.exec_()
-            if dialog.result() == QDialog.Accepted:
-                self.setModified(True)
-                self.menu().addAlgorithm(dialog.index(), dialog.name(), dialog.expression())
-                item.view.model().setSourceModel(item.view.model().sourceModel())
-                # REBUILD INDEX
-                self.updatePreview()
-                self.modified.emit()
-                algorithm = self.menu().algorithms[-1]
-                for name in algorithm.objects():
-                    if not filter(lambda item: item.name == name, self.menu().objects):
-                        self.menu().addObject(**toObject(name))
-                self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
-                for name in algorithm.cuts():
-                    if not filter(lambda item: item.name == name, self.menu().cuts):
-                        raise RuntimeError("NO SUCH CUT AVAILABLE")
-                for name in algorithm.externals():
-                    if not filter(lambda item: item.name == name, self.menu().externals):
-                        raise RuntimeError("NO SUCH CUT AVAILABLE")
-        if item is self.cutsItem:
-            dialog = CutEditorDialog(self.menu(), self)
-            dialog.setModal(True)
-            dialog.setName("Unnamed")
-            dialog.exec_()
-            if dialog.result() == QDialog.Accepted:
-                pass
+            self.addAlgorithm(index, item)
+        elif item is self.cutsItem:
+            self.addCut(index, item)
+
+    def addAlgorithm(self, index, item):
+        dialog = AlgorithmEditorDialog(self.menu(), self)
+        dialog.setModal(True)
+        dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
+        dialog.setName("L1_Unnamed")
+        dialog.editor.setModified(False)
+        dialog.exec_()
+        if dialog.result() != QDialog.Accepted:
+            return
+        self.setModified(True)
+        self.menu().addAlgorithm(str(dialog.index()), str(dialog.name()), str(dialog.expression()))
+        item.view.model().setSourceModel(item.view.model().sourceModel())
+        # REBUILD INDEX
+        self.updatePreview()
+        self.modified.emit()
+        algorithm = self.menu().algorithmByName(str(dialog.name()))
+        self.menu().updateAlgorithm(algorithm)
+        self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
+        for name in algorithm.cuts():
+            if not filter(lambda item: item.name == name, self.menu().cuts):
+                raise RuntimeError("NO SUCH CUT AVAILABLE")
+
+    def addCut(self, index, item):
+        dialog = CutEditorDialog(self.menu(), self)
+        dialog.setModal(True)
+        dialog.setName("Unnamed")
+        dialog.exec_()
+        if dialog.result() != QDialog.Accepted:
+            return
 
     def editItem(self):
         index, item = self.getSelection()
         if item is self.algorithmsItem:
-            dialog = AlgorithmEditorDialog(self.menu(), self)
-            dialog.setModal(True)
-            dialog.setIndex(self.menu().algorithms[index.row()].index)
-            dialog.setName(self.menu().algorithms[index.row()].name)
-            dialog.setExpression(self.menu().algorithms[index.row()].expression)
-            dialog.editor.setModified(False)
-            dialog.exec_()
-            if dialog.result() == QDialog.Accepted:
-                self.setModified(True)
-                self.menu().algorithms[index.row()]['expression'] = dialog.expression()
-                self.menu().algorithms[index.row()]['index'] = str(dialog.index())
-                self.menu().algorithms[index.row()]['name'] = str(dialog.name())
-                # REBUILD INDEX
-                self.updatePreview()
-                self.modified.emit()
-                algorithm = self.menu().algorithms[index.row()]
-                for name in algorithm.objects():
-                    if not filter(lambda item: item.name == name, self.menu().objects):
-                        self.menu().addObject(**toObject(name))
-                self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
-                for name in algorithm.cuts():
-                    if not filter(lambda item: item.name == name, self.menu().cuts):
-                        raise RuntimeError("NO SUCH CUT AVAILABLE")
-                for name in algorithm.externals():
-                    if not filter(lambda item: item.name == name, self.menu().externals):
-                        raise RuntimeError("NO SUCH CUT AVAILABLE")
-        if item is self.cutsItem:
-            dialog = CutEditorDialog(self.menu(), self)
-            dialog.setModal(True)
-            dialog.setName(self.menu().cuts[index.row()]['name'])
-            dialog.exec_()
-            if dialog.result() == QDialog.Accepted:
-                pass
+            self.editAlgorithm(index, item)
+        elif item is self.cutsItem:
+            self.editCut(index, item)
+
+    def editAlgorithm(self, index, item):
+        dialog = AlgorithmEditorDialog(self.menu(), self)
+        dialog.setModal(True)
+        dialog.setIndex(self.menu().algorithms[index.row()].index)
+        dialog.setName(self.menu().algorithms[index.row()].name)
+        dialog.setExpression(self.menu().algorithms[index.row()].expression)
+        dialog.editor.setModified(False)
+        dialog.exec_()
+        if dialog.result() != QDialog.Accepted:
+            return
+        self.setModified(True)
+        self.menu().algorithms[index.row()]['expression'] = str(dialog.expression())
+        self.menu().algorithms[index.row()]['index'] = str(dialog.index())
+        self.menu().algorithms[index.row()]['name'] = str(dialog.name())
+        # REBUILD INDEX
+        self.updatePreview()
+        self.modified.emit()
+        algorithm = self.menu().algorithms[index.row()]
+        self.menu().updateAlgorithm(algorithm)
+        self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
+        for name in algorithm.cuts():
+            if not filter(lambda item: item.name == name, self.menu().cuts):
+                raise RuntimeError("NO SUCH CUT AVAILABLE")
+
+    def editCut(self, index, item):
+        dialog = CutEditorDialog(self.menu(), self)
+        dialog.setModal(True)
+        dialog.setName(self.menu().cuts[index.row()]['name'])
+        dialog.exec_()
+        if dialog.result() != QDialog.Accepted:
+            return
 
     def copyItem(self):
         index, item = self.getSelection()
         if item is self.algorithmsItem:
-            algorithm = Algorithm(**self.menu().algorithms[index.row()])
-            dialog = AlgorithmEditorDialog(self.menu(), self)
-            dialog.setModal(True)
-            dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
-            dialog.setName(algorithm.name + "_copy")
-            dialog.setExpression(algorithm.expression)
-            dialog.editor.setModified(False)
-            dialog.exec_()
-            if dialog.result() == QDialog.Accepted:
-                self.setModified(True)
-                algorithm['expression'] = dialog.expression()
-                algorithm['index'] = str(dialog.index())
-                algorithm['name'] = str(dialog.name())
-                self.menu().algorithms.append(algorithm)
-                item.view.model().setSourceModel(item.view.model().sourceModel())
-                # REBUILD INDEX
-                self.updatePreview()
-                self.modified.emit()
-                for name in algorithm.objects():
-                    if not filter(lambda item: item.name == name, self.menu().objects):
-                        self.menu().addObject(**toObject(name))
-                self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
-                for name in algorithm.cuts():
-                    if not filter(lambda item: item.name == name, self.menu().cuts):
-                        raise RuntimeError("NO SUCH CUT AVAILABLE")
-                for name in algorithm.externals():
-                    if not filter(lambda item: item.name == name, self.menu().externals):
-                        raise RuntimeError("NO SUCH CUT AVAILABLE")
+            self.copyAlgorithm(index, item)
         if item is self.cutsItem:
-            dialog = CutEditorDialog(self.menu(), self)
-            dialog.setModal(True)
-            dialog.setName(self.menu().cuts[index.row()]['name'])
-            dialog.exec_()
-            if dialog.result() == QDialog.Accepted:
-                pass
+            self.copyCut(self, index, item)
+
+    def copyAlgorithm(self, index, item):
+        algorithm = Algorithm(**self.menu().algorithms[index.row()])
+        dialog = AlgorithmEditorDialog(self.menu(), self)
+        dialog.setModal(True)
+        dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
+        dialog.setName(algorithm.name + "_copy")
+        dialog.setExpression(algorithm.expression)
+        dialog.editor.setModified(False)
+        dialog.exec_()
+        if dialog.result() != QDialog.Accepted:
+            return
+        self.setModified(True)
+        algorithm['expression'] = dialog.expression()
+        algorithm['index'] = str(dialog.index())
+        algorithm['name'] = str(dialog.name())
+        self.menu().algorithms.append(algorithm)
+        item.view.model().setSourceModel(item.view.model().sourceModel())
+        # REBUILD INDEX
+        self.updatePreview()
+        self.modified.emit()
+        for name in algorithm.objects():
+            if not filter(lambda item: item.name == name, self.menu().objects):
+                self.menu().addObject(**toObject(name))
+        self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
+        for name in algorithm.cuts():
+            if not filter(lambda item: item.name == name, self.menu().cuts):
+                raise RuntimeError("NO SUCH CUT AVAILABLE")
+        for name in algorithm.externals():
+            if not filter(lambda item: item.name == name, self.menu().externals):
+                raise RuntimeError("NO SUCH CUT AVAILABLE")
+
+    def copyCut(self, index, item):
+        dialog = CutEditorDialog(self.menu(), self)
+        dialog.setModal(True)
+        dialog.setName(self.menu().cuts[index.row()]['name'])
+        dialog.exec_()
+        if dialog.result() != QDialog.Accepted:
+            return
 
     def removeItem(self):
         index, item = self.getSelection()
@@ -500,7 +536,6 @@ class BottomWidget(QWidget):
         layout.addWidget(self.textEdit)
         self.setLayout(layout)
     def setButtonsEnabled(self, enabled):
-        self.addButton.setEnabled(enabled)
         self.editButton.setEnabled(enabled)
         self.copyButton.setEnabled(enabled)
         self.removeBotton.setEnabled(enabled)
@@ -612,8 +647,8 @@ class ObjectsModel(BaseTableModel):
         super(ObjectsModel, self).__init__(menu.objects, parent)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Type", 'type')
-        self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
         self.addColumnSpec("Comparison", 'comparison_operator', fComparison, AlignRight)
+        self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
         # self.addColumnSpec("ID", 'object_id', int, AlignRight)
 

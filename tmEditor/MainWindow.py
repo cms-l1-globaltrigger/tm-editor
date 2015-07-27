@@ -53,11 +53,11 @@ class MainWindow(QMainWindow):
         self.createStatusBar()
         # Create MDI area
         self.mdiArea = MdiArea(self)
-        self.mdiArea.currentChanged.connect(self.updateStatusBar)
-        self.mdiArea.currentUpdated.connect(self.updateStatusBar)
+        self.mdiArea.currentChanged.connect(self.updateStatusBarCounters)
         self.setCentralWidget(self.mdiArea)
         # Initialize
-        self.updateStatusBar()
+        self.updateStatusBarMessage(self.tr("Ready"))
+        self.updateStatusBarCounters()
         self.syncActions()
         # Setup connections.
         self.mdiArea.currentChanged.connect(self.syncActions)
@@ -140,14 +140,23 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(self.statusObjects)
         self.statusBar().addPermanentWidget(self.statusExternals)
 
-    def updateStatusBar(self, index = None):
-        """Update status bar labels."""
+    @pyqtSlot(str)
+    def updateStatusBarMessage(self, message):
+        """Updates status bar message."""
+        self.statusBar().showMessage(message)
+
+    @pyqtSlot()
+    def updateStatusBarCounters(self):
+        """Update status bar with data of current MDI document."""
         document = self.mdiArea.currentDocument()
-        self.statusAlgorithms.setText(QString(" %1: %2 ").arg(self.tr("Algorithms")).arg(len(document.menu().algorithms) if document else '--'))
-        self.statusCuts.setText(QString(" %1: %2 ").arg(self.tr("Cuts")).arg(len(document.menu().cuts) if document else '--'))
-        self.statusObjects.setText(QString(" %1: %2 ").arg(self.tr("Objects")).arg(len(document.menu().objects) if document else '--'))
-        self.statusExternals.setText(QString(" %1: %2 ").arg(self.tr("Externals")).arg(len(document.menu().externals) if document else '--'))
-        self.statusBar().showMessage(self.tr("Ready"))
+        algorithms = len(document.menu().algorithms) if document else '--'
+        cuts = len(document.menu().cuts) if document else '--'
+        objects = len(document.menu().objects) if document else '--'
+        externals = len(document.menu().externals) if document else '--'
+        self.statusAlgorithms.setText(QString(" %1: %2 ").arg(self.tr("Algorithms")).arg(algorithms))
+        self.statusCuts.setText(QString(" %1: %2 ").arg(self.tr("Cuts")).arg(cuts))
+        self.statusObjects.setText(QString(" %1: %2 ").arg(self.tr("Objects")).arg(objects))
+        self.statusExternals.setText(QString(" %1: %2 ").arg(self.tr("Externals")).arg(externals))
 
     def syncActions(self):
         """Disable some actions if no document is opened."""
@@ -157,6 +166,7 @@ class MainWindow(QMainWindow):
         self.closeAct.setEnabled(enabled)
 
     def loadDocument(self, filename):
+        """Load document from file and add it to the MDI area."""
         try:
             document = Document(os.path.basename(filename), self)
         except RuntimeError, e:

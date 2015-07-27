@@ -22,17 +22,23 @@ import uuid
 import shutil
 import tempfile
 import logging
+import re
 import sys, os
 
 __all__ = ['Menu', ]
 
 FORMAT_FLOAT = '+23.16E'
+"""Floating point string format."""
 
 OBJECT_CODES = {
     tmGrammar.Muon: tmGrammar.MU,
     tmGrammar.Egamma: tmGrammar.EG,
     tmGrammar.Jet: tmGrammar.JET,
     tmGrammar.Tau: tmGrammar.TAU,
+    tmGrammar.Scaler: tmGrammar.ETT,
+    tmGrammar.Vector: tmGrammar.ETM,
+    tmGrammar.Scaler: tmGrammar.HTT,
+    tmGrammar.Vector: tmGrammar.HTM,
     tmGrammar.External: tmGrammar.EXT,
 }
 
@@ -87,7 +93,7 @@ class Menu(object):
 
     def addAlgorithm(self, index, name, expression, algorithm_id = 0, module_id = 0, module_index = 0, comment = ""):
         """Provided for convenience."""
-        self.algorithms.append(Algorithm(
+        algorithm = Algorithm(
             algorithm_id = algorithm_id,
             index = index,
             name = name,
@@ -95,7 +101,20 @@ class Menu(object):
             module_id = module_id,
             module_index = module_index,
             comment = comment,
-        ))
+        )
+        self.algorithms.append(algorithm)
+
+    def updateAlgorithm(self, algorithm):
+        if algorithm not in self.algorithms:
+            self.algorithms.append(algorithm)
+        # Add new objects to list.
+        for item in algorithm.objects():
+            if not self.objectByName(item):
+                self.objects.append(toObject(item))
+        # Add new external to list.
+        for item in algorithm.externals():
+            if not self.externalByName(item):
+                self.exteranls.append(toExternal(item))
 
     def algorithmByName(self, name):
         """Returns algorithm item by its name or None if no such algorithm exists."""
@@ -137,37 +156,32 @@ class Menu(object):
 
             # Populate the containers.
             self.menu = dict(menu.menu.items())
+            # Add algorithms
             for algorithm in menu.algorithms:
                 algorithm = Algorithm(algorithm.items())
                 logging.debug("adding algorithm `%s'", algorithm)
                 self.addAlgorithm(**algorithm)
-            buffer = []
+            # Add cuts
             for cuts in menu.cuts.values():
                 for cut in cuts:
                     cut = Cut(cut.items())
-                    if not cut in buffer:
-                        buffer.append(cut)
-            for cut in buffer:
-                logging.debug("adding cut `%s'", cut)
-                self.addCut(**cut)
-            buffer = []
+                    if not cut in self.cuts:
+                        logging.debug("adding cut `%s'", cut)
+                        self.addCut(**cut)
+            # Add objects
             for objs in menu.objects.values():
                 for obj in objs:
                     obj = Object(obj.items())
-                    if not obj in buffer:
-                        buffer.append(obj)
-            for obj in buffer:
-                logging.debug("adding object requirements `%s'", obj)
-                self.addObject(**obj)
-            buffer = []
+                    if not obj in self.objects:
+                        logging.debug("adding object requirements `%s'", obj)
+                        self.addObject(**obj)
+            # Add externals
             for externals in menu.externals.values():
                 for external in externals:
                     external = External(external.items())
-                    if not external in buffer:
-                        buffer.append(external)
-            for ext in buffer:
-                logging.debug("adding externals signal `%s'", ext)
-                self.addExternal(**ext)
+                    if not external in self.externals:
+                        logging.debug("adding external signal `%s'", ext)
+                        self.addExternal(**ext)
             self.scales = scale
             self.extSignals = ext_signal
 
@@ -197,41 +211,40 @@ class Menu(object):
                 menu.algorithms.append(row)
 
                 # Objects
-                if algorithm['name'] not in menu.objects:
-                    menu.objects[algorithm['name']] = []
+                if algorithm.name not in menu.objects.keys():
+                    menu.objects[algorithm.name] = []
                 for name in algorithm.objects():
 
                     object_ = self.objectByName(name)
-                    if not object_.isValid():
+                    if not object_:
                         raise RuntimeError("NOT AN OBJREQ")
 
                     row = object_.toRow()
-                    menu.objects[algorithm['name']] = menu.objects[algorithm['name']] + (row, )
+                    menu.objects[algorithm.name] = menu.objects[algorithm.name] + (row, )
 
                 # Externals
-                if algorithm['name'] not in menu.externals:
-                    menu.externals[algorithm['name']] = []
+                if algorithm.name not in menu.externals.keys():
+                    menu.externals[algorithm.name] = []
                 for name in algorithm.externals():
 
                     external = self.externalByName(name)
-                    if not external.isValid():
+                    if not external:
                         raise RuntimeError("NOT AN EXTERNAL")
 
                     row = external.toRow()
-                    menu.externals[algorithm['name']] = menu.externals[algorithm['name']] + (row, )
+                    menu.externals[algorithm.name] = menu.externals[algorithm.name] + (row, )
 
                 # Cuts
-                if algorithm['name'] not in menu.cuts:
-                    menu.cuts[algorithm['name']] = []
+                if algorithm.name not in menu.cuts.keys():
+                    menu.cuts[algorithm.name] = []
                 for name in algorithm.cuts():
 
                     cut = self.cutByName(name)
-
-                    if not cut.isValid():
+                    if not cut:
                         raise RuntimeError("NOT AN CUT")
 
                     row = cut.toRow()
-                    menu.cuts[algorithm['name']] = menu.cuts[algorithm['name']] + (row, )
+                    menu.cuts[algorithm.name] = menu.cuts[algorithm.name] + (row, )
 
             # Write to XML file.
             logging.debug("writing XML file to `%s'", filename)
@@ -328,6 +341,7 @@ class Algorithm(AbstractDict):
         return list(cuts)
 
     def externals(self):
+        """Returns list of externals names used in the algorithm's expression."""
         externals = set()
         for token in self.tokens():
             if isOperator(token):
@@ -389,6 +403,10 @@ class Object(AbstractDict):
     def threshold(self):
         return self['threshold']
 
+    @property
+    def bx_offset(self):
+        return self['bx_offset']
+
     def isValid(self):
         return tmTable.isObjectRequirement(self.toRow())
 
@@ -406,8 +424,16 @@ class External(AbstractDict):
     def name(self):
         return self['name']
 
+    @property
+    def bx_offset(self):
+        return self['bx_offset']
+
     def isValid(self):
         return tmTable.isExternalRequirement(self.toRow())
+
+# ------------------------------------------------------------------------------
+#  Helper functions (wrapping weird tmGrammar API).
+# ------------------------------------------------------------------------------
 
 def isOperator(token):
     """Retruns True if token is an logical operator."""
@@ -426,7 +452,7 @@ def isFunction(token):
     return filter(lambda item: token.startswith(item), tmGrammar.functionName) != []
 
 def toObject(token):
-    """Returns an object dict."""
+    """Returns an object's dict."""
     o = tmGrammar.Object_Item()
     if not tmGrammar.Object_parser(token, o):
         raise ValueError(token)
@@ -436,6 +462,16 @@ def toObject(token):
         type = OBJECT_CODES[o.type],
         comparison_operator = o.comparison,
         bx_offset = o.bx_offset,
+        comment = "",
+    )
+
+def toExternal(token):
+    """Returns an external's dict."""
+    result = re.match('(\+\d+|\-\d+)$', token)
+    bx_offset = result.group(1) if result else '0'
+    return External(
+        name = token,
+        bx_offset = bx_offset,
         comment = "",
     )
 

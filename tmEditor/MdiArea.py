@@ -20,8 +20,6 @@ from PyQt4.QtGui import *
 class MdiArea(QTabWidget):
     """A tab widget based MDI area widget."""
 
-    currentUpdated = pyqtSignal(int)
-
     def __init__(self, parent = None):
         super(MdiArea, self).__init__(parent)
         self.setTabsClosable(True)
@@ -78,4 +76,4 @@ class MdiArea(QTabWidget):
 
     @pyqtSlot()
     def documentChanged(self):
-        self.currentUpdated.emit(self.currentIndex())
+        self.currentChanged.emit(self.currentIndex())

@@ -61,7 +61,14 @@ def fThreshold(value):
     return "{0:.1f} GeV".format(float(value))
 
 def fComparison(value):
-    return str(value).strip('.')
+    return dict(
+        eq = "==",
+        ge = ">=",
+        gt = ">",
+        le = "<=",
+        lt = "<",
+        ne = "!=",
+    )[str(value).strip('.')]
 
 def fBxOffset(value):
     return '0' if int(value) == 0 else format(int(value), '+d')
