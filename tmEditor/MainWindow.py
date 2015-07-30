@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
     def loadDocument(self, filename):
         """Load document from file and add it to the MDI area."""
         try:
-            document = Document(os.path.basename(filename), self)
+            document = Document(filename, self)
         except RuntimeError, e:
             box = QMessageBox.critical(self,
                 "Failed to open XML menu",
