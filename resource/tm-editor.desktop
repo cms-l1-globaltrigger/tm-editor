@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Trigger Menu Editor
+GenericName=Level-1 Trigger Menu Editor
+Comment=Edit trigger menu XML files
+Exec=/usr/bin/tm-editor
+Terminal=false
+Type=Application
+Icon=tm-editor
+Categories=Development;
+

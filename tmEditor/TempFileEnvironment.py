@@ -30,7 +30,7 @@ class TempFileEnvironment(object):
 
     def __init__(self, filename, xsddir = None):
         self._filename = filename
-        self._xsddir = xsddir or os.path.join(Toolbox.getRootDir(), 'tmXsd')
+        self._xsddir = xsddir or Toolbox.getXsdDir()
         self.tmpdir = None
         self.cwd = None
         self.create()
@@ -106,7 +106,7 @@ class TempFileEnvironment(object):
         # Create symbolic links to XML and XSD files (src, dest).
         for src, dest in self.symlinks:
             os.symlink(src, dest)
-            logging.debug("created symbolic link `%s' -> `%s'", src, dest)
+            logging.debug("created symbolic link `%s' -> `%s'", dest, src)
 
     def remove(self):
         """Remove the virtual environment."""

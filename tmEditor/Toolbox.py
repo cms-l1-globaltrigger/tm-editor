@@ -34,6 +34,13 @@ def getenv(name):
 def getRootDir():
     return getenv('UTM_ROOT')
 
+def getXsdDir():
+    """Returns path for XSD files."""
+    try:
+        return getenv('TM_EDITOR_XSD_DIR')
+    except RuntimeError:
+        return os.path.join(getRootDir(), 'tmXsd')
+
 # ------------------------------------------------------------------------------
 #  String formatting functions
 # ------------------------------------------------------------------------------
@@ -85,8 +92,3 @@ def createIcon(category, name):
         if os.path.isfile(filename):
             icon.addFile(filename)
     return icon
-
-# TODO transitional resource fetcher
-def resource(filename):
-    root = getenv('UTM_ROOT')
-    return os.path.abspath("{root}/tmEditor/resource/{filename}".format(**locals()))
