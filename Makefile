@@ -1,5 +1,6 @@
 # Environment
 prefix ?= /usr
+rootdir ?= ..
 package = tm-editor
 version = 0.1.0
 maintainer = Bernhard Arnold <bernhard.arnold@cern.ch>
@@ -13,10 +14,10 @@ debian_arch = $(shell dpkg --print-architecture)
 pyrcc4 = pyrcc4
 
 # Directories
-tmutil_dir = ../tmUtil
-tmxsd_dir = ../tmXsd
-tmtable_dir = ../tmTable
-tmgrammar_dir = ../tmGrammar
+tmutil_dir = $(rootdir)/tmUtil
+tmxsd_dir = $(rootdir)/tmXsd
+tmtable_dir = $(rootdir)/tmTable
+tmgrammar_dir = $(rootdir)/tmGrammar
 
 # Dependencies
 
@@ -89,7 +90,50 @@ install: all
 rpm: rpmbuild
 
 rpmbuild: all
-	rpmbuild -v -bb --clean SPECS/wget.spec
+	rm -rf rpm/RPMBUILD
+	mkdir -p rpm/RPMBUILD/BUILD
+	mkdir -p rpm/RPMBUILD/RPMS
+	mkdir -p rpm/RPMBUILD/SOURCES
+	mkdir -p rpm/RPMBUILD/SPECS
+	mkdir -p rpm/RPMBUILD/SRPMS
+	make -f Makefile install prefix=rpm/$(package)-$(version)-build
+	mkdir -p rpm/$(package)-$(version)
+	cp Makefile rpm/$(package)-$(version)/.
+	cp -r tmEditor resource scripts copyright rpm/$(package)-$(version)/.
+	cd rpm && tar czf RPMBUILD/SOURCES/$(package)-$(version).tar.gz $(package)-$(version)
+	echo "%define _topdir   $(shell pwd)/rpm/RPMBUILD" > rpm/$(package).spec
+	echo "%define name      $(package)" >> rpm/$(package).spec
+	echo "%define release   1" >> rpm/$(package).spec
+	echo "%define version   $(version)" >> rpm/$(package).spec
+	echo "%define buildroot %{_topdir}/%{name}-%{version}-root" >> rpm/$(package).spec
+	echo >> rpm/$(package).spec
+	echo "BuildRoot: %{buildroot}" >> rpm/$(package).spec
+	echo "Summary:   Level-1 Global Trigger Menu Editor" >> rpm/$(package).spec
+	echo "License:   proprietary" >> rpm/$(package).spec
+	echo "Name:      %{name}" >> rpm/$(package).spec
+	echo "Version:   %{version}" >> rpm/$(package).spec
+	echo "Release:   %{release}" >> rpm/$(package).spec
+	echo "Source:    %{name}-%{version}.tar.gz" >> rpm/$(package).spec
+	echo "Prefix:    /usr" >> rpm/$(package).spec
+	echo "Group:     Development/Tools" >> rpm/$(package).spec
+	echo >> rpm/$(package).spec
+	echo "%description" >> rpm/$(package).spec
+	echo "a foobar app" >> rpm/$(package).spec
+	echo >> rpm/$(package).spec
+	echo "%prep" >> rpm/$(package).spec
+	echo "%setup -q" >> rpm/$(package).spec
+	echo >> rpm/$(package).spec
+	echo "%build" >> rpm/$(package).spec
+	echo "make rootdir=$(shell pwd)/.." >> rpm/$(package).spec
+	echo >> rpm/$(package).spec
+	echo "%install" >> rpm/$(package).spec
+	echo "make install rootdir=$(shell pwd)/.. prefix=\$$RPM_BUILD_ROOT/usr" >> rpm/$(package).spec
+	echo >> rpm/$(package).spec
+	echo "%files" >> rpm/$(package).spec
+	echo "%defattr(-,root,root)" >> rpm/$(package).spec
+	cd rpm/$(package)-$(version)-build && find . -type f -printf "/usr/%P\n" >> ../$(package).spec
+	mv rpm/$(package).spec rpm/RPMBUILD/SPECS/$(package).spec
+	rpmbuild -v -bb --clean rpm/RPMBUILD/SPECS/$(package).spec
 
 deb: debbuild
 
@@ -108,7 +152,7 @@ debbuild: all
 	gzip deb/changelog.DEBIAN
 	mv deb/changelog.DEBIAN.gz deb/$(package)-$(version)/usr/share/doc/$(package)/.
 	echo "//     calculating MD5 sums..."
-	cd deb/$(package)-$(version) && md5sum `find . -type f -printf "%P\n"` > DEBIAN/md5sums
+	cd deb/$(package)-$(version) && md5sum $(shell find . -type f -printf "%P\n") > DEBIAN/md5sums
 	echo "//     writing DEBIAN control file..."
 	echo "Package: $(package)" > deb/control
 	echo "Version: $(version)" >> deb/control
@@ -130,10 +174,10 @@ debbuild: all
 clean:
 	rm -rf tmEditor/tmeditor_rc.py
 
-cleanrpm:
+rpmclean:
 	rm -rf rpm
 
-cleandeb:
+debclean:
 	rm -rf deb
 
 distclean: clean rpmclean debclean
