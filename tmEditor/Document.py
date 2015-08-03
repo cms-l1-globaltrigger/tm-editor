@@ -171,8 +171,10 @@ class Document(QWidget):
         if not len(items):
             return None, None
         item = items[0]
-        index = item.view.currentMappedIndex()
-        return index, item
+        if isinstance(item.view, QTableView):
+            index = item.view.currentMappedIndex()
+            return index, item
+        return None, None
 
     def getUnusedAlgorithmIndices(self):
         free = range(512)
@@ -182,12 +184,15 @@ class Document(QWidget):
 
     def updateViews(self):
         index, item = self.getSelection()
-        if 0 > self.dataViewStack.indexOf(item.view):
-            self.dataViewStack.addWidget(item.view)
-            if hasattr(item.view, 'sortByColumn'):
-                item.view.sortByColumn(0, Qt.AscendingOrder)
-        self.dataViewStack.setCurrentWidget(item.view)
-        self.updatePreview()
+        try:
+            if 0 > self.dataViewStack.indexOf(item.view):
+                self.dataViewStack.addWidget(item.view)
+                if hasattr(item.view, 'sortByColumn'):
+                    item.view.sortByColumn(0, Qt.AscendingOrder)
+            self.dataViewStack.setCurrentWidget(item.view)
+            self.updatePreview()
+        except:
+            pass
 
     def updatePreview(self):
         index, item = self.getSelection()
@@ -218,12 +223,19 @@ class Document(QWidget):
                 data['bx_offset'] = fBxOffset(data['bx_offset'])
                 text.append("<h2>{name}</h2>")
                 text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
+            elif item in self.scalesTypeItem.values():
+                data['name'] = item.name
+                text.append("<h2>Scale {name}</h2>")
+                text.append("<p><strong>Number:</strong> {number}</p>")
+                data['maximum'], data['minimum'] = fCut(data['maximum']), fCut(data['minimum'])
+                text.append("<p><strong>Minimum:</strong> {minimum}</p>")
+                text.append("<p><strong>Maximum:</strong> {maximum}</p>")
             if 'comment' in data.keys():
                 text.append("<p><strong>Comment:</strong></p><p><code>{comment}</code></p>")
             item.preview.setText(''.join(text).format(**data))
             item.preview.setButtonsEnabled(True)
-        except AttributeError:
-            item.preview.setText("")
+        except AttributeError, m:
+            item.preview.setText("<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
             item.preview.setButtonsEnabled(False)
         try:
             if item is self.algorithmsItem:
@@ -268,16 +280,12 @@ class Document(QWidget):
     def addCut(self, index, item):
         dialog = CutEditorDialog(self.menu(), self)
         dialog.setModal(True)
-        dialog.setName("MU-ETA_Unnamed")
         dialog.updateEntries()
         dialog.exec_()
         if dialog.result() != QDialog.Accepted:
             return
         self.setModified(True)
-        t = dialog.type().split('-')
-        if len(t) <= 1: # function cut
-            t = ['', t[0]]
-        self.menu().addCut(name=dialog.name(), object=t[0], type=t[1], minimum=dialog.minimum(), maximum=dialog.maximum(), data=dialog.data() or '')
+        self.menu().addCut(name=dialog.name(), object=dialog.object(), type=dialog.type(), minimum=dialog.minimum() or '', maximum=dialog.maximum() or '', data=dialog.data() or '')
         self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
 
     def editItem(self):
@@ -312,26 +320,16 @@ class Document(QWidget):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
 
     def editCut(self, index, item):
+        cut = self.menu().cuts[index.row()]
         dialog = CutEditorDialog(self.menu(), self)
         dialog.setModal(True)
         dialog.typeComboBox.setEnabled(False)
-        dialog.setName(self.menu().cuts[index.row()]['name'])
-        dialog.setMinimum(self.menu().cuts[index.row()]['maximum'])
-        dialog.setMaximum(self.menu().cuts[index.row()]['minimum'])
-        dialog.setData(self.menu().cuts[index.row()]['data'])
-        dialog.updateEntries()
+        dialog.loadCut(cut)
         dialog.exec_()
         if dialog.result() != QDialog.Accepted:
             return
         self.setModified(True)
-        t = dialog.type().split('-')
-        if len(t) <= 1: # function cut
-            t = ['', t[0]]
-        cut = self.menu().cuts[index.row()]
-        cut['name'] = dialog.name()
-        cut['minimum'] = dialog.minimum()
-        cut['maximum'] = dialog.maximum()
-        cut['data'] = dialog.data() or ''
+        dialog.updateCut(cut)
         self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
 
     def copyItem(self):
@@ -616,6 +614,15 @@ class BaseTableModel(QAbstractTableModel):
                 return self.columnSpecs[section].title
         return QVariant()
 
+# HACK
+class Delegate(QStyledItemDelegate):
+    def createEditor(self, parent, options, index):
+        return QTextEdit(parent)
+    def setEditorData(self, editor, index):
+        editor.setText(index.data())
+    def setModelData(self, editor, model, index):
+        model.setData(index, editor.toPlainText())
+
 class MenuModel(QAbstractTableModel):
 
     def __init__(self, menu, parent = None):
@@ -632,15 +639,42 @@ class MenuModel(QAbstractTableModel):
         if not index.isValid():
             return QVariant()
         row, column = index.row(), index.column()
-        if role == Qt.DisplayRole:
+        if role == Qt.DisplayRole or role == Qt.EditRole:
             return self.menu.menu.items()[row][column]
         return QVariant()
+
+    def setData(self, index, value, role = Qt.EditRole):
+        if not index.isValid():
+            return False
+        row, column = index.row(), index.column()
+        if role == Qt.EditRole:
+            # brrr
+            self.menu.menu[self.menu.menu.items()[row][0]] = str(value.toPyObject())
+            self.dataChanged.emit(index, index)
+            return True
+        return False
+
+    def setModelData(self, editor, model, index):
+        if not index.isValid():
+            return QVariant()
+        if index.column() == 1:
+            if isinstance(editor, QTextEdit):
+                model.setData(index, editor.toPlainText())
+            elif isinstance(editor, QComboBox):
+                model.setData(index, editor.currentText())
+            else:
+                super(Delegate, self).setModelData(editor, model, index)
 
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal:
             if role == Qt.DisplayRole:
                 return ("Key", "Value")[section]
         return QVariant()
+
+    def flags(self, index):
+        if index.column() == 1:
+            return super(MenuModel, self).flags(index) | Qt.ItemIsEditable
+        return super(MenuModel, self).flags(index)
 
 class AlgorithmsModel(BaseTableModel):
 

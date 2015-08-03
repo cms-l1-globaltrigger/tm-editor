@@ -113,7 +113,25 @@
         },
         {
             "name": "JET-QLTY",
-            "title": "Jet quality"
+            "title": "Jet quality",
+            "data": {
+                "0": "quality 00",
+                "1": "quality 01",
+                "2": "quality 02",
+                "3": "quality 03",
+                "4": "quality 04",
+                "5": "quality 05",
+                "6": "quality 06",
+                "7": "quality 07",
+                "8": "quality 08",
+                "9": "quality 09",
+                "10": "quality 10",
+                "11": "quality 11",
+                "12": "quality 12",
+                "13": "quality 13",
+                "14": "quality 14",
+                "15": "quality 15"
+            }
         },
         {
             "name": "TAU-ETA",

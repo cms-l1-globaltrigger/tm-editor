@@ -75,9 +75,9 @@ class Menu(object):
             name = name,
             object = object,
             type = type,
-            minimum = minimum,
-            maximum = maximum,
-            data = data,
+            minimum = minimum if not data else '',
+            maximum = maximum if not data else '',
+            data = data if data else '',
             comment = comment,
         ))
 
@@ -114,7 +114,7 @@ class Menu(object):
         # Add new external to list.
         for item in algorithm.externals():
             if not self.externalByName(item):
-                self.exteranls.append(toExternal(item))
+                self.externals.append(toExternal(item))
 
     def algorithmByName(self, name):
         """Returns algorithm item by its name or None if no such algorithm exists."""
@@ -180,8 +180,8 @@ class Menu(object):
                 for external in externals:
                     external = External(external.items())
                     if not external in self.externals:
-                        logging.debug("adding external signal `%s'", ext)
-                        self.addExternal(**ext)
+                        logging.debug("adding external signal `%s'", external)
+                        self.addExternal(**external)
             self.scales = scale
             self.extSignals = ext_signal
 
@@ -369,6 +369,14 @@ class Cut(AbstractDict):
         self['name'] = str(name)
 
     @property
+    def object(self):
+        return self['object']
+
+    @property
+    def type(self):
+        return self['type']
+
+    @property
     def minimum(self):
         return self['minimum']
 
@@ -380,13 +388,18 @@ class Cut(AbstractDict):
     def data(self):
         return self['data']
 
+    def __eq__(self, cut):
+        """Distinquish cuts by it's uinque name."""
+        return self.name == cut.name and self.object == cut.object and self.type == cut.type
+
     def isValid(self):
         return tmTable.isCut(self.toRow())
 
     def toRow(self):
         row = super(Cut, self).toRow()
-        row['minimum'] = format(float(row['minimum']), FORMAT_FLOAT)
-        row['maximum'] = format(float(row['maximum']), FORMAT_FLOAT)
+        # Workaround 1023 and 1099 ... >_<'
+        row['minimum'] = format(float(row['minimum'] if not self.data else 0.), FORMAT_FLOAT)
+        row['maximum'] = format(float(row['maximum'] if not self.data else 0.), FORMAT_FLOAT)
         return row
 
 # ------------------------------------------------------------------------------
@@ -400,12 +413,31 @@ class Object(AbstractDict):
         return self['name']
 
     @property
+    def type(self):
+        return self['type']
+
+    @property
+    def comparison_operator(self):
+        return self['comparison_operator']
+
+    @property
     def threshold(self):
         return self['threshold']
 
     @property
     def bx_offset(self):
         return self['bx_offset']
+
+    def signature(self):
+        return "{name}{threshold}{bx_offset}".format(**self)
+
+    def __eq__(self, object):
+        """Distinquish objects."""
+        return \
+            self.type == object.type and \
+            self.comparison_operator == object.comparison_operator and \
+            self.threshold == object.threshold and \
+            self.bx_offset == object.bx_offset
 
     def isValid(self):
         return tmTable.isObjectRequirement(self.toRow())
@@ -427,6 +459,10 @@ class External(AbstractDict):
     @property
     def bx_offset(self):
         return self['bx_offset']
+
+    def __eq__(self, object):
+        """Distinquish objects."""
+        return self.name == object.name and self.bx_offset == object.bx_offset
 
     def isValid(self):
         return tmTable.isExternalRequirement(self.toRow())

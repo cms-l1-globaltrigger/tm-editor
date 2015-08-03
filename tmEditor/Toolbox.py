@@ -43,8 +43,6 @@ def getXsdDir():
         return os.path.join(getRootDir(), 'tmXsd')
 
 def readSettings(section = None):
-    print os.path.join(os.path.dirname(os.path.realpath(__file__)), 'settings.json')
-    print open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'settings.json')).read()
     filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'settings.json')
     with open(filename) as handle:
         settings = json.loads(handle.read())
@@ -70,7 +68,10 @@ def fAlgorithm(expr):
     # return expr
 
 def fCut(value):
-    return format(float(value), '+.3f')
+    try:
+        return format(float(value), '+.3f')
+    except ValueError:
+        return ''
 
 def fThreshold(value):
     value = str(value).replace('p', '.') # Replace 'p' by comma.
