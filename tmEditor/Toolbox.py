@@ -19,6 +19,7 @@ import shutil
 import tempfile
 import logging
 import sys, os
+import json
 
 # ------------------------------------------------------------------------------
 #  Low level helper functions
@@ -40,6 +41,14 @@ def getXsdDir():
         return getenv('TM_EDITOR_XSD_DIR')
     except RuntimeError:
         return os.path.join(getRootDir(), 'tmXsd')
+
+def readSettings(section = None):
+    print os.path.join(os.path.dirname(os.path.realpath(__file__)), 'settings.json')
+    print open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'settings.json')).read()
+    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'settings.json')
+    with open(filename) as handle:
+        settings = json.loads(handle.read())
+    return settings[section] if section else settings
 
 # ------------------------------------------------------------------------------
 #  String formatting functions

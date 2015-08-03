@@ -108,6 +108,7 @@ install: all
 
 	echo "//     adding tmEditor package..."
 	cp tmEditor/*.py $(prefix)/lib/$(package)/tmEditor
+	cp tmEditor/*.json $(prefix)/lib/$(package)/tmEditor
 
 	echo "//     adding core libraries..."
 	cp $(corelibs) $(prefix)/lib/$(package)

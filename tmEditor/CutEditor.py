@@ -25,40 +25,7 @@ def genericRangeDict(count):
 
 class CutEditorDialog(QDialog):
 
-    #
-    # TODO: read this from YAML side file?!
-    # If no data key defined lookup the scales set and fetch lookup table.
-    #
-    CutItems = (
-        dict(name = 'MU-ETA', title = "Muon eta"),
-        dict(name = 'MU-PHI', title = "Muon phi"),
-        dict(name = 'MU-QLTY', title = "Muon quality"),
-        dict(name = 'MU-ISO', title = "Muon isolation", data = genericRangeDict(2**2)),
-        dict(name = 'MU-CHG', title = "Muon charge", data = genericRangeDict(4**2)),
-        dict(name = 'EG-ETA', title = "Electron/gamma eta"),
-        dict(name = 'EG-PHI', title = "Electron/gamma phi"),
-        dict(name = 'EG-QLTY', title = "Electron/gamma quality", data = genericRangeDict(4**2)),
-        dict(name = 'EG-ISO', title = "Electron/gamma isolation", data = genericRangeDict(2**2)),
-        dict(name = 'JET-ETA', title = "Jet eta"),
-        dict(name = 'JET-PHI', title = "Jet phi"),
-        dict(name = 'JET-QLTY', title = "Jet quality"),
-        dict(name = 'TAU-ETA', title = "Tau eta"),
-        dict(name = 'TAU-PHI', title = "Tau phi"),
-        dict(name = 'TAU-QLTY', title = "Tau quality", data = genericRangeDict(4**2)),
-        dict(name = 'TAU-ISO', title = "Tau isolation", data = genericRangeDict(2**2)),
-        dict(name = 'ETM-PHI', title = "Missing energy phi"),
-        dict(name = 'HTM-PHI', title = "Missing ? phi"),
-        dict(name = 'CHGCOR', title = "Charge correlation",
-            data = {
-                0: "same sign",
-                1: "opposite sign",
-            }
-        ),
-        dict(name = 'DETA', title = "Delta eta"),
-        dict(name = 'DPHI', title = "Delta phi"),
-        dict(name = 'DR', title = "Delta-R"),
-        dict(name = 'MASS', title = "Invariant mass"),
-    )
+    CutSettings = Toolbox.readSettings('cuts')
 
     def __init__(self, menu, parent = None):
         """Param title is the applciation name, version the main applications
@@ -68,10 +35,10 @@ class CutEditorDialog(QDialog):
         self.menu = menu
         #
         self.suffixLineEdit = QLineEdit(self)
-        self.objectComboBox = QComboBox(self)
-        for item in self.CutItems:
-            self.objectComboBox.addItem(item['name'])
-        self.objectComboBox.currentIndexChanged.connect(self.updateEntries)
+        self.typeComboBox = QComboBox(self)
+        for item in self.CutSettings:
+            self.typeComboBox.addItem(item['name'])
+        self.typeComboBox.currentIndexChanged.connect(self.updateEntries)
         self.minimumComboBox = QComboBox(self)#QDoubleSpinBox(self)
         # self.minimumComboBox.setDecimals(3)
         self.maximumComboBox = QComboBox(self)#QDoubleSpinBox(self)
@@ -85,9 +52,9 @@ class CutEditorDialog(QDialog):
         self.dataLabel = QLabel("Data", self)
         #
         gridLayout = QGridLayout()
-        gridLayout.addWidget(QLabel("Object", self), 0, 0)
-        gridLayout.addWidget(self.objectComboBox, 0, 1)
-        gridLayout.addWidget(QLabel("Name", self), 1, 0)
+        gridLayout.addWidget(QLabel("Type", self), 0, 0)
+        gridLayout.addWidget(self.typeComboBox, 0, 1)
+        gridLayout.addWidget(QLabel("Suffix", self), 1, 0)
         gridLayout.addWidget(self.suffixLineEdit, 1, 1)
         gridLayout.addWidget(self.minimumLabel, 2, 0)
         gridLayout.addWidget(self.minimumComboBox, 2, 1)
@@ -99,60 +66,80 @@ class CutEditorDialog(QDialog):
         self.setLayout(gridLayout)
 
     def name(self):
-        return "{0}_{1}".format(self.objectComboBox.currentText(), self.suffixLineEdit.text())
+        return "{0}_{1}".format(self.typeComboBox.currentText(), self.suffixLineEdit.text())
 
     def setName(self, name):
         tokens = name.split('_')
-        self.objectComboBox.setCurrentIndex(self.objectComboBox.findText(tokens[0]))
+        self.typeComboBox.setCurrentIndex(self.typeComboBox.findText(tokens[0]))
         self.suffixLineEdit.setText('_'.join(tokens[1:]))
 
+    def type(self):
+        """Returns cut typ."""
+        return str(self.typeComboBox.currentText())
+
     def minimum(self):
-        return self.minimumComboBox.itemData(self.minimumComboBox.currentIndex())['minimum']
+        return self.minimumComboBox.itemData(self.minimumComboBox.currentIndex()).toPyObject()['minimum']
 
     def setMinimum(self, value):
-        self.minimumComboBox.setCurrentIndex(self.minimumComboBox.findText(format(value, "+.3f")))
+        self.minimumComboBox.setCurrentIndex(self.minimumComboBox.findText(format(float(value), "+.3f")))
 
     def maximum(self):
-        return self.maximumComboBox.itemData(self.maximumComboBox.currentIndex())['maximum']
+        return self.maximumComboBox.itemData(self.maximumComboBox.currentIndex()).toPyObject()['maximum']
 
     def setMaximum(self, value):
-        self.maximumComboBox.setCurrentIndex(self.maximumComboBox.findText(format(value, "+.3f")))
+        self.maximumComboBox.setCurrentIndex(self.maximumComboBox.findText(format(float(value), "+.3f")))
 
     def data(self):
         if not self.dataComboBox.isEnabled():
             return None
-        return self.dataComboBox.itemData(self.dataComboBox.currentIndex()) # retuns dict key (lookup index)
+        return self.dataComboBox.itemData(self.dataComboBox.currentIndex()).toPyObject() # retuns dict key (lookup index)
+
+    def setData(self, data):
+        pass
+
+    def loadCut(self, cut):
+        """Load data from existing cut object, prevents change of type."""
+        self.typeComboBox.setEnabled(False)
+
+    def updateCut(self, cut):
+        """Update existing cut object with values from editor."""
+        assert cut.type == self.type()
+
+    def setRangeEnabled(self, enabled):
+        """Set range inputs enabled, diables data input."""
+        self.minimumLabel.setEnabled(enabled)
+        self.minimumComboBox.setEnabled(enabled)
+        self.maximumLabel.setEnabled(enabled)
+        self.maximumComboBox.setEnabled(enabled)
+        self.dataLabel.setEnabled(not enabled)
+        self.dataComboBox.setEnabled(not enabled)
+
+    def setDataEnabled(self, enabled):
+        """Set data input enabled, diables range inputs."""
+        self.setRangeEnabled(not enabled)
 
     def updateEntries(self):
-        name = str(self.objectComboBox.currentText())
-        item = filter(lambda item: item['name'] == name, self.CutItems)[0]
+        name = str(self.typeComboBox.currentText())
+        item = filter(lambda item: item['name'] == name, self.CutSettings)[0]
         if 'data' in item.keys():
-            self.minimumLabel.setEnabled(False)
-            self.minimumComboBox.setEnabled(False)
+            self.setDataEnabled(True)
             self.minimumComboBox.clear()
-            self.maximumLabel.setEnabled(False)
-            self.maximumComboBox.setEnabled(False)
             self.maximumComboBox.clear()
-            self.dataComboBox.setEnabled(True)
-            self.dataLabel.setEnabled(True)
             self.dataComboBox.clear()
             for key, value in item['data'].items():
                 self.dataComboBox.addItem(value, key)
         else:
+            self.setRangeEnabled(True)
+            print list(self.menu.scales.bins.keys())
+            print
             scale = self.menu.scales.bins[name]
-            self.minimumLabel.setEnabled(True)
-            self.minimumComboBox.setEnabled(True)
             self.minimumComboBox.clear()
             for entry in scale:
                 self.minimumComboBox.addItem(format(float(entry['minimum']), "+.3f"), entry)
 
-            self.maximumLabel.setEnabled(True)
-            self.maximumComboBox.setEnabled(True)
             self.maximumComboBox.clear()
             for entry in scale:
                 self.maximumComboBox.addItem(format(float(entry['maximum']), "+.3f"), entry)
             self.maximumComboBox.setCurrentIndex(self.maximumComboBox.count() - 1)
 
-            self.dataComboBox.setEnabled(False)
-            self.dataLabel.setEnabled(False)
             self.dataComboBox.clear()

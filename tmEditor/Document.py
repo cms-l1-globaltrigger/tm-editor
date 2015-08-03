@@ -274,10 +274,10 @@ class Document(QWidget):
         if dialog.result() != QDialog.Accepted:
             return
         self.setModified(True)
-        if dialog.data() is not None:
-            self.menu().addCut(dialog.name(), '', '', dialog.minimum(), dialog.maximum(), dialog.data())
-        else:
-            self.menu().addCut(dialog.name(), '', '', dialog.minimum(), dialog.maximum())
+        t = dialog.type().split('-')
+        if len(t) <= 1: # function cut
+            t = ['', t[0]]
+        self.menu().addCut(name=dialog.name(), object=t[0], type=t[1], minimum=dialog.minimum(), maximum=dialog.maximum(), data=dialog.data() or '')
         self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
 
     def editItem(self):
@@ -314,10 +314,25 @@ class Document(QWidget):
     def editCut(self, index, item):
         dialog = CutEditorDialog(self.menu(), self)
         dialog.setModal(True)
+        dialog.typeComboBox.setEnabled(False)
         dialog.setName(self.menu().cuts[index.row()]['name'])
+        dialog.setMinimum(self.menu().cuts[index.row()]['maximum'])
+        dialog.setMaximum(self.menu().cuts[index.row()]['minimum'])
+        dialog.setData(self.menu().cuts[index.row()]['data'])
+        dialog.updateEntries()
         dialog.exec_()
         if dialog.result() != QDialog.Accepted:
             return
+        self.setModified(True)
+        t = dialog.type().split('-')
+        if len(t) <= 1: # function cut
+            t = ['', t[0]]
+        cut = self.menu().cuts[index.row()]
+        cut['name'] = dialog.name()
+        cut['minimum'] = dialog.minimum()
+        cut['maximum'] = dialog.maximum()
+        cut['data'] = dialog.data() or ''
+        self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
 
     def copyItem(self):
         index, item = self.getSelection()
