@@ -120,6 +120,7 @@ install: all
 
 	echo "//     adding shared files (generating directory tree)..."
 	cp -r resource/share/* $(prefix)/share
+	rm -rf `find $(prefix)/share -name .svn`
 	cp copyright $(prefix)/share/doc/$(package)
 
 	echo "//     adding XSD files..."
@@ -142,6 +143,8 @@ rpmbuild: all
 	mkdir -p rpm/$(package)-$(version)
 	cp Makefile rpm/$(package)-$(version)/.
 	cp -r tmEditor resource scripts copyright rpm/$(package)-$(version)/.
+	rm -rf $(find rpm/$(package)-$(version) -name '.svn')
+	rm -rf $(find rpm/$(package)-$(version) -name '*.pyc')
 	cd rpm && tar czf RPMBUILD/SOURCES/$(package)-$(version).tar.gz $(package)-$(version)
 	echo "%define _topdir   $(shell pwd)/rpm/RPMBUILD" > rpm/$(package).spec
 	echo "%define name      $(package)" >> rpm/$(package).spec
@@ -174,6 +177,9 @@ rpmbuild: all
 	echo "%files" >> rpm/$(package).spec
 	echo "%defattr(-,root,root)" >> rpm/$(package).spec
 	cd rpm/$(package)-$(version)-build && find . -type f -printf "/usr/%P\n" >> ../$(package).spec
+	# Generating *.pyc and *.pyo file lists.
+	cd rpm/$(package)-$(version)-build && find . -type f -name '*.py' -printf "/usr/%Po\n" >> ../$(package).spec
+	cd rpm/$(package)-$(version)-build && find . -type f -name '*.py' -printf "/usr/%Pc\n" >> ../$(package).spec
 	mv rpm/$(package).spec rpm/RPMBUILD/SPECS/$(package).spec
 	rpmbuild -v -bb --clean rpm/RPMBUILD/SPECS/$(package).spec
 
