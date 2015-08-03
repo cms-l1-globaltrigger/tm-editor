@@ -268,10 +268,17 @@ class Document(QWidget):
     def addCut(self, index, item):
         dialog = CutEditorDialog(self.menu(), self)
         dialog.setModal(True)
-        dialog.setName("Unnamed")
+        dialog.setName("MU-ETA_Unnamed")
+        dialog.updateEntries()
         dialog.exec_()
         if dialog.result() != QDialog.Accepted:
             return
+        self.setModified(True)
+        if dialog.data() is not None:
+            self.menu().addCut(dialog.name(), '', '', dialog.minimum(), dialog.maximum(), dialog.data())
+        else:
+            self.menu().addCut(dialog.name(), '', '', dialog.minimum(), dialog.maximum())
+        self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
 
     def editItem(self):
         index, item = self.getSelection()

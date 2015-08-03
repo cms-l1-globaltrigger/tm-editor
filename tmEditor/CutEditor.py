@@ -30,34 +30,34 @@ class CutEditorDialog(QDialog):
     # If no data key defined lookup the scales set and fetch lookup table.
     #
     CutItems = (
-        dict(name = 'MU-ETA', title = ""),
-        dict(name = 'MU-PHI', title = ""),
-        dict(name = 'MU-QLTY', title = ""),
-        dict(name = 'MU-ISO', title = "", data = genericRangeDict(2**2)),
-        dict(name = 'MU-CHG', title = "", data = genericRangeDict(4**2)),
-        dict(name = 'EG-ETA', title = ""),
-        dict(name = 'EG-PHI', title = ""),
-        dict(name = 'EG-QLTY', title = "", data = genericRangeDict(4**2)),
-        dict(name = 'EG-ISO', title = "", data = genericRangeDict(2**2)),
-        dict(name = 'JET-ETA', title = ""),
-        dict(name = 'JET-PHI', title = ""),
-        dict(name = 'JET-QLTY', title = ""),
-        dict(name = 'TAU-ETA', title = ""),
-        dict(name = 'TAU-QLTY', title = "", data = genericRangeDict(4**2)),
-        dict(name = 'TAU-ISO', title = "", data = genericRangeDict(2**2)),
-        dict(name = 'TAU-PHI', title = ""),
-        dict(name = 'ETM-PHI', title = ""),
-        dict(name = 'HTM-PHI', title = ""),
+        dict(name = 'MU-ETA', title = "Muon eta"),
+        dict(name = 'MU-PHI', title = "Muon phi"),
+        dict(name = 'MU-QLTY', title = "Muon quality"),
+        dict(name = 'MU-ISO', title = "Muon isolation", data = genericRangeDict(2**2)),
+        dict(name = 'MU-CHG', title = "Muon charge", data = genericRangeDict(4**2)),
+        dict(name = 'EG-ETA', title = "Electron/gamma eta"),
+        dict(name = 'EG-PHI', title = "Electron/gamma phi"),
+        dict(name = 'EG-QLTY', title = "Electron/gamma quality", data = genericRangeDict(4**2)),
+        dict(name = 'EG-ISO', title = "Electron/gamma isolation", data = genericRangeDict(2**2)),
+        dict(name = 'JET-ETA', title = "Jet eta"),
+        dict(name = 'JET-PHI', title = "Jet phi"),
+        dict(name = 'JET-QLTY', title = "Jet quality"),
+        dict(name = 'TAU-ETA', title = "Tau eta"),
+        dict(name = 'TAU-PHI', title = "Tau phi"),
+        dict(name = 'TAU-QLTY', title = "Tau quality", data = genericRangeDict(4**2)),
+        dict(name = 'TAU-ISO', title = "Tau isolation", data = genericRangeDict(2**2)),
+        dict(name = 'ETM-PHI', title = "Missing energy phi"),
+        dict(name = 'HTM-PHI', title = "Missing ? phi"),
         dict(name = 'CHGCOR', title = "Charge correlation",
             data = {
                 0: "same sign",
                 1: "opposite sign",
             }
         ),
-        dict(name = 'DETA', title = ""),
-        dict(name = 'DPHI', title = ""),
-        dict(name = 'DR', title = ""),
-        dict(name = 'MASS', title = ""),
+        dict(name = 'DETA', title = "Delta eta"),
+        dict(name = 'DPHI', title = "Delta phi"),
+        dict(name = 'DR', title = "Delta-R"),
+        dict(name = 'MASS', title = "Invariant mass"),
     )
 
     def __init__(self, menu, parent = None):
@@ -67,15 +67,15 @@ class CutEditorDialog(QDialog):
         self.setWindowTitle(self.tr("Cut Editor"))
         self.menu = menu
         #
-        self.nameLineEdit = QLineEdit(self)
+        self.suffixLineEdit = QLineEdit(self)
         self.objectComboBox = QComboBox(self)
-        for name in tmGrammar.cutName:
-            self.objectComboBox.addItem(name)
+        for item in self.CutItems:
+            self.objectComboBox.addItem(item['name'])
         self.objectComboBox.currentIndexChanged.connect(self.updateEntries)
-        self.minimumSpinBox = QComboBox(self)#QDoubleSpinBox(self)
-        # self.minimumSpinBox.setDecimals(3)
-        self.maximumSpinBox = QComboBox(self)#QDoubleSpinBox(self)
-        # self.maximumSpinBox.setDecimals(3)
+        self.minimumComboBox = QComboBox(self)#QDoubleSpinBox(self)
+        # self.minimumComboBox.setDecimals(3)
+        self.maximumComboBox = QComboBox(self)#QDoubleSpinBox(self)
+        # self.maximumComboBox.setDecimals(3)
         self.dataComboBox = QComboBox(self)
         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
@@ -85,35 +85,54 @@ class CutEditorDialog(QDialog):
         self.dataLabel = QLabel("Data", self)
         #
         gridLayout = QGridLayout()
-        gridLayout.addWidget(QLabel("Name", self), 0, 0)
-        gridLayout.addWidget(self.nameLineEdit, 0, 1)
-        gridLayout.addWidget(QLabel("Object", self), 1, 0)
-        gridLayout.addWidget(self.objectComboBox, 1, 1)
-        gridLayout.addWidget(self.minimumLabel, 3, 0)
-        gridLayout.addWidget(self.minimumSpinBox, 3, 1)
-        gridLayout.addWidget(self.maximumLabel, 4, 0)
-        gridLayout.addWidget(self.maximumSpinBox, 4, 1)
-        gridLayout.addWidget(self.dataLabel, 5, 0)
-        gridLayout.addWidget(self.dataComboBox, 5, 1)
-        gridLayout.addWidget(buttonBox, 6, 0, 6, 2)
+        gridLayout.addWidget(QLabel("Object", self), 0, 0)
+        gridLayout.addWidget(self.objectComboBox, 0, 1)
+        gridLayout.addWidget(QLabel("Name", self), 1, 0)
+        gridLayout.addWidget(self.suffixLineEdit, 1, 1)
+        gridLayout.addWidget(self.minimumLabel, 2, 0)
+        gridLayout.addWidget(self.minimumComboBox, 2, 1)
+        gridLayout.addWidget(self.maximumLabel, 3, 0)
+        gridLayout.addWidget(self.maximumComboBox, 3, 1)
+        gridLayout.addWidget(self.dataLabel, 4, 0)
+        gridLayout.addWidget(self.dataComboBox, 4, 1)
+        gridLayout.addWidget(buttonBox, 5, 0, 5, 2)
         self.setLayout(gridLayout)
 
     def name(self):
-        return str(self.nameLineEdit.text())
+        return "{0}_{1}".format(self.objectComboBox.currentText(), self.suffixLineEdit.text())
 
     def setName(self, name):
-        self.nameLineEdit.setText(name)
+        tokens = name.split('_')
+        self.objectComboBox.setCurrentIndex(self.objectComboBox.findText(tokens[0]))
+        self.suffixLineEdit.setText('_'.join(tokens[1:]))
+
+    def minimum(self):
+        return self.minimumComboBox.itemData(self.minimumComboBox.currentIndex())['minimum']
+
+    def setMinimum(self, value):
+        self.minimumComboBox.setCurrentIndex(self.minimumComboBox.findText(format(value, "+.3f")))
+
+    def maximum(self):
+        return self.maximumComboBox.itemData(self.maximumComboBox.currentIndex())['maximum']
+
+    def setMaximum(self, value):
+        self.maximumComboBox.setCurrentIndex(self.maximumComboBox.findText(format(value, "+.3f")))
+
+    def data(self):
+        if not self.dataComboBox.isEnabled():
+            return None
+        return self.dataComboBox.itemData(self.dataComboBox.currentIndex()) # retuns dict key (lookup index)
 
     def updateEntries(self):
         name = str(self.objectComboBox.currentText())
         item = filter(lambda item: item['name'] == name, self.CutItems)[0]
         if 'data' in item.keys():
             self.minimumLabel.setEnabled(False)
-            self.minimumSpinBox.setEnabled(False)
-            self.minimumSpinBox.clear()
+            self.minimumComboBox.setEnabled(False)
+            self.minimumComboBox.clear()
             self.maximumLabel.setEnabled(False)
-            self.maximumSpinBox.setEnabled(False)
-            self.maximumSpinBox.clear()
+            self.maximumComboBox.setEnabled(False)
+            self.maximumComboBox.clear()
             self.dataComboBox.setEnabled(True)
             self.dataLabel.setEnabled(True)
             self.dataComboBox.clear()
@@ -122,17 +141,17 @@ class CutEditorDialog(QDialog):
         else:
             scale = self.menu.scales.bins[name]
             self.minimumLabel.setEnabled(True)
-            self.minimumSpinBox.setEnabled(True)
-            self.minimumSpinBox.clear()
+            self.minimumComboBox.setEnabled(True)
+            self.minimumComboBox.clear()
             for entry in scale:
-                self.minimumSpinBox.addItem(format(float(entry['minimum']), "+.3f"), entry)
+                self.minimumComboBox.addItem(format(float(entry['minimum']), "+.3f"), entry)
 
             self.maximumLabel.setEnabled(True)
-            self.maximumSpinBox.setEnabled(True)
-            self.maximumSpinBox.clear()
+            self.maximumComboBox.setEnabled(True)
+            self.maximumComboBox.clear()
             for entry in scale:
-                self.maximumSpinBox.addItem(format(float(entry['maximum']), "+.3f"), entry)
-            self.maximumSpinBox.setCurrentIndex(self.maximumSpinBox.count() - 1)
+                self.maximumComboBox.addItem(format(float(entry['maximum']), "+.3f"), entry)
+            self.maximumComboBox.setCurrentIndex(self.maximumComboBox.count() - 1)
 
             self.dataComboBox.setEnabled(False)
             self.dataLabel.setEnabled(False)
