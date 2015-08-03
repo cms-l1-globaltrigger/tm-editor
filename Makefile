@@ -92,6 +92,7 @@ install: all
 	mkdir -p $(prefix)/share/$(package)
 	mkdir -p $(prefix)/share/$(package)/xsd
 	mkdir -p $(prefix)/share/$(package)/xsd/xsd-type
+	mkdir -p $(prefix)/share/doc/$(package)
 
 	echo "//     generating executable wrapper..."
 	echo "#!/bin/bash" > $(prefix)/bin/$(package)
@@ -195,8 +196,8 @@ debbuild: all
 	echo "//     compressing changelogs..."
 	gzip deb/changelog.DEBIAN
 	mv deb/changelog.DEBIAN.gz deb/$(package)-$(version)/usr/share/doc/$(package)/.
-	echo "//     calculating MD5 sums..."
-	cd deb/$(package)-$(version) && md5sum $(shell find . -type f -printf "%P\n") > DEBIAN/md5sums
+	# Strip debug symbols from libraries (linitian complains).
+	strip --strip-unneeded deb/$(package)-$(version)/usr/lib/$(package)/*.so
 	echo "//     writing DEBIAN control file..."
 	echo "Package: $(package)" > deb/control
 	echo "Version: $(version)" >> deb/control
