@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+  <qresource>
+    <file alias="icons/tm-editor.svg">share/icons/hicolor/scalable/apps/tm-editor.svg</file>
+  </qresource>
+</RCC>

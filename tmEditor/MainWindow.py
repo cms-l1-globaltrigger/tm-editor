@@ -43,7 +43,7 @@ class MainWindow(QMainWindow):
     def __init__(self, parent = None):
         super(MainWindow, self).__init__(parent)
         # Setup window.
-        self.setWindowIcon(Toolbox.createIcon("apps", "text-editor"))
+        self.setWindowIcon(QIcon(":icons/tm-editor.svg"))
         self.setWindowTitle(self.tr("L1-Trigger Menu Editor"))
         self.resize(800, 600)
         # Create actions and toolbars.

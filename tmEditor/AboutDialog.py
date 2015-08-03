@@ -35,9 +35,9 @@ class AboutDialog(QDialog):
         version."""
         super(AboutDialog, self).__init__(parent)
         self.setWindowTitle(self.tr("About %1").arg(title))
-        self.setWindowIcon(QIcon(':icons/identity.svg'))
+        self.setWindowIcon(QIcon(':icons/tm-editor.svg'))
         self.icon = QLabel(self)
-        self.icon.setPixmap(QPixmap(QIcon(':icons/identity.svg').pixmap(QSize(32, 32))))
+        self.icon.setPixmap(QPixmap(QIcon(':icons/tm-editor.svg').pixmap(QSize(32, 32))))
         self.titleLabel = QLabel(self)
         self.aboutTextEdit = QTextEdit(self)
         self.aboutTextEdit.setReadOnly(True)

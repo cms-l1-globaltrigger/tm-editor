@@ -1,4 +1,5 @@
 # Environment
+shell=/bin/sh
 prefix ?= /usr
 rootdir ?= ..
 package = tm-editor
@@ -39,9 +40,50 @@ swigmods = \
 
 all: tmEditor/tmeditor_rc.py
 
-tmEditor/tmeditor_rc.py: resource/tmeditor_rc.rcc
+# -----------------------------------------------------------------------------
+#  Generating PyQT4 resource module.
+# -----------------------------------------------------------------------------
+tmEditor/tmeditor_rc.py: resource/tmEditor.rcc
 	$(pyrcc4) -o $@ $<
 
+# -----------------------------------------------------------------------------
+#
+#  Install distribution and external libraries to $(prefix) location.
+#  ==================================================================
+#
+#  prefix/
+#  +-- bin/
+#  |   `-- tm-editor --> wrapper shell script (generated)
+#  +-- lib/
+#  |   `-- tm-editor/
+#  |       +-- tmEditor/ --> this python package
+#  |       |   `-- *.py
+#  |       +-- tmTable.py --> SWIG module copied from tmTable
+#  |       +-- tmGrammar.py --> SWIG module copied from tmGrammar
+#  |       +-- _tmTable.so --> SWIG library copied from tmTable
+#  |       +-- _tmGrammar.so --> SWIG library copied from tmGrammar
+#  |       +-- tmUtil.so --> core library copied from tmUtil
+#  |       +-- tmXsd.so --> core library copied from tmXsd
+#  |       +-- tmTable.so --> core library copied from tmTable
+#  |       `-- tmGrammar.so --> core library copied from tmGrammar
+#  `-- share/
+#      +-- tm-editor/
+#      |   `-- tm-editor/
+#      |       `-- xsd/
+#      |           +-- xsd-types/
+#      |           |    `-- *.xsd --> XSD simple and complex types
+#      |           `-- *.xsd --> XSD components for valiation
+#      +-- doc/
+#      |   `-- tm-editor/
+#      |       `-- copyright --> copied from tmEditor
+#      +-- applications/
+#      |   `-- tm-editor.desktop --> freedesktop.org entry for graphical environments
+#      `-- icons/
+#          `-- hicolor/
+#              `-- scalable/
+#                  `-- apps/
+#                      `-- tm-editor.svg --> applciation icon
+# -----------------------------------------------------------------------------
 install: all
 	echo "//     building directory structure..."
 	mkdir -p $(prefix)/bin
@@ -50,9 +92,6 @@ install: all
 	mkdir -p $(prefix)/share/$(package)
 	mkdir -p $(prefix)/share/$(package)/xsd
 	mkdir -p $(prefix)/share/$(package)/xsd/xsd-type
-	mkdir -p $(prefix)/share/doc/$(package)
-	mkdir -p $(prefix)/share/applications
-	mkdir -p $(prefix)/share/icons/hicolor/scalable/apps
 
 	echo "//     generating executable wrapper..."
 	echo "#!/bin/bash" > $(prefix)/bin/$(package)
@@ -78,15 +117,17 @@ install: all
 	echo "//     adding SWIG libraries..."
 	cp $(swiglibs) $(prefix)/lib/$(package)
 
+	echo "//     adding shared files (generating directory tree)..."
+	cp -r resource/share/* $(prefix)/share
+	cp copyright $(prefix)/share/doc/$(package)
+
 	echo "//     adding XSD files..."
 	cp $(tmxsd_dir)/*.xsd $(prefix)/share/$(package)/xsd
 	cp $(tmxsd_dir)/xsd-type/*.xsd $(prefix)/share/$(package)/xsd/xsd-type
 
-	echo "//     adding various side files..."
-	cp resource/tm-editor.desktop $(prefix)/share/applications
-	cp resource/icons/identity.svg $(prefix)/share/icons/hicolor/scalable/apps/tm-editor.svg
-	cp copyright $(prefix)/share/doc/$(package)
-
+# -----------------------------------------------------------------------------
+#  Create a RPM package from scratch.
+# -----------------------------------------------------------------------------
 rpm: rpmbuild
 
 rpmbuild: all
@@ -135,6 +176,9 @@ rpmbuild: all
 	mv rpm/$(package).spec rpm/RPMBUILD/SPECS/$(package).spec
 	rpmbuild -v -bb --clean rpm/RPMBUILD/SPECS/$(package).spec
 
+# -----------------------------------------------------------------------------
+#  Create a debian package from scratch.
+# -----------------------------------------------------------------------------
 deb: debbuild
 
 debbuild: all
