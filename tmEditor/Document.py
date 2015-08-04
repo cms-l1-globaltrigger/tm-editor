@@ -54,7 +54,7 @@ class Document(QWidget):
         # Layout
         self.setContentsMargins(0, 0, 0, 0)
         # Create table views.
-        menuTableView = self.createProxyTableView("menuTableView", MenuModel(self.menu()))
+        menuTableView = self.createProxyTableView("menuTableView", MenuModel(self.menu(), self))
         algorithmsTableView = self.createProxyTableView("algorithmsTableView", AlgorithmsModel(self.menu(), self))
         algorithmsTableView.resizeColumnsToContents()
         cutsTableView = self.createProxyTableView("cutsTableView", CutsModel(self.menu(), self))
@@ -722,7 +722,7 @@ class ExternalsModel(BaseTableModel):
 class BinsModel(BaseTableModel):
 
     def __init__(self, menu, name, parent = None):
-        super(BinsModel, self).__init__(menu.scales.bins[name])
+        super(BinsModel, self).__init__(menu.scales.bins[name], parent)
         self.name = name
         self.addColumnSpec("Number", 'number', int, AlignRight)
         self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
