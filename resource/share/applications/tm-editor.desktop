@@ -5,7 +5,7 @@ Comment=Edit trigger menu XML files
 Exec=/usr/bin/tm-editor
 Terminal=false
 Type=Application
-Icon=tm-editor
+Icon=/usr/share/icons/hicolor/scalable/apps/tm-editor.svg
 MimeType=application/x-uml;
 Categories=Development;
 
