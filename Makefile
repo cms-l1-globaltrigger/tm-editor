@@ -4,6 +4,7 @@ prefix ?= /usr
 rootdir ?= ..
 package = tm-editor
 version = 0.1.0
+release = 2
 maintainer = Bernhard Arnold <bernhard.arnold@cern.ch>
 url = http://globaltrigger.hephy.at/
 timestamp := $(shell date)
@@ -121,7 +122,7 @@ install: all
 
 	echo "//     adding shared files (generating directory tree)..."
 	cp -r resource/share/* $(prefix)/share
-	rm -rf `find $(prefix)/share -name .svn`
+	rm -rf `find $(prefix) -name .svn`
 	cp copyright $(prefix)/share/doc/$(package)
 
 	echo "//     adding XSD files..."
@@ -149,7 +150,7 @@ rpmbuild: all
 	cd rpm && tar czf RPMBUILD/SOURCES/$(package)-$(version).tar.gz $(package)-$(version)
 	echo "%define _topdir   $(shell pwd)/rpm/RPMBUILD" > rpm/$(package).spec
 	echo "%define name      $(package)" >> rpm/$(package).spec
-	echo "%define release   1" >> rpm/$(package).spec
+	echo "%define release   $(release)" >> rpm/$(package).spec
 	echo "%define version   $(version)" >> rpm/$(package).spec
 	echo "%define buildroot %{_topdir}/%{name}-%{version}-root" >> rpm/$(package).spec
 	echo >> rpm/$(package).spec
@@ -162,6 +163,9 @@ rpmbuild: all
 	echo "Source:    %{name}-%{version}.tar.gz" >> rpm/$(package).spec
 	echo "Prefix:    /usr" >> rpm/$(package).spec
 	echo "Group:     Development/Tools" >> rpm/$(package).spec
+	echo "Requires:  python >= 2.6" >> rpm/$(package).spec
+	echo "Requires:  python-argparse" >> rpm/$(package).spec
+	echo "Requires:	 PyQt4 >= 4.6" >> rpm/$(package).spec
 	echo >> rpm/$(package).spec
 	echo "%description" >> rpm/$(package).spec
 	echo "a foobar app" >> rpm/$(package).spec
@@ -182,7 +186,7 @@ rpmbuild: all
 	cd rpm/$(package)-$(version)-build && find . -type f -name '*.py' -printf "/usr/%Po\n" >> ../$(package).spec
 	cd rpm/$(package)-$(version)-build && find . -type f -name '*.py' -printf "/usr/%Pc\n" >> ../$(package).spec
 	mv rpm/$(package).spec rpm/RPMBUILD/SPECS/$(package).spec
-	rpmbuild -v -bb --clean rpm/RPMBUILD/SPECS/$(package).spec
+	rpmbuild -v -bb rpm/RPMBUILD/SPECS/$(package).spec
 
 # -----------------------------------------------------------------------------
 #  Create a debian package from scratch.
@@ -207,7 +211,7 @@ debbuild: all
 	strip --strip-unneeded deb/$(package)-$(version)/usr/lib/$(package)/*.so
 	echo "//     writing DEBIAN control file..."
 	echo "Package: $(package)" > deb/control
-	echo "Version: $(version)" >> deb/control
+	echo "Version: $(version)-$(release)" >> deb/control
 	echo "Architecture: $(debian_arch)"  >> deb/control
 	echo "Maintainer: $(maintainer)" >> deb/control
 	echo "Installed-Size: $(shell du -sk . | awk '{print $1}')" >> deb/control

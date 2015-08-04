@@ -6,5 +6,6 @@ Exec=/usr/bin/tm-editor
 Terminal=false
 Type=Application
 Icon=tm-editor
+MimeType=application/x-uml;
 Categories=Development;
 
