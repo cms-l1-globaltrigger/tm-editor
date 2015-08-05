@@ -19,6 +19,7 @@ from AlgorithmEditor import AlgorithmEditorDialog
 from CutEditor import CutEditorDialog
 
 from AboutDialog import AboutDialog
+from OpenUrlDialog import OpenUrlDialog
 from Document import Document
 from MdiArea import MdiArea
 from MainWindow import MainWindow

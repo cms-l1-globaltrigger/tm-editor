@@ -10,6 +10,7 @@
 """
 
 import tmTable
+from AlgorithmFormatter import AlgorithmFormatter
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -20,6 +21,8 @@ import tempfile
 import logging
 import sys, os
 import json
+
+Formatter = AlgorithmFormatter()
 
 # ------------------------------------------------------------------------------
 #  Low level helper functions
@@ -56,16 +59,9 @@ def fSeparate(text, separator = ' '):
     return ''.join([str(token) for token in (separator, text, separator)])
 
 def fAlgorithm(expr):
+    """Experimental HTML syntax highlighting for algorithm expressions."""
+    expr = Formatter.humanize(expr)
     return expr
-    # """Experimental HTML syntax highlighting for algorithm expressions."""
-    # expr = formatter.humanize(expr)
-    # if len(expr) > 20:
-    #     expr = expr[:17] + "..."
-    # for function in ('comb', 'dist', 'mass'):
-    #     expr = expr.replace('{0}'.format(function), '<span style="color: blue; font-weight: bold;">{0}</span>'.format(function))
-    # for op in ('AND', 'OR', 'NOT'):
-    #     expr = expr.replace(' {0} '.format(op), ' <span style="color: darkblue; font-weight: bold;">{0}</span> '.format(op))
-    # return expr
 
 def fCut(value):
     try:

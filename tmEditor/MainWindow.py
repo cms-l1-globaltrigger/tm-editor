@@ -11,6 +11,7 @@
 
 from tmEditor import (
     AboutDialog,
+    OpenUrlDialog,
     Document,
     MdiArea,
     Toolbox,
@@ -20,10 +21,13 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import random
+import urllib2
+import tempfile
 import webbrowser
-import sys, os
+import logging
+import sys, os, re
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 """Applciation Version (edit this to increment the release version)."""
 
 L1ContentsURL = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/GlobalTriggerUpgradeL1T-uTme"
@@ -69,6 +73,10 @@ class MainWindow(QMainWindow):
         self.openAct.setStatusTip(self.tr("Open an existing file"))
         self.openAct.setIcon(Toolbox.createIcon("actions", "document-open"))
         self.openAct.triggered.connect(self.onOpen)
+        # Action for opening a file from URL.
+        self.openUrlAct = QAction(self.tr("Open &URL..."), self)
+        self.openUrlAct.setStatusTip(self.tr("Open a file from a remote location"))
+        self.openUrlAct.triggered.connect(self.onOpenUrl)
         # Action for saving the current file.
         self.saveAct = QAction(self.tr("&Save"), self)
         self.saveAct.setShortcut(QKeySequence.Save)
@@ -109,6 +117,7 @@ class MainWindow(QMainWindow):
         # File menu
         self.fileMenu = self.menuBar().addMenu(self.tr("&File"))
         self.fileMenu.addAction(self.openAct)
+        self.fileMenu.addAction(self.openUrlAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.saveAct)
         self.fileMenu.addAction(self.saveAsAct)
@@ -127,6 +136,7 @@ class MainWindow(QMainWindow):
         self.toolbar.setFloatable(False)
         self.toolbar.addAction(self.openAct)
         self.toolbar.addAction(self.saveAct)
+        self.toolbar.addAction(self.saveAsAct)
 
     def createStatusBar(self):
         """Create status bar and populate with status labels."""
@@ -164,11 +174,39 @@ class MainWindow(QMainWindow):
         self.saveAct.setEnabled(enabled)
         self.saveAsAct.setEnabled(enabled)
         self.closeAct.setEnabled(enabled)
+        # Make sure that the file is writeable (and exists)
+        if enabled:
+            document = self.mdiArea.currentDocument()
+            self.saveAct.setEnabled(os.access(document.filename(), os.W_OK))
 
     def loadDocument(self, filename):
-        """Load document from file and add it to the MDI area."""
+        """Load document from file or remote loaction and add it to the MDI area."""
         try:
-            document = Document(filename, self)
+            result = re.match('(http|https|ftp|file)\:\/\/(.+)', filename)
+            if result:
+                protocol, url = result.groups()
+                if protocol == 'file':
+                    document = Document(url, self)
+                else:
+                    url = filename
+                    u = urllib2.urlopen(url)
+                    meta = u.info()
+                    file_size = int(meta.getheaders("Content-Length")[0])
+                    logging.info("fetching %s bytes from %s", file_size, url)
+                    with tempfile.NamedTemporaryFile(bufsize=file_size) as f:
+                        file_size_dl = 0
+                        block_sz = 1024*8
+                        while True:
+                            buffer = u.read(block_sz)
+                            if not buffer:
+                                break
+                            file_size_dl += len(buffer)
+                            f.write(buffer)
+                        f.seek(0)
+                        document = Document(f.name, self)
+                        f.close()
+            else:
+                document = Document(filename, self)
         except RuntimeError, e:
             box = QMessageBox.critical(self,
                 "Failed to open XML menu",
@@ -180,10 +218,22 @@ class MainWindow(QMainWindow):
 
     def onOpen(self):
         """Select a XML menu file using an dialog."""
+        path = os.getcwd() # Default is user home dir on desktop environments.
+        if self.mdiArea.currentDocument():
+            path = os.path.dirname(self.mdiArea.currentDocument().filename())
         filenames = QFileDialog.getOpenFileNames(self, self.tr("Open files..."),
-            os.getcwd(), "L1-Trigger Menus (*.xml)")
+            path, "L1-Trigger Menus (*.xml)")
         for filename in filenames:
             self.loadDocument(str(filename))
+
+    def onOpenUrl(self):
+        """Select an URL to read XML file from."""
+        dialog = OpenUrlDialog(self)
+        dialog.setModal(True)
+        dialog.exec_()
+        if dialog.result() != QDialog.Accepted:
+            return
+        self.loadDocument(dialog.url())
 
     def onSave(self):
         document = self.mdiArea.currentDocument()
@@ -196,8 +246,11 @@ class MainWindow(QMainWindow):
             )
 
     def onSaveAs(self):
+        path = os.getcwd() # Default is user home dir on desktop environments.
+        if self.mdiArea.currentDocument():
+            path = os.path.dirname(self.mdiArea.currentDocument().filename())
         filename = str(QFileDialog.getSaveFileName(self, self.tr("Save as..."),
-            os.getcwd(), "L1-Trigger Menus (*.xml)"))
+            path, "L1-Trigger Menus (*.xml)"))
         if filename:
             document = self.mdiArea.currentDocument()
             try:

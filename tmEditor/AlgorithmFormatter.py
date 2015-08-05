@@ -22,19 +22,19 @@ class AlgorithmFormatter(object):
     Operators = ('AND', 'OR', 'XOR', 'NOT', )
     Paranthesis = ('(', ')', '{', '}', '[', ']', )
     Separators = (',', )
-    def free(self, token):
-        return " {0} ".format(token)
     def machinize(self, algorithm):
+        """Return expression applying strict foramtting required by tmGrammar classes."""
         def separate(keyword, algorithm):
+            """Embraces a token with spaces."""
             return algorithm.replace(keyword, " {keyword} ".format(keyword = keyword))
         for keyword in self.Functions:
-            algorithm = separate(keyword, algorithm)
-        for keyword in self.Operators:
             algorithm = separate(keyword, algorithm)
         for keyword in self.Paranthesis:
             algorithm = separate(keyword, algorithm)
         for keyword in self.Separators:
             algorithm = separate(keyword, algorithm)
+        for keyword in self.Operators:
+            algorithm = algorithm.replace(" {keyword} ", " {keyword} ".format(keyword = keyword))
         algorithm = ' '.join(algorithm.split())
         # TODO: now that's way not the best approach at all, use regular expressions instead...
         algorithm = algorithm.replace(" , ", ",")
@@ -49,10 +49,12 @@ class AlgorithmFormatter(object):
             algorithm = algorithm.replace(keyword.lower(), keyword)
         return algorithm.replace("  ", " ") # TODO: that's not efficient...
     def humanize(self, algorithm):
+        """Returns expression applying a human readable formatting."""
         algorithm = self.machinize(algorithm)
         algorithm = algorithm.replace(",", ", ")
         return algorithm
     def expanded(self, algorithm):
+        """Return expression applying an expanding formatting."""
         algorithm = self.machinize(algorithm)
         # TODO: now that's way not the best approach at all, use regular expressions instead...
         algorithm = algorithm.replace(",", ", ")
@@ -85,7 +87,7 @@ class AlgorithmFormatter(object):
                 temp.append("  " * level)
                 temp.append(algorithm[i:i+3])
                 temp.append("\n")
-                temp.append("  " * (level - 1))
+                temp.append("  " * (level))
                 i += 4
             elif algorithm[i].startswith(')'):
                 if level: level -= 1

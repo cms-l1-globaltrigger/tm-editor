@@ -21,8 +21,13 @@ from PyQt4.QtGui import *
 
 __all__ = ['CutEditorDialog', ]
 
-def suffix(name):
-    return "_".join(name.split("_")[1:])
+FunctionCutObjects = {
+    'MASS': 'MASS',
+    'DR': 'DIST',
+    'DETA': 'DIST',
+    'DPHI': 'DIST',
+    'CHGCOR': 'COMB',
+}
 
 class CutEditorDialog(QDialog):
 
@@ -93,26 +98,29 @@ class CutEditorDialog(QDialog):
         self.typeComboBox.setCurrentIndex(self.typeComboBox.findText(tokens[0]))
         self.suffixLineEdit.setText('_'.join(tokens[1:]))
 
-    def object(self):
-        """Returns object typ."""
-        # TODO not effective, re-write.
-        type_ = str(self.typeComboBox.currentText())
-        try:
-            object, type_ = str(self.typeComboBox.currentText()).split('-')
-        except IndexError:
-            type_ = str(self.typeComboBox.currentText())
-            object = {'MASS': 'mass', 'DR': 'dist', 'DETA': 'dist', 'DPHI': 'dist', 'CHGCOR': 'comb'}[type_]
-        return object
+    def splitName(self):
+        """Returns type, object and suffix of cut name."""
+        # TODO: re-write "<type>-<object>_<suffix>"
+        result = re.match('([A-Z0-9]+)(?:\-([A-Z0-9]+))?\_(.+)', self.name())
+        type_, object, suffix = result.groups()
+        if not object: # Some types require implizit object types.
+            object = FunctionCutObjects[type_]
+        return type_, object, suffix
 
     def type(self):
-        """Returns cut typ."""
-        # TODO not effective, re-write.
-        return str(self.typeComboBox.currentText()).split('-')[1]
+        """Returns type name."""
+        type, object, suffix = self.splitName()
+        return type
+
+    def object(self):
+        """Returns object name."""
+        type, object, suffix = self.splitName()
+        return object
 
     def suffix(self):
         """Returns suffix."""
-        # TODO not effective, re-write.
-        return str(self.suffixLineEdit.text())
+        type, object, suffix = self.splitName()
+        return suffix
 
     def minimum(self):
         if not self.minimumComboBox.isEnabled():
@@ -181,12 +189,12 @@ class CutEditorDialog(QDialog):
 
     def updateEntries(self):
         # TODO not effective, re-write.
-        name = "{0}-{1}".format(self.object(), self.type())
+        name = str(self.typeComboBox.currentText())
         item = filter(lambda item: item['name'] == name, self.CutSettings)[0]
         self.infoTextEdit.clear()
         info = []
         if 'title' in item.keys():
-            info.append("<p><img src=\":icons/hint.png\"/> <strong>{title}</strong></p>".format(**item))
+            info.append("<h3><img src=\"/usr/share/icons/gnome/16x16/actions/help-about.png\"/> {title}</h3>".format(**item))
         if 'description' in item.keys():
             info.append("<p>{description}</p>".format(**item))
         if not self.typeComboBox.isEnabled():
@@ -200,9 +208,12 @@ class CutEditorDialog(QDialog):
             # brrrr.... >_<'
             for key in [str(i) for i in sorted([int(key) for key in item['data'].keys()])]:
                 self.dataComboBox.addItem(item['data'][key], key)
+        elif self.object() in ('MASS', 'DIST', 'COMB'):
+            pass # ???? scales ???
         else:
             self.setRangeEnabled(True)
-            scale = self.menu.scales.bins[name]
+            typename = "-".join((self.type(), self.object()))
+            scale = self.menu.scales.bins[typename]
             self.minimumComboBox.clear()
             for entry in scale:
                 self.minimumComboBox.addItem(format(float(entry['minimum']), "+.3f"), entry)

@@ -36,9 +36,10 @@ class AlgorithmEditor(QMainWindow):
         self.formatter = AlgorithmFormatter()
         self.setModified(False)
         #
-        self.indexComboBox = QComboBox(self)
-        self.indexComboBox.setEditable(True)
-        self.indexComboBox.setMinimumWidth(50)
+        self.indexSpinBox = QSpinBox(self)
+        # self.indexSpinBox.setMaximum(512)
+        # self.indexSpinBox.setEditable(True)
+        self.indexSpinBox.setMinimumWidth(100)
         self.nameComboBox = QLineEdit(self)
         self.nameComboBox.setMinimumWidth(300)
         # Create actions and toolbars.
@@ -63,6 +64,7 @@ class AlgorithmEditor(QMainWindow):
         self.setExpression("")
         self.setComment("")
         self.textEdit.textChanged.connect(self.onTextChanged)
+        self.indexSpinBox.valueChanged.connect(self.onIndexChanged)
 
     def createActions(self):
         """Create actions."""
@@ -94,12 +96,13 @@ class AlgorithmEditor(QMainWindow):
         self.toolbar.addWidget(QLabel(self.tr("  Name "), self))
         self.toolbar.addWidget(self.nameComboBox)
         self.toolbar.addWidget(QLabel(self.tr("  Index "), self))
-        self.toolbar.addWidget(self.indexComboBox)
+        self.toolbar.addWidget(self.indexSpinBox)
 
     def createDocks(self):
         """Create dock widgets."""
         # Setup library
         dock = QDockWidget(self.tr("Library"), self)
+        dock.setFeatures(QDockWidget.NoDockWidgetFeatures)
         dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
         self.libraryWidget = LibraryWidget(self.menu, dock)
         self.libraryWidget.selected.connect(self.onInsertItem)
@@ -107,10 +110,10 @@ class AlgorithmEditor(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
 
     def index(self):
-        return int(self.indexComboBox.currentText())
+        return int(self.indexSpinBox.value())
 
     def setIndex(self, index):
-        self.indexComboBox.setEditText(str(index))
+        self.indexSpinBox.setValue(int(index))
 
     def name(self):
         return self.nameComboBox.text()
@@ -139,6 +142,9 @@ class AlgorithmEditor(QMainWindow):
 
     def onTextChanged(self):
         self.setModified(True)
+
+    def onIndexChanged(self):
+        pass
 
     def onFormatCompact(self):
         modified = self.isModified() # Foramtting does not count as change.
@@ -254,18 +260,18 @@ class LibraryWidget(QWidget):
     selected = pyqtSignal(str)
 
     Functions = (
-        ("comb{obj, obj}", "Double combination function, returns true if both object requirements are fulfilled.",),
-        ("comb{obj, obj, obj}", "Triple combination function, returns true if all three object requirements are fulfilled.",),
-        ("comb{obj, obj, obj, obj}", "Quad combination function, returns true if all four object requirements are fulfilled.",),
-        ("dist{obj, obj}[cut]", "Correlation function, retruns true if correlation of both object requirements is within the given cut.",),
-        ("dist{obj, obj}[cut, cut]", "Correlation function, retruns true if correlation of both object requirements is within the given cuts.",),
-        ("mass{obj, obj}[cut]", "Invariant mass function, returns true if the invariant mass of two object requirements is between the given cut.",),
+        ("comb{obj, obj}", "<strong>Double combination function</strong><br/>Returns true if both object requirements are fulfilled.",),
+        ("comb{obj, obj, obj}", "<strong>Triple combination function</strong><br/>Returns true if all three object requirements are fulfilled.",),
+        ("comb{obj, obj, obj, obj}", "<strong>Quad combination function</strong><br/>Returns true if all four object requirements are fulfilled.",),
+        ("dist{obj, obj}[cut]", "<strong>Correlation function</strong><br/>Retruns true if correlation of both object requirements is within the given cut.",),
+        ("dist{obj, obj}[cut, cut]", "<strong>Correlation function</strong><br/>Retruns true if correlation of both object requirements is within the given cuts.",),
+        ("mass{obj, obj}[cut]", "<strong>Invariant mass function</strong><br/>Returns true if the invariant mass of two object requirements is between the given cut.",),
     )
     Operators = (
-        ("AND", "Logical AND operator.",),
-        ("OR", "Logical OR operator.",),
-        ("XOR", "Logical XOR operator.",),
-        ("NOT", "Logical NOT operator.",),
+        ("AND", "Logical <strong>AND</strong> operator.",),
+        ("OR", "Logical <strong>OR</strong> operator.",),
+        ("XOR", "Logical <strong>XOR</strong> (exclusive or) operator.",),
+        ("NOT", "Logical <strong>NOT</strong> operator.",),
     )
     ObjectPreview = "<br/>".join((
         "<strong>Name:</strong> {name}",
@@ -310,9 +316,10 @@ class LibraryWidget(QWidget):
         self.operatorsList.addItems([name for name, _ in self.Operators])
         self.tabWidget.addTab(self.operatorsList, "O&ps")
         # Insert button.
-        self.insertButton = QPushButton(self.tr("<< &Insert"), self)
+        self.insertButton = QPushButton(Toolbox.createIcon('actions', 'insert-text'), self.tr("&Insert"), self)
         self.insertButton.clicked.connect(self.onInsert)
         self.insertButton.setDefault(False)
+        ###self.insertButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         # Wizard option.
         self.wizardCheckBox = QCheckBox(self.tr("Use &wizard"), self)
         # Preview widget.
@@ -323,10 +330,10 @@ class LibraryWidget(QWidget):
         # Layout
         gridLayout = QGridLayout()
         gridLayout.setContentsMargins(1, 1, 1, 1)
-        gridLayout.addWidget(self.tabWidget, 0, 0, 1, 2)
+        gridLayout.addWidget(self.tabWidget, 0, 0, 1, 3)
         gridLayout.addWidget(self.insertButton, 1, 0)
         gridLayout.addWidget(self.wizardCheckBox, 1, 1)
-        gridLayout.addWidget(self.previewLabel, 2, 0, 1, 2)
+        gridLayout.addWidget(self.previewLabel, 2, 0, 1, 3)
         self.setLayout(gridLayout)
         # Setup connections.
         self.objectsList.currentRowChanged.connect(self.onPreview)
@@ -354,6 +361,9 @@ class LibraryWidget(QWidget):
         self.externalsList.addItems(sorted([external.name for external in self.menu.externals]))
         # Refresh UI.
         self.onPreview()
+        # Default message.
+        self.previewLabel.setText(self.tr("<img src=\"/usr/share/icons/gnome/16x16/actions/help-about.png\"/> <strong>Double click</strong> on an above item to insert it at the current cursor position or click on the <strong>bnsert</strong> button."))
+
 
     def onPreview(self):
         """Updates preview widget with current selected library item."""
@@ -403,6 +413,8 @@ class LibraryWidget(QWidget):
             if row < 0: return
             self.previewLabel.setText(self.Operators[row][1])
             self.insertButton.setEnabled(True)
+        # TODO Not implemented
+        self.wizardCheckBox.setEnabled(False)
 
     def onInsert(self):
         """Insert selected item from active library list."""

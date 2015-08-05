@@ -3,8 +3,9 @@ shell=/bin/sh
 prefix ?= /usr
 rootdir ?= ..
 package = tm-editor
-version = 0.1.0
-release = 3
+version = 0.1.1
+release = 1
+pkgdir = $(package)-$(version)-$(release)
 maintainer = Bernhard Arnold <bernhard.arnold@cern.ch>
 url = http://globaltrigger.hephy.at/
 timestamp := $(shell date)
@@ -129,6 +130,13 @@ install: all
 	cp $(tmxsd_dir)/*.xsd $(prefix)/share/$(package)/xsd
 	cp $(tmxsd_dir)/xsd-type/*.xsd $(prefix)/share/$(package)/xsd/xsd-type
 
+	echo "//     compressing changelog..."
+	cp changelog  $(prefix)/share/doc/$(package)/changelog
+	gzip -9 $(prefix)/share/doc/$(package)/changelog
+
+	echo "//     compressing man page..."
+	gzip -9 $(prefix)/share/man/man1/$(package).1
+
 # -----------------------------------------------------------------------------
 #  Create a RPM package from scratch.
 # -----------------------------------------------------------------------------
@@ -141,13 +149,13 @@ rpmbuild: all
 	mkdir -p rpm/RPMBUILD/SOURCES
 	mkdir -p rpm/RPMBUILD/SPECS
 	mkdir -p rpm/RPMBUILD/SRPMS
-	make -f Makefile install prefix=rpm/$(package)-$(version)-build
-	mkdir -p rpm/$(package)-$(version)
-	cp Makefile rpm/$(package)-$(version)/.
-	cp -r tmEditor resource scripts copyright rpm/$(package)-$(version)/.
-	rm -rf $(find rpm/$(package)-$(version) -name '.svn')
-	rm -rf $(find rpm/$(package)-$(version) -name '*.pyc')
-	cd rpm && tar czf RPMBUILD/SOURCES/$(package)-$(version).tar.gz $(package)-$(version)
+	make -f Makefile install prefix=rpm/$(pkgdir)-build
+	mkdir -p rpm/$(pkgdir)
+	cp Makefile rpm/$(pkgdir)/.
+	cp -r tmEditor resource scripts copyright rpm/$(pkgdir)/.
+	rm -rf $(find rpm/$(pkgdir) -name '.svn')
+	rm -rf $(find rpm/$(pkgdir) -name '*.pyc')
+	cd rpm && tar czf RPMBUILD/SOURCES/$(pkgdir).tar.gz $(pkgdir)
 	echo "%define _topdir   $(shell pwd)/rpm/RPMBUILD" > rpm/$(package).spec
 	echo "%define name      $(package)" >> rpm/$(package).spec
 	echo "%define release   $(release)" >> rpm/$(package).spec
@@ -166,6 +174,7 @@ rpmbuild: all
 	echo "Requires:  python >= 2.6" >> rpm/$(package).spec
 	echo "Requires:  python-argparse" >> rpm/$(package).spec
 	echo "Requires:	 PyQt4 >= 4.6" >> rpm/$(package).spec
+	echo "Requires:	 gnome-icon-theme" >> rpm/$(package).spec
 	echo >> rpm/$(package).spec
 	echo "%description" >> rpm/$(package).spec
 	echo "a foobar app" >> rpm/$(package).spec
@@ -181,10 +190,10 @@ rpmbuild: all
 	echo >> rpm/$(package).spec
 	echo "%files" >> rpm/$(package).spec
 	echo "%defattr(-,root,root)" >> rpm/$(package).spec
-	cd rpm/$(package)-$(version)-build && find . -type f -printf "/usr/%P\n" >> ../$(package).spec
+	cd rpm/$(pkgdir)-build && find . -type f -printf "/usr/%P\n" >> ../$(package).spec
 	# Generating *.pyc and *.pyo file lists.
-	cd rpm/$(package)-$(version)-build && find . -type f -name '*.py' -printf "/usr/%Po\n" >> ../$(package).spec
-	cd rpm/$(package)-$(version)-build && find . -type f -name '*.py' -printf "/usr/%Pc\n" >> ../$(package).spec
+	cd rpm/$(pkgdir)-build && find . -type f -name '*.py' -printf "/usr/%Po\n" >> ../$(package).spec
+	cd rpm/$(pkgdir)-build && find . -type f -name '*.py' -printf "/usr/%Pc\n" >> ../$(package).spec
 	mv rpm/$(package).spec rpm/RPMBUILD/SPECS/$(package).spec
 	rpmbuild -v -bb rpm/RPMBUILD/SPECS/$(package).spec
 
@@ -194,28 +203,23 @@ rpmbuild: all
 deb: debbuild
 
 debbuild: all
-	rm -rf deb/$(package)-$(version)
-	mkdir -p deb/$(package)-$(version)
-	make -f Makefile install prefix=deb/$(package)-$(version)/usr
-	mkdir -p deb/$(package)-$(version)/DEBIAN
-	echo "//     auto generate dummy changelog..."
-	echo "$(package) ($VERSION) extra; urgency=low" > deb/changelog.DEBIAN
-	echo > deb/changelog.DEBIAN
-	echo "  * Added Changelog for compliance with debian rules." > deb/changelog.DEBIAN
-	echo > deb/changelog.DEBIAN
-	echo " -- $(maintainer)  $(timestamp)" > deb/changelog.DEBIAN
+	rm -rf deb/$(pkgdir)
+	mkdir -p deb/$(pkgdir)
+	make -f Makefile install prefix=deb/$(pkgdir)/usr
+	mkdir -p deb/$(pkgdir)/DEBIAN
+	cp changelog deb/changelog.Debian
 	echo "//     compressing changelogs..."
-	gzip deb/changelog.DEBIAN
-	mv deb/changelog.DEBIAN.gz deb/$(package)-$(version)/usr/share/doc/$(package)/.
+	gzip -9 deb/changelog.Debian
+	mv deb/changelog.Debian.gz deb/$(pkgdir)/usr/share/doc/$(package)/.
 	# Strip debug symbols from libraries (linitian complains).
-	strip --strip-unneeded deb/$(package)-$(version)/usr/lib/$(package)/*.so
+	strip --strip-unneeded deb/$(pkgdir)/usr/lib/$(package)/*.so
 	echo "//     writing DEBIAN control file..."
 	echo "Package: $(package)" > deb/control
 	echo "Version: $(version)-$(release)" >> deb/control
 	echo "Architecture: $(debian_arch)"  >> deb/control
 	echo "Maintainer: $(maintainer)" >> deb/control
 	echo "Installed-Size: $(shell du -sk . | awk '{print $1}')" >> deb/control
-	echo "Depends: python (>= 2.6), python-qt4 (>= 4.6), libc6 (>= 2.4), libxerces-c28 (>= 2.8)" >> deb/control
+	echo "Depends: python (>= 2.6), python-qt4 (>= 4.6), libc6 (>= 2.4), libxerces-c28 (>= 2.8), gnome-icon-theme" >> deb/control
 	echo "Replaces: $(package)" >> deb/control
 	echo "Provides: $(package)" >> deb/control
 	echo "Section: gnome" >> deb/control
@@ -223,9 +227,9 @@ debbuild: all
 	echo "Homepage: $(url)" >> deb/control
 	echo "Description: Trigger Menu Editor" >> deb/control
 	echo " Graphical editor for editing Level-1 trigger menu XML files." >> deb/control
-	mv deb/control deb/$(package)-$(version)/DEBIAN/.
+	mv deb/control deb/$(pkgdir)/DEBIAN/.
 	echo "//     generateing DEBIAN package..."
-	fakeroot dpkg-deb -Zgzip -b deb/$(package)-$(version) deb/$(package)-$(version)-$(debian_arch).deb
+	fakeroot dpkg-deb -Zgzip -b deb/$(pkgdir) deb/$(pkgdir)-$(debian_arch).deb
 
 clean:
 	rm -rf tmEditor/tmeditor_rc.py

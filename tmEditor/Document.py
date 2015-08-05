@@ -36,6 +36,7 @@ import sys, os
 
 AlignLeft = Qt.AlignLeft | Qt.AlignVCenter
 AlignRight = Qt.AlignRight | Qt.AlignVCenter
+AlignCenter = Qt.AlignCenter | Qt.AlignVCenter
 
 # ------------------------------------------------------------------------------
 #  Document widget
@@ -577,15 +578,15 @@ class BottomWidget(QWidget):
 class BaseTableModel(QAbstractTableModel):
     """Abstract table model class to be inherited to display table data."""
 
-    ColumnSpec = namedtuple('ColumnSpec', 'title, key, format, alignment')
+    ColumnSpec = namedtuple('ColumnSpec', 'title, key, format, alignment, headerAlignment')
 
     def __init__(self, values, parent = None):
         super(BaseTableModel, self).__init__(parent)
         self.values = values
         self.columnSpecs = []
 
-    def addColumnSpec(self, title, key, format = str, alignment = AlignLeft):
-        spec = self.ColumnSpec(title, key, format, alignment)
+    def addColumnSpec(self, title, key, format = str, alignment = AlignLeft, headerAlignment = AlignCenter):
+        spec = self.ColumnSpec(title, key, format, alignment, headerAlignment)
         self.columnSpecs.append(spec)
         return spec
 
@@ -612,6 +613,8 @@ class BaseTableModel(QAbstractTableModel):
         if orientation == Qt.Horizontal:
             if role == Qt.DisplayRole:
                 return self.columnSpecs[section].title
+            if role == Qt.TextAlignmentRole:
+                return self.columnSpecs[section].headerAlignment
         return QVariant()
 
 # HACK
@@ -680,10 +683,11 @@ class AlgorithmsModel(BaseTableModel):
 
     def __init__(self, menu, parent = None):
         super(AlgorithmsModel, self).__init__(menu.algorithms, parent)
+        self.formatter = AlgorithmFormatter()
         self.addColumnSpec("Index", 'index', int, AlignRight)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Expression", 'expression', fAlgorithm)
-        # self.addColumnSpec("ID", 'algorithm_id', int, AlignRight)
+        # self.addColumnSpec("Comment", 'comment')
 
 class CutsModel(BaseTableModel):
 
@@ -695,6 +699,7 @@ class CutsModel(BaseTableModel):
         self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
         self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
         self.addColumnSpec("Data", 'data')
+        # self.addColumnSpec("Comment", 'comment')
         # self.addColumnSpec("ID", 'cut_id', int, AlignRight)
 
 class ObjectsModel(BaseTableModel):
@@ -706,6 +711,7 @@ class ObjectsModel(BaseTableModel):
         self.addColumnSpec("Comparison", 'comparison_operator', fComparison, AlignRight)
         self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
+        self.addColumnSpec("Comment", 'comment')
         # self.addColumnSpec("ID", 'object_id', int, AlignRight)
 
 class ExternalsModel(BaseTableModel):
@@ -716,7 +722,8 @@ class ExternalsModel(BaseTableModel):
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
         self.addColumnSpec("Comment", 'comment')
         self.addColumnSpec("Timestamp", 'datetime')
-        # self.addColumnSpec("ID", 'requirement_id', int, AlignRight)
+        self.addColumnSpec("Comment", 'comment')
+        # self.addColumnSpec("ID", 'requirement_id', int, AlignRight, AlignRight)
         # self.addColumnSpec("ID2", 'ext_signal_id', int, AlignRight)
 
 class BinsModel(BaseTableModel):
@@ -727,15 +734,16 @@ class BinsModel(BaseTableModel):
         self.addColumnSpec("Number", 'number', int, AlignRight)
         self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
         self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
-        # self.addColumnSpec("ID", 'scale_id', int, AlignRight)
+        self.addColumnSpec("Comment", 'comment')
+        # self.addColumnSpec("ID", 'scale_id', int, AlignRight, AlignRight)
 
 class ExtSignalsModel(BaseTableModel):
 
     def __init__(self, menu, parent = None):
         super(ExtSignalsModel, self).__init__(menu.extSignals.extSignals, parent)
+        self.addColumnSpec("System", 'system')
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Label", 'label')
-        self.addColumnSpec("System", 'system')
         self.addColumnSpec("Cable", 'cable')
         self.addColumnSpec("Channel", 'channel')
         self.addColumnSpec("Description", 'description')

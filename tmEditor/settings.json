@@ -1,209 +1,209 @@
 {
-    "cuts": [
-        {
-            "name": "MU-ETA",
-            "title": "Muon eta",
-            "description": "Restricting eta range for muon object requirement."
-        },
-        {
-            "name": "MU-PHI",
-            "title": "Muon phi"
-        },
-        {
-            "name": "MU-QLTY",
-            "title": "Muon quality",
-            "data": {
-                "0": "quality 00",
-                "1": "quality 01",
-                "2": "quality 02",
-                "3": "quality 03",
-                "4": "quality 04",
-                "5": "quality 05",
-                "6": "quality 06",
-                "7": "quality 07",
-                "8": "quality 08",
-                "9": "quality 09",
-                "10": "quality 10",
-                "11": "quality 11",
-                "12": "quality 12",
-                "13": "quality 13",
-                "14": "quality 14",
-                "15": "quality 15"
-            }
-        },
-        {
-            "name": "MU-ISO",
-            "title": "Muon isolation",
-            "data": {
-                "0": "isolation 0",
-                "1": "isolation 1",
-                "2": "isolation 2",
-                "3": "isolation 3"
-            }
-        },
-        {
-            "name": "MU-CHG",
-            "title": "Muon charge",
-            "data": {
-                "0": "quality 00",
-                "1": "quality 01",
-                "2": "quality 02",
-                "3": "quality 03",
-                "4": "quality 04",
-                "5": "quality 05",
-                "6": "quality 06",
-                "7": "quality 07",
-                "8": "quality 08",
-                "9": "quality 09",
-                "10": "quality 10",
-                "11": "quality 11",
-                "12": "quality 12",
-                "13": "quality 13",
-                "14": "quality 14",
-                "15": "quality 15"
-            }
-        },
-        {
-            "name": "EG-ETA",
-            "title": "Electron/gamma eta"
-        },
-        {
-            "name": "EG-PHI",
-            "title": "Electron/gamma phi"
-        },
-        {
-            "name": "EG-QLTY",
-            "title": "Electron/gamma quality",
-            "data": {
-                "0": "quality 00",
-                "1": "quality 01",
-                "2": "quality 02",
-                "3": "quality 03",
-                "4": "quality 04",
-                "5": "quality 05",
-                "6": "quality 06",
-                "7": "quality 07",
-                "8": "quality 08",
-                "9": "quality 09",
-                "10": "quality 10",
-                "11": "quality 11",
-                "12": "quality 12",
-                "13": "quality 13",
-                "14": "quality 14",
-                "15": "quality 15"
-            }
-        },
-        {
-            "name": "EG-ISO",
-            "title": "Electron/gamma isolation",
-            "data": {
-                "0": "isolation 0",
-                "1": "isolation 1",
-                "2": "isolation 2",
-                "3": "isolation 3"
-            }
-        },
-        {
-            "name": "JET-ETA",
-            "title": "Jet eta"
-        },
-        {
-            "name": "JET-PHI",
-            "title": "Jet phi"
-        },
-        {
-            "name": "JET-QLTY",
-            "title": "Jet quality",
-            "data": {
-                "0": "quality 00",
-                "1": "quality 01",
-                "2": "quality 02",
-                "3": "quality 03",
-                "4": "quality 04",
-                "5": "quality 05",
-                "6": "quality 06",
-                "7": "quality 07",
-                "8": "quality 08",
-                "9": "quality 09",
-                "10": "quality 10",
-                "11": "quality 11",
-                "12": "quality 12",
-                "13": "quality 13",
-                "14": "quality 14",
-                "15": "quality 15"
-            }
-        },
-        {
-            "name": "TAU-ETA",
-            "title": "Tau eta"
-        },
-        {
-            "name": "TAU-PHI",
-            "title": "Tau phi"
-        },
-        {
-            "name": "TAU-QLTY",
-            "title": "Tau quality",
-            "data": {
-                "0": "quality 00",
-                "1": "quality 01",
-                "2": "quality 02",
-                "3": "quality 03",
-                "4": "quality 04",
-                "5": "quality 05",
-                "6": "quality 06",
-                "7": "quality 07",
-                "8": "quality 08",
-                "9": "quality 09",
-                "10": "quality 10",
-                "11": "quality 11",
-                "12": "quality 12",
-                "13": "quality 13",
-                "14": "quality 14",
-                "15": "quality 15"
-            }
-        },
-        {
-            "name": "TAU-ISO",
-            "title": "Tau isolation",
-            "data": {
-                "0": "isolation 0",
-                "1": "isolation 1",
-                "2": "isolation 2",
-                "3": "isolation 3"
-            }
-        },
-        {
-            "name": "ETM-PHI",
-            "title": "Missing energy phi"
-        },
-        {
-            "name": "HTM-PHI",
-            "title": "Missing ? phi"
-        },
-        {
-            "name": "CHGCOR",
-            "title": "Charge correlation",
-            "data": {
-                "0": "same sign",
-                "1": "opposite sign"
-            }
-        },
-        {
-            "name": "DETA",
-            "title": "Delta eta"
-        },
-        {
-            "name": "DPHI",
-            "title": "Delta phi"
-        },
-        {
-            "name": "DR",
-            "title": "Delta-R"
-        },
-        {
-            "name": "MASS",
-            "title": "Invariant mass"
-        }
+  "cuts": [
+    {
+      "name": "MU-ETA",
+      "title": "Muon eta",
+      "description": "Restricting eta range for muon object requirement."
+    },
+    {
+      "name": "MU-PHI",
+      "title": "Muon phi"
+    },
+    {
+      "name": "MU-QLTY",
+      "title": "Muon quality",
+      "data": {
+        "0": "quality 00",
+        "1": "quality 01",
+        "2": "quality 02",
+        "3": "quality 03",
+        "4": "quality 04",
+        "5": "quality 05",
+        "6": "quality 06",
+        "7": "quality 07",
+        "8": "quality 08",
+        "9": "quality 09",
+        "10": "quality 10",
+        "11": "quality 11",
+        "12": "quality 12",
+        "13": "quality 13",
+        "14": "quality 14",
+        "15": "quality 15"
+      }
+    },
+    {
+      "name": "MU-ISO",
+      "title": "Muon isolation",
+      "data": {
+        "0": "isolation 0",
+        "1": "isolation 1",
+        "2": "isolation 2",
+        "3": "isolation 3"
+      }
+    },
+    {
+      "name": "MU-CHG",
+      "title": "Muon charge",
+      "data": {
+        "0": "quality 00",
+        "1": "quality 01",
+        "2": "quality 02",
+        "3": "quality 03",
+        "4": "quality 04",
+        "5": "quality 05",
+        "6": "quality 06",
+        "7": "quality 07",
+        "8": "quality 08",
+        "9": "quality 09",
+        "10": "quality 10",
+        "11": "quality 11",
+        "12": "quality 12",
+        "13": "quality 13",
+        "14": "quality 14",
+        "15": "quality 15"
+      }
+    },
+    {
+      "name": "EG-ETA",
+      "title": "Electron/gamma eta"
+    },
+    {
+      "name": "EG-PHI",
+      "title": "Electron/gamma phi"
+    },
+    {
+      "name": "EG-QLTY",
+      "title": "Electron/gamma quality",
+      "data": {
+        "0": "quality 00",
+        "1": "quality 01",
+        "2": "quality 02",
+        "3": "quality 03",
+        "4": "quality 04",
+        "5": "quality 05",
+        "6": "quality 06",
+        "7": "quality 07",
+        "8": "quality 08",
+        "9": "quality 09",
+        "10": "quality 10",
+        "11": "quality 11",
+        "12": "quality 12",
+        "13": "quality 13",
+        "14": "quality 14",
+        "15": "quality 15"
+      }
+    },
+    {
+      "name": "EG-ISO",
+      "title": "Electron/gamma isolation",
+      "data": {
+        "0": "isolation 0",
+        "1": "isolation 1",
+        "2": "isolation 2",
+        "3": "isolation 3"
+      }
+    },
+    {
+      "name": "JET-ETA",
+      "title": "Jet eta"
+    },
+    {
+      "name": "JET-PHI",
+      "title": "Jet phi"
+    },
+    {
+      "name": "JET-QLTY",
+      "title": "Jet quality",
+      "data": {
+        "0": "quality 00",
+        "1": "quality 01",
+        "2": "quality 02",
+        "3": "quality 03",
+        "4": "quality 04",
+        "5": "quality 05",
+        "6": "quality 06",
+        "7": "quality 07",
+        "8": "quality 08",
+        "9": "quality 09",
+        "10": "quality 10",
+        "11": "quality 11",
+        "12": "quality 12",
+        "13": "quality 13",
+        "14": "quality 14",
+        "15": "quality 15"
+      }
+    },
+    {
+      "name": "TAU-ETA",
+      "title": "Tau eta"
+    },
+    {
+      "name": "TAU-PHI",
+      "title": "Tau phi"
+    },
+    {
+      "name": "TAU-QLTY",
+      "title": "Tau quality",
+      "data": {
+        "0": "quality 00",
+        "1": "quality 01",
+        "2": "quality 02",
+        "3": "quality 03",
+        "4": "quality 04",
+        "5": "quality 05",
+        "6": "quality 06",
+        "7": "quality 07",
+        "8": "quality 08",
+        "9": "quality 09",
+        "10": "quality 10",
+        "11": "quality 11",
+        "12": "quality 12",
+        "13": "quality 13",
+        "14": "quality 14",
+        "15": "quality 15"
+      }
+    },
+    {
+      "name": "TAU-ISO",
+      "title": "Tau isolation",
+      "data": {
+        "0": "isolation 0",
+        "1": "isolation 1",
+        "2": "isolation 2",
+        "3": "isolation 3"
+      }
+    },
+    {
+      "name": "ETM-PHI",
+      "title": "Missing energy phi"
+    },
+    {
+      "name": "HTM-PHI",
+      "title": "Missing ? phi"
+    },
+    {
+      "name": "CHGCOR",
+      "title": "Charge correlation",
+      "data": {
+        "0": "same sign",
+        "1": "opposite sign"
+      }
+    },
+    {
+      "name": "DETA",
+      "title": "Delta eta"
+    },
+    {
+      "name": "DPHI",
+      "title": "Delta phi"
+    },
+    {
+      "name": "DR",
+      "title": "Delta-R"
+    },
+    {
+      "name": "MASS",
+      "title": "Invariant mass"
+    }
   ]
 }
