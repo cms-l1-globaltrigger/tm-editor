@@ -149,13 +149,13 @@ rpmbuild: all
 	mkdir -p rpm/RPMBUILD/SOURCES
 	mkdir -p rpm/RPMBUILD/SPECS
 	mkdir -p rpm/RPMBUILD/SRPMS
-	make -f Makefile install prefix=rpm/$(pkgdir)-build
-	mkdir -p rpm/$(pkgdir)
-	cp Makefile rpm/$(pkgdir)/.
-	cp -r tmEditor resource scripts copyright rpm/$(pkgdir)/.
-	rm -rf $(find rpm/$(pkgdir) -name '.svn')
-	rm -rf $(find rpm/$(pkgdir) -name '*.pyc')
-	cd rpm && tar czf RPMBUILD/SOURCES/$(pkgdir).tar.gz $(pkgdir)
+	make -f Makefile install prefix=rpm/$(package)-$(version)-build
+	mkdir -p rpm/$(package)-$(version)
+	cp Makefile rpm/$(package)-$(version)/.
+	cp -r tmEditor resource scripts copyright changelog rpm/$(package)-$(version)/.
+	rm -rf $(find rpm/$(package)-$(version) -name '.svn')
+	rm -rf $(find rpm/$(package)-$(version) -name '*.pyc')
+	cd rpm && tar czf RPMBUILD/SOURCES/$(package)-$(version).tar.gz $(package)-$(version)
 	echo "%define _topdir   $(shell pwd)/rpm/RPMBUILD" > rpm/$(package).spec
 	echo "%define name      $(package)" >> rpm/$(package).spec
 	echo "%define release   $(release)" >> rpm/$(package).spec
@@ -174,7 +174,6 @@ rpmbuild: all
 	echo "Requires:  python >= 2.6" >> rpm/$(package).spec
 	echo "Requires:  python-argparse" >> rpm/$(package).spec
 	echo "Requires:	 PyQt4 >= 4.6" >> rpm/$(package).spec
-	echo "Requires:	 gnome-icon-theme" >> rpm/$(package).spec
 	echo >> rpm/$(package).spec
 	echo "%description" >> rpm/$(package).spec
 	echo "a foobar app" >> rpm/$(package).spec
@@ -190,10 +189,10 @@ rpmbuild: all
 	echo >> rpm/$(package).spec
 	echo "%files" >> rpm/$(package).spec
 	echo "%defattr(-,root,root)" >> rpm/$(package).spec
-	cd rpm/$(pkgdir)-build && find . -type f -printf "/usr/%P\n" >> ../$(package).spec
+	cd rpm/$(package)-$(version)-build && find . -type f -printf "/usr/%P\n" >> ../$(package).spec
 	# Generating *.pyc and *.pyo file lists.
-	cd rpm/$(pkgdir)-build && find . -type f -name '*.py' -printf "/usr/%Po\n" >> ../$(package).spec
-	cd rpm/$(pkgdir)-build && find . -type f -name '*.py' -printf "/usr/%Pc\n" >> ../$(package).spec
+	cd rpm/$(package)-$(version)-build && find . -type f -name '*.py' -printf "/usr/%Po\n" >> ../$(package).spec
+	cd rpm/$(package)-$(version)-build && find . -type f -name '*.py' -printf "/usr/%Pc\n" >> ../$(package).spec
 	mv rpm/$(package).spec rpm/RPMBUILD/SPECS/$(package).spec
 	rpmbuild -v -bb rpm/RPMBUILD/SPECS/$(package).spec
 
