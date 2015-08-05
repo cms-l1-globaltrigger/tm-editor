@@ -1,0 +1,44 @@
+.TH tm\-editor 1 "05 Aug 2015"
+.SH NAME
+\fBtm\-editor\fP \- CMS Level-1 global trigger menu editor
+
+.SH SYNOPSIS
+.B tm\-editor
+[\fIOPTION\fR]... [\fIFILE\fR]...
+.SH DESCRIPTION
+.B tm\-editor
+is the official trigger menu editor for the CERN CMS community.
+
+.LP
+.SH OPTIONS
+
+.TP
+\fB\-h ", " \-\-help\fR
+Prints the command line options.
+.TP
+\fBfilename(s)...\fR
+Specifies the XML file to open when
+.B tm\-editor
+starts. If this is not specified,
+.B tm\-editor
+will load a blank environment. Multiple XML files can be loaded if they are
+separated by spaces.
+.B tm\-editor
+also supports handling of remote files.  For example, you can pass the location
+of a remote XML file to
+.B tm\-editor,
+like "http://www.example.org/sample.xml", or load a file from a FTP server,
+like "ftp://ftp.example.org/sample.xml".
+.TP
+\fB\-v ", " \-\-version\fR
+Increases output verbosity and writes messages also to
+.B tm\-editor.log
+logfile in the current directory (default is user home).
+.TP
+\fB\-V ", " \-\-version\fR
+Output version information and exit
+
+.SH BUGS
+If you find a bug, please report it at <bernhard.arnold@cern.ch>.
+.SH AUTHORS
+Bernhard Arnold (bernhard.arnold@cern.ch)
