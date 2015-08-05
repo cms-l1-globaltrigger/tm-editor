@@ -1,0 +1,16 @@
+tm-editor (0.1.1-0) extra; urgency=medium
+
+  * Added open from URL dialog.
+  * Improved path location on open and safe as actions.
+  * Improved algorithm editor dialog.
+  * Introduced algorithm syntax validator.
+  * Added manpage file.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Wed, 05 Aug 2015 08:40:49 +0200
+
+tm-editor (0.1.0-3) extra; urgency=medium
+
+  * Initial application release. Supports most (not all) of the algorithm
+    expression language features.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Tue, 04 Aug 2015 17:37:19 +0200
