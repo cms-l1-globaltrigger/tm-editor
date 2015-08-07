@@ -30,14 +30,17 @@ FunctionCutObjects = {
 }
 
 class CutEditorDialog(QDialog):
+    """Dialog providing cut creation/editing interface."""
 
-    CutSettings = Toolbox.readSettings('cuts')
+    CutSettings = Toolbox.Settings['cuts']
 
     def __init__(self, menu, parent = None):
         """Param title is the applciation name, version the main applications
         version."""
         super(CutEditorDialog, self).__init__(parent)
+        # Dialog appeareance
         self.setWindowTitle(self.tr("Cut Editor"))
+        # Attributes
         self.menu = menu
         # Cut type
         self.typeLabel = QLabel(self.tr("Type"), self)
@@ -47,17 +50,21 @@ class CutEditorDialog(QDialog):
         self.suffixLabel = QLabel(self.tr("Suffix"), self)
         # Populate cut types.
         for item in self.CutSettings:
-            self.typeComboBox.addItem(item['name'])
-        #
-        self.typeComboBox.currentIndexChanged.connect(self.updateEntries)
+            self.typeComboBox.addItem(item['name'], item)
+        # Minimum
         self.minimumLabel = QLabel(self.tr("Minimum"), self)
         self.minimumComboBox = QComboBox(self)#QDoubleSpinBox(self)
-        #
+        # Maximum
         self.maximumLabel = QLabel(self.tr("Maximum"), self)
         self.maximumComboBox = QComboBox(self)#QDoubleSpinBox(self)
-        #
+        # Data
         self.dataLabel = QLabel(self.tr("Data"), self)
         self.dataComboBox = QComboBox(self)
+        # Comment
+        self.commentLabel = QLabel(self.tr("Comment"), self)
+        self.commentTextEdit = QPlainTextEdit(self)
+        self.commentTextEdit.setMaximumHeight(50)
+        # Info box
         self.infoTextEdit = QTextEdit(self)
         self.infoTextEdit.setReadOnly(True)
         # Button box
@@ -76,8 +83,10 @@ class CutEditorDialog(QDialog):
         gridLayout.addWidget(self.maximumComboBox, 3, 1)
         gridLayout.addWidget(self.dataLabel, 4, 0)
         gridLayout.addWidget(self.dataComboBox, 4, 1)
+        gridLayout.addWidget(self.commentLabel, 5, 0)
+        gridLayout.addWidget(self.commentTextEdit, 5, 1, 1, 2)
         gridLayout.addWidget(self.infoTextEdit, 0, 2, 5, 1)
-        gridLayout.addWidget(buttonBox, 5, 0, 1, 3)
+        gridLayout.addWidget(buttonBox, 6, 0, 1, 3)
         self.setLayout(gridLayout)
         # Setup connections.
         self.typeComboBox.currentIndexChanged.connect(self.updateEntries)
@@ -98,32 +107,21 @@ class CutEditorDialog(QDialog):
         self.typeComboBox.setCurrentIndex(self.typeComboBox.findText(tokens[0]))
         self.suffixLineEdit.setText('_'.join(tokens[1:]))
 
-    def splitName(self):
-        """Returns type, object and suffix of cut name."""
-        # TODO: re-write "<type>-<object>_<suffix>"
-        result = re.match('([A-Z0-9]+)(?:\-([A-Z0-9]+))?\_(.+)', self.name())
-        type_, object, suffix = result.groups()
-        if not object: # Some types require implizit object types.
-            object = FunctionCutObjects[type_]
-        return type_, object, suffix
-
     def type(self):
         """Returns type name."""
-        type, object, suffix = self.splitName()
-        return type
+        return self.getCurrentCutSettings()['type']
 
     def object(self):
         """Returns object name."""
-        type, object, suffix = self.splitName()
-        return object
+        return self.getCurrentCutSettings()['object']
 
     def suffix(self):
         """Returns suffix."""
-        type, object, suffix = self.splitName()
-        return suffix
+        return str(self.suffixLineEdit.text())
 
     def minimum(self):
-        if not self.minimumComboBox.isEnabled():
+        """Returns minimum floating point string or None if not a range type cut."""
+        if 'data' in self.getCurrentCutSettings().keys():
             return None
         return self.minimumComboBox.itemData(self.minimumComboBox.currentIndex()).toPyObject()['minimum']
 
@@ -132,7 +130,8 @@ class CutEditorDialog(QDialog):
         self.minimumComboBox.setCurrentIndex(self.minimumComboBox.findText(format(float(value), "+.3f")))
 
     def maximum(self):
-        if not self.maximumComboBox.isEnabled():
+        """Returns maximum floating point string or None if not a range type cut."""
+        if 'data' in self.getCurrentCutSettings().keys():
             return None
         return self.maximumComboBox.itemData(self.maximumComboBox.currentIndex()).toPyObject()['maximum']
 
@@ -141,7 +140,8 @@ class CutEditorDialog(QDialog):
         self.maximumComboBox.setCurrentIndex(self.maximumComboBox.findText(format(float(value), "+.3f")))
 
     def data(self):
-        if not self.dataComboBox.isEnabled():
+        """Returns data string or None if not a data type cut."""
+        if not 'data' in self.getCurrentCutSettings().keys():
             return None
         return str(self.dataComboBox.itemData(self.dataComboBox.currentIndex()).toPyObject()) # retuns dict key (lookup index)
 
@@ -162,6 +162,8 @@ class CutEditorDialog(QDialog):
             self.setRangeEnabled(True)
             self.setMinimum(cut.minimum)
             self.setMaximum(cut.maximum)
+        if 'comment' in cut.keys():
+            self.commentTextEdit.setPlainText(cut['comment'])
 
     def updateCut(self, cut):
         """Update existing cut object with values from editor."""
@@ -172,7 +174,7 @@ class CutEditorDialog(QDialog):
         cut['minimum'] = self.minimum() or ''
         cut['maximum'] = self.maximum() or ''
         cut['data'] = self.data() or ''
-        # cut['comment'] = comment
+        cut['comment'] = str(self.commentTextEdit.toPlainText())
 
     def setRangeEnabled(self, enabled):
         """Set range inputs enabled, diables data input."""
@@ -187,10 +189,14 @@ class CutEditorDialog(QDialog):
         """Set data input enabled, diables range inputs."""
         self.setRangeEnabled(not enabled)
 
+    def getCurrentCutSettings(self):
+        """Retruns dict holding settings for current selected cut."""
+        name = str(self.typeComboBox.currentText())
+        return filter(lambda item: item['name'] == name, self.CutSettings)[0]
+
     def updateEntries(self):
         # TODO not effective, re-write.
-        name = str(self.typeComboBox.currentText())
-        item = filter(lambda item: item['name'] == name, self.CutSettings)[0]
+        item = self.getCurrentCutSettings()
         self.infoTextEdit.clear()
         info = []
         if 'title' in item.keys():
@@ -209,11 +215,14 @@ class CutEditorDialog(QDialog):
             for key in [str(i) for i in sorted([int(key) for key in item['data'].keys()])]:
                 self.dataComboBox.addItem(item['data'][key], key)
         elif self.object() in ('MASS', 'DIST', 'COMB'):
-            pass # ???? scales ???
+            self.minimumComboBox.clear()
+            self.maximumComboBox.clear()
+            self.dataComboBox.clear()
         else:
             self.setRangeEnabled(True)
-            typename = "-".join((self.type(), self.object()))
+            typename = str('-'.join((item['object'], item['type']))) # TODO: Recast to string required (why?)
             scale = self.menu.scales.bins[typename]
+
             self.minimumComboBox.clear()
             for entry in scale:
                 self.minimumComboBox.addItem(format(float(entry['minimum']), "+.3f"), entry)

@@ -45,11 +45,15 @@ def getXsdDir():
     except RuntimeError:
         return os.path.join(getRootDir(), 'tmXsd')
 
-def readSettings(section = None):
+def readSettings():
+    """Read settings from JSON side file."""
     filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'settings.json')
     with open(filename) as handle:
         settings = json.loads(handle.read())
-    return settings[section] if section else settings
+    return settings
+
+Settings = readSettings()
+"""Storing static settings."""
 
 # ------------------------------------------------------------------------------
 #  String formatting functions

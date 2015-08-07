@@ -2,16 +2,24 @@
   "cuts": [
     {
       "name": "MU-ETA",
+      "object": "MU",
+      "type": "ETA",
       "title": "Muon eta",
-      "description": "Restricting eta range for muon object requirement."
+      "description": "Restricts valid eta range for muon object requirement."
     },
     {
       "name": "MU-PHI",
-      "title": "Muon phi"
+      "object": "MU",
+      "type": "PHI",
+      "title": "Muon phi",
+      "description": "Restricts valid phi range for muon object requirement."
     },
     {
       "name": "MU-QLTY",
+      "object": "MU",
+      "type": "QLTY",
       "title": "Muon quality",
+      "description": "Applies quality filter for muon object requirement.",
       "data": {
         "0": "quality 00",
         "1": "quality 01",
@@ -33,6 +41,8 @@
     },
     {
       "name": "MU-ISO",
+      "object": "MU",
+      "type": "ISO",
       "title": "Muon isolation",
       "data": {
         "0": "isolation 0",
@@ -43,36 +53,30 @@
     },
     {
       "name": "MU-CHG",
+      "object": "MU",
+      "type": "CHG",
       "title": "Muon charge",
       "data": {
-        "0": "quality 00",
-        "1": "quality 01",
-        "2": "quality 02",
-        "3": "quality 03",
-        "4": "quality 04",
-        "5": "quality 05",
-        "6": "quality 06",
-        "7": "quality 07",
-        "8": "quality 08",
-        "9": "quality 09",
-        "10": "quality 10",
-        "11": "quality 11",
-        "12": "quality 12",
-        "13": "quality 13",
-        "14": "quality 14",
-        "15": "quality 15"
+        "0": "positive",
+        "1": "negative"
       }
     },
     {
       "name": "EG-ETA",
+      "object": "EG",
+      "type": "ETA",
       "title": "Electron/gamma eta"
     },
     {
       "name": "EG-PHI",
+      "object": "EG",
+      "type": "PHI",
       "title": "Electron/gamma phi"
     },
     {
       "name": "EG-QLTY",
+      "object": "EG",
+      "type": "QLTY",
       "title": "Electron/gamma quality",
       "data": {
         "0": "quality 00",
@@ -95,6 +99,8 @@
     },
     {
       "name": "EG-ISO",
+      "object": "EG",
+      "type": "ISO",
       "title": "Electron/gamma isolation",
       "data": {
         "0": "isolation 0",
@@ -105,14 +111,20 @@
     },
     {
       "name": "JET-ETA",
+      "object": "JET",
+      "type": "ETA",
       "title": "Jet eta"
     },
     {
       "name": "JET-PHI",
+      "object": "JET",
+      "type": "PHI",
       "title": "Jet phi"
     },
     {
       "name": "JET-QLTY",
+      "object": "JET",
+      "type": "QLTY",
       "title": "Jet quality",
       "data": {
         "0": "quality 00",
@@ -135,14 +147,20 @@
     },
     {
       "name": "TAU-ETA",
+      "object": "TAU",
+      "type": "ETA",
       "title": "Tau eta"
     },
     {
       "name": "TAU-PHI",
+      "object": "TAU",
+      "type": "PHI",
       "title": "Tau phi"
     },
     {
       "name": "TAU-QLTY",
+      "object": "TAU",
+      "type": "QLTY",
       "title": "Tau quality",
       "data": {
         "0": "quality 00",
@@ -165,6 +183,8 @@
     },
     {
       "name": "TAU-ISO",
+      "object": "TAU",
+      "type": "ISO",
       "title": "Tau isolation",
       "data": {
         "0": "isolation 0",
@@ -175,15 +195,22 @@
     },
     {
       "name": "ETM-PHI",
+      "object": "MET",
+      "type": "PHI",
       "title": "Missing energy phi"
     },
     {
       "name": "HTM-PHI",
-      "title": "Missing ? phi"
+      "object": "MHT",
+      "type": "PHI",
+      "title": "Missing energy phi"
     },
     {
       "name": "CHGCOR",
+      "object": "COMB",
+      "type": "CHGCOR",
       "title": "Charge correlation",
+      "description": "Applies charge correlation restriction to combination of two objects.",
       "data": {
         "0": "same sign",
         "1": "opposite sign"
@@ -191,18 +218,28 @@
     },
     {
       "name": "DETA",
-      "title": "Delta eta"
+      "object": "DIST",
+      "type": "DETA",
+      "title": "Delta eta",
+      "description": "Applies delta eta restricton to combination of two objects."
     },
     {
       "name": "DPHI",
-      "title": "Delta phi"
+      "object": "DIST",
+      "type": "DPHI",
+      "title": "Delta phi",
+      "description": "Applies delta phi restricton to combination of two objects."
     },
     {
       "name": "DR",
+      "object": "DIST",
+      "type": "DR",
       "title": "Delta-R"
     },
     {
       "name": "MASS",
+      "object": "MASS",
+      "type": "MASS",
       "title": "Invariant mass"
     }
   ]

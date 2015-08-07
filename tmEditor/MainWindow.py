@@ -27,7 +27,7 @@ import webbrowser
 import logging
 import sys, os, re
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 """Applciation Version (edit this to increment the release version)."""
 
 L1ContentsURL = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/GlobalTriggerUpgradeL1T-uTme"
@@ -182,34 +182,43 @@ class MainWindow(QMainWindow):
     def loadDocument(self, filename):
         """Load document from file or remote loaction and add it to the MDI area."""
         try:
+            # Test if filename is a remote URL.
             result = re.match('(http|https|ftp|file)\:\/\/(.+)', filename)
             if result:
                 protocol, url = result.groups()
+                # Handle file protocol as local filesystem path.
                 if protocol == 'file':
                     document = Document(url, self)
+                # Else try to download remote file to a temporary file.
                 else:
                     url = filename
                     u = urllib2.urlopen(url)
                     meta = u.info()
-                    file_size = int(meta.getheaders("Content-Length")[0])
-                    logging.info("fetching %s bytes from %s", file_size, url)
-                    with tempfile.NamedTemporaryFile(bufsize=file_size) as f:
-                        file_size_dl = 0
-                        block_sz = 1024*8
+                    # Get byte size of remote content.
+                    fileSize = int(meta.getheaders("Content-Length")[0])
+                    logging.info("fetching %s bytes from %s", fileSize, url)
+                    # Create a temorary file buffer.
+                    with tempfile.NamedTemporaryFile(bufsize = fileSize) as f:
+                        receivedSize = 0
+                        blockSize = 1024 * 8
                         while True:
-                            buffer = u.read(block_sz)
+                            buffer = u.read(blockSize)
                             if not buffer:
                                 break
-                            file_size_dl += len(buffer)
+                            receivedSize += len(buffer)
                             f.write(buffer)
+                        # Reset file pointer so make sure document is read from
+                        # begin. Note: do not close the temporary file as it
+                        # will vanish (see python tempfile.NamedTemporaryFile).
                         f.seek(0)
+                        # Create document by reading temporary file.
                         document = Document(f.name, self)
-                        f.close()
+            # Else it is a local filesystem path.
             else:
                 document = Document(filename, self)
         except RuntimeError, e:
             box = QMessageBox.critical(self,
-                "Failed to open XML menu",
+                self.tr("Failed to open XML menu"),
                 str(e),
             )
         else:
@@ -222,7 +231,7 @@ class MainWindow(QMainWindow):
         if self.mdiArea.currentDocument():
             path = os.path.dirname(self.mdiArea.currentDocument().filename())
         filenames = QFileDialog.getOpenFileNames(self, self.tr("Open files..."),
-            path, "L1-Trigger Menus (*.xml)")
+            path, self.tr("L1-Trigger Menus (*.xml)"))
         for filename in filenames:
             self.loadDocument(str(filename))
 
@@ -230,10 +239,12 @@ class MainWindow(QMainWindow):
         """Select an URL to read XML file from."""
         dialog = OpenUrlDialog(self)
         dialog.setModal(True)
+        dialog.loadRecentUrls()
         dialog.exec_()
         if dialog.result() != QDialog.Accepted:
             return
         self.loadDocument(dialog.url())
+        dialog.storeRecentUrls()
 
     def onSave(self):
         document = self.mdiArea.currentDocument()
@@ -241,17 +252,19 @@ class MainWindow(QMainWindow):
             document.saveMenu()
         except RuntimeError, e:
             box = QMessageBox.critical(self,
-                "Failed to write XML menu",
+                self.tr("Failed to write XML menu"),
                 str(e),
             )
 
     def onSaveAs(self):
-        path = os.getcwd() # Default is user home dir on desktop environments.
-        if self.mdiArea.currentDocument():
-            path = os.path.dirname(self.mdiArea.currentDocument().filename())
+        path = str(self.mdiArea.currentDocument().filename())
+        if not path.endswith('*.xml'):
+            path = os.path.join(str(QDir.homePath()), ''.join((os.path.basename(path), '.xml')))
         filename = str(QFileDialog.getSaveFileName(self, self.tr("Save as..."),
-            path, "L1-Trigger Menus (*.xml)"))
+            path, self.tr("L1-Trigger Menus (*.xml)")))
         if filename:
+            if not filename.endswith('.xml'):
+                filename = ''.join((filename, '.xml'))
             document = self.mdiArea.currentDocument()
             try:
                 document.saveMenu(filename)
@@ -259,11 +272,12 @@ class MainWindow(QMainWindow):
                 self.mdiArea.setTabText(self.mdiArea.currentIndex(), os.path.basename(filename))
             except RuntimeError, e:
                 box = QMessageBox.critical(self,
-                    "Failed to write XML menu",
+                    self.tr("Failed to write XML menu"),
                     str(e),
                 )
 
     def onClose(self):
+        """Removes the current active document."""
         index = self.mdiArea.currentIndex()
         self.mdiArea.closeDocument(index)
 
@@ -290,8 +304,8 @@ class MainWindow(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
-    #app.setOrganizationName("HEPHY");
-    #app.setApplicationName("L1TriggerMenuEditor");
+    app.setOrganizationName("HEPHY");
+    app.setApplicationName("Trigger Menu Editor");
     window = MainWindow()
     window.show()
 

@@ -1,4 +1,12 @@
-tm-editor (0.1.1-0) extra; urgency=medium
+tm-editor (0.1.2-1) extra; urgency=medium
+
+  * Improved safe as action adding .xml suffix if missing.
+  * Added comment field to cut editor dialog.
+  * New menu name and description page.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Fri, 07 Aug 2015 10:07:37 +0200
+
+tm-editor (0.1.1-1) extra; urgency=medium
 
   * Added open from URL dialog.
   * Improved path location on open and safe as actions.

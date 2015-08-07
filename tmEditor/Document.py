@@ -45,7 +45,8 @@ AlignCenter = Qt.AlignCenter | Qt.AlignVCenter
 class Document(QWidget):
     """Document container widget used by MDI area."""
 
-    modified = pyqtSignal()
+    modified = pyqtSignal(bool)
+    """This signal is emitted whenever the content of the document changes."""
 
     def __init__(self, filename, parent = None):
         super(Document, self).__init__(parent)
@@ -71,6 +72,21 @@ class Document(QWidget):
         # Table view
         self.dataViewStack = QStackedWidget(self)
         ### self.dataViewStack.addWidget(QTextEdit(self))
+        #
+        menuView = QWidget(self)
+        menuView.menu = self.menu()
+        menuView.nameLineEdit = QLineEdit(self)
+        menuView.commentTextEdit = QPlainTextEdit(self)
+        menuView.commentTextEdit.setMaximumHeight(50)
+        vbox = QVBoxLayout()
+        vbox.addWidget(QLabel(self.tr("Name:"), self))
+        vbox.addWidget(menuView.nameLineEdit)
+        vbox.addWidget(QLabel(self.tr("Comment:"), self))
+        vbox.addWidget(menuView.commentTextEdit)
+        vbox.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding))
+        menuView.setLayout(vbox)
+        menuView.setAutoFillBackground(True)
+        #
         # Preview
         self.bottomWidget = BottomWidget(self)
         self.bottomWidget.addTriggered.connect(self.addItem)
@@ -83,12 +99,15 @@ class Document(QWidget):
         self.navigationTreeWidget.setObjectName("navigationTreeWidget")
         self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee;}")
         # Add navigation items.
-        self.menuItem = NavigationItem(self.navigationTreeWidget, "Menu", menuTableView, self.bottomWidget)
+        self.menuItem = NavigationItem(self.navigationTreeWidget, "Menu", menuView, self.bottomWidget)
         self.algorithmsItem = NavigationItem(self.menuItem, "Algorithms", algorithmsTableView, self.bottomWidget)
         self.cutsItem = NavigationItem(self.menuItem, "Cuts", cutsTableView, self.bottomWidget)
         self.objectsItem = NavigationItem(self.menuItem, "Objects", objectsTableView, self.bottomWidget)
         self.externalsItem = NavigationItem(self.menuItem, "Externals", externalsTableView, self.bottomWidget)
-        self.scalesItem = NavigationItem(self.navigationTreeWidget, "Scales", QLabel("Select a scale set...", self), self.bottomWidget)
+        label = QLabel("Select a scale set...", self)
+        label.setAutoFillBackground(True)
+        label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.scalesItem = NavigationItem(self.navigationTreeWidget, "Scales", label, self.bottomWidget)
         self.scalesTypeItem = {}
         for scale in self.menu().scales.bins.keys():
             self.scalesTypeItem[scale] = NavigationItem(self.scalesItem, scale, binsTableViews[scale], self.bottomWidget)
@@ -116,6 +135,9 @@ class Document(QWidget):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
+        #
+        self.menuItem.view.nameLineEdit.setText(self.menu().menu['name'])
+        self.menuItem.view.commentTextEdit.setPlainText(self.menu().menu['comment'] if 'comment' in self.menu().menu else '')
 
     def createProxyTableView(self, name, model):
         proxyModel = QSortFilterProxyModel(self)
@@ -127,6 +149,17 @@ class Document(QWidget):
         tableView.doubleClicked.connect(self.editItem)
         tableView.selectionModel().selectionChanged.connect(self.updatePreview)
         return tableView
+
+    def addPage(self, name, page, preview, parent):
+        item = QTreeWidgetItem(self)
+        if parent is self.navigationTreeWidget:
+            # Hilight root items in bold text.
+            font = item.font(0)
+            font.setBold(True)
+            item.setFont(0, font)
+        item.page = page
+        item.preview = preview
+        return item
 
     def filename(self):
         return self._filename
@@ -160,6 +193,8 @@ class Document(QWidget):
     def saveMenu(self, filename = None):
         """Save menu to filename."""
         filename = filename or self.filename()
+        self._menu.menu['name'] = str(self.menuItem.view.nameLineEdit.text())
+        self._menu.menu['comment'] = str(self.menuItem.view.commentTextEdit.toPlainText())
         self._menu.saveXml(filename)
         self.setFilename(filename)
         self.setName(os.path.basename(filename))
@@ -175,7 +210,7 @@ class Document(QWidget):
         if isinstance(item.view, QTableView):
             index = item.view.currentMappedIndex()
             return index, item
-        return None, None
+        return None, item
 
     def getUnusedAlgorithmIndices(self):
         free = range(512)

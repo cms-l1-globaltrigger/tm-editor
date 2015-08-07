@@ -362,7 +362,11 @@ class LibraryWidget(QWidget):
         # Refresh UI.
         self.onPreview()
         # Default message.
-        self.previewLabel.setText(self.tr("<img src=\"/usr/share/icons/gnome/16x16/actions/help-about.png\"/> <strong>Double click</strong> on an above item to insert it at the current cursor position or click on the <strong>bnsert</strong> button."))
+        self.previewLabel.setText(self.tr("""
+            <img src=\"/usr/share/icons/gnome/16x16/actions/help-about.png\"/>
+            <strong>Double click</strong> on an above item to insert it at the current
+            cursor position or click on the <strong><img src=\"/usr/share/icons/gnome/16x16/actions/insert-text.png\"/> Insert</strong> button.
+        """))
 
 
     def onPreview(self):
