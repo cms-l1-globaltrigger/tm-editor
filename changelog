@@ -1,6 +1,13 @@
+tm-editor (0.1.2-2) extra; urgency=high
+
+  * Fixed broken signal in document class.
+  * Fixed automatic .xml suffixing on save-as action.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Thu, 13 Aug 2015 12:20:35 +0200
+
 tm-editor (0.1.2-1) extra; urgency=medium
 
-  * Improved safe as action adding .xml suffix if missing.
+  * Improved safe-as action adding .xml suffix if missing.
   * Added comment field to cut editor dialog.
   * New menu name and description page.
 

@@ -33,7 +33,6 @@ from PyQt4.QtGui import *
 
 from collections import namedtuple
 import sys, os
-
 AlignLeft = Qt.AlignLeft | Qt.AlignVCenter
 AlignRight = Qt.AlignRight | Qt.AlignVCenter
 AlignCenter = Qt.AlignCenter | Qt.AlignVCenter
@@ -45,7 +44,7 @@ AlignCenter = Qt.AlignCenter | Qt.AlignVCenter
 class Document(QWidget):
     """Document container widget used by MDI area."""
 
-    modified = pyqtSignal(bool)
+    modified = pyqtSignal()
     """This signal is emitted whenever the content of the document changes."""
 
     def __init__(self, filename, parent = None):

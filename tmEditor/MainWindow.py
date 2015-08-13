@@ -258,7 +258,7 @@ class MainWindow(QMainWindow):
 
     def onSaveAs(self):
         path = str(self.mdiArea.currentDocument().filename())
-        if not path.endswith('*.xml'):
+        if not path.endswith('.xml'):
             path = os.path.join(str(QDir.homePath()), ''.join((os.path.basename(path), '.xml')))
         filename = str(QFileDialog.getSaveFileName(self, self.tr("Save as..."),
             path, self.tr("L1-Trigger Menus (*.xml)")))
