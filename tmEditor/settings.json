@@ -21,22 +21,22 @@
       "title": "Muon quality",
       "description": "Applies quality filter for muon object requirement.",
       "data": {
-        "0": "quality 00",
-        "1": "quality 01",
-        "2": "quality 02",
-        "3": "quality 03",
-        "4": "quality 04",
-        "5": "quality 05",
-        "6": "quality 06",
-        "7": "quality 07",
-        "8": "quality 08",
-        "9": "quality 09",
-        "10": "quality 10",
-        "11": "quality 11",
-        "12": "quality 12",
-        "13": "quality 13",
-        "14": "quality 14",
-        "15": "quality 15"
+        "0": "quality level 0",
+        "1": "quality level 1",
+        "2": "quality level 2",
+        "3": "quality level 3",
+        "4": "quality level 4",
+        "5": "quality level 5",
+        "6": "quality level 6",
+        "7": "quality level 7",
+        "8": "quality level 8",
+        "9": "quality level 9",
+        "10": "quality level 10",
+        "11": "quality level 11",
+        "12": "quality level 12",
+        "13": "quality level 13",
+        "14": "quality level 14",
+        "15": "quality level 15"
       }
     },
     {
@@ -45,10 +45,10 @@
       "type": "ISO",
       "title": "Muon isolation",
       "data": {
-        "0": "isolation 0",
-        "1": "isolation 1",
-        "2": "isolation 2",
-        "3": "isolation 3"
+        "0": "isolated",
+        "1": "non-isolated",
+        "2": "n/a",
+        "3": "n/a"
       }
     },
     {
@@ -79,22 +79,22 @@
       "type": "QLTY",
       "title": "Electron/gamma quality",
       "data": {
-        "0": "quality 00",
-        "1": "quality 01",
-        "2": "quality 02",
-        "3": "quality 03",
-        "4": "quality 04",
-        "5": "quality 05",
-        "6": "quality 06",
-        "7": "quality 07",
-        "8": "quality 08",
-        "9": "quality 09",
-        "10": "quality 10",
-        "11": "quality 11",
-        "12": "quality 12",
-        "13": "quality 13",
-        "14": "quality 14",
-        "15": "quality 15"
+        "0": "quality level 0",
+        "1": "quality level 1",
+        "2": "quality level 2",
+        "3": "quality level 3",
+        "4": "quality level 4",
+        "5": "quality level 5",
+        "6": "quality level 6",
+        "7": "quality level 7",
+        "8": "quality level 8",
+        "9": "quality level 9",
+        "10": "quality level 10",
+        "11": "quality level 11",
+        "12": "quality level 12",
+        "13": "quality level 13",
+        "14": "quality level 14",
+        "15": "quality level 15"
       }
     },
     {
@@ -103,10 +103,10 @@
       "type": "ISO",
       "title": "Electron/gamma isolation",
       "data": {
-        "0": "isolation 0",
-        "1": "isolation 1",
-        "2": "isolation 2",
-        "3": "isolation 3"
+        "0": "isolated",
+        "1": "non-isolated",
+        "2": "n/a",
+        "3": "n/a"
       }
     },
     {
@@ -127,22 +127,22 @@
       "type": "QLTY",
       "title": "Jet quality",
       "data": {
-        "0": "quality 00",
-        "1": "quality 01",
-        "2": "quality 02",
-        "3": "quality 03",
-        "4": "quality 04",
-        "5": "quality 05",
-        "6": "quality 06",
-        "7": "quality 07",
-        "8": "quality 08",
-        "9": "quality 09",
-        "10": "quality 10",
-        "11": "quality 11",
-        "12": "quality 12",
-        "13": "quality 13",
-        "14": "quality 14",
-        "15": "quality 15"
+        "0": "quality level 0",
+        "1": "quality level 1",
+        "2": "quality level 2",
+        "3": "quality level 3",
+        "4": "quality level 4",
+        "5": "quality level 5",
+        "6": "quality level 6",
+        "7": "quality level 7",
+        "8": "quality level 8",
+        "9": "quality level 9",
+        "10": "quality level 10",
+        "11": "quality level 11",
+        "12": "quality level 12",
+        "13": "quality level 13",
+        "14": "quality level 14",
+        "15": "quality level 15"
       }
     },
     {
@@ -163,22 +163,22 @@
       "type": "QLTY",
       "title": "Tau quality",
       "data": {
-        "0": "quality 00",
-        "1": "quality 01",
-        "2": "quality 02",
-        "3": "quality 03",
-        "4": "quality 04",
-        "5": "quality 05",
-        "6": "quality 06",
-        "7": "quality 07",
-        "8": "quality 08",
-        "9": "quality 09",
-        "10": "quality 10",
-        "11": "quality 11",
-        "12": "quality 12",
-        "13": "quality 13",
-        "14": "quality 14",
-        "15": "quality 15"
+        "0": "quality level 0",
+        "1": "quality level 1",
+        "2": "quality level 2",
+        "3": "quality level 3",
+        "4": "quality level 4",
+        "5": "quality level 5",
+        "6": "quality level 6",
+        "7": "quality level 7",
+        "8": "quality level 8",
+        "9": "quality level 9",
+        "10": "quality level 10",
+        "11": "quality level 11",
+        "12": "quality level 12",
+        "13": "quality level 13",
+        "14": "quality level 14",
+        "15": "quality level 15"
       }
     },
     {
@@ -187,10 +187,10 @@
       "type": "ISO",
       "title": "Tau isolation",
       "data": {
-        "0": "isolation 0",
-        "1": "isolation 1",
-        "2": "isolation 2",
-        "3": "isolation 3"
+        "0": "isolated",
+        "1": "non-isolated",
+        "2": "n/a",
+        "3": "n/a"
       }
     },
     {
@@ -231,16 +231,41 @@
       "description": "Applies delta phi restricton to combination of two objects."
     },
     {
-      "name": "DR",
-      "object": "DIST",
+      "name": "DR-CC",
+      "object": "CC",
       "type": "DR",
-      "title": "Delta-R"
+      "title": "Delta-R for Calo-Calo"
+    },
+    {
+      "name": "DR-CM",
+      "object": "CM",
+      "type": "DR",
+      "title": "Delta-R for Calo-Muon"
+    },
+    {
+      "name": "DR-MM",
+      "object": "MM",
+      "type": "DR",
+      "title": "Delta-R for Muon-Muon"
+    },
+    {
+      "name": "DR-CE",
+      "object": "CE",
+      "type": "DR",
+      "title": "Delta-R for Calo-Esum"
+    },
+    {
+      "name": "DR-ME",
+      "object": "ME",
+      "type": "DR",
+      "title": "Delta-R for Muon-Esum"
     },
     {
       "name": "MASS",
       "object": "MASS",
       "type": "MASS",
-      "title": "Invariant mass"
+      "title": "Invariant mass",
+      "enabled": false
     }
   ]
 }

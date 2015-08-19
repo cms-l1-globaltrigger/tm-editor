@@ -321,7 +321,13 @@ class Document(QWidget):
         if dialog.result() != QDialog.Accepted:
             return
         self.setModified(True)
-        self.menu().addCut(name=dialog.name(), object=dialog.object(), type=dialog.type(), minimum=dialog.minimum() or '', maximum=dialog.maximum() or '', data=dialog.data() or '')
+        self.menu().addCut(name=dialog.name(),
+            object=dialog.object(),
+            type=dialog.type(),
+            minimum=dialog.minimum() or '',
+            maximum=dialog.maximum() or '',
+            data=dialog.data() or '',
+            comment=dialog.comment())
         self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
 
     def editItem(self):
@@ -330,6 +336,7 @@ class Document(QWidget):
             self.editAlgorithm(index, item)
         elif item is self.cutsItem:
             self.editCut(index, item)
+        self.updatePreview()
 
     def editAlgorithm(self, index, item):
         dialog = AlgorithmEditorDialog(self.menu(), self)

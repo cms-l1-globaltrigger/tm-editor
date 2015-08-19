@@ -29,6 +29,169 @@ FunctionCutObjects = {
     'CHGCOR': 'COMB',
 }
 
+# -----------------------------------------------------------------------------
+#  Custom widgets
+# -----------------------------------------------------------------------------
+
+class ScaleSpinBox(QDoubleSpinBox):
+    """Custom spin box for scales lookup table."""
+
+    MinimumMode = 'minimum'
+    MaximumMode = 'maximum'
+    EmptyScale = [{'number': 0, 'minimum': .0, 'maximum': .0}]
+
+    def __init__(self, mode = MinimumMode, parent = None):
+        super(ScaleSpinBox, self).__init__(parent)
+        self.setMode(mode)
+        self.setScale(self.EmptyScale)
+
+    def setMode(self, mode):
+        self.mode = mode
+
+    def setScale(self, scale, prec = 3):
+        """Scale requires a list of dictionaries with at least a *number*,
+        *minimum* and *maximum* keys. *mode* specifies if the upper or lower bin
+         limit is used."""
+        self.scale = scale
+        self.index = 0
+        self.setDecimals(prec)
+        self.setRange(float(self.scale[0][self.mode]), float(self.scale[-1][self.mode]))
+
+    def stepBy(self, steps):
+        self.index += steps
+        self.setValue(float(self.scale[self.index][self.mode]))
+
+    def value(self, index = None):
+        """Returns bins floating point value by LUT index (upper or lower depending on mode)."""
+        if index == None: index = self.index
+        return self.scale[index][self.mode]
+
+    def minimum(self):
+        return self.value(0)
+
+    def maximum(self):
+        return self.value(-1)
+
+    def valueFromText(self, text):
+        """Re-implementation of valueFromText(), it returns only the nearest."""
+        return self.nearest(float(str(text).strip(" =<>!")))
+
+    def nearest(self, value):
+        """Returns nearest neighbor of value in range."""
+        # See also "finding index of an item closest to the value in a list that's not entirely sorted"
+        # http://stackoverflow.com/questions/9706041/finding-index-of-an-item-closest-to-the-value-in-a-list-thats-not-entirely-sort
+        result = min(range(len(self.scale)), key = lambda i: abs(float(self.scale[i][self.mode]) - value))
+        self.index = result
+        return self.value(self.index)
+
+class DataField(QScrollArea):
+    """Custom data field for cuts.
+    >>> d = DataField(['foo', 'bar', 'baz'])
+    >>> d.setData("0,2")
+    >>> d.data()
+    "0,2"
+    """
+
+    def __init__(self, parent = None):
+        super(DataField, self).__init__(parent)
+        self.clear()
+
+    def setEntries(self, labels):
+        """labels requires a sorted list data entry labels. The size determines
+        the overall size of data entries assigned."""
+        self.clear()
+        widget = QWidget(self)
+        layout = QVBoxLayout(self)
+        for label in labels:
+            checkBox = QCheckBox(label, self)
+            # checkBox.setToolTip()
+            self.checkBoxes.append(checkBox)
+            layout.addWidget(checkBox)
+        widget.setLayout(layout)
+        self.setWidget(widget)
+
+    def clear(self):
+        """Clears all data entries."""
+        widget = QWidget(self)
+        self.setWidget(widget)
+        self.checkBoxes = []
+
+    def data(self):
+        """Returns comma separated list of enabled data entries."""
+        indexes = []
+        for index, checkBox in enumerate(self.checkBoxes):
+            if checkBox.isChecked():
+                indexes.append(str(index))
+        return ','.join(indexes)
+
+    def setData(self, data):
+        """Sets data entries to supplied data. Data is a comma separated list."""
+        # Convert from comma separated string list to list of integers.
+        data = [int(index) for index in data.split(',')]
+        for index in data:
+            if index < len(self.checkBoxes):
+                self.checkBoxes[index].setChecked(True)
+
+class RangeWidget(QWidget):
+
+    def __init__(self, scale, parent = None):
+        super(RangeWidget, self).__init__(parent)
+        self.suffixLabel = QLabel(self.tr("Suffix"), self)
+        self.suffixLineEdit = QLineEdit(self)
+        self.minimumLabel = QLabel(self.tr("Minimum"), self)
+        self.minimumSpinBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
+        self.maximumLabel = QLabel(self.tr("Maximum"), self)
+        self.maximumSpinBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
+        self.commentLabel = QLabel(self.tr("Comment"), self)
+        self.commentTextEdit = QPlainTextEdit(self)
+        self.commentTextEdit.setMaximumHeight(40)
+        layout = QGridLayout()
+        layout.addWidget(self.suffixLabel, 0, 0)
+        layout.addWidget(self.suffixLineEdit, 0, 1)
+        layout.addWidget(self.minimumLabel, 1, 0)
+        layout.addWidget(self.minimumSpinBox, 1, 1)
+        layout.addWidget(self.maximumLabel, 2, 0)
+        layout.addWidget(self.maximumSpinBox, 2, 1)
+        layout.addWidget(self.commentLabel, 3, 0)
+        layout.addWidget(self.commentTextEdit, 3, 1)
+        self.setLayout(layout)
+
+    def minimum(self):
+        return self.minimumSpinBox.value()
+
+    def maximum(self):
+        return self.maximumSpinBox.value()
+
+    def setRange(self, minimum, maximum):
+        self.minimumSpinBox.setvalue(self.nearest(minimum))
+        self.maximumSpinBox.setScale(self.nearest(maximum))
+
+class DataWidget(QWidget):
+
+    def __init__(self, labels, parent = None):
+        super(DataWidget, self).__init__(parent)
+        self.suffixLabel = QLabel(self.tr("Suffix"), self)
+        self.suffixLineEdit = QLineEdit(self)
+        self.dataLabel = QLabel(self.tr("Data"), self)
+        self.dataField = DataField(labels, self)
+        self.commentLabel = QLabel(self.tr("Comment"), self)
+        self.commentTextEdit = QPlainTextEdit(self)
+        self.commentTextEdit.setMaximumHeight(40)
+        layout = QGridLayout()
+        layout.addWidget(self.suffixLabel, 0, 0)
+        layout.addWidget(self.suffixLineEdit, 0, 1)
+        layout.addWidget(self.dataLabel, 1, 0)
+        layout.addWidget(self.dataField, 1, 1)
+        layout.addWidget(self.commentLabel, 2, 0)
+        layout.addWidget(self.commentTextEdit, 2, 1)
+        self.setLayout(layout)
+
+    def data(self):
+        return self.dataField.data()
+
+    def setData(self, data):
+        self.dataLabel.setData(data)
+
 class CutEditorDialog(QDialog):
     """Dialog providing cut creation/editing interface."""
 
@@ -40,6 +203,7 @@ class CutEditorDialog(QDialog):
         super(CutEditorDialog, self).__init__(parent)
         # Dialog appeareance
         self.setWindowTitle(self.tr("Cut Editor"))
+        self.resize(600, 400)
         # Attributes
         self.menu = menu
         # Cut type
@@ -50,6 +214,10 @@ class CutEditorDialog(QDialog):
         self.suffixLabel = QLabel(self.tr("Suffix"), self)
         # Populate cut types.
         for item in self.CutSettings:
+            # Check if item is disabled: { enabled: false } [optional]
+            if 'enabled' in item.keys():
+                if not item['enabled']:
+                    continue
             self.typeComboBox.addItem(item['name'], item)
         # Minimum
         self.minimumLabel = QLabel(self.tr("Minimum"), self)
@@ -59,7 +227,8 @@ class CutEditorDialog(QDialog):
         self.maximumComboBox = QComboBox(self)#QDoubleSpinBox(self)
         # Data
         self.dataLabel = QLabel(self.tr("Data"), self)
-        self.dataComboBox = QComboBox(self)
+        #self.dataComboBox = QComboBox(self)
+        self.dataComboBox = DataField(self)
         # Comment
         self.commentLabel = QLabel(self.tr("Comment"), self)
         self.commentTextEdit = QPlainTextEdit(self)
@@ -143,11 +312,21 @@ class CutEditorDialog(QDialog):
         """Returns data string or None if not a data type cut."""
         if not 'data' in self.getCurrentCutSettings().keys():
             return None
-        return str(self.dataComboBox.itemData(self.dataComboBox.currentIndex()).toPyObject()) # retuns dict key (lookup index)
+        #return str(self.dataComboBox.itemData(self.dataComboBox.currentIndex()).toPyObject()) # retuns dict key (lookup index)
+        return self.dataComboBox.data()
 
     def setData(self, data):
         self.setDataEnabled(True)
-        self.dataComboBox.setCurrentIndex(int(data))
+        #self.dataComboBox.setCurrentIndex(int(data))
+        self.dataComboBox.setData(data)
+
+    def comment(self):
+        """Returns comment text."""
+        return str(self.commentTextEdit.toPlainText())
+
+    def setComment(self, text):
+        """Set comment text."""
+        self.commentTextEdit.setPlainText(text)
 
     def loadCut(self, cut):
         """Load data from existing cut object, prevents change of type."""
@@ -157,6 +336,9 @@ class CutEditorDialog(QDialog):
         self.updateEntries()
         if cut.data:
             self.setDataEnabled(True)
+            labels = filter(lambda c: c['type'] == cut['type'] and c['object'] == cut['object'], Toolbox.Settings['cuts'])[0]['data']
+            labels = [labels[str(k)] for k in sorted([int(i) for i in labels.keys()])]
+            self.dataComboBox.setEntries(labels)
             self.setData(cut.data)
         else:
             self.setRangeEnabled(True)
@@ -210,10 +392,13 @@ class CutEditorDialog(QDialog):
             self.setDataEnabled(True)
             self.minimumComboBox.clear()
             self.maximumComboBox.clear()
-            self.dataComboBox.clear()
+            #self.dataComboBox.clear()
             # brrrr.... >_<'
-            for key in [str(i) for i in sorted([int(key) for key in item['data'].keys()])]:
-                self.dataComboBox.addItem(item['data'][key], key)
+            #for key in [str(i) for i in sorted([int(key) for key in item['data'].keys()])]:
+            #    self.dataComboBox.addItem(item['data'][key], key)
+            keys = sorted([int(key) for key in item['data'].keys()])
+            labels = [item['data'][str(k)] for k in keys]
+            self.dataComboBox.setEntries(labels)
         elif self.object() in ('MASS', 'DIST', 'COMB'):
             self.minimumComboBox.clear()
             self.maximumComboBox.clear()
