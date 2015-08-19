@@ -27,7 +27,7 @@ import webbrowser
 import logging
 import sys, os, re
 
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 """Applciation Version (edit this to increment the release version)."""
 
 L1ContentsURL = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/GlobalTriggerUpgradeL1T-uTme"

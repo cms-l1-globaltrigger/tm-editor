@@ -73,6 +73,12 @@ def fCut(value):
     except ValueError:
         return ''
 
+def fHex(value):
+    try:
+        return '0x{0:x}'.format(int(value))
+    except ValueError:
+        return ''
+
 def fThreshold(value):
     value = str(value).replace('p', '.') # Replace 'p' by comma.
     return "{0:.1f} GeV".format(float(value))
