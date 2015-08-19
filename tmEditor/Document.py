@@ -23,6 +23,7 @@ from tmEditor.Menu import Algorithm, Object, toObject
 from tmEditor.Toolbox import (
     fAlgorithm,
     fCut,
+    fHex,
     fThreshold,
     fComparison,
     fBxOffset,
@@ -765,7 +766,8 @@ class BinsModel(BaseTableModel):
     def __init__(self, menu, name, parent = None):
         super(BinsModel, self).__init__(menu.scales.bins[name], parent)
         self.name = name
-        self.addColumnSpec("Number", 'number', int, AlignRight)
+        self.addColumnSpec("Number dec", 'number', int, AlignRight)
+        self.addColumnSpec("Number hex", 'number', fHex, AlignRight)
         self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
         self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
         self.addColumnSpec("Comment", 'comment')
