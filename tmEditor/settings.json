@@ -195,13 +195,13 @@
     },
     {
       "name": "ETM-PHI",
-      "object": "MET",
+      "object": "ETM",
       "type": "PHI",
       "title": "Missing energy phi"
     },
     {
       "name": "HTM-PHI",
-      "object": "MHT",
+      "object": "HTM",
       "type": "PHI",
       "title": "Missing energy phi"
     },

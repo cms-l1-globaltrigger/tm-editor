@@ -355,7 +355,9 @@ class CutEditorDialog(QDialog):
             self.setRangeEnabled(True)
             typename = str('-'.join((item['object'], item['type']))) # TODO: Recast to string required (why?)
 
+            print "typename:",  typename
             scale = self.menu.scales.bins[typename]
+
 
             self.minimumSpinBox.setScale(scale)
             self.maximumSpinBox.setScale(scale)
