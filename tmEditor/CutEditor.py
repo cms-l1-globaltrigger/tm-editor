@@ -365,7 +365,7 @@ class CutEditorDialog(QDialog):
 
             self.dataField.clear()
             minimum = self.minimumSpinBox.minimum()
-            maximum = self.minimumSpinBox.maximum()
+            maximum = self.maximumSpinBox.maximum()
             info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
         if not self.typeComboBox.isEnabled():
             info.append("<p><strong>Note:</strong> Changing an existing cut's type is not allowed.</p>".format(**item))
