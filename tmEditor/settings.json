@@ -206,11 +206,11 @@
       "title": "Missing energy phi"
     },
     {
-      "name": "CHGCOR",
+      "name": "COMB-CHGCOR",
       "object": "COMB",
       "type": "CHGCOR",
       "title": "Charge correlation",
-      "description": "Applies charge correlation restriction to combination of two objects.",
+      "description": "Applies charge correlation restriction to combination of two objects.\nExample: comb{MU20, MU20}[CHGCOR_OP]",
       "data": {
         "0": "same sign",
         "1": "opposite sign"
@@ -300,36 +300,31 @@
       "name": "CC-DR",
       "object": "CC",
       "type": "DR",
-      "title": "Delta-R for Calo-Calo",
-      "enabled": false
+      "title": "Delta-R for Calo-Calo"
     },
     {
       "name": "MM-DR",
       "object": "MM",
       "type": "DR",
-      "title": "Delta-R for Muon-Muon",
-      "enabled": false
+      "title": "Delta-R for Muon-Muon"
     },
     {
       "name": "CM-DR",
       "object": "CM",
       "type": "DR",
-      "title": "Delta-R for Calo-Muon",
-      "enabled": false
+      "title": "Delta-R for Calo-Muon"
     },
     {
       "name": "CE-DR",
       "object": "CE",
       "type": "DR",
-      "title": "Delta-R for Calo-Esum",
-      "enabled": false
+      "title": "Delta-R for Calo-Esum"
     },
     {
       "name": "ME-DR",
       "object": "ME",
       "type": "DR",
-      "title": "Delta-R for Muon-Esum",
-      "enabled": false
+      "title": "Delta-R for Muon-Esum"
     },
     {
       "name": "MASS",

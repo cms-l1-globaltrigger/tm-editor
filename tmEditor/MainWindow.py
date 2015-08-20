@@ -255,6 +255,11 @@ class MainWindow(QMainWindow):
                 self.tr("Failed to write XML menu"),
                 str(e),
             )
+        except ValueError, e:
+            box = QMessageBox.critical(self,
+                self.tr("Failed to write XML menu"),
+                str(e),
+            )
 
     def onSaveAs(self):
         path = str(self.mdiArea.currentDocument().filename())

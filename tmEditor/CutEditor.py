@@ -14,7 +14,7 @@ from tmEditor import (
 )
 import tmGrammar
 from collections import namedtuple
-import re
+import re, math, logging
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -45,6 +45,9 @@ class ScaleSpinBox(QDoubleSpinBox):
         self.setMode(mode)
         self.setScale(self.EmptyScale)
 
+    def reset(self):
+        self.setScale(self.EmptyScale)
+
     def setMode(self, mode):
         self.mode = mode
 
@@ -56,8 +59,8 @@ class ScaleSpinBox(QDoubleSpinBox):
         self.scale = sorted(scale, key = lambda bin: float(bin[self.mode]))
         self.index = 0
         self.setDecimals(prec)
-        minimum = min([float(value[self.mode]) for value in self.scale])
-        maximum = max([float(value[self.mode]) for value in self.scale])
+        minimum = min([float(value[self.mode]) for value in self.scale] or [0.])
+        maximum = max([float(value[self.mode]) for value in self.scale] or [0.])
         self.setRange(minimum, maximum)
 
     def stepBy(self, steps):
@@ -215,6 +218,9 @@ class CutEditorDialog(QDialog):
         self.suffixLineEdit.setText(self.tr("Unnamed"))
         self.updateEntries()
 
+    def settings(self):
+        return Toolbox.query(self.CutSettings, name=self.typename())[0]
+
     def name(self):
         return "{0}_{1}".format(self.typeComboBox.currentText(), self.suffixLineEdit.text())
 
@@ -224,47 +230,45 @@ class CutEditorDialog(QDialog):
         self.typeComboBox.setCurrentIndex(self.typeComboBox.findText(tokens[0]))
         self.suffixLineEdit.setText('_'.join(tokens[1:]))
 
+    def typename(self):
+        return str(self.typeComboBox.currentText())
+
     def type(self):
         """Returns type name."""
-        return self.getCurrentCutSettings()['type']
+        return self.settings()['type']
 
     def object(self):
         """Returns object name."""
-        return self.getCurrentCutSettings()['object']
+        return self.settings()['object']
 
     def suffix(self):
         """Returns suffix."""
         return str(self.suffixLineEdit.text())
 
     def minimum(self):
-        """Returns minimum floating point string or None if not a range type cut."""
-        if 'data' in self.getCurrentCutSettings().keys():
-            return None
-        #return self.minimumSpinBox.itemData(self.minimumSpinBox.currentIndex()).toPyObject()['minimum']
+        """Returns minimum."""
         return self.minimumSpinBox.value()
 
     def setMinimum(self, value):
+        """Set minimum value."""
         self.setRangeEnabled(True)
-        self.minimumSpinBox.setValue(float(self.minimumSpinBox.nearest(value)))
-        #self.minimumSpinBox.setCurrentIndex(self.minimumSpinBox.findText(format(float(value), "+.3f")))
+        self.minimumSpinBox.setValue(self.minimumSpinBox.nearest(value))
 
     def maximum(self):
-        """Returns maximum floating point string or None if not a range type cut."""
-        if 'data' in self.getCurrentCutSettings().keys():
-            return None
-        #return self.maximumSpinBox.itemData(self.maximumSpinBox.currentIndex()).toPyObject()['maximum']
+        """Returns maximum."""
         return self.maximumSpinBox.value()
 
+    def setMaximum(self, value):
+        """Set maximum value."""
+        self.setRangeEnabled(True)
+        self.maximumSpinBox.setValue(self.maximumSpinBox.nearest(value))
+
     def data(self):
-        """Returns data string or None if not a data type cut."""
-        if not 'data' in self.getCurrentCutSettings().keys():
-            return None
-        #return str(self.dataField.itemData(self.dataField.currentIndex()).toPyObject()) # retuns dict key (lookup index)
+        """Returns data string."""
         return self.dataField.data()
 
     def setData(self, data):
         self.setDataEnabled(True)
-        #self.dataField.setCurrentIndex(int(data))
         self.dataField.setData(data)
 
     def comment(self):
@@ -283,15 +287,19 @@ class CutEditorDialog(QDialog):
         self.updateEntries()
         if cut.type in ('ISO', 'QLTY', 'CHGCOR'):
             self.setDataEnabled(True)
-            labels = self.getCurrentCutSettings()['data']
+            labels = self.settings()['data']
             labels = [labels[str(k)] for k in sorted([int(i) for i in labels.keys()])]
             self.dataField.setEntries(labels)
             self.setData(cut.data)
         else:
             self.setRangeEnabled(True)
-            self.minimumSpinBox.setScale(cut.scale(self.menu.scales))
+            if cut.type in ('DR', 'DETA', 'DPHI'):
+                scale = self.generateScale(cut.type, cut.object)
+            else:
+                scale = cut.scale(self.menu.scales)
+            self.minimumSpinBox.setScale(scale)
             self.minimumSpinBox.setValue(float(self.minimumSpinBox.nearest(cut.minimum)))
-            self.maximumSpinBox.setScale(cut.scale(self.menu.scales))
+            self.maximumSpinBox.setScale(scale)
             self.maximumSpinBox.setValue(float(self.maximumSpinBox.nearest(cut.maximum)))
         if 'comment' in cut.keys():
             self.commentTextEdit.setPlainText(cut['comment'])
@@ -326,38 +334,78 @@ class CutEditorDialog(QDialog):
         """Set data input enabled, diables range inputs."""
         self.setRangeEnabled(not enabled)
 
-    def getCurrentCutSettings(self):
-        """Retruns dict holding settings for current selected cut."""
-        name = str(self.typeComboBox.currentText())
-        return filter(lambda item: item['name'] == name, self.CutSettings)[0]
+    # Scales on the fly
+    def generateScale(self, type, object):
+        # DAMN ugly...
+        def dr(deta, dphi):
+            return math.sqrt(deta*deta+dphi*dphi)
+        def delta(scale):
+            minimum = min([float(value['minimum']) for value in scale])
+            maximum = max([float(value['maximum']) for value in scale])
+            return abs(maximum) + abs(minimum)
+        scale = []
+        eta, phi = ScaleSpinBox(), ScaleSpinBox()
+        if type == 'DR':
+            if object == 'CC':
+                # HACK WARNING relies on EG... shal we distinquis calorimeter scales???!
+                deta = delta(self.menu.scales.bins['EG-ETA'])
+                dphi = delta(self.menu.scales.bins['EG-PHI'])
+            elif object == 'MM':
+                deta = delta(self.menu.scales.bins['EG-ETA'])
+                dphi = delta(self.menu.scales.bins['EG-PHI'])
+            elif object == 'CM':
+                deta = delta(self.menu.scales.bins['MU-ETA'])
+                dphi = delta(self.menu.scales.bins['EG-PHI'])
+            elif object == 'CE':
+                deta = 0.
+                dphi = delta(self.menu.scales.bins['EG-PHI'])
+            elif object == 'ME':
+                deta = 0.
+                dphi = delta(self.menu.scales.bins['MU-PHI'])
+            maximum = int(dr(deta, dphi) * 1000)
+            logging.debug("deta: %s", deta)
+            logging.debug("dphi: %s", dphi)
+            logging.debug("dr(deta, dphi): %s", dr(deta, dphi))
+            logging.debug("dr(deta, dphi) * 1000: %s", dr(deta, dphi) * 1000)
+            logging.debug("maximum: %s", maximum)
+            scale = [{'number': i, 'minimum': i/1000., 'maximum': i/1000.+0.001} for i in range(maximum)]
+            logging.debug("scale[0]: %s", scale[0])
+            logging.debug("scale[-1]: %s", scale[-1])
+        return scale
 
     def updateEntries(self):
+        """Update entries according to selected cut type."""
         # TODO not effective, re-write.
-        item = self.getCurrentCutSettings()
-        self.infoTextEdit.clear()
+        typename = self.typename()
+        settings = Toolbox.query(self.CutSettings, name=typename[0]
+        self.minimumSpinBox.reset()
+        self.maximumSpinBox.reset()
+        self.dataField.clear()
         info = []
-        if 'title' in item.keys():
-            info.append("<h3><img src=\"/usr/share/icons/gnome/16x16/actions/help-about.png\"/> {title}</h3>".format(**item))
-        if 'description' in item.keys():
-            info.append("<p>{description}</p>".format(**item))
-        if 'data' in item.keys():
+        if 'title' in settings.keys():
+            info.append("<h3><img src=\"/usr/share/icons/gnome/16x16/actions/help-about.png\"/> {title}</h3>".format(**settings))
+        if 'description' in settings.keys():
+            info.append("<p>{description}</p>".format(**settings))
+        if 'data' in settings.keys():
             self.setDataEnabled(True)
-            #self.dataField.clear()
-            # brrrr.... >_<'
-            #for key in [str(i) for i in sorted([int(key) for key in item['data'].keys()])]:
-            #    self.dataField.addItem(item['data'][key], key)
-            keys = sorted([int(key) for key in item['data'].keys()])
-            labels = [item['data'][str(k)] for k in keys]
+            keys = sorted([int(key) for key in settings['data'].keys()])
+            labels = [settings['data'][str(k)] for k in keys]
             self.dataField.setEntries(labels)
-        elif self.type() in ('DR', 'DETA', 'DPHI', 'MASS'):
-            self.dataField.clear()
+        elif self.type() in ('DR', 'DETA', 'DPHI'):
+            self.setRangeEnabled(True)
+            scale = self.generateScale(self.type(), self.object())
+            self.minimumSpinBox.setScale(scale)
+            self.maximumSpinBox.setScale(scale)
+            self.minimumSpinBox.setValue(self.minimumSpinBox.minimum())
+            self.maximumSpinBox.setValue(self.maximumSpinBox.maximum())
+            minimum = self.minimumSpinBox.minimum()
+            maximum = self.maximumSpinBox.maximum()
+            info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
+        elif self.type() in ('MASS', ):
+            pass
         else:
             self.setRangeEnabled(True)
-            typename = str('-'.join((item['object'], item['type']))) # TODO: Recast to string required (why?)
-
-            print "typename:",  typename
-            scale = self.menu.scales.bins[typename]
-
+            scale = self.menu.scales.bins[self.typename()]
 
             self.minimumSpinBox.setScale(scale)
             self.maximumSpinBox.setScale(scale)
@@ -365,10 +413,9 @@ class CutEditorDialog(QDialog):
             self.minimumSpinBox.setValue(self.minimumSpinBox.minimum())
             self.maximumSpinBox.setValue(self.maximumSpinBox.maximum())
 
-            self.dataField.clear()
             minimum = self.minimumSpinBox.minimum()
             maximum = self.maximumSpinBox.maximum()
             info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
         if not self.typeComboBox.isEnabled():
-            info.append("<p><strong>Note:</strong> Changing an existing cut's type is not allowed.</p>".format(**item))
-        self.infoTextEdit.setText("".join(info))
+            info.append("<p><strong>Note:</strong> Changing an existing cut's type is not allowed.</p>")
+        self.infoTextEdit.setText("\n".join(info))

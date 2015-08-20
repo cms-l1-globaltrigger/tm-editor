@@ -45,6 +45,16 @@ def getXsdDir():
     except RuntimeError:
         return os.path.join(getRootDir(), 'tmXsd')
 
+def query(data, **kwargs):
+    """Perform dictionary query.
+    >>> d = {'foo': 42, 'bar': 'baz'}
+    >>> query(d, bar='baz')
+    [{'bar': 'baz'}]
+    """
+    def lookup(entry, **kwargs):
+        return sum([entry[key] == value for key, value in kwargs.items()])
+    return filter(lambda entry: lookup(entry, **kwargs), data)
+
 def readSettings():
     """Read settings from JSON side file."""
     filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'settings.json')

@@ -542,7 +542,6 @@ def functionCuts(token):
         raise ValueError(token)
     for name in tmGrammar.Function_getCuts(f):
         cuts.append(name)
-        print name
     return cuts
 
 def functionObjectsCuts(token):
@@ -557,7 +556,6 @@ def functionObjectsCuts(token):
             raise ValueError(token)
         for name in o.cuts:
             cuts.append(name)
-            print name
     return cuts
 
 def objectCuts(token):
