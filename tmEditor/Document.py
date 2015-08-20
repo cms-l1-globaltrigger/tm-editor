@@ -244,7 +244,13 @@ class Document(QWidget):
                 text.append("<h2>{name}</h2>")
                 text.append("<p><strong>Type:</strong> {object}</p>")
                 if data['data']:
-                    text.append("<p><strong>Data:</strong> {data}</p>")
+                    fdata = []
+                    typename = "{0}-{1}".format(data['object'], data['type'])
+                    data_ = filter(lambda entry: entry['name'] == typename, Toolbox.Settings['cuts'])[0]['data']
+                    for n in data['data'].split(','):
+                        fdata.append("{1} ({0})".format(int(n), data_[n.strip()]))
+                    fdata = ', '.join(fdata)
+                    text.append("<p><strong>Data:</strong> {translation}</p>".format(translation = fdata))
                 else:
                     text.append("<p><strong>Minimum:</strong> {minimum}</p>")
                     text.append("<p><strong>Maximum:</strong> {maximum}</p>")
@@ -274,10 +280,15 @@ class Document(QWidget):
             item.preview.setText("<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
             item.preview.setButtonsEnabled(False)
         try:
+            item.preview.notice.hide()
             if item is self.algorithmsItem:
                 item.preview.toolbar.show()
             elif item is self.cutsItem:
                 item.preview.toolbar.show()
+            elif item is self.objectsItem:
+                item.preview.toolbar.hide()
+                item.preview.notice.setText(self.tr("<strong>Note:</strong> new objects are created directly in the algorithm editor."))
+                item.preview.notice.show()
             else:
                 item.preview.toolbar.hide()
         except:
@@ -380,7 +391,7 @@ class Document(QWidget):
         if item is self.algorithmsItem:
             self.copyAlgorithm(index, item)
         if item is self.cutsItem:
-            self.copyCut(self, index, item)
+            self.copyCut(index, item)
 
     def copyAlgorithm(self, index, item):
         algorithm = Algorithm(**self.menu().algorithms[index.row()])
@@ -416,10 +427,20 @@ class Document(QWidget):
     def copyCut(self, index, item):
         dialog = CutEditorDialog(self.menu(), self)
         dialog.setModal(True)
-        dialog.setName(self.menu().cuts[index.row()]['name'])
+        cut = self.menu().cuts[index.row()]
+        dialog.loadCut(cut)
         dialog.exec_()
         if dialog.result() != QDialog.Accepted:
             return
+        self.setModified(True)
+        self.menu().addCut(name=dialog.name(),
+            object=dialog.object(),
+            type=dialog.type(),
+            minimum=dialog.minimum() or '',
+            maximum=dialog.maximum() or '',
+            data=dialog.data() or '',
+            comment=dialog.comment())
+        self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
 
     def removeItem(self):
         index, item = self.getSelection()
@@ -583,6 +604,10 @@ class BottomWidget(QWidget):
         self.removeBotton.clicked.connect(self.onRemove)
         layout.addWidget(self.removeBotton)
         self.toolbar.setLayout(layout)
+        self.notice = QLabel(self)
+        self.notice.hide()
+        self.notice.setAutoFillBackground(True)
+        self.notice.setStyleSheet("padding:10px;")
         self.textEdit = QTextEdit(self)
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("BottomWidgetTextEdit")
@@ -596,6 +621,7 @@ class BottomWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.toolbar)
+        layout.addWidget(self.notice)
         layout.addWidget(self.textEdit)
         self.setLayout(layout)
     def setButtonsEnabled(self, enabled):

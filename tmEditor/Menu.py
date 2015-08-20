@@ -377,6 +377,14 @@ class Cut(AbstractDict):
         return self['type']
 
     @property
+    def typename(self):
+        return "{self.object}-{self.type}".format(**locals())
+
+    @property
+    def suffix(self):
+        return self.name[len(self.typename) + 1:]
+
+    @property
     def minimum(self):
         return self['minimum']
 
@@ -394,6 +402,10 @@ class Cut(AbstractDict):
 
     def isValid(self):
         return tmTable.isCut(self.toRow())
+
+    def scale(self, scale):
+        if self.typename in scale.bins.keys():
+            return scale.bins[self.typename]
 
     def toRow(self):
         row = super(Cut, self).toRow()

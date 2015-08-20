@@ -72,15 +72,19 @@ class ScaleSpinBox(QDoubleSpinBox):
     def maximum(self):
         return self.value(-1)
 
+    def setValue(self, value):
+        value = self.nearest(value)
+        super(ScaleSpinBox, self).setValue(float(value))
+
     def valueFromText(self, text):
         """Re-implementation of valueFromText(), it returns only the nearest."""
-        return self.nearest(float(str(text).strip(" =<>!")))
+        return float(self.nearest(float(str(text).strip(" =<>!"))))
 
     def nearest(self, value):
         """Returns nearest neighbor of value in range."""
         # See also "finding index of an item closest to the value in a list that's not entirely sorted"
         # http://stackoverflow.com/questions/9706041/finding-index-of-an-item-closest-to-the-value-in-a-list-thats-not-entirely-sort
-        result = min(range(len(self.scale)), key = lambda i: abs(float(self.scale[i][self.mode]) - value))
+        result = min(range(len(self.scale)), key = lambda i: abs(float(self.scale[i][self.mode]) - float(value)))
         self.index = result
         return self.value(self.index)
 
@@ -127,7 +131,7 @@ class DataField(QScrollArea):
     def setData(self, data):
         """Sets data entries to supplied data. Data is a comma separated list."""
         # Convert from comma separated string list to list of integers.
-        data = [int(index) for index in data.split(',')]
+        data = [int(index) for index in data.split(',')] if data else []
         for index in data:
             if index < len(self.checkBoxes):
                 self.checkBoxes[index].setChecked(True)
@@ -221,14 +225,15 @@ class CutEditorDialog(QDialog):
             self.typeComboBox.addItem(item['name'], item)
         # Minimum
         self.minimumLabel = QLabel(self.tr("Minimum"), self)
-        self.minimumComboBox = QComboBox(self)#QDoubleSpinBox(self)
+        #self.minimumComboBox = QComboBox(self)#QDoubleSpinBox(self)
+        self.minimumComboBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
         # Maximum
         self.maximumLabel = QLabel(self.tr("Maximum"), self)
-        self.maximumComboBox = QComboBox(self)#QDoubleSpinBox(self)
+        #self.maximumComboBox = QComboBox(self)#QDoubleSpinBox(self)
+        self.maximumComboBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
         # Data
         self.dataLabel = QLabel(self.tr("Data"), self)
-        #self.dataComboBox = QComboBox(self)
-        self.dataComboBox = DataField(self)
+        self.dataField = DataField(self)
         # Comment
         self.commentLabel = QLabel(self.tr("Comment"), self)
         self.commentTextEdit = QPlainTextEdit(self)
@@ -251,7 +256,7 @@ class CutEditorDialog(QDialog):
         gridLayout.addWidget(self.maximumLabel, 3, 0)
         gridLayout.addWidget(self.maximumComboBox, 3, 1)
         gridLayout.addWidget(self.dataLabel, 4, 0)
-        gridLayout.addWidget(self.dataComboBox, 4, 1)
+        gridLayout.addWidget(self.dataField, 4, 1)
         gridLayout.addWidget(self.commentLabel, 5, 0)
         gridLayout.addWidget(self.commentTextEdit, 5, 1, 1, 2)
         gridLayout.addWidget(self.infoTextEdit, 0, 2, 5, 1)
@@ -292,33 +297,32 @@ class CutEditorDialog(QDialog):
         """Returns minimum floating point string or None if not a range type cut."""
         if 'data' in self.getCurrentCutSettings().keys():
             return None
-        return self.minimumComboBox.itemData(self.minimumComboBox.currentIndex()).toPyObject()['minimum']
+        #return self.minimumComboBox.itemData(self.minimumComboBox.currentIndex()).toPyObject()['minimum']
+        return self.minimumComboBox.value()
 
     def setMinimum(self, value):
         self.setRangeEnabled(True)
-        self.minimumComboBox.setCurrentIndex(self.minimumComboBox.findText(format(float(value), "+.3f")))
+        self.minimumComboBox.setValue(float(self.minimumComboBox.nearest(value)))
+        #self.minimumComboBox.setCurrentIndex(self.minimumComboBox.findText(format(float(value), "+.3f")))
 
     def maximum(self):
         """Returns maximum floating point string or None if not a range type cut."""
         if 'data' in self.getCurrentCutSettings().keys():
             return None
-        return self.maximumComboBox.itemData(self.maximumComboBox.currentIndex()).toPyObject()['maximum']
-
-    def setMaximum(self, value):
-        self.setRangeEnabled(True)
-        self.maximumComboBox.setCurrentIndex(self.maximumComboBox.findText(format(float(value), "+.3f")))
+        #return self.maximumComboBox.itemData(self.maximumComboBox.currentIndex()).toPyObject()['maximum']
+        return self.maximumComboBox.value()
 
     def data(self):
         """Returns data string or None if not a data type cut."""
         if not 'data' in self.getCurrentCutSettings().keys():
             return None
-        #return str(self.dataComboBox.itemData(self.dataComboBox.currentIndex()).toPyObject()) # retuns dict key (lookup index)
-        return self.dataComboBox.data()
+        #return str(self.dataField.itemData(self.dataField.currentIndex()).toPyObject()) # retuns dict key (lookup index)
+        return self.dataField.data()
 
     def setData(self, data):
         self.setDataEnabled(True)
-        #self.dataComboBox.setCurrentIndex(int(data))
-        self.dataComboBox.setData(data)
+        #self.dataField.setCurrentIndex(int(data))
+        self.dataField.setData(data)
 
     def comment(self):
         """Returns comment text."""
@@ -334,16 +338,18 @@ class CutEditorDialog(QDialog):
         self.typeComboBox.setEnabled(False)
         self.setName(cut.name)
         self.updateEntries()
-        if cut.data:
+        if cut.type in ('ISO', 'QLTY', 'CHGCOR'):
             self.setDataEnabled(True)
-            labels = filter(lambda c: c['type'] == cut['type'] and c['object'] == cut['object'], Toolbox.Settings['cuts'])[0]['data']
+            labels = self.getCurrentCutSettings()['data']
             labels = [labels[str(k)] for k in sorted([int(i) for i in labels.keys()])]
-            self.dataComboBox.setEntries(labels)
+            self.dataField.setEntries(labels)
             self.setData(cut.data)
         else:
             self.setRangeEnabled(True)
-            self.setMinimum(cut.minimum)
-            self.setMaximum(cut.maximum)
+            self.minimumComboBox.setScale(cut.scale(self.menu.scales))
+            self.minimumComboBox.setValue(float(self.minimumComboBox.nearest(cut.minimum)))
+            self.maximumComboBox.setScale(cut.scale(self.menu.scales))
+            self.maximumComboBox.setValue(float(self.maximumComboBox.nearest(cut.maximum)))
         if 'comment' in cut.keys():
             self.commentTextEdit.setPlainText(cut['comment'])
 
@@ -365,7 +371,7 @@ class CutEditorDialog(QDialog):
         self.maximumLabel.setEnabled(enabled)
         self.maximumComboBox.setEnabled(enabled)
         self.dataLabel.setEnabled(not enabled)
-        self.dataComboBox.setEnabled(not enabled)
+        self.dataField.setEnabled(not enabled)
 
     def setDataEnabled(self, enabled):
         """Set data input enabled, diables range inputs."""
@@ -390,31 +396,33 @@ class CutEditorDialog(QDialog):
         self.infoTextEdit.setText("".join(info))
         if 'data' in item.keys():
             self.setDataEnabled(True)
-            self.minimumComboBox.clear()
-            self.maximumComboBox.clear()
-            #self.dataComboBox.clear()
+            #self.minimumComboBox.clear()
+            #self.maximumComboBox.clear()
+            #self.dataField.clear()
             # brrrr.... >_<'
             #for key in [str(i) for i in sorted([int(key) for key in item['data'].keys()])]:
-            #    self.dataComboBox.addItem(item['data'][key], key)
+            #    self.dataField.addItem(item['data'][key], key)
             keys = sorted([int(key) for key in item['data'].keys()])
             labels = [item['data'][str(k)] for k in keys]
-            self.dataComboBox.setEntries(labels)
-        elif self.object() in ('MASS', 'DIST', 'COMB'):
-            self.minimumComboBox.clear()
-            self.maximumComboBox.clear()
-            self.dataComboBox.clear()
+            self.dataField.setEntries(labels)
+        elif self.type() in ('DR', 'DETA', 'DPHI', 'MASS'):
+            #self.minimumComboBox.clear()
+            #self.maximumComboBox.clear()
+            self.dataField.clear()
         else:
             self.setRangeEnabled(True)
             typename = str('-'.join((item['object'], item['type']))) # TODO: Recast to string required (why?)
             scale = self.menu.scales.bins[typename]
 
-            self.minimumComboBox.clear()
-            for entry in scale:
-                self.minimumComboBox.addItem(format(float(entry['minimum']), "+.3f"), entry)
+            #self.minimumComboBox.clear()
+            self.minimumComboBox.setScale(self.menu.scales.bins[typename])
+            #for entry in scale:
+            #    self.minimumComboBox.addItem(format(float(entry['minimum']), "+.3f"), entry)
 
-            self.maximumComboBox.clear()
-            for entry in scale:
-                self.maximumComboBox.addItem(format(float(entry['maximum']), "+.3f"), entry)
-            self.maximumComboBox.setCurrentIndex(self.maximumComboBox.count() - 1)
-
-            self.dataComboBox.clear()
+            #self.maximumComboBox.clear()
+            self.maximumComboBox.setScale(self.menu.scales.bins[typename])
+            #for entry in scale:
+            #    self.maximumComboBox.addItem(format(float(entry['maximum']), "+.3f"), entry)
+            #self.maximumComboBox.setCurrentIndex(self.maximumComboBox.count() - 1)
+            self.maximumComboBox.setValue(self.maximumComboBox.maximum())
+            self.dataField.clear()

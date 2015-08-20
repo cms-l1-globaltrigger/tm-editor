@@ -217,48 +217,119 @@
       }
     },
     {
-      "name": "DETA",
-      "object": "DIST",
+      "name": "CC-DETA",
+      "object": "CC",
       "type": "DETA",
       "title": "Delta eta",
-      "description": "Applies delta eta restricton to combination of two objects."
+      "description": "Applies delta eta restricton to combination of two objects.",
+      "enabled": false
     },
     {
-      "name": "DPHI",
-      "object": "DIST",
+      "name": "MM-DETA",
+      "object": "MM",
+      "type": "DETA",
+      "title": "Delta eta",
+      "description": "Applies delta eta restricton to combination of two objects.",
+      "enabled": false
+    },
+    {
+      "name": "CM-DETA",
+      "object": "CM",
+      "type": "DETA",
+      "title": "Delta eta",
+      "description": "Applies delta eta restricton to combination of two objects.",
+      "enabled": false
+    },
+    {
+      "name": "CE-DETA",
+      "object": "CE",
+      "type": "DETA",
+      "title": "Delta eta",
+      "description": "Applies delta eta restricton to combination of two objects.",
+      "enabled": false
+    },
+    {
+      "name": "ME-DETA",
+      "object": "ME",
+      "type": "DETA",
+      "title": "Delta eta",
+      "description": "Applies delta eta restricton to combination of two objects.",
+      "enabled": false
+    },
+    {
+      "name": "CC-DPHI",
+      "object": "CC",
       "type": "DPHI",
       "title": "Delta phi",
-      "description": "Applies delta phi restricton to combination of two objects."
+      "description": "Applies delta phi restricton to combination of two objects.",
+      "enabled": false
     },
     {
-      "name": "DR-CC",
+      "name": "MM-DPHI",
+      "object": "MM",
+      "type": "DPHI",
+      "title": "Delta phi",
+      "description": "Applies delta phi restricton to combination of two objects.",
+      "enabled": false
+    },
+    {
+      "name": "CM-DPHI",
+      "object": "CM",
+      "type": "DPHI",
+      "title": "Delta phi",
+      "description": "Applies delta phi restricton to combination of two objects.",
+      "enabled": false
+    },
+    {
+      "name": "CE-DPHI",
+      "object": "CE",
+      "type": "DPHI",
+      "title": "Delta phi",
+      "description": "Applies delta phi restricton to combination of two objects.",
+      "enabled": false
+    },
+    {
+      "name": "ME-DPHI",
+      "object": "ME",
+      "type": "DPHI",
+      "title": "Delta phi",
+      "description": "Applies delta phi restricton to combination of two objects.",
+      "enabled": false
+    },
+    {
+      "name": "CC-DR",
       "object": "CC",
       "type": "DR",
-      "title": "Delta-R for Calo-Calo"
+      "title": "Delta-R for Calo-Calo",
+      "enabled": false
     },
     {
-      "name": "DR-CM",
-      "object": "CM",
-      "type": "DR",
-      "title": "Delta-R for Calo-Muon"
-    },
-    {
-      "name": "DR-MM",
+      "name": "MM-DR",
       "object": "MM",
       "type": "DR",
-      "title": "Delta-R for Muon-Muon"
+      "title": "Delta-R for Muon-Muon",
+      "enabled": false
     },
     {
-      "name": "DR-CE",
+      "name": "CM-DR",
+      "object": "CM",
+      "type": "DR",
+      "title": "Delta-R for Calo-Muon",
+      "enabled": false
+    },
+    {
+      "name": "CE-DR",
       "object": "CE",
       "type": "DR",
-      "title": "Delta-R for Calo-Esum"
+      "title": "Delta-R for Calo-Esum",
+      "enabled": false
     },
     {
-      "name": "DR-ME",
+      "name": "ME-DR",
       "object": "ME",
       "type": "DR",
-      "title": "Delta-R for Muon-Esum"
+      "title": "Delta-R for Muon-Esum",
+      "enabled": false
     },
     {
       "name": "MASS",
