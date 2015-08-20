@@ -52,10 +52,13 @@ class ScaleSpinBox(QDoubleSpinBox):
         """Scale requires a list of dictionaries with at least a *number*,
         *minimum* and *maximum* keys. *mode* specifies if the upper or lower bin
          limit is used."""
-        self.scale = scale
+        # Important: sort the scale set by minimum or maximum - not by numbers (encoded in two's complement).
+        self.scale = sorted(scale, key = lambda bin: float(bin[self.mode]))
         self.index = 0
         self.setDecimals(prec)
-        self.setRange(float(self.scale[0][self.mode]), float(self.scale[-1][self.mode]))
+        minimum = min([float(value[self.mode]) for value in self.scale])
+        maximum = max([float(value[self.mode]) for value in self.scale])
+        self.setRange(minimum, maximum)
 
     def stepBy(self, steps):
         self.index += steps
@@ -67,18 +70,18 @@ class ScaleSpinBox(QDoubleSpinBox):
         return self.scale[index][self.mode]
 
     def minimum(self):
-        return self.value(0)
+        return float(self.value(0))
 
     def maximum(self):
-        return self.value(-1)
+        return float(self.value(-1))
 
     def setValue(self, value):
         value = self.nearest(value)
-        super(ScaleSpinBox, self).setValue(float(value))
+        super(ScaleSpinBox, self).setValue(value)
 
     def valueFromText(self, text):
         """Re-implementation of valueFromText(), it returns only the nearest."""
-        return float(self.nearest(float(str(text).strip(" =<>!"))))
+        return self.nearest(float(str(text).strip(" =<>!")))
 
     def nearest(self, value):
         """Returns nearest neighbor of value in range."""
@@ -86,7 +89,7 @@ class ScaleSpinBox(QDoubleSpinBox):
         # http://stackoverflow.com/questions/9706041/finding-index-of-an-item-closest-to-the-value-in-a-list-thats-not-entirely-sort
         result = min(range(len(self.scale)), key = lambda i: abs(float(self.scale[i][self.mode]) - float(value)))
         self.index = result
-        return self.value(self.index)
+        return float(self.value(self.index))
 
 class DataField(QScrollArea):
     """Custom data field for cuts.
@@ -136,66 +139,6 @@ class DataField(QScrollArea):
             if index < len(self.checkBoxes):
                 self.checkBoxes[index].setChecked(True)
 
-class RangeWidget(QWidget):
-
-    def __init__(self, scale, parent = None):
-        super(RangeWidget, self).__init__(parent)
-        self.suffixLabel = QLabel(self.tr("Suffix"), self)
-        self.suffixLineEdit = QLineEdit(self)
-        self.minimumLabel = QLabel(self.tr("Minimum"), self)
-        self.minimumSpinBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
-        self.maximumLabel = QLabel(self.tr("Maximum"), self)
-        self.maximumSpinBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
-        self.commentLabel = QLabel(self.tr("Comment"), self)
-        self.commentTextEdit = QPlainTextEdit(self)
-        self.commentTextEdit.setMaximumHeight(40)
-        layout = QGridLayout()
-        layout.addWidget(self.suffixLabel, 0, 0)
-        layout.addWidget(self.suffixLineEdit, 0, 1)
-        layout.addWidget(self.minimumLabel, 1, 0)
-        layout.addWidget(self.minimumSpinBox, 1, 1)
-        layout.addWidget(self.maximumLabel, 2, 0)
-        layout.addWidget(self.maximumSpinBox, 2, 1)
-        layout.addWidget(self.commentLabel, 3, 0)
-        layout.addWidget(self.commentTextEdit, 3, 1)
-        self.setLayout(layout)
-
-    def minimum(self):
-        return self.minimumSpinBox.value()
-
-    def maximum(self):
-        return self.maximumSpinBox.value()
-
-    def setRange(self, minimum, maximum):
-        self.minimumSpinBox.setvalue(self.nearest(minimum))
-        self.maximumSpinBox.setScale(self.nearest(maximum))
-
-class DataWidget(QWidget):
-
-    def __init__(self, labels, parent = None):
-        super(DataWidget, self).__init__(parent)
-        self.suffixLabel = QLabel(self.tr("Suffix"), self)
-        self.suffixLineEdit = QLineEdit(self)
-        self.dataLabel = QLabel(self.tr("Data"), self)
-        self.dataField = DataField(labels, self)
-        self.commentLabel = QLabel(self.tr("Comment"), self)
-        self.commentTextEdit = QPlainTextEdit(self)
-        self.commentTextEdit.setMaximumHeight(40)
-        layout = QGridLayout()
-        layout.addWidget(self.suffixLabel, 0, 0)
-        layout.addWidget(self.suffixLineEdit, 0, 1)
-        layout.addWidget(self.dataLabel, 1, 0)
-        layout.addWidget(self.dataField, 1, 1)
-        layout.addWidget(self.commentLabel, 2, 0)
-        layout.addWidget(self.commentTextEdit, 2, 1)
-        self.setLayout(layout)
-
-    def data(self):
-        return self.dataField.data()
-
-    def setData(self, data):
-        self.dataLabel.setData(data)
-
 class CutEditorDialog(QDialog):
     """Dialog providing cut creation/editing interface."""
 
@@ -225,12 +168,12 @@ class CutEditorDialog(QDialog):
             self.typeComboBox.addItem(item['name'], item)
         # Minimum
         self.minimumLabel = QLabel(self.tr("Minimum"), self)
-        #self.minimumComboBox = QComboBox(self)#QDoubleSpinBox(self)
-        self.minimumComboBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
+        #self.minimumSpinBox = QComboBox(self)#QDoubleSpinBox(self)
+        self.minimumSpinBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
         # Maximum
         self.maximumLabel = QLabel(self.tr("Maximum"), self)
-        #self.maximumComboBox = QComboBox(self)#QDoubleSpinBox(self)
-        self.maximumComboBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
+        #self.maximumSpinBox = QComboBox(self)#QDoubleSpinBox(self)
+        self.maximumSpinBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
         # Data
         self.dataLabel = QLabel(self.tr("Data"), self)
         self.dataField = DataField(self)
@@ -252,9 +195,9 @@ class CutEditorDialog(QDialog):
         gridLayout.addWidget(self.suffixLabel, 1, 0)
         gridLayout.addWidget(self.suffixLineEdit, 1, 1)
         gridLayout.addWidget(self.minimumLabel, 2, 0)
-        gridLayout.addWidget(self.minimumComboBox, 2, 1)
+        gridLayout.addWidget(self.minimumSpinBox, 2, 1)
         gridLayout.addWidget(self.maximumLabel, 3, 0)
-        gridLayout.addWidget(self.maximumComboBox, 3, 1)
+        gridLayout.addWidget(self.maximumSpinBox, 3, 1)
         gridLayout.addWidget(self.dataLabel, 4, 0)
         gridLayout.addWidget(self.dataField, 4, 1)
         gridLayout.addWidget(self.commentLabel, 5, 0)
@@ -297,20 +240,20 @@ class CutEditorDialog(QDialog):
         """Returns minimum floating point string or None if not a range type cut."""
         if 'data' in self.getCurrentCutSettings().keys():
             return None
-        #return self.minimumComboBox.itemData(self.minimumComboBox.currentIndex()).toPyObject()['minimum']
-        return self.minimumComboBox.value()
+        #return self.minimumSpinBox.itemData(self.minimumSpinBox.currentIndex()).toPyObject()['minimum']
+        return self.minimumSpinBox.value()
 
     def setMinimum(self, value):
         self.setRangeEnabled(True)
-        self.minimumComboBox.setValue(float(self.minimumComboBox.nearest(value)))
-        #self.minimumComboBox.setCurrentIndex(self.minimumComboBox.findText(format(float(value), "+.3f")))
+        self.minimumSpinBox.setValue(float(self.minimumSpinBox.nearest(value)))
+        #self.minimumSpinBox.setCurrentIndex(self.minimumSpinBox.findText(format(float(value), "+.3f")))
 
     def maximum(self):
         """Returns maximum floating point string or None if not a range type cut."""
         if 'data' in self.getCurrentCutSettings().keys():
             return None
-        #return self.maximumComboBox.itemData(self.maximumComboBox.currentIndex()).toPyObject()['maximum']
-        return self.maximumComboBox.value()
+        #return self.maximumSpinBox.itemData(self.maximumSpinBox.currentIndex()).toPyObject()['maximum']
+        return self.maximumSpinBox.value()
 
     def data(self):
         """Returns data string or None if not a data type cut."""
@@ -346,10 +289,10 @@ class CutEditorDialog(QDialog):
             self.setData(cut.data)
         else:
             self.setRangeEnabled(True)
-            self.minimumComboBox.setScale(cut.scale(self.menu.scales))
-            self.minimumComboBox.setValue(float(self.minimumComboBox.nearest(cut.minimum)))
-            self.maximumComboBox.setScale(cut.scale(self.menu.scales))
-            self.maximumComboBox.setValue(float(self.maximumComboBox.nearest(cut.maximum)))
+            self.minimumSpinBox.setScale(cut.scale(self.menu.scales))
+            self.minimumSpinBox.setValue(float(self.minimumSpinBox.nearest(cut.minimum)))
+            self.maximumSpinBox.setScale(cut.scale(self.menu.scales))
+            self.maximumSpinBox.setValue(float(self.maximumSpinBox.nearest(cut.maximum)))
         if 'comment' in cut.keys():
             self.commentTextEdit.setPlainText(cut['comment'])
 
@@ -367,11 +310,17 @@ class CutEditorDialog(QDialog):
     def setRangeEnabled(self, enabled):
         """Set range inputs enabled, diables data input."""
         self.minimumLabel.setEnabled(enabled)
-        self.minimumComboBox.setEnabled(enabled)
+        self.minimumSpinBox.setEnabled(enabled)
         self.maximumLabel.setEnabled(enabled)
-        self.maximumComboBox.setEnabled(enabled)
+        self.maximumSpinBox.setEnabled(enabled)
         self.dataLabel.setEnabled(not enabled)
         self.dataField.setEnabled(not enabled)
+        self.minimumLabel.setVisible(enabled)
+        self.minimumSpinBox.setVisible(enabled)
+        self.maximumLabel.setVisible(enabled)
+        self.maximumSpinBox.setVisible(enabled)
+        self.dataLabel.setVisible(not enabled)
+        self.dataField.setVisible(not enabled)
 
     def setDataEnabled(self, enabled):
         """Set data input enabled, diables range inputs."""
@@ -391,13 +340,8 @@ class CutEditorDialog(QDialog):
             info.append("<h3><img src=\"/usr/share/icons/gnome/16x16/actions/help-about.png\"/> {title}</h3>".format(**item))
         if 'description' in item.keys():
             info.append("<p>{description}</p>".format(**item))
-        if not self.typeComboBox.isEnabled():
-            info.append("<p><strong>Note:</strong> Changing an existing cut's type is not allowed.</p>".format(**item))
-        self.infoTextEdit.setText("".join(info))
         if 'data' in item.keys():
             self.setDataEnabled(True)
-            #self.minimumComboBox.clear()
-            #self.maximumComboBox.clear()
             #self.dataField.clear()
             # brrrr.... >_<'
             #for key in [str(i) for i in sorted([int(key) for key in item['data'].keys()])]:
@@ -406,23 +350,23 @@ class CutEditorDialog(QDialog):
             labels = [item['data'][str(k)] for k in keys]
             self.dataField.setEntries(labels)
         elif self.type() in ('DR', 'DETA', 'DPHI', 'MASS'):
-            #self.minimumComboBox.clear()
-            #self.maximumComboBox.clear()
             self.dataField.clear()
         else:
             self.setRangeEnabled(True)
             typename = str('-'.join((item['object'], item['type']))) # TODO: Recast to string required (why?)
+
             scale = self.menu.scales.bins[typename]
 
-            #self.minimumComboBox.clear()
-            self.minimumComboBox.setScale(self.menu.scales.bins[typename])
-            #for entry in scale:
-            #    self.minimumComboBox.addItem(format(float(entry['minimum']), "+.3f"), entry)
+            self.minimumSpinBox.setScale(scale)
+            self.maximumSpinBox.setScale(scale)
 
-            #self.maximumComboBox.clear()
-            self.maximumComboBox.setScale(self.menu.scales.bins[typename])
-            #for entry in scale:
-            #    self.maximumComboBox.addItem(format(float(entry['maximum']), "+.3f"), entry)
-            #self.maximumComboBox.setCurrentIndex(self.maximumComboBox.count() - 1)
-            self.maximumComboBox.setValue(self.maximumComboBox.maximum())
+            self.minimumSpinBox.setValue(self.minimumSpinBox.minimum())
+            self.maximumSpinBox.setValue(self.maximumSpinBox.maximum())
+
             self.dataField.clear()
+            minimum = self.minimumSpinBox.minimum()
+            maximum = self.minimumSpinBox.maximum()
+            info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
+        if not self.typeComboBox.isEnabled():
+            info.append("<p><strong>Note:</strong> Changing an existing cut's type is not allowed.</p>".format(**item))
+        self.infoTextEdit.setText("".join(info))
