@@ -10,7 +10,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   tools.rst
+   cuts.rst
    library.rst
    tutorials.rst
 
