@@ -10,6 +10,7 @@
 """
 
 import tmTable
+import tmGrammar
 from AlgorithmFormatter import AlgorithmFormatter
 
 from PyQt4.QtCore import *
@@ -20,7 +21,8 @@ import shutil
 import tempfile
 import logging
 import sys, os
-import json
+import json, re
+from operator import attrgetter
 
 Formatter = AlgorithmFormatter()
 
@@ -118,3 +120,40 @@ def createIcon(category, name):
         if os.path.isfile(filename):
             icon.addFile(filename)
     return icon
+
+# ------------------------------------------------------------------------------
+#  Specs
+# ------------------------------------------------------------------------------
+
+class CutSpec(object):
+    def __init__(self, **kwargs):
+        self.name = self._autoattr(kwargs['name'])
+        self.object = self._autoattr(kwargs['object'])
+        self.type = self._autoattr(kwargs['type'])
+        self.functions = kwargs.get('function', [])
+        self.objects = kwargs.get('objects', [])
+        self.data = self._intdict(kwargs.get('data', {}))
+        self.title = kwargs.get('title', "")
+        self.description = kwargs.get('description', "")
+        self.enabled = kwargs.get('enabled', True)
+    @property
+    def sorted_data(self):
+        """Returns sorted list of data dict values. Keys are converted to integers."""
+        return [self.data[key] for key in sorted([int(key) for key in self.data.keys()])]
+    def items(self):
+        """Returns dict containing specifications items."""
+        return dict(name=self.name, object=self.object, type=self.type,
+            functions=self.functions, objects=self.objects, data=self.data,
+            sorted_data=self.sorted_data, title=self.title,
+            description=self.description, enabled=self.enabled)
+    def _autoattr(self, attr):
+        """If attr is a string and enclosed by <tmGrammar.xxx> it is cast to an attribute.
+        _autoattr('os.path.join') returns <function join>.
+        """
+        result = re.match('\<tmGrammar\.([a-zA-Z_][a-zA-Z0-9_.]*)\>', str(attr))
+        if result:
+            return attrgetter(result.group(1))(tmGrammar)
+        return attr
+    def _intdict(self, d):
+        """Returns dictionary with keys converted to integers (assuming strings)."""
+        return dict([(int(key), value) for key, value in d.items()])

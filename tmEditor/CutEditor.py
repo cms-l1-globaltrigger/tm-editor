@@ -145,7 +145,7 @@ class DataField(QScrollArea):
 class CutEditorDialog(QDialog):
     """Dialog providing cut creation/editing interface."""
 
-    CutSettings = Toolbox.Settings['cuts']
+    CutSettings = [Toolbox.CutSpec(**cut) for cut in Toolbox.Settings['cuts']]
 
     def __init__(self, menu, parent = None):
         """Param title is the applciation name, version the main applications
@@ -163,12 +163,10 @@ class CutEditorDialog(QDialog):
         self.suffixLineEdit = QLineEdit(self)
         self.suffixLabel = QLabel(self.tr("Suffix"), self)
         # Populate cut types.
-        for item in self.CutSettings:
+        for spec in self.CutSettings:
             # Check if item is disabled: { enabled: false } [optional]
-            if 'enabled' in item.keys():
-                if not item['enabled']:
-                    continue
-            self.typeComboBox.addItem(item['name'], item)
+            if spec.enabled:
+                self.typeComboBox.addItem(spec.name, spec)
         # Minimum
         self.minimumLabel = QLabel(self.tr("Minimum"), self)
         #self.minimumSpinBox = QComboBox(self)#QDoubleSpinBox(self)
@@ -218,8 +216,8 @@ class CutEditorDialog(QDialog):
         self.suffixLineEdit.setText(self.tr("Unnamed"))
         self.updateEntries()
 
-    def settings(self):
-        return Toolbox.query(self.CutSettings, name=self.typename())[0]
+    def spec(self):
+        return filter(lambda spec: spec.name == self.typename(), self.CutSettings)[0]
 
     def name(self):
         return "{0}_{1}".format(self.typeComboBox.currentText(), self.suffixLineEdit.text())
@@ -231,15 +229,16 @@ class CutEditorDialog(QDialog):
         self.suffixLineEdit.setText('_'.join(tokens[1:]))
 
     def typename(self):
-        return str(self.typeComboBox.currentText())
+        typename = str(self.typeComboBox.currentText())
+        return typename
 
     def type(self):
         """Returns type name."""
-        return self.settings()['type']
+        return self.spec().type
 
     def object(self):
         """Returns object name."""
-        return self.settings()['object']
+        return self.spec().object
 
     def suffix(self):
         """Returns suffix."""
@@ -285,15 +284,13 @@ class CutEditorDialog(QDialog):
         self.typeComboBox.setEnabled(False)
         self.setName(cut.name)
         self.updateEntries()
-        if cut.type in ('ISO', 'QLTY', 'CHGCOR'):
+        if cut.type in (tmGrammar.ISO, tmGrammar.QLTY, tmGrammar.CHGCOR):
             self.setDataEnabled(True)
-            labels = self.settings()['data']
-            labels = [labels[str(k)] for k in sorted([int(i) for i in labels.keys()])]
-            self.dataField.setEntries(labels)
+            self.dataField.setEntries(self.spec().sorted_data)
             self.setData(cut.data)
         else:
             self.setRangeEnabled(True)
-            if cut.type in ('DR', 'DETA', 'DPHI'):
+            if cut.type in (tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
                 scale = self.generateScale(cut.type, cut.object)
             else:
                 scale = cut.scale(self.menu.scales)
@@ -339,36 +336,36 @@ class CutEditorDialog(QDialog):
         # DAMN ugly...
         def dr(deta, dphi):
             return math.sqrt(deta*deta+dphi*dphi)
-        def delta(scale):
-            minimum = min([float(value['minimum']) for value in scale])
-            maximum = max([float(value['maximum']) for value in scale])
-            return abs(maximum) + abs(minimum)
+        def calc_(maximum):
+            return [{'number': i, 'minimum': i/1000., 'maximum': i/1000.+0.001} for i in xrange(maximum)]
         scale = []
         eta, phi = ScaleSpinBox(), ScaleSpinBox()
-        if type == 'DR':
-            if object == 'CC':
-                # HACK WARNING relies on EG... shal we distinquis calorimeter scales???!
-                deta = delta(self.menu.scales.bins['EG-ETA'])
-                dphi = delta(self.menu.scales.bins['EG-PHI'])
-            elif object == 'MM':
-                deta = delta(self.menu.scales.bins['EG-ETA'])
-                dphi = delta(self.menu.scales.bins['EG-PHI'])
-            elif object == 'CM':
-                deta = delta(self.menu.scales.bins['MU-ETA'])
-                dphi = delta(self.menu.scales.bins['EG-PHI'])
-            elif object == 'CE':
-                deta = 0.
-                dphi = delta(self.menu.scales.bins['EG-PHI'])
-            elif object == 'ME':
-                deta = 0.
-                dphi = delta(self.menu.scales.bins['MU-PHI'])
+        if type == tmGrammar.DETA:
+            deta = 10.
+            maximum = int(deta * 1000)
+            logging.debug("deta: %s", deta)
+            logging.debug("maximum: %s", maximum)
+            scale = calc_(maximum)
+            logging.debug("scale[0]: %s", scale[0])
+            logging.debug("scale[-1]: %s", scale[-1])
+        if type == tmGrammar.DPHI:
+            dphi = 10.
+            maximum = int(dphi * 1000)
+            logging.debug("dphi: %s", dphi)
+            logging.debug("maximum: %s", maximum)
+            scale = calc_(maximum)
+            logging.debug("scale[0]: %s", scale[0])
+            logging.debug("scale[-1]: %s", scale[-1])
+        if type == tmGrammar.DR:
+            deta = 10.
+            dphi = 2 * math.pi
             maximum = int(dr(deta, dphi) * 1000)
             logging.debug("deta: %s", deta)
             logging.debug("dphi: %s", dphi)
             logging.debug("dr(deta, dphi): %s", dr(deta, dphi))
             logging.debug("dr(deta, dphi) * 1000: %s", dr(deta, dphi) * 1000)
             logging.debug("maximum: %s", maximum)
-            scale = [{'number': i, 'minimum': i/1000., 'maximum': i/1000.+0.001} for i in range(maximum)]
+            scale = calc_(maximum)
             logging.debug("scale[0]: %s", scale[0])
             logging.debug("scale[-1]: %s", scale[-1])
         return scale
@@ -377,21 +374,19 @@ class CutEditorDialog(QDialog):
         """Update entries according to selected cut type."""
         # TODO not effective, re-write.
         typename = self.typename()
-        settings = Toolbox.query(self.CutSettings, name=typename[0]
+        spec = self.spec()
         self.minimumSpinBox.reset()
         self.maximumSpinBox.reset()
         self.dataField.clear()
         info = []
-        if 'title' in settings.keys():
-            info.append("<h3><img src=\"/usr/share/icons/gnome/16x16/actions/help-about.png\"/> {title}</h3>".format(**settings))
-        if 'description' in settings.keys():
-            info.append("<p>{description}</p>".format(**settings))
-        if 'data' in settings.keys():
+        if spec.title:
+            info.append("<h3><img src=\"/usr/share/icons/gnome/16x16/actions/help-about.png\"/> {spec.title}</h3>".format(**locals()))
+        if spec.description:
+            info.append("<p>{spec.description}</p>".format(**locals()))
+        if spec.data:
             self.setDataEnabled(True)
-            keys = sorted([int(key) for key in settings['data'].keys()])
-            labels = [settings['data'][str(k)] for k in keys]
-            self.dataField.setEntries(labels)
-        elif self.type() in ('DR', 'DETA', 'DPHI'):
+            self.dataField.setEntries(spec.sorted_data)
+        elif self.type() in (tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
             self.setRangeEnabled(True)
             scale = self.generateScale(self.type(), self.object())
             self.minimumSpinBox.setScale(scale)
@@ -401,7 +396,7 @@ class CutEditorDialog(QDialog):
             minimum = self.minimumSpinBox.minimum()
             maximum = self.maximumSpinBox.maximum()
             info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
-        elif self.type() in ('MASS', ):
+        elif self.type() in (tmGrammar.MASS, ):
             pass
         else:
             self.setRangeEnabled(True)

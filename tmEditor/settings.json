@@ -1,9 +1,9 @@
 {
   "cuts": [
     {
-      "name": "MU-ETA",
-      "object": "MU",
-      "type": "ETA",
+      "name": "<tmGrammar.MU_ETA>",
+      "object": "<tmGrammar.MU>",
+      "type": "<tmGrammar.ETA>",
       "title": "Muon eta",
       "description": "Restricts valid eta range for muon object requirement."
     },
@@ -206,9 +206,11 @@
       "title": "Missing energy phi"
     },
     {
-      "name": "COMB-CHGCOR",
+      "name": "CHGCOR",
       "object": "COMB",
       "type": "CHGCOR",
+      "function": "comb",
+      "objects": ["MU", "EG", "JET", "TAU"],
       "title": "Charge correlation",
       "description": "Applies charge correlation restriction to combination of two objects.\nExample: comb{MU20, MU20}[CHGCOR_OP]",
       "data": {
@@ -217,120 +219,38 @@
       }
     },
     {
-      "name": "CC-DETA",
-      "object": "CC",
+      "name": "DETA",
+      "object": "DIST",
       "type": "DETA",
+      "functions": ["dist"],
+      "objects": [],
       "title": "Delta eta",
-      "description": "Applies delta eta restricton to combination of two objects.",
-      "enabled": false
+      "description": "Applies delta eta restricton to combination of two objects."
     },
     {
-      "name": "MM-DETA",
-      "object": "MM",
-      "type": "DETA",
-      "title": "Delta eta",
-      "description": "Applies delta eta restricton to combination of two objects.",
-      "enabled": false
-    },
-    {
-      "name": "CM-DETA",
-      "object": "CM",
-      "type": "DETA",
-      "title": "Delta eta",
-      "description": "Applies delta eta restricton to combination of two objects.",
-      "enabled": false
-    },
-    {
-      "name": "CE-DETA",
-      "object": "CE",
-      "type": "DETA",
-      "title": "Delta eta",
-      "description": "Applies delta eta restricton to combination of two objects.",
-      "enabled": false
-    },
-    {
-      "name": "ME-DETA",
-      "object": "ME",
-      "type": "DETA",
-      "title": "Delta eta",
-      "description": "Applies delta eta restricton to combination of two objects.",
-      "enabled": false
-    },
-    {
-      "name": "CC-DPHI",
-      "object": "CC",
+      "name": "DPHI",
+      "object": "DIST",
       "type": "DPHI",
+      "functions": ["dist"],
+      "objects": [],
       "title": "Delta phi",
-      "description": "Applies delta phi restricton to combination of two objects.",
-      "enabled": false
+      "description": "Applies delta phi restricton to combination of two objects."
     },
     {
-      "name": "MM-DPHI",
-      "object": "MM",
-      "type": "DPHI",
-      "title": "Delta phi",
-      "description": "Applies delta phi restricton to combination of two objects.",
-      "enabled": false
-    },
-    {
-      "name": "CM-DPHI",
-      "object": "CM",
-      "type": "DPHI",
-      "title": "Delta phi",
-      "description": "Applies delta phi restricton to combination of two objects.",
-      "enabled": false
-    },
-    {
-      "name": "CE-DPHI",
-      "object": "CE",
-      "type": "DPHI",
-      "title": "Delta phi",
-      "description": "Applies delta phi restricton to combination of two objects.",
-      "enabled": false
-    },
-    {
-      "name": "ME-DPHI",
-      "object": "ME",
-      "type": "DPHI",
-      "title": "Delta phi",
-      "description": "Applies delta phi restricton to combination of two objects.",
-      "enabled": false
-    },
-    {
-      "name": "CC-DR",
-      "object": "CC",
+      "name": "DR",
+      "object": "DIST",
       "type": "DR",
-      "title": "Delta-R for Calo-Calo"
-    },
-    {
-      "name": "MM-DR",
-      "object": "MM",
-      "type": "DR",
-      "title": "Delta-R for Muon-Muon"
-    },
-    {
-      "name": "CM-DR",
-      "object": "CM",
-      "type": "DR",
-      "title": "Delta-R for Calo-Muon"
-    },
-    {
-      "name": "CE-DR",
-      "object": "CE",
-      "type": "DR",
-      "title": "Delta-R for Calo-Esum"
-    },
-    {
-      "name": "ME-DR",
-      "object": "ME",
-      "type": "DR",
-      "title": "Delta-R for Muon-Esum"
+      "functions": ["dist"],
+      "objects": [],
+      "title": "Applies delta-R restricton to combination of two objects."
     },
     {
       "name": "MASS",
       "object": "MASS",
       "type": "MASS",
-      "title": "Invariant mass",
+      "functions": ["mass"],
+      "objects": [],
+      "title": "Invariant mass restricton.",
       "enabled": false
     }
   ]

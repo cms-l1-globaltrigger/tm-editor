@@ -42,6 +42,26 @@ OBJECT_CODES = {
     tmGrammar.External: tmGrammar.EXT,
 }
 
+OperatorList = (
+    tmGrammar.AND,
+    tmGrammar.OR,
+    tmGrammar.XOR,
+    tmGrammar.NOT,
+)
+
+ObjectComparisonList = (
+    tmGrammar.EQ,
+    tmGrammar.NE,
+    tmGrammar.GE,
+    tmGrammar.GT,
+    tmGrammar.LE,
+    tmGrammar.LT,
+)
+
+CUT_MAPPING = {
+
+}
+
 class Menu(object):
     """L1-Trigger Menu container class."""
 
