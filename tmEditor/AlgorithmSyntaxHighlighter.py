@@ -9,12 +9,17 @@
 """Algorithm syntax highlighter class.
 """
 
+import tmGrammar
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 from collections import namedtuple
 
 __all__ = ['AlgorithmSyntaxHighlighter', ]
+
+def makeKeyword(key):
+    return "\\b{key}\\b".format(key = key)
 
 class AlgorithmSyntaxHighlighter(QSyntaxHighlighter):
     """Syntax highighter class for algorithm expressions."""
@@ -29,15 +34,20 @@ class AlgorithmSyntaxHighlighter(QSyntaxHighlighter):
         keywordFormat = QTextCharFormat()
         keywordFormat.setForeground(Qt.darkBlue)
         keywordFormat.setFontWeight(QFont.Bold)
-        keywordPatterns = QStringList()
-        keywordPatterns << "\\bAND\\b" << "\\bOR\\b" << "\\bXOR\\b" << "\\bNOT\\b"
+        keywordPatterns = [
+            makeKeyword(tmGrammar.AND),
+            makeKeyword(tmGrammar.OR),
+            makeKeyword(tmGrammar.XOR),
+            makeKeyword(tmGrammar.NOT),
+        ]
         for pattern in keywordPatterns:
             self.highlightingRules.append(
                 self.HighlightingRule(keywordFormat, QRegExp(pattern)))
         functionFormat = QTextCharFormat()
         functionFormat.setForeground(Qt.blue)
         functionFormat.setFontWeight(QFont.Bold)
-        rule = self.HighlightingRule(functionFormat, QRegExp("\\bcomb|delta|mass+(?=\\{)"))
+        rule = self.HighlightingRule(functionFormat,
+            QRegExp("\\b{tmGrammar.comb}|{tmGrammar.dist}|{tmGrammar.mass}+(?=\\{{)".format(tmGrammar = tmGrammar)))
         self.highlightingRules.append(rule)
     def highlightBlock(self, text):
         for rule in self.highlightingRules:

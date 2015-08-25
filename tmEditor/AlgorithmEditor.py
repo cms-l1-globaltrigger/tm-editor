@@ -9,6 +9,7 @@
 """Algorithm editor main window and dialog.
 """
 
+import tmGrammar
 from tmEditor import AlgorithmFormatter
 from tmEditor import AlgorithmSyntaxHighlighter
 from tmEditor import Toolbox
@@ -212,7 +213,7 @@ class AlgorithmEditorDialog(QDialog):
 
     def name(self):
         """Provided for convenience."""
-        return self.editor.name()
+        return str(self.editor.name())
 
     def setName(self, name):
         """Provided for convenience."""
@@ -220,7 +221,7 @@ class AlgorithmEditorDialog(QDialog):
 
     def expression(self):
         """Provided for convenience."""
-        return self.editor.expression()
+        return str(self.editor.expression())
 
     def setExpression(self, expression):
         """Provided for convenience."""
@@ -228,11 +229,33 @@ class AlgorithmEditorDialog(QDialog):
 
     def comment(self):
         """Provided for convenience."""
-        return self.editor.comment()
+        return str(self.editor.comment())
 
     def setComment(self, comment):
         """Provided for convenience."""
         self.editor.setComment(comment)
+
+    def loadAlgorithm(self, algorithm):
+        self.setIndex(algorithm.index)
+        self.setName(algorithm.name)
+        self.setExpression(algorithm.expression)
+        self.setComment(algorithm.comment)
+
+    def updateAlgorithm(self, algorithm):
+        algorithm['index'] = str(self.index())
+        algorithm['name'] = self.name()
+        algorithm['expression'] = self.expression()
+        algorithm['comment'] = self.comment()
+
+    def accept(self):
+        try:
+            algorithm = Algorithm(expression = self.expression())
+            algorithm.objects()
+            algorithm.cuts()
+        except ValueError, e:
+            reply = QMessageBox.warning(self, "Invalid expression", str(e))
+        else:
+            super(AlgorithmEditorDialog, self).accept()
 
     def closeEvent(self, event):
         """On window close event."""
@@ -245,8 +268,11 @@ class AlgorithmEditorDialog(QDialog):
                 event.ignore()
                 return
             if reply == QMessageBox.Apply:
-                event.accept()
                 self.accept()
+                if self.result() != QDialog.Accepted:
+                    event.ignore()
+                    return
+                event.accept()
                 return
         event.accept()
         self.reject()
@@ -268,10 +294,10 @@ class LibraryWidget(QWidget):
         ("mass{obj, obj}[cut]", "<strong>Invariant mass function</strong><br/>Returns true if the invariant mass of two object requirements is between the given cut.",),
     )
     Operators = (
-        ("AND", "Logical <strong>AND</strong> operator.",),
-        ("OR", "Logical <strong>OR</strong> operator.",),
-        ("XOR", "Logical <strong>XOR</strong> (exclusive or) operator.",),
-        ("NOT", "Logical <strong>NOT</strong> operator.",),
+        (tmGrammar.AND, "Logical <strong>AND</strong> operator.",),
+        (tmGrammar.OR, "Logical <strong>OR</strong> operator.",),
+        (tmGrammar.XOR, "Logical <strong>XOR</strong> (exclusive or) operator.",),
+        (tmGrammar.NOT, "Logical <strong>NOT</strong> operator.",),
     )
     ObjectPreview = "<br/>".join((
         "<strong>Name:</strong> {name}",

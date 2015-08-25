@@ -9,17 +9,22 @@
 """Algorithm formatter class.
 """
 
+import tmGrammar
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 __all__ = ['AlgorithmFormatter', ]
 
+EOL = "\n"
+INDENT = "  "
+
 class AlgorithmFormatter(object):
     """Formatter class used to format user input to the (currently very)
     restrictive algorithm equation syntax.
     """
-    Functions = ('comb', 'delta', 'mass', )
-    Operators = ('AND', 'OR', 'XOR', 'NOT', )
+    Functions = (tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, )
+    Operators = (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR, tmGrammar.NOT, )
     Paranthesis = ('(', ')', '{', '}', '[', ']', )
     Separators = (',', )
     def machinize(self, algorithm):
@@ -65,34 +70,34 @@ class AlgorithmFormatter(object):
             if algorithm[i].startswith('('):
                 level += 1
                 temp.append(algorithm[i])
-                temp.append("\n")
-                temp.append("  " * level)
+                temp.append(EOL)
+                temp.append(INDENT * level)
                 i += 1
-            elif algorithm[i:i+2].startswith('OR'):
-                temp.append("\n")
-                temp.append("  " * level)
+            elif algorithm[i:i+2].startswith(tmGrammar.OR):
+                temp.append(EOL)
+                temp.append(INDENT * level)
                 temp.append(algorithm[i:i+2])
-                temp.append("\n")
-                temp.append("  " * level)
+                temp.append(EOL)
+                temp.append(INDENT * level)
                 i += 3
-            elif algorithm[i:i+3].startswith('AND'):
-                temp.append("\n")
-                temp.append("  " * level)
+            elif algorithm[i:i+3].startswith(tmGrammar.AND):
+                temp.append(EOL)
+                temp.append(INDENT * level)
                 temp.append(algorithm[i:i+3])
-                temp.append("\n")
-                temp.append("  " * level)
+                temp.append(EOL)
+                temp.append(INDENT * level)
                 i += 4
-            elif algorithm[i:i+3].startswith('XOR'):
-                temp.append("\n")
-                temp.append("  " * level)
+            elif algorithm[i:i+3].startswith(tmGrammar.XOR):
+                temp.append(EOL)
+                temp.append(INDENT * level)
                 temp.append(algorithm[i:i+3])
-                temp.append("\n")
+                temp.append(EOL)
                 temp.append("  " * (level))
                 i += 4
             elif algorithm[i].startswith(')'):
                 if level: level -= 1
-                temp.append("\n")
-                temp.append("  " * level)
+                temp.append(EOL)
+                temp.append(INDENT * level)
                 temp.append(algorithm[i])
                 i += 1
             else:

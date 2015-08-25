@@ -21,13 +21,8 @@ from PyQt4.QtGui import *
 
 __all__ = ['CutEditorDialog', ]
 
-FunctionCutObjects = {
-    'MASS': 'MASS',
-    'DR': 'DIST',
-    'DETA': 'DIST',
-    'DPHI': 'DIST',
-    'CHGCOR': 'COMB',
-}
+MaxDEta = 10. # Maximum by detector geometry.
+MaxDPhi = 2 * math.pi # Maximum by detector geometry.
 
 # -----------------------------------------------------------------------------
 #  Custom widgets
@@ -337,37 +332,14 @@ class CutEditorDialog(QDialog):
         def dr(deta, dphi):
             return math.sqrt(deta*deta+dphi*dphi)
         def calc_(maximum):
-            return [{'number': i, 'minimum': i/1000., 'maximum': i/1000.+0.001} for i in xrange(maximum)]
+            return [{'number': i, 'minimum': i/1000., 'maximum': i/1000.+0.001} for i in xrange(int(maximum))]
         scale = []
-        eta, phi = ScaleSpinBox(), ScaleSpinBox()
         if type == tmGrammar.DETA:
-            deta = 10.
-            maximum = int(deta * 1000)
-            logging.debug("deta: %s", deta)
-            logging.debug("maximum: %s", maximum)
-            scale = calc_(maximum)
-            logging.debug("scale[0]: %s", scale[0])
-            logging.debug("scale[-1]: %s", scale[-1])
+            scale = calc_(MaxDEta * 1000)
         if type == tmGrammar.DPHI:
-            dphi = 10.
-            maximum = int(dphi * 1000)
-            logging.debug("dphi: %s", dphi)
-            logging.debug("maximum: %s", maximum)
-            scale = calc_(maximum)
-            logging.debug("scale[0]: %s", scale[0])
-            logging.debug("scale[-1]: %s", scale[-1])
+            scale = calc_(MaxDPhi * 1000)
         if type == tmGrammar.DR:
-            deta = 10.
-            dphi = 2 * math.pi
-            maximum = int(dr(deta, dphi) * 1000)
-            logging.debug("deta: %s", deta)
-            logging.debug("dphi: %s", dphi)
-            logging.debug("dr(deta, dphi): %s", dr(deta, dphi))
-            logging.debug("dr(deta, dphi) * 1000: %s", dr(deta, dphi) * 1000)
-            logging.debug("maximum: %s", maximum)
-            scale = calc_(maximum)
-            logging.debug("scale[0]: %s", scale[0])
-            logging.debug("scale[-1]: %s", scale[-1])
+            scale = calc_(dr(MaxDEta, MaxDPhi) * 1000)
         return scale
 
     def updateEntries(self):

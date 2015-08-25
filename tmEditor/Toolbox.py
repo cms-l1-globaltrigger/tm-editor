@@ -130,8 +130,7 @@ class CutSpec(object):
         self.name = self._autoattr(kwargs['name'])
         self.object = self._autoattr(kwargs['object'])
         self.type = self._autoattr(kwargs['type'])
-        self.functions = kwargs.get('function', [])
-        self.objects = kwargs.get('objects', [])
+        self.objects = [self._autoattr(item) for item in kwargs.get('objects', [])]
         self.data = self._intdict(kwargs.get('data', {}))
         self.title = kwargs.get('title', "")
         self.description = kwargs.get('description', "")
@@ -143,9 +142,8 @@ class CutSpec(object):
     def items(self):
         """Returns dict containing specifications items."""
         return dict(name=self.name, object=self.object, type=self.type,
-            functions=self.functions, objects=self.objects, data=self.data,
-            sorted_data=self.sorted_data, title=self.title,
-            description=self.description, enabled=self.enabled)
+            objects=self.objects, data=self.data, sorted_data=self.sorted_data,
+            title=self.title, description=self.description, enabled=self.enabled)
     def _autoattr(self, attr):
         """If attr is a string and enclosed by <tmGrammar.xxx> it is cast to an attribute.
         _autoattr('os.path.join') returns <function join>.

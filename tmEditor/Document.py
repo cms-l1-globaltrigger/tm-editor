@@ -312,12 +312,13 @@ class Document(QWidget):
         if dialog.result() != QDialog.Accepted:
             return
         self.setModified(True)
-        self.menu().addAlgorithm(str(dialog.index()), str(dialog.name()), str(dialog.expression()))
+        algorithm = Algorithm()
+        dialog.updateAlgorithm(algorithm)
+        self.menu().addAlgorithm(**algorithm)
         item.view.model().setSourceModel(item.view.model().sourceModel())
         # REBUILD INDEX
         self.updatePreview()
         self.modified.emit()
-        algorithm = self.menu().algorithmByName(str(dialog.name()))
         self.menu().updateAlgorithm(algorithm)
         self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
         for name in algorithm.cuts():
@@ -350,23 +351,19 @@ class Document(QWidget):
         self.updatePreview()
 
     def editAlgorithm(self, index, item):
+        algorithm = self.menu().algorithms[index.row()]
         dialog = AlgorithmEditorDialog(self.menu(), self)
         dialog.setModal(True)
-        dialog.setIndex(self.menu().algorithms[index.row()].index)
-        dialog.setName(self.menu().algorithms[index.row()].name)
-        dialog.setExpression(self.menu().algorithms[index.row()].expression)
+        dialog.loadAlgorithm(algorithm)
         dialog.editor.setModified(False)
         dialog.exec_()
         if dialog.result() != QDialog.Accepted:
             return
         self.setModified(True)
-        self.menu().algorithms[index.row()]['expression'] = str(dialog.expression())
-        self.menu().algorithms[index.row()]['index'] = str(dialog.index())
-        self.menu().algorithms[index.row()]['name'] = str(dialog.name())
+        dialog.updateAlgorithm(algorithm)
         # REBUILD INDEX
         self.updatePreview()
         self.modified.emit()
-        algorithm = self.menu().algorithms[index.row()]
         self.menu().updateAlgorithm(algorithm)
         self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
         for name in algorithm.cuts():
