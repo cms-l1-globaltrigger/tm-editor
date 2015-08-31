@@ -12,6 +12,8 @@
 import tmGrammar
 from tmEditor import AlgorithmFormatter
 from tmEditor import AlgorithmSyntaxHighlighter
+from tmEditor import AlgorithmSyntaxValidator
+from tmEditor.AlgorithmSyntaxValidator import AlgorithmSyntaxError
 from tmEditor import Toolbox
 from tmEditor import Menu
 from tmEditor.Menu import Algorithm
@@ -249,9 +251,15 @@ class AlgorithmEditorDialog(QDialog):
 
     def accept(self):
         try:
+            # Validate algorithm expression.
+            validator = AlgorithmSyntaxValidator()
+            validator.validate(self.expression())
+            # Temporary limited conistency check.
             algorithm = Algorithm(expression = self.expression())
             algorithm.objects()
             algorithm.cuts()
+        except AlgorithmSyntaxError, e:
+            reply = QMessageBox.warning(self, "Algorithm Syntax Error", str(e))
         except ValueError, e:
             reply = QMessageBox.warning(self, "Invalid expression", str(e))
         else:

@@ -13,6 +13,7 @@ from Menu import Menu
 
 from AlgorithmFormatter import AlgorithmFormatter
 from AlgorithmSyntaxHighlighter import AlgorithmSyntaxHighlighter
+from AlgorithmSyntaxValidator import AlgorithmSyntaxValidator
 from AlgorithmEditor import AlgorithmEditor
 from AlgorithmEditor import AlgorithmEditorDialog
 

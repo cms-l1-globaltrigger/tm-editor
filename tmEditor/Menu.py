@@ -319,6 +319,10 @@ class Algorithm(AbstractDict):
     def module_id(self):
         return self['module_id']
 
+    @property
+    def comment(self):
+        return self['comment'] if 'comment' in self.keys() else ""
+
     def isValid(self):
         return tmTable.isAlgorithm(self.toRow())
 
