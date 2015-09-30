@@ -38,6 +38,8 @@ AlignLeft = Qt.AlignLeft | Qt.AlignVCenter
 AlignRight = Qt.AlignRight | Qt.AlignVCenter
 AlignCenter = Qt.AlignCenter | Qt.AlignVCenter
 
+MaxAlgorithms = 512
+
 # ------------------------------------------------------------------------------
 #  Document widget
 # ------------------------------------------------------------------------------
@@ -213,9 +215,10 @@ class Document(QWidget):
         return None, item
 
     def getUnusedAlgorithmIndices(self):
-        free = range(512)
+        free = [i for i in range(512)]
         for algorithm in self.menu().algorithms:
-            free.remove(int(algorithm.index))
+            if int(algorithm.index) in free:
+                free.remove(int(algorithm.index))
         return free
 
     def updateViews(self):
@@ -319,7 +322,6 @@ class Document(QWidget):
         # REBUILD INDEX
         self.updatePreview()
         self.modified.emit()
-        self.menu().updateAlgorithm(algorithm)
         self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
         for name in algorithm.cuts():
             if not filter(lambda item: item.name == name, self.menu().cuts):
