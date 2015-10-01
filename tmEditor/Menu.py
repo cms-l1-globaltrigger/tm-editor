@@ -27,6 +27,9 @@ import sys, os
 
 __all__ = ['Menu', ]
 
+DEFAULT_UUID = '00000000-0000-0000-0000-000000000000'
+"""Empty UUID"""
+
 FORMAT_FLOAT = '+23.16E'
 """Floating point string format."""
 
@@ -215,7 +218,7 @@ class Menu(object):
             # Regenerate menu UUID.
             self.menu['uuid_menu'] = str(uuid.uuid4())
             # Reset firmware UUID.
-            self.menu['uuid_firmware'] = '00000000-0000-0000-0000-000000000000'
+            self.menu['uuid_firmware'] = DEFAULT_UUID
             # Create a new menu instance.
             menu = tmTable.Menu()
 
@@ -225,7 +228,7 @@ class Menu(object):
             for algorithm in self.algorithms:
 
                 if not algorithm.isValid():
-                    raise RuntimeError("NOT AN ALGO")
+                    raise RuntimeError("Invalid algorithm ({algorithm.index}): {algorithm.name}".format(**locals()))
 
                 row = algorithm.toRow()
                 menu.algorithms.append(row)
@@ -237,7 +240,7 @@ class Menu(object):
 
                     object_ = self.objectByName(name)
                     if not object_:
-                        raise RuntimeError("NOT AN OBJREQ")
+                        raise RuntimeError("Invalid object requirement: {name}".format(**locals()))
 
                     row = object_.toRow()
                     menu.objects[algorithm.name] = menu.objects[algorithm.name] + (row, )
@@ -249,7 +252,7 @@ class Menu(object):
 
                     external = self.externalByName(name)
                     if not external:
-                        raise RuntimeError("NOT AN EXTERNAL")
+                        raise RuntimeError("Invalid external signal: {name}".format(**locals()))
 
                     row = external.toRow()
                     menu.externals[algorithm.name] = menu.externals[algorithm.name] + (row, )
@@ -261,7 +264,7 @@ class Menu(object):
 
                     cut = self.cutByName(name)
                     if not cut:
-                        raise RuntimeError("NOT AN CUT")
+                        raise RuntimeError("Invalid cut: {name}".format(**locals()))
 
                     row = cut.toRow()
                     menu.cuts[algorithm.name] = menu.cuts[algorithm.name] + (row, )
@@ -570,17 +573,16 @@ def functionCuts(token):
 
 def functionObjectsCuts(token):
     """Returns list of cut names assigned to function objects."""
-    cuts = []
+    cuts = set()
     f = tmGrammar.Function_Item()
     if not tmGrammar.Function_parser(token, f):
         raise ValueError(token)
-    for token in tmGrammar.Function_getObjects(f):
-        o = tmGrammar.Object_Item()
-        if not tmGrammar.Object_parser(token, o):
-            raise ValueError(token)
-        for name in o.cuts:
-            cuts.append(name)
-    return cuts
+    # Note: returns string containting list of cuts.
+    for names in tmGrammar.Function_getObjectCuts(f):
+        if names:
+            for name in names.split(','):
+                cuts.add(name.strip())
+    return list(cuts)
 
 def objectCuts(token):
     """Returns list of cut names assigned to an object."""

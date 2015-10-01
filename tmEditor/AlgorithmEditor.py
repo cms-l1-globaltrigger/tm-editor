@@ -23,6 +23,8 @@ from PyQt4.QtGui import *
 
 import sys, os
 
+MaxAlgorithms = 512
+
 # -----------------------------------------------------------------------------
 #  Algorithm editor window
 # -----------------------------------------------------------------------------
@@ -40,8 +42,8 @@ class AlgorithmEditor(QMainWindow):
         self.setModified(False)
         #
         self.indexSpinBox = QSpinBox(self)
-        # self.indexSpinBox.setMaximum(512)
-        # self.indexSpinBox.setEditable(True)
+        self.indexSpinBox.setMaximum(MaxAlgorithms)
+        self.indexSpinBox.setEditable(True)
         self.indexSpinBox.setMinimumWidth(100)
         self.nameComboBox = QLineEdit(self)
         self.nameComboBox.setMinimumWidth(300)

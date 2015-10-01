@@ -142,6 +142,7 @@ class Document(QWidget):
         self.menuItem.view.commentTextEdit.setPlainText(self.menu().menu['comment'] if 'comment' in self.menu().menu else '')
 
     def createProxyTableView(self, name, model):
+        """Factory to create new QTableView view using a QSortFilterProxyModel."""
         proxyModel = QSortFilterProxyModel(self)
         proxyModel.setSourceModel(model)
         tableView = TableView(self)
@@ -153,9 +154,10 @@ class Document(QWidget):
         return tableView
 
     def addPage(self, name, page, preview, parent):
+        """Add page to document navigation."""
         item = QTreeWidgetItem(self)
         if parent is self.navigationTreeWidget:
-            # Hilight root items in bold text.
+            # Highlight root items in bold text.
             font = item.font(0)
             font.setBold(True)
             item.setFont(0, font)
@@ -249,9 +251,10 @@ class Document(QWidget):
                 if data['data']:
                     fdata = []
                     typename = "{0}-{1}".format(data['object'], data['type'])
-                    data_ = filter(lambda entry: entry['name'] == typename, Toolbox.Settings['cuts'])[0]['data']
+                    CutSettings = [Toolbox.CutSpec(**cut) for cut in Toolbox.Settings['cuts']]
+                    data_ = filter(lambda entry: entry.name == typename, CutSettings)[0].data
                     for n in data['data'].split(','):
-                        fdata.append("{1} ({0})".format(int(n), data_[n.strip()]))
+                        fdata.append("{0} ({1})".format(data_[int(n)], int(n)))
                     fdata = ', '.join(fdata)
                     text.append("<p><strong>Data:</strong> {translation}</p>".format(translation = fdata))
                 else:
