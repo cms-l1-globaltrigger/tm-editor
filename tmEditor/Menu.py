@@ -467,6 +467,10 @@ class Object(AbstractDict):
     def bx_offset(self):
         return self['bx_offset']
 
+    @property
+    def comment(self):
+        return self['comment'] if 'comment' in self.keys() else ''
+
     def signature(self):
         return "{name}{threshold}{bx_offset}".format(**self)
 
@@ -542,8 +546,9 @@ def toObject(token):
 
 def toExternal(token):
     """Returns an external's dict."""
-    result = re.match('(\+\d+|\-\d+)$', token)
-    bx_offset = result.group(1) if result else '0'
+    # Test if external signal ends with bunch crossign offset.
+    result = re.match('.*(\+\d+|\-\d+)$', token)
+    bx_offset = result.group(1) if result else '+0'
     return External(
         name = token,
         bx_offset = bx_offset,
