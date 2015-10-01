@@ -16,6 +16,21 @@ Usage example
 
 """
 
+import tmGrammar
+
+from tmEditor.Menu import (
+    isOperator,
+    isObject,
+    isCut,
+    isFunction,
+    toObject,
+    toExternal,
+    functionObjects,
+    functionCuts,
+    functionObjectsCuts,
+    objectCuts,
+)
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
@@ -72,10 +87,39 @@ class DistNrObjects(SyntaxRule):
     """Limit number of objects for distance function."""
 
     def validate(self, expression):
-        pass
+        tmGrammar.Algorithm_Logic.clear()
+        if not tmGrammar.Algorithm_parser(expression):
+            raise AlgorithmSyntaxError()
+        for token in tmGrammar.Algorithm_Logic.getTokens():
+            if isFunction(token):
+                if token.startswith(tmGrammar.dist):
+                    f = tmGrammar.Function_Item()
+                    if not tmGrammar.Function_parser(token, f):
+                        raise AlgorithmSyntaxError(str(f.message))
+                    objects = functionObjects(token)
+                    if len(objects) != 2:
+                        raise AlgorithmSyntaxError("dist{{...}} function requires excactly two objects. Error near `{token}'".format(**locals()))
 
 class DistDeltaEtaRange(SyntaxRule):
     """Validates that delta-eta cut ranges does not exceed assigned objects limits."""
 
     def validate(self, expression):
-        pass
+        tmGrammar.Algorithm_Logic.clear()
+        if not tmGrammar.Algorithm_parser(expression):
+            raise AlgorithmSyntaxError()
+        for token in tmGrammar.Algorithm_Logic.getTokens():
+            if isFunction(token):
+                if token.startswith(tmGrammar.dist):
+                    cuts = functionCuts(token)
+                    for cut in cuts:
+                        if cut.startswith(tmGrammar.DETA):
+                            objects = functionObjects(token)
+                            if len(objects) != 2:
+                                raise AlgorithmSyntaxError("dist function requires two objects")
+                            print "{"
+                            for object in objects:
+                                o = tmGrammar.Object_Item()
+                                if not tmGrammar.Object_parser(object, o):
+                                    raise AlgorithmSyntaxError("not an object")
+                                print " ", o.getObjectName()
+                            print "}"

@@ -302,11 +302,14 @@ class Document(QWidget):
             item.preview.toolbar.hide()
 
     def addItem(self):
-        index, item = self.getSelection()
-        if item is self.algorithmsItem:
-            self.addAlgorithm(index, item)
-        elif item is self.cutsItem:
-            self.addCut(index, item)
+        try:
+            index, item = self.getSelection()
+            if item is self.algorithmsItem:
+                self.addAlgorithm(index, item)
+            elif item is self.cutsItem:
+                self.addCut(index, item)
+        except RuntimeError, e:
+            QMessageBox.warning(self, "Error", str(e))
 
     def addAlgorithm(self, index, item):
         dialog = AlgorithmEditorDialog(self.menu(), self)
@@ -348,12 +351,15 @@ class Document(QWidget):
         self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
 
     def editItem(self):
-        index, item = self.getSelection()
-        if item is self.algorithmsItem:
-            self.editAlgorithm(index, item)
-        elif item is self.cutsItem:
-            self.editCut(index, item)
-        self.updatePreview()
+        try:
+            index, item = self.getSelection()
+            if item is self.algorithmsItem:
+                self.editAlgorithm(index, item)
+            elif item is self.cutsItem:
+                self.editCut(index, item)
+            self.updatePreview()
+        except RuntimeError, e:
+                QMessageBox.warning(self, "Error", str(e))
 
     def editAlgorithm(self, index, item):
         algorithm = self.menu().algorithms[index.row()]

@@ -9,10 +9,14 @@ import tmGrammar
 from tmEditor.Menu import (
     Object,
     External,
+    isOperator,
     isObject,
+    isCut,
+    isFunction,
     toObject,
     toExternal,
     functionObjects,
+    functionCuts,
     functionObjectsCuts,
     objectCuts,
 )
@@ -22,13 +26,35 @@ class MenuTests(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_isOperator(self):
+        for op in tmGrammar.gateName:
+            self.assertTrue(isOperator(op))
+        for op in ("comb", "MU10", "MU-ISO_Q"):
+            self.assertFalse(isOperator(op))
+
     def test_isObject(self):
         self.assertTrue(isObject("MU10"))
         self.assertTrue(isObject("EG100-1"))
         self.assertTrue(isObject("TAU.eq.50p5+1"))
         self.assertFalse(isObject("comb"))
         self.assertFalse(isObject("AND"))
-        self.assertFalse(isObject("dist"))
+        self.assertFalse(isObject("TAU+1"))
+
+    def test_isCut(self):
+        self.assertTrue(isCut("MU-ISO_Q"))
+        self.assertTrue(isCut("EG-ETA_Q"))
+        self.assertTrue(isCut("JET-PHI_Q"))
+        self.assertFalse(isCut("comb"))
+        self.assertFalse(isCut("AND"))
+        self.assertFalse(isCut("MU20"))
+
+    def test_isFunction(self):
+        self.assertTrue(isFunction("comb{MU20,MU10}"))
+        self.assertTrue(isFunction("dist{MU100,JET100}"))
+        self.assertTrue(isFunction("dist{MU20[MU-PHI_Q],MU10[MU-PHI_Q]}[DPHI_Q]"))
+        self.assertFalse(isFunction("MU-ISO_Q"))
+        self.assertFalse(isFunction("AND"))
+        self.assertFalse(isFunction("MU10"))
 
     def test_toObject(self):
         cases = {
@@ -58,6 +84,16 @@ class MenuTests(unittest.TestCase):
         }
         for token, ref in cases.items():
             self.assertEqual(functionObjects(token), ref)
+
+    def test_functionCuts(self):
+        cases = {
+            "comb{MU10,MU20}": [],
+            "dist{MU10,MU20}[DR_Q]": ["DR_Q"],
+            "dist{EG80+1,EG60+1}[DETA_Q,DPHI_Q]": ["DETA_Q", "DPHI_Q"],
+            "dist{TAU80[TAU-ISO_Q],TAU20[TAU-ISO_Q]}[DETA_Q]": ["DETA_Q"],
+        }
+        for token, ref in cases.items():
+            self.assertEqual(functionCuts(token), ref)
 
     def test_functionObjectsCuts(self):
         cases = {

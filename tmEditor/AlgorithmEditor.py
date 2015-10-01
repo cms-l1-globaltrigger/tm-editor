@@ -43,7 +43,6 @@ class AlgorithmEditor(QMainWindow):
         #
         self.indexSpinBox = QSpinBox(self)
         self.indexSpinBox.setMaximum(MaxAlgorithms)
-        self.indexSpinBox.setEditable(True)
         self.indexSpinBox.setMinimumWidth(100)
         self.nameComboBox = QLineEdit(self)
         self.nameComboBox.setMinimumWidth(300)
@@ -192,6 +191,7 @@ class AlgorithmEditorDialog(QDialog):
     def __init__(self, menu, parent = None):
         super(AlgorithmEditorDialog, self).__init__(parent)
         self.editor = AlgorithmEditor(menu)
+        self.loadedAlgorithm = None
         self.setWindowTitle(self.editor.windowTitle())
         self.resize(720, 480)
         self.setSizeGripEnabled(True)
@@ -240,6 +240,7 @@ class AlgorithmEditorDialog(QDialog):
         self.editor.setComment(comment)
 
     def loadAlgorithm(self, algorithm):
+        self.loadedAlgorithm = algorithm
         self.setIndex(algorithm.index)
         self.setName(algorithm.name)
         self.setExpression(algorithm.expression)
@@ -256,6 +257,20 @@ class AlgorithmEditorDialog(QDialog):
             # Validate algorithm expression.
             validator = AlgorithmSyntaxValidator()
             validator.validate(self.expression())
+            for algorithm in self.editor.menu.algorithms:
+                if algorithm is self.loadedAlgorithm:
+                    continue
+                if int(algorithm.index) == int(self.index()):
+                    QMessageBox.warning(self, "Index used", "Algorithm index {0} already used. Please select a different index.".format(algorithm.index))
+                    return
+                if algorithm.name == self.name():
+                    QMessageBox.warning(self, "Name used", "Algorithm name {0} already used (by index {1})".format(algorithm.name, algorithm.index))
+                    return
+                if algorithm.expression == self.expression():
+                    QMessageBox.warning(self, "Expression used", "Algorithm expression {0} already used (by {1}, index {2})".format(algorithm.expression, algorithm.name, algorithm.index))
+                    return
+                # Check existance of cuts and external signals.
+                #
             # Temporary limited conistency check.
             algorithm = Algorithm(expression = self.expression())
             algorithm.objects()
