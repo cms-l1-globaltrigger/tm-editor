@@ -217,7 +217,7 @@ class MainWindow(QMainWindow):
             else:
                 document = Document(filename, self)
         except RuntimeError, e:
-            box = QMessageBox.critical(self,
+            QMessageBox.critical(self,
                 self.tr("Failed to open XML menu"),
                 str(e),
             )
@@ -251,12 +251,12 @@ class MainWindow(QMainWindow):
         try:
             document.saveMenu()
         except RuntimeError, e:
-            box = QMessageBox.critical(self,
+            QMessageBox.critical(self,
                 self.tr("Failed to write XML menu"),
                 str(e),
             )
         except ValueError, e:
-            box = QMessageBox.critical(self,
+            QMessageBox.critical(self,
                 self.tr("Failed to write XML menu"),
                 str(e),
             )
@@ -276,7 +276,7 @@ class MainWindow(QMainWindow):
                 # TODO
                 self.mdiArea.setTabText(self.mdiArea.currentIndex(), os.path.basename(filename))
             except RuntimeError, e:
-                box = QMessageBox.critical(self,
+                QMessageBox.critical(self,
                     self.tr("Failed to write XML menu"),
                     str(e),
                 )

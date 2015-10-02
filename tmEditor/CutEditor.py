@@ -102,7 +102,7 @@ class DataField(QScrollArea):
         self.clear()
 
     def setEntries(self, labels):
-        """labels requires a sorted list data entry labels. The size determines
+        """Labels require a sorted list data entry labels. The size determines
         the overall size of data entries assigned."""
         self.clear()
         widget = QWidget(self)
@@ -396,6 +396,7 @@ class CutEditorDialog(QDialog):
         self.infoTextEdit.setText("\n".join(info))
 
     def accept(self):
+        """Perform consistency checks befor accepting changes."""
         if self.menu.cutByName(self.name()):
             QMessageBox.warning(self, "Name used", "Cut name `{0}' already used. Please select a different name.".format(self.name()))
         # add check for duplicated values...

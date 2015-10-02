@@ -276,6 +276,8 @@ class AlgorithmEditorDialog(QDialog):
             algorithm.objects()
             algorithm.cuts()
         except AlgorithmSyntaxError, e:
+            # TODO the tmGrammar parser errors ar not user friendly.
+            #       think about how to translate the messages in a user readable way.
             QMessageBox.warning(self, "Algorithm Syntax Error", str(e))
         except ValueError, e:
             QMessageBox.warning(self, "Invalid expression", str(e))
