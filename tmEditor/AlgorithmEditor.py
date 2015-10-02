@@ -276,9 +276,9 @@ class AlgorithmEditorDialog(QDialog):
             algorithm.objects()
             algorithm.cuts()
         except AlgorithmSyntaxError, e:
-            reply = QMessageBox.warning(self, "Algorithm Syntax Error", str(e))
+            QMessageBox.warning(self, "Algorithm Syntax Error", str(e))
         except ValueError, e:
-            reply = QMessageBox.warning(self, "Invalid expression", str(e))
+            QMessageBox.warning(self, "Invalid expression", str(e))
         else:
             super(AlgorithmEditorDialog, self).accept()
 

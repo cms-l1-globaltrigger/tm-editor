@@ -302,9 +302,14 @@ class CutEditorDialog(QDialog):
         assert cut.type == self.type()
         assert cut.object == self.object()
         cut['name'] = self.name()
-        cut['minimum'] = self.minimum() or ''
-        cut['maximum'] = self.maximum() or ''
-        cut['data'] = self.data() or ''
+        if cut['data']:
+            cut['minimum'] = ''
+            cut['maximum'] = ''
+            cut['data'] = self.data()
+        else:
+            cut['minimum'] = self.minimum()
+            cut['maximum'] = self.maximum()
+            cut['data'] = ''
         cut['comment'] = str(self.commentTextEdit.toPlainText())
 
     def setRangeEnabled(self, enabled):
@@ -358,6 +363,7 @@ class CutEditorDialog(QDialog):
         if spec.data:
             self.setDataEnabled(True)
             self.dataField.setEntries(spec.sorted_data)
+        # Delta ranges
         elif self.type() in (tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
             self.setRangeEnabled(True)
             scale = self.generateScale(self.type(), self.object())
@@ -368,8 +374,10 @@ class CutEditorDialog(QDialog):
             minimum = self.minimumSpinBox.minimum()
             maximum = self.maximumSpinBox.maximum()
             info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
+        # Invariant mass
         elif self.type() in (tmGrammar.MASS, ):
             pass
+        # Ranges
         else:
             self.setRangeEnabled(True)
             scale = self.menu.scales.bins[self.typename()]
@@ -386,3 +394,10 @@ class CutEditorDialog(QDialog):
         if not self.typeComboBox.isEnabled():
             info.append("<p><strong>Note:</strong> Changing an existing cut's type is not allowed.</p>")
         self.infoTextEdit.setText("\n".join(info))
+
+    def accept(self):
+        if self.menu.cutByName(self.name()):
+            QMessageBox.warning(self, "Name used", "Cut name `{0}' already used. Please select a different name.".format(self.name()))
+        # add check for duplicated values...
+        else:
+            super(CutEditorDialog, self).accept()

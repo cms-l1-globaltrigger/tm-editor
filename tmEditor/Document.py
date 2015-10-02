@@ -11,6 +11,8 @@
 """Document widget.
 """
 
+import tmGrammar
+
 from tmEditor import Toolbox
 
 from tmEditor import CutEditorDialog
@@ -250,7 +252,10 @@ class Document(QWidget):
                 text.append("<p><strong>Type:</strong> {object}</p>")
                 if data['data']:
                     fdata = []
-                    typename = "{0}-{1}".format(data['object'], data['type'])
+                    if data['object'] == tmGrammar.comb:
+                        typename = data['type']
+                    else:
+                        typename = "{0}-{1}".format(data['object'], data['type'])
                     CutSettings = [Toolbox.CutSpec(**cut) for cut in Toolbox.Settings['cuts']]
                     data_ = filter(lambda entry: entry.name == typename, CutSettings)[0].data
                     for n in data['data'].split(','):
@@ -285,8 +290,9 @@ class Document(QWidget):
         except AttributeError, m:
             item.preview.setText("<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
             item.preview.setButtonsEnabled(False)
+        item.preview.notice.hide()
+        item.preview.toolbar.hide()
         try:
-            item.preview.notice.hide()
             if item is self.algorithmsItem:
                 item.preview.toolbar.show()
             elif item is self.cutsItem:
@@ -344,9 +350,9 @@ class Document(QWidget):
         self.menu().addCut(name=dialog.name(),
             object=dialog.object(),
             type=dialog.type(),
-            minimum=dialog.minimum() or '',
-            maximum=dialog.maximum() or '',
-            data=dialog.data() or '',
+            minimum=dialog.minimum() if not dialog.data() else '',
+            maximum=dialog.maximum() if not dialog.data() else '',
+            data=dialog.data() if dialog.data() else '',
             comment=dialog.comment())
         self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
 
