@@ -33,7 +33,7 @@ DEFAULT_UUID = '00000000-0000-0000-0000-000000000000'
 FORMAT_FLOAT = '+23.16E'
 """Floating point string format."""
 
-OBJECT_CODES = {
+ObjectCodes = {
     tmGrammar.Muon: tmGrammar.MU,
     tmGrammar.Egamma: tmGrammar.EG,
     tmGrammar.Jet: tmGrammar.JET,
@@ -543,7 +543,7 @@ def toObject(token):
     return Object(
         name = o.getObjectName(),
         threshold = o.threshold,
-        type = OBJECT_CODES[o.type],
+        type = ObjectCodes[o.type],
         comparison_operator = o.comparison,
         bx_offset = o.bx_offset,
         comment = "",

@@ -7,6 +7,14 @@
 #
 
 """Open from URL dialog.
+
+This dialog provides an URL entry to download an XML file from a remote location
+using HTTP or FTP protocol.
+
+Example usage:
+>>> dialog = OpenUrlDialog()
+>>> dialog.exec_()
+>>> print dialog.url()
 """
 
 from PyQt4.QtCore import *

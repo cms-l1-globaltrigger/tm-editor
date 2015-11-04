@@ -1,23 +1,23 @@
 {
   "cuts": [
     {
-      "name": "<tmGrammar.MU_ETA>",
-      "object": "<tmGrammar.MU>",
-      "type": "<tmGrammar.ETA>",
+      "name": "MU-ETA",
+      "object": "MU",
+      "type": "ETA",
       "title": "Muon eta",
       "description": "Restricts valid eta range for muon object requirement."
     },
     {
-      "name": "<tmGrammar.MU_PHI>",
-      "object": "<tmGrammar.MU>",
-      "type": "<tmGrammar.PHI>",
+      "name": "MU-PHI",
+      "object": "MU",
+      "type": "PHI",
       "title": "Muon phi",
       "description": "Restricts valid phi range for muon object requirement."
     },
     {
-      "name": "<tmGrammar.MU_QLTY>",
-      "object": "<tmGrammar.MU>",
-      "type": "<tmGrammar.QLTY>",
+      "name": "MU-QLTY",
+      "object": "MU",
+      "type": "QLTY",
       "title": "Muon quality",
       "description": "Applies quality filter for muon object requirement.",
       "data": {
@@ -40,9 +40,9 @@
       }
     },
     {
-      "name": "<tmGrammar.MU_ISO>",
-      "object": "<tmGrammar.MU>",
-      "type": "<tmGrammar.ISO>",
+      "name": "MU-ISO",
+      "object": "MU",
+      "type": "ISO",
       "title": "Muon isolation",
       "data": {
         "0": "isolated",
@@ -52,9 +52,9 @@
       }
     },
     {
-      "name": "<tmGrammar.MU_CHG>",
-      "object": "<tmGrammar.MU>",
-      "type": "<tmGrammar.CHG>",
+      "name": "MU-CHG",
+      "object": "MU",
+      "type": "CHG",
       "title": "Muon charge",
       "data": {
         "0": "positive",
@@ -62,21 +62,21 @@
       }
     },
     {
-      "name": "<tmGrammar.EG_ETA>",
-      "object": "<tmGrammar.EG>",
-      "type": "<tmGrammar.ETA>",
+      "name": "EG-ETA",
+      "object": "EG",
+      "type": "ETA",
       "title": "Electron/gamma eta"
     },
     {
-      "name": "<tmGrammar.EG_PHI>",
-      "object": "<tmGrammar.EG>",
-      "type": "<tmGrammar.PHI>",
+      "name": "EG-PHI",
+      "object": "EG",
+      "type": "PHI",
       "title": "Electron/gamma phi"
     },
     {
-      "name": "<tmGrammar.EG_QLTY>",
-      "object": "<tmGrammar.EG>",
-      "type": "<tmGrammar.QLTY>",
+      "name": "EG-QLTY",
+      "object": "EG",
+      "type": "QLTY",
       "title": "Electron/gamma quality",
       "data": {
         "0": "quality level 0",
@@ -98,9 +98,9 @@
       }
     },
     {
-      "name": "<tmGrammar.EG_ISO>",
-      "object": "<tmGrammar.EG>",
-      "type": "<tmGrammar.ISO>",
+      "name": "EG-ISO",
+      "object": "EG",
+      "type": "ISO",
       "title": "Electron/gamma isolation",
       "data": {
         "0": "isolated",
@@ -110,21 +110,21 @@
       }
     },
     {
-      "name": "<tmGrammar.JET_ETA>",
-      "object": "<tmGrammar.JET>",
-      "type": "<tmGrammar.ETA>",
+      "name": "JET-ETA",
+      "object": "JET",
+      "type": "ETA",
       "title": "Jet eta"
     },
     {
-      "name": "<tmGrammar.JET_PHI>",
-      "object": "<tmGrammar.JET>",
-      "type": "<tmGrammar.PHI>",
+      "name": "JET-PHI",
+      "object": "JET",
+      "type": "PHI",
       "title": "Jet phi"
     },
     {
-      "name": "<tmGrammar.JET_QLTY>",
-      "object": "<tmGrammar.JET>",
-      "type": "<tmGrammar.QLTY>",
+      "name": "JET-QLTY",
+      "object": "JET",
+      "type": "QLTY",
       "title": "Jet quality",
       "data": {
         "0": "quality level 0",
@@ -146,21 +146,21 @@
       }
     },
     {
-      "name": "<tmGrammar.TAU_ETA>",
-      "object": "<tmGrammar.TAU>",
-      "type": "<tmGrammar.ETA>",
+      "name": "TAU-ETA",
+      "object": "TAU",
+      "type": "ETA",
       "title": "Tau eta"
     },
     {
-      "name": "<tmGrammar.TAU_PHI>",
-      "object": "<tmGrammar.TAU>",
-      "type": "<tmGrammar.PHI>",
+      "name": "TAU-PHI",
+      "object": "TAU",
+      "type": "PHI",
       "title": "Tau phi"
     },
     {
-      "name": "<tmGrammar.TAU_QLTY>",
-      "object": "<tmGrammar.TAU>",
-      "type": "<tmGrammar.QLTY>",
+      "name": "TAU-QLTY",
+      "object": "TAU",
+      "type": "QLTY",
       "title": "Tau quality",
       "data": {
         "0": "quality level 0",
@@ -182,9 +182,9 @@
       }
     },
     {
-      "name": "<tmGrammar.TAU_ISO>",
-      "object": "<tmGrammar.TAU>",
-      "type": "<tmGrammar.ISO>",
+      "name": "TAU-ISO",
+      "object": "TAU",
+      "type": "ISO",
       "title": "Tau isolation",
       "data": {
         "0": "isolated",
@@ -194,22 +194,22 @@
       }
     },
     {
-      "name": "<tmGrammar.ETM_PHI>",
-      "object": "<tmGrammar.ETM>",
-      "type": "<tmGrammar.PHI>",
+      "name": "ETM-PHI",
+      "object": "ETM",
+      "type": "PHI",
       "title": "Missing energy phi"
     },
     {
-      "name": "<tmGrammar.HTM_PHI>",
-      "object": "<tmGrammar.HTM>",
-      "type": "<tmGrammar.PHI>",
+      "name": "HTM-PHI",
+      "object": "HTM",
+      "type": "PHI",
       "title": "Missing energy phi"
     },
     {
-      "name": "<tmGrammar.CHGCOR>",
-      "object": "<tmGrammar.comb>",
-      "type": "<tmGrammar.CHGCOR>",
-      "objects": ["<tmGrammar.MU>", "<tmGrammar.EG>", "<tmGrammar.JET>", "<tmGrammar.TAU>"],
+      "name": "CHGCOR",
+      "object": "comb",
+      "type": "CHGCOR",
+      "objects": ["MU", "EG", "JET", "TAU"],
       "title": "Charge correlation",
       "description": "Applies charge correlation restriction to combination of two objects.\nExample: comb{MU20, MU20}[CHGCOR_OP]",
       "data": {
@@ -218,32 +218,32 @@
       }
     },
     {
-      "name": "<tmGrammar.DETA>",
-      "object": "<tmGrammar.dist>",
-      "type": "<tmGrammar.DETA>",
+      "name": "DETA",
+      "object": "dist",
+      "type": "DETA",
       "objects": [],
       "title": "Delta eta",
       "description": "Applies delta eta restricton to combination of two objects."
     },
     {
-      "name": "<tmGrammar.DPHI>",
-      "object": "<tmGrammar.dist>",
-      "type": "<tmGrammar.DPHI>",
+      "name": "DPHI",
+      "object": "dist",
+      "type": "DPHI",
       "objects": [],
       "title": "Delta phi",
       "description": "Applies delta phi restricton to combination of two objects."
     },
     {
-      "name": "<tmGrammar.DR>",
-      "object": "<tmGrammar.dist>",
-      "type": "<tmGrammar.DR>",
+      "name": "DR",
+      "object": "dist",
+      "type": "DR",
       "objects": [],
       "title": "Applies delta-R restricton to combination of two objects."
     },
     {
-      "name": "<tmGrammar.MASS>",
-      "object": "<tmGrammar.mass>",
-      "type": "<tmGrammar.MASS>",
+      "name": "MASS",
+      "object": "mass",
+      "type": "MASS",
       "objects": [],
       "title": "Invariant mass restricton.",
       "enabled": false
