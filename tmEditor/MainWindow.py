@@ -195,7 +195,10 @@ class MainWindow(QMainWindow):
                     u = urllib2.urlopen(url)
                     meta = u.info()
                     # Get byte size of remote content.
-                    fileSize = int(meta.getheaders("Content-Length")[0])
+                    contentLength = meta.getheaders("Content-Length")
+                    if not contentLength:
+                        raise RuntimeError("Unable to open URL")
+                    fileSize = int(contentLength[0])
                     logging.info("fetching %s bytes from %s", fileSize, url)
                     # Create a temorary file buffer.
                     with tempfile.NamedTemporaryFile(bufsize = fileSize) as f:
@@ -216,7 +219,7 @@ class MainWindow(QMainWindow):
             # Else it is a local filesystem path.
             else:
                 document = Document(filename, self)
-        except RuntimeError, e:
+        except (RuntimeError, OSError, urllib2.HTTPError, urllib2.URLError), e:
             QMessageBox.critical(self,
                 self.tr("Failed to open XML menu"),
                 str(e),

@@ -22,7 +22,7 @@ from PyQt4.QtGui import *
 __all__ = ['CutEditorDialog', ]
 
 MaxDEta = 10. # Maximum by detector geometry.
-MaxDPhi = 2 * math.pi # Maximum by detector geometry.
+MaxDPhi = math.pi # Maximum by detector geometry.
 
 # -----------------------------------------------------------------------------
 #  Custom widgets
@@ -285,8 +285,8 @@ class CutEditorDialog(QDialog):
             self.setData(cut.data)
         else:
             self.setRangeEnabled(True)
-            if cut.type in (tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
-                scale = self.generateScale(cut.type, cut.object)
+            if cut.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
+                scale = self.generateScale(cut.type)
             else:
                 scale = cut.scale(self.menu.scales)
             self.minimumSpinBox.setScale(scale)
@@ -332,7 +332,7 @@ class CutEditorDialog(QDialog):
         self.setRangeEnabled(not enabled)
 
     # Scales on the fly
-    def generateScale(self, type, object):
+    def generateScale(self, type):
         # DAMN ugly...
         def dr(deta, dphi):
             return math.sqrt(deta*deta+dphi*dphi)
@@ -366,7 +366,7 @@ class CutEditorDialog(QDialog):
         # Delta ranges
         elif self.type() in (tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
             self.setRangeEnabled(True)
-            scale = self.generateScale(self.type(), self.object())
+            scale = self.generateScale(self.type())
             self.minimumSpinBox.setScale(scale)
             self.maximumSpinBox.setScale(scale)
             self.minimumSpinBox.setValue(self.minimumSpinBox.minimum())

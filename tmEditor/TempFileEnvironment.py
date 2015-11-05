@@ -74,9 +74,9 @@ class TempFileEnvironment(object):
         return os.path.isdir(self.tmpdir or '')
 
     def create(self):
-        """Creates a temporary directory, copies the XML and creates symbolic
-        links to the XSD files, then loads and validates the menu. Returns a
-        tuple containing table objects for menu, scales and external signals.
+        """Creates a temporary directory, creates symbolic links to the XML and
+        XSD files, then loads and validates the menu. Returns a tuple containing
+        table objects for menu, scales and external signals.
 
         XML parsing requires that the XSD files are in the same directory as
         the XML file (this location is actually specified in the XML's header).

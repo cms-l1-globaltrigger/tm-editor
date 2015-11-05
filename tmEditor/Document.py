@@ -19,9 +19,11 @@ from tmEditor import CutEditorDialog
 from tmEditor import AlgorithmEditorDialog
 from tmEditor import AlgorithmFormatter
 from tmEditor import AlgorithmSyntaxHighlighter
+
 from tmEditor import Menu
 from tmEditor.Menu import Algorithm, Object, toObject
 
+from tmEditor.Models import *
 from tmEditor.Toolbox import (
     fAlgorithm,
     fCut,
@@ -34,11 +36,7 @@ from tmEditor.Toolbox import (
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-from collections import namedtuple
 import sys, os
-AlignLeft = Qt.AlignLeft | Qt.AlignVCenter
-AlignRight = Qt.AlignRight | Qt.AlignVCenter
-AlignCenter = Qt.AlignCenter | Qt.AlignVCenter
 
 MaxAlgorithms = 512
 
@@ -60,7 +58,6 @@ class Document(QWidget):
         # Layout
         self.setContentsMargins(0, 0, 0, 0)
         # Create table views.
-        menuTableView = self.createProxyTableView("menuTableView", MenuModel(self.menu(), self))
         algorithmsTableView = self.createProxyTableView("algorithmsTableView", AlgorithmsModel(self.menu(), self))
         algorithmsTableView.resizeColumnsToContents()
         cutsTableView = self.createProxyTableView("cutsTableView", CutsModel(self.menu(), self))
@@ -288,7 +285,8 @@ class Document(QWidget):
             item.preview.setText(''.join(text).format(**data))
             item.preview.setButtonsEnabled(True)
         except AttributeError, m:
-            item.preview.setText("<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
+            #"<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
+            item.preview.setText("")
             item.preview.setButtonsEnabled(False)
         item.preview.notice.hide()
         item.preview.toolbar.hide()
@@ -458,21 +456,33 @@ class Document(QWidget):
 
     def removeItem(self):
         index, item = self.getSelection()
+        # Removing algorithm item
         if item is self.algorithmsItem:
             algorithm = self.menu().algorithms[index.row()]
+            reply = QMessageBox.warning(self, "Delete algorithm",
+                self.tr("Do you want to delete algorithm <em>%1</em>?").arg(algorithm.name),
+                QMessageBox.Cancel | QMessageBox.Ok, QMessageBox.Cancel)
+            if reply == QMessageBox.Cancel:
+                return
             self.menu().algorithms.remove(algorithm)
             item.view.model().setSourceModel(item.view.model().sourceModel())
             # REBUILD INDEX
             self.updatePreview()
             self.modified.emit()
             self.setModified(True)
+        # Removing cut item
         elif item is self.cutsItem:
             cut = self.menu().cuts[index.row()]
+            reply = QMessageBox.warning(self, "Delete cut",
+                self.tr("Do you want to delete cut <em>%1</em>?").arg(cut.name),
+                QMessageBox.Cancel | QMessageBox.Ok, QMessageBox.Cancel)
+            if reply == QMessageBox.Cancel:
+                return
             for algorithm in self.menu().algorithms:
                 if cut.name in algorithm.cuts():
                     QMessageBox.warning(self,
-                        "Cut is used",
-                        "Cut {cut.name} is used by algorithm {algorithm.name}".format(**locals()),
+                        self.tr("Cut is used"),
+                        self.tr("Cut %1 is used by algorithm %2").arg(cut.name).arg(algorithm.name),
                     )
                     return
             self.menu().cuts.remove(cut)
@@ -625,10 +635,14 @@ class BottomWidget(QWidget):
         self.textEdit = QTextEdit(self)
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("BottomWidgetTextEdit")
+        #self.textEdit.setStyleSheet("""#BottomWidgetTextEdit {
+        #    border: 0;
+        #    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
+        #        stop:0 rgba(203, 222, 238, 255), stop:1 rgba(233, 233, 233, 255));
+        #}""")
         self.textEdit.setStyleSheet("""#BottomWidgetTextEdit {
             border: 0;
-            background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
-                stop:0 rgba(203, 222, 238, 255), stop:1 rgba(233, 233, 233, 255));
+            background-color: #eee;
         }""")
         self.textEditHighlighter = AlgorithmSyntaxHighlighter(self.textEdit)
         layout = QVBoxLayout()
@@ -638,196 +652,23 @@ class BottomWidget(QWidget):
         layout.addWidget(self.notice)
         layout.addWidget(self.textEdit)
         self.setLayout(layout)
+
     def setButtonsEnabled(self, enabled):
         self.editButton.setEnabled(enabled)
         self.copyButton.setEnabled(enabled)
         self.removeBotton.setEnabled(enabled)
+
     def setText(self, message):
         self.textEdit.setText(message)
+
     def onAdd(self):
         self.addTriggered.emit()
+
     def onEdit(self):
         self.editTriggered.emit()
+
     def onCopy(self):
         self.copyTriggered.emit()
+
     def onRemove(self):
         self.removeTriggered.emit()
-
-# ------------------------------------------------------------------------------
-#  Models
-# ------------------------------------------------------------------------------
-
-class BaseTableModel(QAbstractTableModel):
-    """Abstract table model class to be inherited to display table data."""
-
-    ColumnSpec = namedtuple('ColumnSpec', 'title, key, format, alignment, headerAlignment')
-
-    def __init__(self, values, parent = None):
-        super(BaseTableModel, self).__init__(parent)
-        self.values = values
-        self.columnSpecs = []
-
-    def addColumnSpec(self, title, key, format = str, alignment = AlignLeft, headerAlignment = AlignCenter):
-        spec = self.ColumnSpec(title, key, format, alignment, headerAlignment)
-        self.columnSpecs.append(spec)
-        return spec
-
-    def rowCount(self, parent):
-        return len(self.values)
-
-    def columnCount(self, parent):
-        return len(self.columnSpecs)
-
-    def data(self, index, role):
-        if not index.isValid():
-            return QVariant()
-        row, column = index.row(), index.column()
-        if role == Qt.DisplayRole:
-            spec = self.columnSpecs[column]
-            if spec.key not in self.values[row].keys():
-                return QVariant()
-            return spec.format(self.values[row][spec.key])
-        if role == Qt.TextAlignmentRole:
-            return self.columnSpecs[column].alignment
-        return QVariant()
-
-    def headerData(self, section, orientation, role):
-        if orientation == Qt.Horizontal:
-            if role == Qt.DisplayRole:
-                return self.columnSpecs[section].title
-            if role == Qt.TextAlignmentRole:
-                return self.columnSpecs[section].headerAlignment
-        return QVariant()
-
-# HACK
-class Delegate(QStyledItemDelegate):
-    def createEditor(self, parent, options, index):
-        return QTextEdit(parent)
-    def setEditorData(self, editor, index):
-        editor.setText(index.data())
-    def setModelData(self, editor, model, index):
-        model.setData(index, editor.toPlainText())
-
-class MenuModel(QAbstractTableModel):
-
-    def __init__(self, menu, parent = None):
-        super(MenuModel, self).__init__(parent)
-        self.menu = menu
-
-    def rowCount(self, parent):
-        return len(self.menu.menu)
-
-    def columnCount(self, parent):
-        return 2
-
-    def data(self, index, role):
-        if not index.isValid():
-            return QVariant()
-        row, column = index.row(), index.column()
-        if role == Qt.DisplayRole or role == Qt.EditRole:
-            return self.menu.menu.items()[row][column]
-        return QVariant()
-
-    def setData(self, index, value, role = Qt.EditRole):
-        if not index.isValid():
-            return False
-        row, column = index.row(), index.column()
-        if role == Qt.EditRole:
-            # brrr
-            self.menu.menu[self.menu.menu.items()[row][0]] = str(value.toPyObject())
-            self.dataChanged.emit(index, index)
-            return True
-        return False
-
-    def setModelData(self, editor, model, index):
-        if not index.isValid():
-            return QVariant()
-        if index.column() == 1:
-            if isinstance(editor, QTextEdit):
-                model.setData(index, editor.toPlainText())
-            elif isinstance(editor, QComboBox):
-                model.setData(index, editor.currentText())
-            else:
-                super(Delegate, self).setModelData(editor, model, index)
-
-    def headerData(self, section, orientation, role):
-        if orientation == Qt.Horizontal:
-            if role == Qt.DisplayRole:
-                return ("Key", "Value")[section]
-        return QVariant()
-
-    def flags(self, index):
-        if index.column() == 1:
-            return super(MenuModel, self).flags(index) | Qt.ItemIsEditable
-        return super(MenuModel, self).flags(index)
-
-class AlgorithmsModel(BaseTableModel):
-
-    def __init__(self, menu, parent = None):
-        super(AlgorithmsModel, self).__init__(menu.algorithms, parent)
-        self.formatter = AlgorithmFormatter()
-        self.addColumnSpec("Index", 'index', int, AlignRight)
-        self.addColumnSpec("Name", 'name')
-        self.addColumnSpec("Expression", 'expression', fAlgorithm)
-        # self.addColumnSpec("Comment", 'comment')
-
-class CutsModel(BaseTableModel):
-
-    def __init__(self, menu, parent = None):
-        super(CutsModel, self).__init__(menu.cuts, parent)
-        self.addColumnSpec("Name", 'name')
-        self.addColumnSpec("Type", 'type')
-        self.addColumnSpec("Object", 'object')
-        self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
-        self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
-        self.addColumnSpec("Data", 'data')
-        # self.addColumnSpec("Comment", 'comment')
-        # self.addColumnSpec("ID", 'cut_id', int, AlignRight)
-
-class ObjectsModel(BaseTableModel):
-
-    def __init__(self, menu, parent = None):
-        super(ObjectsModel, self).__init__(menu.objects, parent)
-        self.addColumnSpec("Name", 'name')
-        self.addColumnSpec("Type", 'type')
-        self.addColumnSpec("Comparison", 'comparison_operator', fComparison, AlignRight)
-        self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
-        self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
-        self.addColumnSpec("Comment", 'comment')
-        # self.addColumnSpec("ID", 'object_id', int, AlignRight)
-
-class ExternalsModel(BaseTableModel):
-
-    def __init__(self, menu, parent = None):
-        super(ExternalsModel, self).__init__(menu.externals, parent)
-        self.addColumnSpec("Name", 'name')
-        self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
-        self.addColumnSpec("Comment", 'comment')
-        self.addColumnSpec("Timestamp", 'datetime')
-        self.addColumnSpec("Comment", 'comment')
-        # self.addColumnSpec("ID", 'requirement_id', int, AlignRight, AlignRight)
-        # self.addColumnSpec("ID2", 'ext_signal_id', int, AlignRight)
-
-class BinsModel(BaseTableModel):
-
-    def __init__(self, menu, name, parent = None):
-        super(BinsModel, self).__init__(menu.scales.bins[name], parent)
-        self.name = name
-        self.addColumnSpec("Number dec", 'number', int, AlignRight)
-        self.addColumnSpec("Number hex", 'number', fHex, AlignRight)
-        self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
-        self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
-        self.addColumnSpec("Comment", 'comment')
-        # self.addColumnSpec("ID", 'scale_id', int, AlignRight, AlignRight)
-
-class ExtSignalsModel(BaseTableModel):
-
-    def __init__(self, menu, parent = None):
-        super(ExtSignalsModel, self).__init__(menu.extSignals.extSignals, parent)
-        self.addColumnSpec("System", 'system')
-        self.addColumnSpec("Name", 'name')
-        self.addColumnSpec("Label", 'label')
-        self.addColumnSpec("Cable", 'cable')
-        self.addColumnSpec("Channel", 'channel')
-        self.addColumnSpec("Description", 'description')
-        # self.addColumnSpec("ID", 'ext_signal_id', int, AlignRight)

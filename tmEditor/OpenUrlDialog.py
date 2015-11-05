@@ -37,6 +37,7 @@ class OpenUrlDialog(QDialog):
         self.urlComboBox = QComboBox(self)
         self.urlComboBox.addItem("")
         self.urlComboBox.setEditable(True)
+        self.urlComboBox.editTextChanged.connect(self.onUrlEdit)
         self.hintLabel = QLabel(self.tr("""
             <p style="color: #888; margin-left:5px;">
             http://www.example.com/sample.xml<br/>
@@ -46,6 +47,8 @@ class OpenUrlDialog(QDialog):
         buttonBox = QDialogButtonBox(QDialogButtonBox.Open | QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
+        self.openButton = buttonBox.button(QDialogButtonBox.Open)
+        self.openButton.setEnabled(False)
         # Create layout.
         gridLayout = QVBoxLayout()
         gridLayout.addWidget(self.urlLabel)
@@ -53,6 +56,9 @@ class OpenUrlDialog(QDialog):
         gridLayout.addWidget(self.hintLabel)
         gridLayout.addWidget(buttonBox)
         self.setLayout(gridLayout)
+
+    def onUrlEdit(self):
+        self.openButton.setEnabled(len(self.url()))
 
     def url(self):
         """Returns current entered URL from combo box."""

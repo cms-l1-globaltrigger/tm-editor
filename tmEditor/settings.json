@@ -221,32 +221,38 @@
       "name": "DETA",
       "object": "dist",
       "type": "DETA",
-      "objects": [],
+      "objects": ["MU", "EG", "JET", "TAU"],
+      "precision": 3,
       "title": "Delta eta",
-      "description": "Applies delta eta restricton to combination of two objects."
+      "description": "Applies delta eta restriction to combination of two objects."
     },
     {
       "name": "DPHI",
       "object": "dist",
       "type": "DPHI",
-      "objects": [],
+      "objects": ["MU", "EG", "JET", "TAU"],
+      "precision": 3,
       "title": "Delta phi",
-      "description": "Applies delta phi restricton to combination of two objects."
+      "description": "Applies delta phi restriction to combination of two objects."
     },
     {
       "name": "DR",
       "object": "dist",
       "type": "DR",
-      "objects": [],
-      "title": "Applies delta-R restricton to combination of two objects."
+      "objects": ["MU", "EG", "JET", "TAU"],
+      "precision": 1,
+      "stepwidth": 0.1,
+      "title": "Delta-R",
+      "description": "Applies delta-R restriction to combination of two objects.<br/>&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span>"
     },
     {
       "name": "MASS",
       "object": "mass",
       "type": "MASS",
-      "objects": [],
-      "title": "Invariant mass restricton.",
-      "enabled": false
+      "objects": ["MU", "EG", "JET", "TAU"],
+      "precision": 1,
+      "step": 0.2,
+      "title": "Invariant mass restriction."
     }
   ]
 }
