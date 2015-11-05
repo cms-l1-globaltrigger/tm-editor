@@ -139,6 +139,8 @@ class Document(QWidget):
         #
         self.menuItem.view.nameLineEdit.setText(self.menu().menu['name'])
         self.menuItem.view.commentTextEdit.setPlainText(self.menu().menu['comment'] if 'comment' in self.menu().menu else '')
+        self.bottomWidget.setText("<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
+
 
     def createProxyTableView(self, name, model):
         """Factory to create new QTableView view using a QSortFilterProxyModel."""

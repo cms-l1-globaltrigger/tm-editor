@@ -164,12 +164,12 @@ class CutEditorDialog(QDialog):
                 self.typeComboBox.addItem(spec.name, spec)
         # Minimum
         self.minimumLabel = QLabel(self.tr("Minimum"), self)
-        #self.minimumSpinBox = QComboBox(self)#QDoubleSpinBox(self)
         self.minimumSpinBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
+        self.minimumRangeSpinBox = QDoubleSpinBox(self)
         # Maximum
         self.maximumLabel = QLabel(self.tr("Maximum"), self)
-        #self.maximumSpinBox = QComboBox(self)#QDoubleSpinBox(self)
         self.maximumSpinBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
+        self.maximumRangeSpinBox = QDoubleSpinBox(self)
         # Data
         self.dataLabel = QLabel(self.tr("Data"), self)
         self.dataField = DataField(self)
@@ -191,9 +191,15 @@ class CutEditorDialog(QDialog):
         gridLayout.addWidget(self.suffixLabel, 1, 0)
         gridLayout.addWidget(self.suffixLineEdit, 1, 1)
         gridLayout.addWidget(self.minimumLabel, 2, 0)
-        gridLayout.addWidget(self.minimumSpinBox, 2, 1)
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.minimumSpinBox)
+        hbox.addWidget(self.minimumRangeSpinBox)
+        gridLayout.addLayout(hbox, 2, 1)
         gridLayout.addWidget(self.maximumLabel, 3, 0)
-        gridLayout.addWidget(self.maximumSpinBox, 3, 1)
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.maximumSpinBox)
+        hbox.addWidget(self.maximumRangeSpinBox)
+        gridLayout.addLayout(hbox, 3, 1)
         gridLayout.addWidget(self.dataLabel, 4, 0)
         gridLayout.addWidget(self.dataField, 4, 1)
         gridLayout.addWidget(self.commentLabel, 5, 0)
@@ -241,21 +247,27 @@ class CutEditorDialog(QDialog):
 
     def minimum(self):
         """Returns minimum."""
+        if self.type() in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
+            return self.minimumRangeSpinBox.value()
         return self.minimumSpinBox.value()
 
     def setMinimum(self, value):
         """Set minimum value."""
         self.setRangeEnabled(True)
         self.minimumSpinBox.setValue(self.minimumSpinBox.nearest(value))
+        self.minimumRangeSpinBox.setValue(float(value))
 
     def maximum(self):
         """Returns maximum."""
+        if self.type() in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
+            return self.maximumRangeSpinBox.value()
         return self.maximumSpinBox.value()
 
     def setMaximum(self, value):
         """Set maximum value."""
         self.setRangeEnabled(True)
         self.maximumSpinBox.setValue(self.maximumSpinBox.nearest(value))
+        self.maximumRangeSpinBox.setValue(float(value))
 
     def data(self):
         """Returns data string."""
@@ -277,6 +289,7 @@ class CutEditorDialog(QDialog):
         """Load data from existing cut object, prevents change of type."""
         # TODO not effective, re-write.
         self.typeComboBox.setEnabled(False)
+        self.suffixLineEdit.setEnabled(not filter(lambda algorithm: cut.name in algorithm.cuts(), self.menu.algorithms))
         self.setName(cut.name)
         self.updateEntries()
         if cut.type in (tmGrammar.ISO, tmGrammar.QLTY, tmGrammar.CHGCOR):
@@ -286,13 +299,14 @@ class CutEditorDialog(QDialog):
         else:
             self.setRangeEnabled(True)
             if cut.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
-                scale = self.generateScale(cut.type)
+                self.minimumRangeSpinBox.setValue(float(cut.minimum))
+                self.maximumRangeSpinBox.setValue(float(cut.maximum))
             else:
                 scale = cut.scale(self.menu.scales)
-            self.minimumSpinBox.setScale(scale)
-            self.minimumSpinBox.setValue(float(self.minimumSpinBox.nearest(cut.minimum)))
-            self.maximumSpinBox.setScale(scale)
-            self.maximumSpinBox.setValue(float(self.maximumSpinBox.nearest(cut.maximum)))
+                self.minimumSpinBox.setScale(scale)
+                self.minimumSpinBox.setValue(float(self.minimumSpinBox.nearest(cut.minimum)))
+                self.maximumSpinBox.setScale(scale)
+                self.maximumSpinBox.setValue(float(self.maximumSpinBox.nearest(cut.maximum)))
         if 'comment' in cut.keys():
             self.commentTextEdit.setPlainText(cut['comment'])
 
@@ -314,16 +328,22 @@ class CutEditorDialog(QDialog):
 
     def setRangeEnabled(self, enabled):
         """Set range inputs enabled, diables data input."""
+        # Determine type of spin boxes
+        mode = self.type() in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI)
         self.minimumLabel.setEnabled(enabled)
-        self.minimumSpinBox.setEnabled(enabled)
+        self.minimumSpinBox.setEnabled(enabled and not mode)
+        self.minimumRangeSpinBox.setEnabled(enabled and mode)
         self.maximumLabel.setEnabled(enabled)
-        self.maximumSpinBox.setEnabled(enabled)
+        self.maximumSpinBox.setEnabled(enabled and not mode)
+        self.maximumRangeSpinBox.setEnabled(enabled and mode)
         self.dataLabel.setEnabled(not enabled)
         self.dataField.setEnabled(not enabled)
         self.minimumLabel.setVisible(enabled)
-        self.minimumSpinBox.setVisible(enabled)
+        self.minimumSpinBox.setVisible(enabled and not mode)
+        self.minimumRangeSpinBox.setVisible(enabled and mode)
         self.maximumLabel.setVisible(enabled)
-        self.maximumSpinBox.setVisible(enabled)
+        self.maximumSpinBox.setVisible(enabled and not mode)
+        self.maximumRangeSpinBox.setVisible(enabled and mode)
         self.dataLabel.setVisible(not enabled)
         self.dataField.setVisible(not enabled)
 
@@ -364,19 +384,38 @@ class CutEditorDialog(QDialog):
             self.setDataEnabled(True)
             self.dataField.setEntries(spec.sorted_data)
         # Delta ranges
-        elif self.type() in (tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
+        elif self.type() in tmGrammar.DR:
             self.setRangeEnabled(True)
-            scale = self.generateScale(self.type())
-            self.minimumSpinBox.setScale(scale)
-            self.maximumSpinBox.setScale(scale)
-            self.minimumSpinBox.setValue(self.minimumSpinBox.minimum())
-            self.maximumSpinBox.setValue(self.maximumSpinBox.maximum())
-            minimum = self.minimumSpinBox.minimum()
-            maximum = self.maximumSpinBox.maximum()
-            info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
+            self.minimumRangeSpinBox.setRange(0, 10E10)
+            self.minimumRangeSpinBox.setValue(0)
+            self.minimumRangeSpinBox.setDecimals(1)
+            self.minimumRangeSpinBox.setSingleStep(.1)
+            self.maximumRangeSpinBox.setRange(0, 10E10)
+            self.maximumRangeSpinBox.setValue(0)
+            self.maximumRangeSpinBox.setDecimals(1)
+            self.maximumRangeSpinBox.setSingleStep(.1)
+        elif self.type() in (tmGrammar.DETA, tmGrammar.DPHI):
+            self.setRangeEnabled(True)
+            self.minimumRangeSpinBox.setRange(0, 10E10)
+            self.minimumRangeSpinBox.setValue(0)
+            self.minimumRangeSpinBox.setDecimals(3)
+            self.minimumRangeSpinBox.setSingleStep(.001)
+            self.maximumRangeSpinBox.setRange(0, 10E10)
+            self.maximumRangeSpinBox.setValue(0)
+            self.maximumRangeSpinBox.setDecimals(3)
+            self.maximumRangeSpinBox.setSingleStep(.001)
+            # info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
         # Invariant mass
-        elif self.type() in (tmGrammar.MASS, ):
-            pass
+        elif self.type() in tmGrammar.MASS:
+            self.setRangeEnabled(True)
+            self.minimumRangeSpinBox.setRange(0, 10E10)
+            self.minimumRangeSpinBox.setValue(0)
+            self.minimumRangeSpinBox.setDecimals(1)
+            self.minimumRangeSpinBox.setSingleStep(.2)
+            self.maximumRangeSpinBox.setRange(0, 10E10)
+            self.maximumRangeSpinBox.setValue(0)
+            self.maximumRangeSpinBox.setDecimals(1)
+            self.maximumRangeSpinBox.setSingleStep(.2)
         # Ranges
         else:
             self.setRangeEnabled(True)
@@ -397,8 +436,5 @@ class CutEditorDialog(QDialog):
 
     def accept(self):
         """Perform consistency checks befor accepting changes."""
-        if self.menu.cutByName(self.name()):
-            QMessageBox.warning(self, "Name used", "Cut name `{0}' already used. Please select a different name.".format(self.name()))
-        # add check for duplicated values...
-        else:
-            super(CutEditorDialog, self).accept()
+        # Ugh...
+        super(CutEditorDialog, self).accept()
