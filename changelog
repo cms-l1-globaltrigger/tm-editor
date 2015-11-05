@@ -1,3 +1,10 @@
+tm-editor (0.1.6-1) extra; urgency=medium
+
+  * Added experimental support for DETA/DPHI/DR/MASS cuts in cut editor.
+  * Improved user interface and various minor bugfixes.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Thu, 05 Nov 2015 17:42:34 +0100
+
 tm-editor (0.1.5-1) extra; urgency=medium
 
   * Completely reworked delta-Eta/Phi/R cut mechanism.
