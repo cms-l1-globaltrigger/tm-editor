@@ -1,3 +1,9 @@
+tm-editor (0.1.6-3) extra; urgency=high
+
+  * Fixed accidental duplication of objects an loading from XML file.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Fri, 06 Nov 2015 14:54:16 +0100
+
 tm-editor (0.1.6-2) extra; urgency=high
 
   * Fixed error preventing saving menus with certain new algorithms.

@@ -115,7 +115,7 @@ class Menu(object):
         ))
 
     def addAlgorithm(self, index, name, expression, algorithm_id = 0, module_id = 0, module_index = 0, comment = ""):
-        """Provided for convenience."""
+        """Provided for convenience. Note: related objects must be added separately."""
         algorithm = Algorithm(
             algorithm_id = algorithm_id,
             index = index,
@@ -126,19 +126,24 @@ class Menu(object):
             comment = comment,
         )
         self.algorithms.append(algorithm)
-        self.updateAlgorithm(self.algorithmByName(name))
 
     def updateAlgorithm(self, algorithm):
+        print "updateAlgorithm()"
+        print " global:", [o.name for o in self.objects]
+        print " pre:", algorithm.objects()
         #if algorithm not in self.algorithms: # MALICIOUS
         #    self.algorithms.append(algorithm)
         # Add new objects to list.
         for item in algorithm.objects():
             if not self.objectByName(item):
+                print " add:", item
                 self.objects.append(toObject(item))
         # Add new external to list.
         for item in algorithm.externals():
             if not self.externalByName(item):
                 self.externals.append(toExternal(item))
+        print " global:", [o.name for o in self.objects]
+        print "--"
 
     def algorithmByName(self, name):
         """Returns algorithm item by its name or None if no such algorithm exists."""

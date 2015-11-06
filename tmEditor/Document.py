@@ -330,6 +330,7 @@ class Document(QWidget):
         algorithm = Algorithm()
         dialog.updateAlgorithm(algorithm)
         self.menu().addAlgorithm(**algorithm)
+        self.menu().updateAlgorithm(self.menu().algorithmByName(algorithm.name)) # IMPORTANT: add/update new objects!
         item.view.model().setSourceModel(item.view.model().sourceModel())
         # REBUILD INDEX
         self.updatePreview()
