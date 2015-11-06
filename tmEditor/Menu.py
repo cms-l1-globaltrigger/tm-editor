@@ -126,11 +126,11 @@ class Menu(object):
             comment = comment,
         )
         self.algorithms.append(algorithm)
-        self.updateAlgorithm(algorithm)
+        self.updateAlgorithm(self.algorithmByName(name))
 
     def updateAlgorithm(self, algorithm):
-        if algorithm not in self.algorithms:
-            self.algorithms.append(algorithm)
+        #if algorithm not in self.algorithms: # MALICIOUS
+        #    self.algorithms.append(algorithm)
         # Add new objects to list.
         for item in algorithm.objects():
             if not self.objectByName(item):
