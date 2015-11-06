@@ -1,3 +1,10 @@
+tm-editor (0.1.6-2) extra; urgency=high
+
+  * Fixed error preventing saving menus with certain new algorithms.
+  * Fixed broken error message of algorithm syntax validator.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Fri, 06 Nov 2015 14:09:53 +0100
+
 tm-editor (0.1.6-1) extra; urgency=medium
 
   * Added experimental support for DETA/DPHI/DR/MASS cuts in cut editor.

@@ -61,7 +61,7 @@ class SyntaxRule(object):
         """Parses algorithm expression and returns list of tokens."""
         tmGrammar.Algorithm_Logic.clear()
         if not tmGrammar.Algorithm_parser(expression):
-            raise AlgorithmSyntaxError("Failed to parse algorithm expression `{expression}'".format(expression))
+            raise AlgorithmSyntaxError("Failed to parse algorithm expression `{expression}'".format(**locals()))
         return tmGrammar.Algorithm_Logic.getTokens()
 
     def validate(self, expression):
@@ -99,7 +99,7 @@ class CombBxOffset(SyntaxRule):
             objects = functionObjects(token)
             for i in range(len(objects)):
                 if int(objects[i].bx_offset) != int(objects[0].bx_offset):
-                    raise AlgorithmSyntaxError("All object requirements of function comb{...} must be of same bunch crossing offset.\n" \
+                    raise AlgorithmSyntaxError("All object requirements of function comb{{...}} must be of same bunch crossing offset.\n" \
                                                "Invalid expression near \"{token}\"".format(**locals()))
 
 class DistNrObjects(SyntaxRule):
@@ -116,7 +116,7 @@ class DistNrObjects(SyntaxRule):
                 raise AlgorithmSyntaxError(str(f.message))
             objects = functionObjects(token)
             if len(objects) != 2:
-                raise AlgorithmSyntaxError("Function dist{...} requires excactly two object requirements.\n" \
+                raise AlgorithmSyntaxError("Function dist{{...}} requires excactly two object requirements.\n" \
                                            "Invalid expression near \"{token}\"".format(**locals()))
 
 class DistDeltaEtaRange(SyntaxRule):

@@ -12,7 +12,7 @@ from glob import glob
 
 setup(
     name = 'tmEditor',
-    version = '0.1.0',
+    version = '0.1.6',
     description = "Trigger Menu Editor for uGT upgrade",
     author = "Bernhard Arnold",
     author_email = "bernhard.arnold@cern.ch",

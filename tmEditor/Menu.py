@@ -126,6 +126,7 @@ class Menu(object):
             comment = comment,
         )
         self.algorithms.append(algorithm)
+        self.updateAlgorithm(algorithm)
 
     def updateAlgorithm(self, algorithm):
         if algorithm not in self.algorithms:
