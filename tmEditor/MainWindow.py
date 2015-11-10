@@ -27,7 +27,7 @@ import webbrowser
 import logging
 import sys, os, re
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 """Applciation Version (edit this to increment the release version)."""
 
 L1ContentsURL = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/GlobalTriggerUpgradeL1T-uTme"
@@ -253,12 +253,7 @@ class MainWindow(QMainWindow):
         document = self.mdiArea.currentDocument()
         try:
             document.saveMenu()
-        except RuntimeError, e:
-            QMessageBox.critical(self,
-                self.tr("Failed to write XML menu"),
-                str(e),
-            )
-        except ValueError, e:
+        except (RuntimeError, ValueError), e:
             QMessageBox.critical(self,
                 self.tr("Failed to write XML menu"),
                 str(e),

@@ -70,9 +70,6 @@ class Document(QWidget):
         for scale in self.menu().scales.bins.keys():
             binsTableViews[scale] = self.createProxyTableView("{scale}TableView".format(**locals()), BinsModel(self.menu(), scale, self))
         extSignalsTableView = self.createProxyTableView("externalsTableView", ExtSignalsModel(self.menu(), self))
-        # Table view
-        self.dataViewStack = QStackedWidget(self)
-        ### self.dataViewStack.addWidget(QTextEdit(self))
         #
         menuView = QWidget(self)
         menuView.menu = self.menu()
@@ -88,7 +85,7 @@ class Document(QWidget):
         menuView.setLayout(vbox)
         menuView.setAutoFillBackground(True)
         #
-        # Preview
+        # Bottom widget
         self.bottomWidget = BottomWidget(self)
         self.bottomWidget.addTriggered.connect(self.addItem)
         self.bottomWidget.editTriggered.connect(self.editItem)
@@ -99,24 +96,27 @@ class Document(QWidget):
         self.navigationTreeWidget.headerItem().setHidden(True)
         self.navigationTreeWidget.setObjectName("navigationTreeWidget")
         self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee;}")
+        # Stacks
+        self.topStack = QStackedWidget(self)
+        self.bottomStack = QStackedWidget(self)
         # Add navigation items.
-        self.menuItem = NavigationItem(self.navigationTreeWidget, "Menu", menuView, self.bottomWidget)
-        self.algorithmsItem = NavigationItem(self.menuItem, "Algorithms", algorithmsTableView, self.bottomWidget)
-        self.cutsItem = NavigationItem(self.menuItem, "Cuts", cutsTableView, self.bottomWidget)
-        self.objectsItem = NavigationItem(self.menuItem, "Objects", objectsTableView, self.bottomWidget)
-        self.externalsItem = NavigationItem(self.menuItem, "Externals", externalsTableView, self.bottomWidget)
+        self.menuPage = self.addPage(self.navigationTreeWidget, "Menu", menuView, self.bottomWidget)
+        self.algorithmsPage = self.addPage(self.menuPage, "Algorithms", algorithmsTableView, self.bottomWidget)
+        self.cutsPage = self.addPage(self.menuPage, "Cuts", cutsTableView, self.bottomWidget)
+        self.objectsPage = self.addPage(self.menuPage, "Objects", objectsTableView, self.bottomWidget)
+        self.externalsPage = self.addPage(self.menuPage, "Externals", externalsTableView, self.bottomWidget)
         label = QLabel("Select a scale set...", self)
         label.setAutoFillBackground(True)
         label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        self.scalesItem = NavigationItem(self.navigationTreeWidget, "Scales", label, self.bottomWidget)
-        self.scalesTypeItem = {}
+        self.scalesPage = self.addPage(self.navigationTreeWidget, "Scales", label, self.bottomWidget)
+        self.scalesTypePages = {}
         for scale in self.menu().scales.bins.keys():
-            self.scalesTypeItem[scale] = NavigationItem(self.scalesItem, scale, binsTableViews[scale], self.bottomWidget)
-        self.extSignalsItem = NavigationItem(self.navigationTreeWidget, "External Signals", extSignalsTableView, self.bottomWidget)
+            self.scalesTypePages[scale] = self.addPage(self.scalesPage, scale, binsTableViews[scale], self.bottomWidget)
+        self.extSignalsPage = self.addPage(self.navigationTreeWidget, "External Signals", extSignalsTableView, self.bottomWidget)
         # Finsish navigation setup.
-        self.navigationTreeWidget.expandItem(self.menuItem)
-        self.navigationTreeWidget.itemSelectionChanged.connect(self.updateViews)
-        self.navigationTreeWidget.setCurrentItem(self.menuItem)
+        self.navigationTreeWidget.expandItem(self.menuPage)
+        self.navigationTreeWidget.itemSelectionChanged.connect(self.updateTop)
+        self.navigationTreeWidget.setCurrentItem(self.menuPage)
         # Splitters
         self.vsplitter = SlimSplitter(Qt.Horizontal, self)
         self.vsplitter.setObjectName("vsplitter")
@@ -124,8 +124,8 @@ class Document(QWidget):
         self.vsplitter.addWidget(self.navigationTreeWidget)
         self.vsplitter.setOpaqueResize(False)
         self.hsplitter = SlimSplitter(Qt.Vertical, self)
-        self.hsplitter.addWidget(self.dataViewStack)
-        self.hsplitter.addWidget(self.bottomWidget)
+        self.hsplitter.addWidget(self.topStack)
+        self.hsplitter.addWidget(self.bottomStack)
         self.vsplitter.addWidget(self.hsplitter)
         self.vsplitter.setStretchFactor(0, 0)
         self.vsplitter.setStretchFactor(1, 1)
@@ -137,10 +137,9 @@ class Document(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
         #
-        self.menuItem.view.nameLineEdit.setText(self.menu().menu['name'])
-        self.menuItem.view.commentTextEdit.setPlainText(self.menu().menu['comment'] if 'comment' in self.menu().menu else '')
+        self.menuPage.top.nameLineEdit.setText(self.menu().menu['name'])
+        self.menuPage.top.commentTextEdit.setPlainText(self.menu().menu['comment'] if 'comment' in self.menu().menu else '')
         self.bottomWidget.setText("<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
-
 
     def createProxyTableView(self, name, model):
         """Factory to create new QTableView view using a QSortFilterProxyModel."""
@@ -151,20 +150,16 @@ class Document(QWidget):
         tableView.setStyleSheet("#{name} {{ border: 0; }}".format(**locals()))
         tableView.setModel(proxyModel)
         tableView.doubleClicked.connect(self.editItem)
-        tableView.selectionModel().selectionChanged.connect(self.updatePreview)
+        tableView.selectionModel().selectionChanged.connect(self.updateBottom)
         return tableView
 
-    def addPage(self, name, page, preview, parent):
-        """Add page to document navigation."""
-        item = QTreeWidgetItem(self)
-        if parent is self.navigationTreeWidget:
-            # Highlight root items in bold text.
-            font = item.font(0)
-            font.setBold(True)
-            item.setFont(0, font)
-        item.page = page
-        item.preview = preview
-        return item
+    def addPage(self, parent, name, top, bottom):
+        page = NavigationItem(parent, name, top, bottom)
+        if 0 > self.topStack.indexOf(top):
+            self.topStack.addWidget(top)
+        if 0 > self.bottomStack.indexOf(bottom):
+            self.bottomStack.addWidget(bottom)
+        return page
 
     def filename(self):
         return self._filename
@@ -198,22 +193,22 @@ class Document(QWidget):
     def saveMenu(self, filename = None):
         """Save menu to filename."""
         filename = filename or self.filename()
-        self._menu.menu['name'] = str(self.menuItem.view.nameLineEdit.text())
-        self._menu.menu['comment'] = str(self.menuItem.view.commentTextEdit.toPlainText())
+        self._menu.menu['name'] = str(self.menuPage.top.nameLineEdit.text())
+        self._menu.menu['comment'] = str(self.menuPage.top.commentTextEdit.toPlainText())
         self._menu.saveXml(filename)
         self.setFilename(filename)
         self.setName(os.path.basename(filename))
         self.setModified(False)
         index, item = self.getSelection()
-        item.view.update()
+        item.top.update()
 
     def getSelection(self):
         items = self.navigationTreeWidget.selectedItems()
         if not len(items):
             return None, None
         item = items[0]
-        if isinstance(item.view, QTableView):
-            index = item.view.currentMappedIndex()
+        if isinstance(item.top, QTableView):
+            index = item.top.currentMappedIndex()
             return index, item
         return None, item
 
@@ -224,95 +219,116 @@ class Document(QWidget):
                 free.remove(int(algorithm.index))
         return free
 
-    def updateViews(self):
+    def updateTop(self):
         index, item = self.getSelection()
-        try:
-            if 0 > self.dataViewStack.indexOf(item.view):
-                self.dataViewStack.addWidget(item.view)
-                if hasattr(item.view, 'sortByColumn'):
-                    item.view.sortByColumn(0, Qt.AscendingOrder)
-            self.dataViewStack.setCurrentWidget(item.view)
-            self.updatePreview()
-        except:
-            pass
+        # if 0 > self.topStack.indexOf(item.top):
+        #     self.topStack.addWidget(item.top)
+        if item and hasattr(item.top, 'sortByColumn'):
+            item.top.sortByColumn(0, Qt.AscendingOrder)
+        self.topStack.setCurrentWidget(item.top)
+        self.updateBottom()
 
-    def updatePreview(self):
+    def updateBottom(self):
         index, item = self.getSelection()
         # Generic preview...
-        try:
-            data = dict([(key, value) for key, value in item.view.model().sourceModel().values[index.row()].items()]) # Local copy
+        if index and item and isinstance(item.top, TableView):
+            data = dict([(key, value) for key, value in item.top.model().sourceModel().values[index.row()].items()]) # Local copy
             text = []
-            if item is self.algorithmsItem:
-                text.append("<h2>{name} ({index})</h2>")
-                text.append("<p><strong>Expression:</strong></p><p><code>{expression}</code></p>")
-            elif item is self.cutsItem:
-                data['maximum'], data['minimum'] = fCut(data['maximum']), fCut(data['minimum'])
-                text.append("<h2>{name}</h2>")
-                text.append("<p><strong>Type:</strong> {object}</p>")
-                if data['data']:
-                    fdata = []
-                    if data['object'] == tmGrammar.comb:
-                        typename = data['type']
-                    else:
-                        typename = "{0}-{1}".format(data['object'], data['type'])
-                    CutSettings = [Toolbox.CutSpec(**cut) for cut in Toolbox.Settings['cuts']]
-                    data_ = filter(lambda entry: entry.name == typename, CutSettings)[0].data
-                    for n in data['data'].split(','):
-                        fdata.append("{0} ({1})".format(data_[int(n)], int(n)))
-                    fdata = ', '.join(fdata)
-                    text.append("<p><strong>Data:</strong> {translation}</p>".format(translation = fdata))
+            if item is self.algorithmsPage:
+                rows = item.top.selectionModel().selectedRows()
+                if 1 < len(rows):
+                    text.append("Selected {0} algorithms.".format(len(rows)))
                 else:
-                    text.append("<p><strong>Minimum:</strong> {minimum}</p>")
-                    text.append("<p><strong>Maximum:</strong> {maximum}</p>")
-            elif item is self.objectsItem:
-                data['threshold'] = fThreshold(str(data['threshold']))
-                data['bx_offset'] = fBxOffset(data['bx_offset'])
-                text.append("<h2>{name}</h2>")
-                text.append("<p><strong>Type:</strong> {type}</p>")
-                text.append("<p><strong>Threshold:</strong> {threshold}</p>")
-                text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
-            elif item is self.externalsItem:
-                data['bx_offset'] = fBxOffset(data['bx_offset'])
-                text.append("<h2>{name}</h2>")
-                text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
-            elif item in self.scalesTypeItem.values():
+                    text.append("<h2>{name} ({index})</h2>")
+                    text.append("<p><strong>Expression:</strong></p><p><code>{expression}</code></p>")
+                    if 'comment' in data.keys() and data['comment']:
+                        text.append("<p><strong>Comment:</strong></p><p><code>{comment}</code></p>")
+            elif item is self.cutsPage:
+                rows = item.top.selectionModel().selectedRows()
+                if 1 < len(rows):
+                    text.append("Selected {0} cuts.".format(len(rows)))
+                else:
+                    data['maximum'], data['minimum'] = fCut(data['maximum']), fCut(data['minimum'])
+                    text.append("<h2>{name}</h2>")
+                    text.append("<p><strong>Type:</strong> {object}</p>")
+                    if data['data']:
+                        fdata = []
+                        if data['object'] == tmGrammar.comb:
+                            typename = data['type']
+                        else:
+                            typename = "{0}-{1}".format(data['object'], data['type'])
+                        CutSettings = [Toolbox.CutSpec(**cut) for cut in Toolbox.Settings['cuts']]
+                        data_ = filter(lambda entry: entry.name == typename, CutSettings)[0].data
+                        for n in data['data'].split(','):
+                            fdata.append("{0} ({1})".format(data_[int(n)], int(n)))
+                        fdata = ', '.join(fdata)
+                        text.append("<p><strong>Data:</strong> {translation}</p>".format(translation = fdata))
+                    else:
+                        text.append("<p><strong>Minimum:</strong> {minimum}</p>")
+                        text.append("<p><strong>Maximum:</strong> {maximum}</p>")
+                    if 'comment' in data.keys() and data['comment']:
+                        text.append("<p><strong>Comment:</strong></p><p><code>{comment}</code></p>")
+            elif item is self.objectsPage:
+                rows = item.top.selectionModel().selectedRows()
+                if 1 < len(rows):
+                    text.append("Selected {0} object requiremetns.".format(len(rows)))
+                else:
+                    data['threshold'] = fThreshold(str(data['threshold']))
+                    data['bx_offset'] = fBxOffset(data['bx_offset'])
+                    text.append("<h2>{name}</h2>")
+                    text.append("<p><strong>Type:</strong> {type}</p>")
+                    text.append("<p><strong>Threshold:</strong> {threshold}</p>")
+                    text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
+            elif item is self.externalsPage:
+                rows = item.top.selectionModel().selectedRows()
+                if 1 < len(rows):
+                    text.append("Selected {0} external signals.".format(len(rows)))
+                else:
+                    data['bx_offset'] = fBxOffset(data['bx_offset'])
+                    text.append("<h2>{name}</h2>")
+                    text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
+                    if 'comment' in data.keys() and data['comment']:
+                        text.append("<p><strong>Comment:</strong></p><p><code>{comment}</code></p>")
+            elif item in self.scalesTypePages.values():
                 data['name'] = item.name
                 text.append("<h2>Scale {name}</h2>")
                 text.append("<p><strong>Number:</strong> {number}</p>")
                 data['maximum'], data['minimum'] = fCut(data['maximum']), fCut(data['minimum'])
                 text.append("<p><strong>Minimum:</strong> {minimum}</p>")
                 text.append("<p><strong>Maximum:</strong> {maximum}</p>")
-            if 'comment' in data.keys():
-                text.append("<p><strong>Comment:</strong></p><p><code>{comment}</code></p>")
-            item.preview.setText(''.join(text).format(**data))
-            item.preview.setButtonsEnabled(True)
-        except AttributeError, m:
-            #"<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
-            item.preview.setText("")
-            item.preview.setButtonsEnabled(False)
-        item.preview.notice.hide()
-        item.preview.toolbar.hide()
-        try:
-            if item is self.algorithmsItem:
-                item.preview.toolbar.show()
-            elif item is self.cutsItem:
-                item.preview.toolbar.show()
-            elif item is self.objectsItem:
-                item.preview.toolbar.hide()
-                item.preview.notice.setText(self.tr("<strong>Note:</strong> new objects are created directly in the algorithm editor."))
-                item.preview.notice.show()
-            else:
-                item.preview.toolbar.hide()
-        except:
-            item.preview.setText("")
-            item.preview.toolbar.hide()
+            item.bottom.setText(''.join(text).format(**data))
+            item.bottom.setButtonsEnabled(True)
+        else:
+            item.bottom.setText("Nothing selected...")
+            item.bottom.setButtonsEnabled(False)
+        item.bottom.notice.hide()
+        item.bottom.toolbar.hide()
+        #item.bottom.setText("")
+        if item is self.algorithmsPage:
+            item.bottom.toolbar.show()
+        elif item is self.cutsPage:
+            # Experimental - enable only possible controls
+            item.bottom.toolbar.show()
+            item.bottom.removeButton.setEnabled(False)
+            if index:
+                item.bottom.removeButton.setEnabled(True)
+                cut = self.menu().cuts[index.row()]
+                for algorithm in self.menu().algorithms:
+                    if cut.name in algorithm.cuts():
+                        item.bottom.removeButton.setEnabled(False)
+        elif item is self.objectsPage:
+            item.bottom.toolbar.hide()
+            item.bottom.notice.setText(self.tr("<strong>Note:</strong> new objects are created directly in the algorithm editor."))
+            item.bottom.notice.show()
+        else:
+            item.bottom.toolbar.hide()
 
     def addItem(self):
         try:
             index, item = self.getSelection()
-            if item is self.algorithmsItem:
+            if item is self.algorithmsPage:
                 self.addAlgorithm(index, item)
-            elif item is self.cutsItem:
+            elif item is self.cutsPage:
                 self.addCut(index, item)
         except RuntimeError, e:
             QMessageBox.warning(self, "Error", str(e))
@@ -331,11 +347,11 @@ class Document(QWidget):
         dialog.updateAlgorithm(algorithm)
         self.menu().addAlgorithm(**algorithm)
         self.menu().updateAlgorithm(self.menu().algorithmByName(algorithm.name)) # IMPORTANT: add/update new objects!
-        item.view.model().setSourceModel(item.view.model().sourceModel())
+        item.top.model().setSourceModel(item.top.model().sourceModel())
         # REBUILD INDEX
-        self.updatePreview()
+        self.updateBottom()
         self.modified.emit()
-        self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
+        self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
         for name in algorithm.cuts():
             if not filter(lambda item: item.name == name, self.menu().cuts):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
@@ -355,16 +371,16 @@ class Document(QWidget):
             maximum=dialog.maximum() if not dialog.data() else '',
             data=dialog.data() if dialog.data() else '',
             comment=dialog.comment())
-        self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
+        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
 
     def editItem(self):
         try:
             index, item = self.getSelection()
-            if item is self.algorithmsItem:
+            if item is self.algorithmsPage:
                 self.editAlgorithm(index, item)
-            elif item is self.cutsItem:
+            elif item is self.cutsPage:
                 self.editCut(index, item)
-            self.updatePreview()
+            self.updateBottom()
         except RuntimeError, e:
                 QMessageBox.warning(self, "Error", str(e))
 
@@ -380,10 +396,10 @@ class Document(QWidget):
         self.setModified(True)
         dialog.updateAlgorithm(algorithm)
         # REBUILD INDEX
-        self.updatePreview()
+        self.updateBottom()
         self.modified.emit()
         self.menu().updateAlgorithm(algorithm)
-        self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
+        self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
         for name in algorithm.cuts():
             if not filter(lambda item: item.name == name, self.menu().cuts):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
@@ -399,13 +415,13 @@ class Document(QWidget):
             return
         self.setModified(True)
         dialog.updateCut(cut)
-        self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
+        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
 
     def copyItem(self):
         index, item = self.getSelection()
-        if item is self.algorithmsItem:
+        if item is self.algorithmsPage:
             self.copyAlgorithm(index, item)
-        if item is self.cutsItem:
+        if item is self.cutsPage:
             self.copyCut(index, item)
 
     def copyAlgorithm(self, index, item):
@@ -424,14 +440,14 @@ class Document(QWidget):
         algorithm['index'] = str(dialog.index())
         algorithm['name'] = str(dialog.name())
         self.menu().algorithms.append(algorithm)
-        item.view.model().setSourceModel(item.view.model().sourceModel())
+        item.top.model().setSourceModel(item.top.model().sourceModel())
         # REBUILD INDEX
-        self.updatePreview()
+        self.updateBottom()
         self.modified.emit()
         for name in algorithm.objects():
             if not filter(lambda item: item.name == name, self.menu().objects):
                 self.menu().addObject(**toObject(name))
-        self.objectsItem.view.model().setSourceModel(self.objectsItem.view.model().sourceModel())
+        self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
         for name in algorithm.cuts():
             if not filter(lambda item: item.name == name, self.menu().cuts):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
@@ -455,43 +471,64 @@ class Document(QWidget):
             maximum=dialog.maximum() or '',
             data=dialog.data() or '',
             comment=dialog.comment())
-        self.cutsItem.view.model().setSourceModel(self.cutsItem.view.model().sourceModel())
+        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
 
     def removeItem(self):
         index, item = self.getSelection()
         # Removing algorithm item
-        if item is self.algorithmsItem:
-            algorithm = self.menu().algorithms[index.row()]
-            reply = QMessageBox.warning(self, "Delete algorithm",
-                self.tr("Do you want to delete algorithm <em>%1</em>?").arg(algorithm.name),
-                QMessageBox.Cancel | QMessageBox.Ok, QMessageBox.Cancel)
-            if reply == QMessageBox.Cancel:
-                return
-            self.menu().algorithms.remove(algorithm)
-            item.view.model().setSourceModel(item.view.model().sourceModel())
+        if item is self.algorithmsPage:
+            confirm = True
+            while item.top.selectionModel().hasSelection():
+                rows = item.top.selectionModel().selectedRows()
+                row = rows[0]
+                algorithm = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
+                if confirm:
+                    result = QMessageBox.question(self, "Remove algorithm",
+                        QString("Do you want to remove algorithm <strong>%2, %1</strong> from the menu?").arg(algorithm.name).arg(algorithm.index),
+                        QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.Abort if len(rows) > 1 else QMessageBox.Yes | QMessageBox.Abort)
+                    if result == QMessageBox.Abort:
+                        break
+                    elif result == QMessageBox.YesToAll:
+                        confirm = False
+                item.top.model().removeRows(row.row(), 1)
+            selection = item.top.selectionModel()
+            selection.setCurrentIndex(selection.currentIndex(), QItemSelectionModel.Select | QItemSelectionModel.Rows)
+            # Removing orphaned objects.
+            for name in self.menu().orphanedObjects():
+                object = self.menu().objectByName(name)
+                self.menu().objects.remove(object)
             # REBUILD INDEX
-            self.updatePreview()
+            self.updateBottom()
             self.modified.emit()
             self.setModified(True)
+
         # Removing cut item
-        elif item is self.cutsItem:
-            cut = self.menu().cuts[index.row()]
-            reply = QMessageBox.warning(self, "Delete cut",
-                self.tr("Do you want to delete cut <em>%1</em>?").arg(cut.name),
-                QMessageBox.Cancel | QMessageBox.Ok, QMessageBox.Cancel)
-            if reply == QMessageBox.Cancel:
-                return
-            for algorithm in self.menu().algorithms:
-                if cut.name in algorithm.cuts():
-                    QMessageBox.warning(self,
-                        self.tr("Cut is used"),
-                        self.tr("Cut %1 is used by algorithm %2").arg(cut.name).arg(algorithm.name),
-                    )
-                    return
-            self.menu().cuts.remove(cut)
-            item.view.model().setSourceModel(item.view.model().sourceModel())
+        elif item is self.cutsPage:
+            confirm = True
+            while item.top.selectionModel().hasSelection():
+                rows = item.top.selectionModel().selectedRows()
+                row = rows[0]
+                cut = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
+                for algorithm in self.menu().algorithms:
+                    if cut.name in algorithm.cuts():
+                        QMessageBox.warning(self,
+                            self.tr("Cut is used"),
+                            self.tr("Cut %1 is used by algorithm %2 an can not be removed. Remove the corresponding algorithm first.").arg(cut.name).arg(algorithm.name),
+                        )
+                        return
+                if confirm:
+                    result = QMessageBox.question(self, "Remove cut",
+                        QString("Do you want to remove cut <strong>%1</strong> from the menu?").arg(cut.name),
+                        QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.Abort if len(rows) > 1 else QMessageBox.Yes | QMessageBox.Abort)
+                    if result == QMessageBox.Abort:
+                        break
+                    elif result == QMessageBox.YesToAll:
+                        confirm = False
+                item.top.model().removeRows(row.row(), 1)
+            selection = item.top.selectionModel()
+            selection.setCurrentIndex(selection.currentIndex(), QItemSelectionModel.Select | QItemSelectionModel.Rows)
             # REBUILD INDEX
-            self.updatePreview()
+            self.updateBottom()
             self.modified.emit()
             self.setModified(True)
 
@@ -524,11 +561,12 @@ class SlimSplitterHandle(QSplitterHandle):
 # ------------------------------------------------------------------------------
 
 class NavigationItem(QTreeWidgetItem):
-    def __init__(self, parent, name, view, preview):
+
+    def __init__(self, parent, name, top, bottom):
         super(NavigationItem, self).__init__(parent, [name])
         self.name = name
-        self.view = view
-        self.preview = preview
+        self.top = top
+        self.bottom = bottom
         if not isinstance(parent, NavigationItem):
             # Hilight root items in bold text.
             font = self.font(0)
@@ -549,7 +587,7 @@ class TableView(QTableView):
         # Setup table view.
         self.setShowGrid(False)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setAlternatingRowColors(True)
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
         # Setup horizontal column appearance.
@@ -627,9 +665,9 @@ class BottomWidget(QWidget):
         self.copyButton = QPushButton(Toolbox.createIcon('actions', 'edit-copy'), "Copy...", self)
         self.copyButton.clicked.connect(self.onCopy)
         layout.addWidget(self.copyButton)
-        self.removeBotton = QPushButton(Toolbox.createIcon('actions', 'list-remove'), "Delete", self)
-        self.removeBotton.clicked.connect(self.onRemove)
-        layout.addWidget(self.removeBotton)
+        self.removeButton = QPushButton(Toolbox.createIcon('actions', 'list-remove'), "Delete", self)
+        self.removeButton.clicked.connect(self.onRemove)
+        layout.addWidget(self.removeButton)
         self.toolbar.setLayout(layout)
         self.notice = QLabel(self)
         self.notice.hide()
@@ -638,16 +676,10 @@ class BottomWidget(QWidget):
         self.textEdit = QTextEdit(self)
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("BottomWidgetTextEdit")
-        #self.textEdit.setStyleSheet("""#BottomWidgetTextEdit {
-        #    border: 0;
-        #    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
-        #        stop:0 rgba(203, 222, 238, 255), stop:1 rgba(233, 233, 233, 255));
-        #}""")
         self.textEdit.setStyleSheet("""#BottomWidgetTextEdit {
             border: 0;
             background-color: #eee;
         }""")
-        self.textEditHighlighter = AlgorithmSyntaxHighlighter(self.textEdit)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -656,10 +688,16 @@ class BottomWidget(QWidget):
         layout.addWidget(self.textEdit)
         self.setLayout(layout)
 
+    def setToolbarVisible(self, visible):
+        self.toolbar.setVisible(visible)
+
+    def setNoticeVisible(self, visible):
+        self.notice.setVisible(visible)
+
     def setButtonsEnabled(self, enabled):
         self.editButton.setEnabled(enabled)
         self.copyButton.setEnabled(enabled)
-        self.removeBotton.setEnabled(enabled)
+        self.removeButton.setEnabled(enabled)
 
     def setText(self, message):
         self.textEdit.setText(message)

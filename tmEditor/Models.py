@@ -82,7 +82,21 @@ class AlgorithmsModel(BaseTableModel):
         self.addColumnSpec("Index", 'index', int, AlignRight)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Expression", 'expression', fAlgorithm)
-        # self.addColumnSpec("Comment", 'comment')
+
+    def insertRows(self, position, rows, parent = QModelIndex()):
+        self.beginInsertRows(parent, position, position + rows - 1)
+        for i in range(rows):
+            self.values.addAlgorithm(0, "name", "expression")
+        self.endInsertRows()
+        return True
+
+    def removeRows(self, position, rows, parent = QModelIndex()):
+        self.beginRemoveRows(parent, position, position + rows - 1)
+        for i in range(rows):
+            algorithm = self.values[position + i]
+            self.values.remove(algorithm)
+        self.endRemoveRows()
+        return True
 
 class CutsModel(BaseTableModel):
 
@@ -94,8 +108,22 @@ class CutsModel(BaseTableModel):
         self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
         self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
         self.addColumnSpec("Data", 'data')
-        # self.addColumnSpec("Comment", 'comment')
-        # self.addColumnSpec("ID", 'cut_id', int, AlignRight)
+
+    def insertRows(self, position, rows, parent = QModelIndex()):
+        self.beginInsertRows(parent, position, position + rows - 1)
+        for i in range(rows):
+            self.values.addCut(["name", "object", "type", 0, 0])
+        self.endInsertRows()
+        return True
+
+    def removeRows(self, position, rows, parent = QModelIndex()):
+        self.beginRemoveRows(parent, position, position + rows - 1)
+        for i in range(rows):
+            value = self.values[position + i]
+            self.values.remove(value)
+        self.endRemoveRows()
+        return True
+
 
 class ObjectsModel(BaseTableModel):
 
@@ -107,7 +135,6 @@ class ObjectsModel(BaseTableModel):
         self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
         self.addColumnSpec("Comment", 'comment')
-        # self.addColumnSpec("ID", 'object_id', int, AlignRight)
 
 class ExternalsModel(BaseTableModel):
 

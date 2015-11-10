@@ -128,9 +128,9 @@ class Menu(object):
         self.algorithms.append(algorithm)
 
     def updateAlgorithm(self, algorithm):
-        print "updateAlgorithm()"
-        print " global:", [o.name for o in self.objects]
-        print " pre:", algorithm.objects()
+        #print "updateAlgorithm()"
+        #print " global:", [o.name for o in self.objects]
+        #print " pre:", algorithm.objects()
         #if algorithm not in self.algorithms: # MALICIOUS
         #    self.algorithms.append(algorithm)
         # Add new objects to list.
@@ -160,6 +160,24 @@ class Menu(object):
     def externalByName(self, name):
         """Returns external signal item by its name or None if no such external signal exists."""
         return (filter(lambda item: item.name == name, self.externals) or [None])[0]
+
+    def orphanedObjects(self):
+        """Returns list of orphaned object names not referenced by any algorithm."""
+        tags = [object.name for object in self.objects]
+        for algorithm in self.algorithms:
+            for name in algorithm.objects():
+                if name in tags:
+                    tags.remove(name)
+        return tags
+
+    def orphanedCuts(self):
+        """Returns list of orphaned cut names not referenced by any algorithm."""
+        tags = [cut.name for cut in self.cuts]
+        for algorithm in self.algorithms:
+            for name in algorithm.cuts():
+                if name in tags:
+                    tags.remove(name)
+        return tags
 
     def loadXml(self, filename):
         """Read XML menu from file. Provided for convenience."""
