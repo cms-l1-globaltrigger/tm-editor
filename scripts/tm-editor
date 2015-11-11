@@ -7,6 +7,8 @@
 # Last changed date : $Date: $
 #
 
+import gtk # Load at first to prevent further GTK warnings.
+
 import tmEditor
 
 from PyQt4.QtCore import QSettings
@@ -20,6 +22,7 @@ EXIT_OK = 0
 EXIT_FAIL = 1
 
 def parse():
+    """Command line argument parser."""
     parser = argparse.ArgumentParser()
     parser.add_argument('filenames',
         metavar = '<file>',
@@ -38,39 +41,34 @@ def parse():
     return parser.parse_args()
 
 def main():
-    """Main routine."""
+    """Main application routine."""
+    # Parse arguments.
     args = parse()
-
     # Setup console logging and debug level.
     loggingLevel = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(format = '%(levelname)s: %(message)s', level = loggingLevel)
-
     # As things are getting serious let's start logging to file.
     if args.verbose:
         handler = logging.FileHandler('tm-editor.log', mode = 'a')
         handler.setFormatter(logging.Formatter(fmt = '%(asctime)s %(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
         handler.setLevel(loggingLevel)
         logging.getLogger().addHandler(handler)
-
     # Create application window.
     try:
         app = QApplication(sys.argv)
         logging.debug("launching L1-Trigger Menu Editor, version %s", tmEditor.MainWindow.Version)
-
         # Create/Load application settings.
         app.setOrganizationName("HEPHY")
         app.setOrganizationDomain("hephy.at")
         app.setApplicationName("Trigger Menu Editor")
-        QSettings() # Init global settings.
-
+        # Init global settings.
+        QSettings()
         # Create main window.
         window = tmEditor.MainWindow()
-
         # Load documents from command line (optional).
         for filename in args.filenames:
             logging.debug("loading file %s", filename)
             window.loadDocument(filename)
-
         # Take care window is shown.
         window.show()
         return app.exec_()
