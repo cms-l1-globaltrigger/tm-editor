@@ -38,7 +38,7 @@ class MenuTests(unittest.TestCase):
         self.assertTrue(isObject("TAU.eq.50p5+1"))
         self.assertFalse(isObject("comb"))
         self.assertFalse(isObject("AND"))
-        self.assertFalse(isObject("TAU+1"))
+        self.assertFalse(isObject("NOT"))
 
     def test_isCut(self):
         self.assertTrue(isCut("MU-ISO_Q"))
