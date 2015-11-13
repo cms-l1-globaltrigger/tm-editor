@@ -377,11 +377,8 @@ class CutEditorDialog(QDialog):
         self.dataField.clear()
         info = []
         if spec.title:
-            from gtk import icon_theme_get_default
-            iconTheme = icon_theme_get_default()
-            iconInfo = iconTheme.lookup_icon("info", 16, 0)
-            spec._filename = iconInfo.get_filename()
-            info.append("<h3><img src=\"{spec._filename}\"/> {spec.title}</h3>".format(**locals()))
+            spec._filename = ""
+            info.append("<h3>{spec.title}</h3>".format(**locals()))
         if spec.description:
             info.append("<p>{spec.description}</p>".format(**locals()))
         if spec.data:

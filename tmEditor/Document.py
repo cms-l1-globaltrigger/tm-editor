@@ -200,6 +200,17 @@ class Document(QWidget):
 
     def saveMenu(self, filename = None):
         """Save menu to filename."""
+        orphans = self._menu.orphanedCuts()
+        if len(orphans) > 1:
+            QMessageBox.information(self,
+                self.tr("Found orphaned cuts"),
+                QString("There are %1 orphaned cuts (<em>%2</em>, ...) that will be lost as they can't be saved to the XML file!").arg(len(orphans)).arg(orphans[0])
+            )
+        elif len(orphans):
+            QMessageBox.information(self,
+                self.tr("Found orphaned cut"),
+                QString("There is one orphaned cut (<em>%1</em>) that will be lost as it can't be saved to the XML file!").arg(orphans[0])
+            )
         filename = filename or self.filename()
         self._menu.menu['name'] = str(self.menuPage.top.nameLineEdit.text())
         self._menu.menu['comment'] = str(self.menuPage.top.commentTextEdit.toPlainText())

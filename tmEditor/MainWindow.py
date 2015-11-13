@@ -82,6 +82,7 @@ class MainWindow(QMainWindow):
         # Action for importing from another file.
         self.importAct = QAction(self.tr("Import..."), self)
         self.importAct.setStatusTip(self.tr("Import from existing file"))
+        self.importAct.setIcon(Toolbox.createIcon("document-import"))
         self.importAct.triggered.connect(self.onImport)
         # Action for saving the current file.
         self.saveAct = QAction(self.tr("&Save"), self)
@@ -125,10 +126,10 @@ class MainWindow(QMainWindow):
         self.fileMenu.addAction(self.openAct)
         self.fileMenu.addAction(self.openUrlAct)
         self.fileMenu.addSeparator()
-        self.fileMenu.addAction(self.importAct)
-        self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.saveAct)
         self.fileMenu.addAction(self.saveAsAct)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.importAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.closeAct)
         self.fileMenu.addAction(self.quitAct)
@@ -147,6 +148,8 @@ class MainWindow(QMainWindow):
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.saveAct)
         self.toolbar.addAction(self.saveAsAct)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.importAct)
 
     def createStatusBar(self):
         """Create status bar and populate with status labels."""

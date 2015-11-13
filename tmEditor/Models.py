@@ -162,8 +162,6 @@ class ExternalsModel(AbstractTableModel):
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
         self.addColumnSpec("Comment", 'comment')
-        self.addColumnSpec("Timestamp", 'datetime')
-        self.addColumnSpec("Comment", 'comment')
         # self.addColumnSpec("ID", 'requirement_id', int, AlignRight, AlignRight)
         # self.addColumnSpec("ID2", 'ext_signal_id', int, AlignRight)
 
