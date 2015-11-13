@@ -45,7 +45,14 @@ MaxAlgorithms = 512
 # ------------------------------------------------------------------------------
 
 class Document(QWidget):
-    """Document container widget used by MDI area."""
+    """Document container widget used by MDI area.
+
+    Document consists of pages listed in a tree view on the left. Adding pages
+    requires assigning a top and a bottom widget to each page. Normally the top
+    widget is either a generic table view or a more specific form widget whereas
+    the bottom widget holds a versatile preview widget displaying details and
+    actions for the above selected data set.
+    """
 
     modified = pyqtSignal()
     """This signal is emitted whenever the content of the document changes."""
@@ -100,19 +107,19 @@ class Document(QWidget):
         self.topStack = QStackedWidget(self)
         self.bottomStack = QStackedWidget(self)
         # Add navigation items.
-        self.menuPage = self.addPage(self.navigationTreeWidget, "Menu", menuView, self.bottomWidget)
-        self.algorithmsPage = self.addPage(self.menuPage, "Algorithms", algorithmsTableView, self.bottomWidget)
-        self.cutsPage = self.addPage(self.menuPage, "Cuts", cutsTableView, self.bottomWidget)
-        self.objectsPage = self.addPage(self.menuPage, "Objects", objectsTableView, self.bottomWidget)
-        self.externalsPage = self.addPage(self.menuPage, "Externals", externalsTableView, self.bottomWidget)
+        self.menuPage = self.addPage("Menu", menuView, self.bottomWidget)
+        self.algorithmsPage = self.addPage("Algorithms", algorithmsTableView, self.bottomWidget, self.menuPage)
+        self.cutsPage = self.addPage("Cuts", cutsTableView, self.bottomWidget, self.menuPage)
+        self.objectsPage = self.addPage("Object Requirements", objectsTableView, self.bottomWidget, self.menuPage)
+        self.externalsPage = self.addPage("External Requirements", externalsTableView, self.bottomWidget, self.menuPage)
         label = QLabel("Select a scale set...", self)
         label.setAutoFillBackground(True)
         label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        self.scalesPage = self.addPage(self.navigationTreeWidget, "Scales", label, self.bottomWidget)
+        self.scalesPage = self.addPage("Scales", label, self.bottomWidget)
         self.scalesTypePages = {}
         for scale in self.menu().scales.bins.keys():
-            self.scalesTypePages[scale] = self.addPage(self.scalesPage, scale, binsTableViews[scale], self.bottomWidget)
-        self.extSignalsPage = self.addPage(self.navigationTreeWidget, "External Signals", extSignalsTableView, self.bottomWidget)
+            self.scalesTypePages[scale] = self.addPage(scale, binsTableViews[scale], self.bottomWidget, self.scalesPage)
+        self.extSignalsPage = self.addPage("External Signals", extSignalsTableView, self.bottomWidget)
         # Finsish navigation setup.
         self.navigationTreeWidget.expandItem(self.menuPage)
         self.navigationTreeWidget.itemSelectionChanged.connect(self.updateTop)
@@ -139,7 +146,7 @@ class Document(QWidget):
         #
         self.menuPage.top.nameLineEdit.setText(self.menu().menu['name'])
         self.menuPage.top.commentTextEdit.setPlainText(self.menu().menu['comment'] if 'comment' in self.menu().menu else '')
-        self.bottomWidget.setText("<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
+        #self.bottomWidget.setText("<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
 
     def createProxyTableView(self, name, model):
         """Factory to create new QTableView view using a QSortFilterProxyModel."""
@@ -153,8 +160,9 @@ class Document(QWidget):
         tableView.selectionModel().selectionChanged.connect(self.updateBottom)
         return tableView
 
-    def addPage(self, parent, name, top, bottom):
-        page = NavigationItem(parent, name, top, bottom)
+    def addPage(self, name, top, bottom, parent = None):
+        """Add page consisting of navigation tree entry, top and bottom widget."""
+        page = Page(name, top, bottom, parent or self.navigationTreeWidget)
         if 0 > self.topStack.indexOf(top):
             self.topStack.addWidget(top)
         if 0 > self.bottomStack.indexOf(bottom):
@@ -221,8 +229,6 @@ class Document(QWidget):
 
     def updateTop(self):
         index, item = self.getSelection()
-        # if 0 > self.topStack.indexOf(item.top):
-        #     self.topStack.addWidget(item.top)
         if item and hasattr(item.top, 'sortByColumn'):
             item.top.sortByColumn(0, Qt.AscendingOrder)
         self.topStack.setCurrentWidget(item.top)
@@ -231,7 +237,14 @@ class Document(QWidget):
     def updateBottom(self):
         index, item = self.getSelection()
         # Generic preview...
-        if index and item and isinstance(item.top, TableView):
+        if item is self.menuPage:
+            text = []
+            for key, value in self.menu().menu.items():
+                if value == '\x00': value = "" # Overwrite NULL characters
+                text.append("<strong>{key}:</strong> {value}<br/>".format(**locals()))
+            item.bottom.setText(''.join(text))
+            item.bottom.setButtonsEnabled(True)
+        elif index and item and isinstance(item.top, TableView):
             data = dict([(key, value) for key, value in item.top.model().sourceModel().values[index.row()].items()]) # Local copy
             text = []
             if item is self.algorithmsPage:
@@ -239,6 +252,7 @@ class Document(QWidget):
                 if 1 < len(rows):
                     text.append("Selected {0} algorithms.".format(len(rows)))
                 else:
+                    data['expression'] = fAlgorithm(data['expression'])
                     text.append("<h2>{name} ({index})</h2>")
                     text.append("<p><strong>Expression:</strong></p><p><code>{expression}</code></p>")
                     if 'comment' in data.keys() and data['comment']:
@@ -301,7 +315,7 @@ class Document(QWidget):
         else:
             item.bottom.setText("Nothing selected...")
             item.bottom.setButtonsEnabled(False)
-        item.bottom.notice.hide()
+        item.bottom.clearNotice()
         item.bottom.toolbar.hide()
         #item.bottom.setText("")
         if item is self.algorithmsPage:
@@ -318,8 +332,10 @@ class Document(QWidget):
                         item.bottom.removeButton.setEnabled(False)
         elif item is self.objectsPage:
             item.bottom.toolbar.hide()
-            item.bottom.notice.setText(self.tr("<strong>Note:</strong> new objects are created directly in the algorithm editor."))
-            item.bottom.notice.show()
+            item.bottom.setNotice(self.tr("New objects requirements are created directly in the algorithm editor."), Toolbox.createIcon("info"))
+        elif item is self.externalsPage:
+            item.bottom.toolbar.hide()
+            item.bottom.setNotice(self.tr("New external requirements are created directly in the algorithm editor."), Toolbox.createIcon("info"))
         else:
             item.bottom.toolbar.hide()
 
@@ -441,6 +457,7 @@ class Document(QWidget):
         algorithm['name'] = str(dialog.name())
         self.menu().algorithms.append(algorithm)
         item.top.model().setSourceModel(item.top.model().sourceModel())
+        self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
         # REBUILD INDEX
         self.updateBottom()
         self.modified.emit()
@@ -497,6 +514,7 @@ class Document(QWidget):
             for name in self.menu().orphanedObjects():
                 object = self.menu().objectByName(name)
                 self.menu().objects.remove(object)
+            self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
             # REBUILD INDEX
             self.updateBottom()
             self.modified.emit()
@@ -560,14 +578,14 @@ class SlimSplitterHandle(QSplitterHandle):
 #  Navigation tree item
 # ------------------------------------------------------------------------------
 
-class NavigationItem(QTreeWidgetItem):
+class Page(QTreeWidgetItem):
 
-    def __init__(self, parent, name, top, bottom):
-        super(NavigationItem, self).__init__(parent, [name])
+    def __init__(self, name, top, bottom, parent = None):
+        super(Page, self).__init__(parent, [name])
         self.name = name
         self.top = top
         self.bottom = bottom
-        if not isinstance(parent, NavigationItem):
+        if not isinstance(parent, Page):
             # Hilight root items in bold text.
             font = self.font(0)
             font.setBold(True)
@@ -655,24 +673,22 @@ class BottomWidget(QWidget):
         self.toolbar.setAutoFillBackground(True)
         layout = QHBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
-        self.addButton = QPushButton(Toolbox.createIcon('actions', 'list-add'), "Add...", self)
+        self.addButton = QPushButton(Toolbox.createIcon("list-add"), "Add...", self)
         self.addButton.clicked.connect(self.onAdd)
         layout.addWidget(self.addButton)
         layout.addStretch(10)
-        self.editButton = QPushButton(Toolbox.createIcon('apps', 'text-editor'), "Edit...", self)
+        self.editButton = QPushButton(Toolbox.createIcon("text-editor"), "Edit...", self)
         self.editButton.clicked.connect(self.onEdit)
         layout.addWidget(self.editButton)
-        self.copyButton = QPushButton(Toolbox.createIcon('actions', 'edit-copy'), "Copy...", self)
+        self.copyButton = QPushButton(Toolbox.createIcon("edit-copy"), "Copy...", self)
         self.copyButton.clicked.connect(self.onCopy)
         layout.addWidget(self.copyButton)
-        self.removeButton = QPushButton(Toolbox.createIcon('actions', 'list-remove'), "Delete", self)
+        self.removeButton = QPushButton(Toolbox.createIcon("list-remove"), "Remove", self)
         self.removeButton.clicked.connect(self.onRemove)
         layout.addWidget(self.removeButton)
         self.toolbar.setLayout(layout)
-        self.notice = QLabel(self)
-        self.notice.hide()
+        self.notice = Toolbox.IconLabel(QIcon(), QString(), self)
         self.notice.setAutoFillBackground(True)
-        self.notice.setStyleSheet("padding:10px;")
         self.textEdit = QTextEdit(self)
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("BottomWidgetTextEdit")
@@ -688,11 +704,19 @@ class BottomWidget(QWidget):
         layout.addWidget(self.textEdit)
         self.setLayout(layout)
 
-    def setToolbarVisible(self, visible):
-        self.toolbar.setVisible(visible)
+    def setNotice(self, text, icon = None):
+        self.notice.show()
+        self.notice.icon.hide()
+        self.notice.icon.clear()
+        self.notice.setText(text)
+        if icon:
+            self.notice.icon.show()
+            self.notice.setIcon(icon)
 
-    def setNoticeVisible(self, visible):
-        self.notice.setVisible(visible)
+    def clearNotice(self):
+        self.notice.hide()
+        self.notice.icon.clear()
+        self.notice.label.clear()
 
     def setButtonsEnabled(self, enabled):
         self.editButton.setEnabled(enabled)

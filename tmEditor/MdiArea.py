@@ -44,7 +44,7 @@ class MdiArea(QTabWidget):
             self.setCurrentWidget(result[0])
             return self.currentIndex()
         document.modified.connect(self.documentChanged)
-        return self.addTab(document, Toolbox.createIcon("mimetypes", "document"), document.name())
+        return self.addTab(document, Toolbox.createIcon("document"), document.name())
 
     @pyqtSlot()
     def currentDocument(self):

@@ -21,6 +21,7 @@ from CutEditor import CutEditorDialog
 
 from AboutDialog import AboutDialog
 from OpenUrlDialog import OpenUrlDialog
+from ImportDialog import ImportDialog
 from Document import Document
 from MdiArea import MdiArea
 from MainWindow import MainWindow

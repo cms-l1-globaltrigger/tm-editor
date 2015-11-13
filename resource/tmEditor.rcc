@@ -1,5 +1,10 @@
 <!DOCTYPE RCC><RCC version="1.0">
   <qresource>
     <file alias="icons/tm-editor.svg">share/icons/hicolor/scalable/apps/tm-editor.svg</file>
+    <file alias="icons/mu.svg">share/tm-editor/icons/object_mu.svg</file>
+    <file alias="icons/eg.svg">share/tm-editor/icons/object_eg.svg</file>
+    <file alias="icons/jet.svg">share/tm-editor/icons/object_jet.svg</file>
+    <file alias="icons/tau.svg">share/tm-editor/icons/object_tau.svg</file>
+    <file alias="icons/esums.svg">share/tm-editor/icons/object_esums.svg</file>
   </qresource>
 </RCC>

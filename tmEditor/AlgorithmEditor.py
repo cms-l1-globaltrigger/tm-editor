@@ -22,6 +22,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import sys, os
+import logging
 
 MaxAlgorithms = 512
 
@@ -41,9 +42,10 @@ class AlgorithmEditor(QMainWindow):
         self.formatter = AlgorithmFormatter()
         self.setModified(False)
         #
-        self.indexSpinBox = QSpinBox(self)
+        self.indexSpinBox = Toolbox.ListSpinBox([0], self)
+        self.updateFreeIndices()
         self.indexSpinBox.setMaximum(MaxAlgorithms)
-        self.indexSpinBox.setMinimumWidth(100)
+        self.indexSpinBox.setMinimumWidth(60)
         self.nameComboBox = QLineEdit(self)
         self.nameComboBox.setMinimumWidth(300)
         # Create actions and toolbars.
@@ -73,15 +75,30 @@ class AlgorithmEditor(QMainWindow):
     def createActions(self):
         """Create actions."""
         self.formatCompactAct = QAction(self.tr("&Compact"), self)
-        self.formatCompactAct.setIcon(Toolbox.createIcon('actions', 'zoom-out'))
+        self.formatCompactAct.setIcon(Toolbox.createIcon("zoom-out"))
         self.formatCompactAct.triggered.connect(self.onFormatCompact)
         self.formatExpandAct = QAction(self.tr("&Expand"), self)
-        self.formatExpandAct.setIcon(Toolbox.createIcon('actions', 'zoom-in'))
+        self.formatExpandAct.setIcon(Toolbox.createIcon("zoom-in"))
         self.formatExpandAct.triggered.connect(self.onFormatExpand)
+        self.undoAct = QAction(self.tr("&Undo"), self)
+        self.undoAct.setShortcut(QKeySequence.Undo)
+        self.undoAct.setIcon(Toolbox.createIcon("edit-undo"))
+        self.undoAct.triggered.connect(self.onUndo)
+        self.redoAct = QAction(self.tr("&Redo"), self)
+        self.redoAct.setShortcut(QKeySequence.Redo)
+        self.redoAct.setIcon(Toolbox.createIcon("edit-redo"))
+        self.redoAct.triggered.connect(self.onRedo)
+        self.selectIndexAct = QAction(self.tr("Select &Index"), self)
+        self.selectIndexAct.setIcon(Toolbox.createIcon("search"))
+        self.selectIndexAct.triggered.connect(self.onSelectIndex)
 
     def createMenus(self):
         """Create menus."""
-        # self.editMenu = self.menuBar().addMenu(self.tr("&Edit"))
+        self.editMenu = self.menuBar().addMenu(self.tr("&Edit"))
+        self.editMenu.addAction(self.undoAct)
+        self.editMenu.addAction(self.redoAct)
+        self.editMenu.addSeparator()
+        self.editMenu.addAction(self.selectIndexAct)
         self.formatMenu = self.menuBar().addMenu(self.tr("&Format"))
         self.formatMenu.addAction(self.formatCompactAct)
         self.formatMenu.addAction(self.formatExpandAct)
@@ -94,6 +111,9 @@ class AlgorithmEditor(QMainWindow):
         self.toolbar.setMovable(False)
         self.toolbar.setFloatable(False)
         # self.toolbar.addSeparator()
+        self.toolbar.addAction(self.undoAct)
+        self.toolbar.addAction(self.redoAct)
+        self.toolbar.addSeparator()
         self.toolbar.addAction(self.formatCompactAct)
         self.toolbar.addAction(self.formatExpandAct)
         self.toolbar.addSeparator()
@@ -101,6 +121,7 @@ class AlgorithmEditor(QMainWindow):
         self.toolbar.addWidget(self.nameComboBox)
         self.toolbar.addWidget(QLabel(self.tr("  Index "), self))
         self.toolbar.addWidget(self.indexSpinBox)
+        self.toolbar.addAction(self.selectIndexAct)
 
     def createDocks(self):
         """Create dock widgets."""
@@ -144,20 +165,47 @@ class AlgorithmEditor(QMainWindow):
     def setModified(self, modified):
         self._isModified = bool(modified)
 
+    def replacePlainText(self, expression):
+        cursor = self.textEdit.textCursor()
+        cursor.clearSelection()
+        cursor.movePosition(QTextCursor.Start);
+        cursor.movePosition(QTextCursor.End, QTextCursor.KeepAnchor)
+        cursor.insertText(expression)
+
+    def onUndo(self):
+        self.textEdit.document().undo()
+
+    def onRedo(self):
+        self.textEdit.document().redo()
+
     def onTextChanged(self):
         self.setModified(True)
+        self.undoAct.setEnabled(self.textEdit.document().isUndoAvailable())
+        self.redoAct.setEnabled(self.textEdit.document().isRedoAvailable())
 
     def onIndexChanged(self):
         pass
 
+    def onSelectIndex(self):
+        index = self.index()
+        # Get list of already used indices but remove current index as it is matter of this operation.
+        reserved = [i for i in range(MaxAlgorithms) if self.menu.algorithmByIndex(i) is not None]
+        if index in reserved:
+            reserved.remove(index)
+        dialog = AlgorithmSelectionDialog(index, reserved, self)
+        dialog.setModal(True)
+        if dialog.exec_() == QDialog.Accepted:
+            logging.debug("Selected new algorithm index %d", dialog.index)
+            self.setIndex(dialog.index)
+
     def onFormatCompact(self):
-        modified = self.isModified() # Foramtting does not count as change.
-        self.textEdit.setPlainText(self.formatter.humanize(self.expression()))
+        modified = self.isModified() # Formatting does not count as change.
+        self.replacePlainText(self.formatter.humanize(self.expression()))
         self.setModified(modified)
 
     def onFormatExpand(self):
-        modified = self.isModified() # Foramtting does not count as change.
-        self.textEdit.setPlainText(self.formatter.expanded(self.expression()))
+        modified = self.isModified() # Formatting does not count as change.
+        self.replacePlainText(self.formatter.expanded(self.expression()))
         self.setModified(modified)
 
     def onInsertItem(self, text):
@@ -180,6 +228,19 @@ class AlgorithmEditor(QMainWindow):
                 text = text + " "
         cursor.insertText(text)
         self.textEdit.ensureCursorVisible()
+
+    def updateFreeIndices(self, ignore = None):
+        # Get list of free indices.
+        #
+        # Buggy.....
+        #
+        reserved = set([i for i in range(MaxAlgorithms) if self.menu.algorithmByIndex(i) is not None])
+        indices = set(range(MaxAlgorithms)) - reserved
+        if ignore is not None:
+            indices.add(ignore)
+        self.indexSpinBox.setValues(list(indices))
+        if ignore is not None:
+            self.indexSpinBox.setValue(ignore)
 
 # -----------------------------------------------------------------------------
 #  Algorithm editor dialog (modal)
@@ -245,6 +306,7 @@ class AlgorithmEditorDialog(QDialog):
         self.setName(algorithm.name)
         self.setExpression(algorithm.expression)
         self.setComment(algorithm.comment)
+        self.editor.updateFreeIndices(int(algorithm.index)) # brrr
 
     def updateAlgorithm(self, algorithm):
         algorithm['index'] = str(self.index())
@@ -369,7 +431,7 @@ class LibraryWidget(QWidget):
         self.operatorsList.addItems([name for name, _ in self.Operators])
         self.tabWidget.addTab(self.operatorsList, "O&ps")
         # Insert button.
-        self.insertButton = QPushButton(Toolbox.createIcon('actions', 'insert-text'), self.tr("&Insert"), self)
+        self.insertButton = QPushButton(Toolbox.createIcon("insert-text"), self.tr("&Insert"), self)
         self.insertButton.clicked.connect(self.onInsert)
         self.insertButton.setDefault(False)
         ###self.insertButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -405,7 +467,20 @@ class LibraryWidget(QWidget):
         """Populate library lists with content from menu."""
         # Build list of objects.
         self.objectsList.clear()
-        self.objectsList.addItems(sorted([obj.name for obj in self.menu.objects]))
+        for name in sorted([obj.name for obj in self.menu.objects]):
+            icon = QIcon()
+            if name.startswith("MU"):
+                icon.addPixmap(QIcon(":/icons/mu.svg").pixmap(12, 12))
+            if name.startswith("EG"):
+                icon.addPixmap(QIcon(":/icons/eg.svg").pixmap(12, 12))
+            if name.startswith("TAU"):
+                icon.addPixmap(QIcon(":/icons/tau.svg").pixmap(12, 12))
+            if name.startswith("JET"):
+                icon.addPixmap(QIcon(":/icons/jet.svg").pixmap(12, 12))
+            if name.startswith("ET") or name.startswith("HT"):
+                icon.addPixmap(QIcon(":/icons/esums.svg").pixmap(12, 12))
+            item = QListWidgetItem(icon, name)
+            self.objectsList.addItem(item)
         # Build list of cuts.
         self.cutsList.clear()
         self.cutsList.addItems(sorted([cut.name for cut in self.menu.cuts]))
@@ -476,3 +551,73 @@ class LibraryWidget(QWidget):
     def onInsert(self):
         """Insert selected item from active library list."""
         self.selected.emit(self.tabWidget.currentWidget().currentItem().text())
+
+# -----------------------------------------------------------------------------
+#  Index selection dialog.
+# -----------------------------------------------------------------------------
+
+class AlgorithmSelectionDialog(QDialog):
+    """Dialog for graphical selection of algorithm index.
+    Displays a colored button grid representing all available index slots.
+    Already used indexes are colored red, free are colored green. User can assign
+    an index by clicking a free index button.
+    """
+    # Define size of the index grid.
+    ColumnCount = 16
+    RowCount    = MaxAlgorithms // ColumnCount
+
+    def __init__(self, index, reserved, parent = None):
+        super(AlgorithmSelectionDialog, self).__init__(parent)
+        self.setWindowTitle(self.tr("Select Index"))
+        self.resize(590, 300)
+        self.index = index
+        # Button box with cancel button
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.buttonBox.button(QDialogButtonBox.Cancel).setAutoDefault(False)
+        self.buttonBox.button(QDialogButtonBox.Cancel).clicked.connect(self.reject)
+        # Layout to add Buttons
+        gridLayout = QGridLayout()
+        gridLayout.setHorizontalSpacing(2)
+        gridLayout.setVerticalSpacing(2)
+        self.gridWidget = QWidget(self)
+        # Create a scroll area for the preview
+        self.scrollArea = QScrollArea(self)
+        self.scrollArea.setWidgetResizable(True)
+        # Variable to iterate over all indices.
+        index = 0
+        # Add items to the grid in the scroll area
+        for row in range(self.RowCount):
+            for column in range(self.ColumnCount):
+                if index >= MaxAlgorithms:
+                    break
+                button = QPushButton(str(index), self)
+                button.setCheckable(True)
+                button.setFixedSize(30, 30)
+                button.clicked[bool].connect(self._updateIndex)
+                gridLayout.addWidget(button, row, column)
+                if index in reserved:
+                    # if index is not available, button can not be clicked
+                    button.setEnabled(False)
+                    button.setChecked(True)
+                if index == self.index:
+                    # In Edition-Action Original Index is always enabled
+                    button.setChecked(True)
+                    self.currentButton = button
+                # Increment index.
+                index += 1
+        # Layout for Dailog Window
+        self.gridWidget.setLayout(gridLayout)
+        self.scrollArea.setWidget(self.gridWidget)
+        layout = QVBoxLayout()
+        layout.addWidget(self.scrollArea)
+        bottomLayout = QHBoxLayout()
+        bottomLayout.addWidget(Toolbox.IconLabel(Toolbox.createIcon("info"), self.tr("Select a free algorithm index."), self))
+        bottomLayout.addWidget(self.buttonBox)
+        layout.addLayout(bottomLayout)
+        self.setLayout(layout)
+        self.scrollArea.ensureWidgetVisible(self.currentButton)
+
+    def _updateIndex(self):
+        """Get new index from the button."""
+        self.index = int(str(self.sender().text())) # From QString to integer.
+        self.accept()

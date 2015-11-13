@@ -24,6 +24,10 @@ import urllib2
 
 __all__ = ['OpenUrlDialog', ]
 
+#
+# Open URL dialog
+#
+
 class OpenUrlDialog(QDialog):
     """Dialog providing an URL input field."""
 

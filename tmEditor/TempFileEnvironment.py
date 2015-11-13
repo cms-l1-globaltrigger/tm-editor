@@ -7,6 +7,17 @@
 #
 
 """Temporary file environment for loading XSD.
+
+Required XSD files for validation must reside at the location specified in the
+header of the XML document to be parsed. In this case the files must reside all
+in the same directory.
+
+To overcome this limitation, a temporary directory is created, symbolic links to
+the required XSD files and the XML document are placed inside and the current
+working directory of the application is set to this temporary location.
+
+Afterwards it is reqired to restore the original working directory and removing
+the links and the temporary directory.
 """
 
 from tmEditor import Toolbox

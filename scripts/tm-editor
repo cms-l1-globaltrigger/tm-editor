@@ -7,8 +7,6 @@
 # Last changed date : $Date: $
 #
 
-import gtk # Load at first to prevent further GTK warnings.
-
 import tmEditor
 
 from PyQt4.QtCore import QSettings

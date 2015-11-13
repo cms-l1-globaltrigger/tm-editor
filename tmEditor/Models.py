@@ -28,13 +28,13 @@ AlignCenter = Qt.AlignCenter | Qt.AlignVCenter
 #  Base models
 # ------------------------------------------------------------------------------
 
-class BaseTableModel(QAbstractTableModel):
+class AbstractTableModel(QAbstractTableModel):
     """Abstract table model class to be inherited to display table data."""
 
     ColumnSpec = namedtuple('ColumnSpec', 'title, key, format, alignment, headerAlignment')
 
     def __init__(self, values, parent = None):
-        super(BaseTableModel, self).__init__(parent)
+        super(AbstractTableModel, self).__init__(parent)
         self.values = values
         self.columnSpecs = []
 
@@ -74,7 +74,7 @@ class BaseTableModel(QAbstractTableModel):
 #  Custom models
 # ------------------------------------------------------------------------------
 
-class AlgorithmsModel(BaseTableModel):
+class AlgorithmsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(AlgorithmsModel, self).__init__(menu.algorithms, parent)
@@ -86,7 +86,7 @@ class AlgorithmsModel(BaseTableModel):
     def insertRows(self, position, rows, parent = QModelIndex()):
         self.beginInsertRows(parent, position, position + rows - 1)
         for i in range(rows):
-            self.values.addAlgorithm(0, "name", "expression")
+            self.values.append(None)
         self.endInsertRows()
         return True
 
@@ -98,10 +98,11 @@ class AlgorithmsModel(BaseTableModel):
         self.endRemoveRows()
         return True
 
-class CutsModel(BaseTableModel):
+class CutsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(CutsModel, self).__init__(menu.cuts, parent)
+        self.menu = menu
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Type", 'type')
         self.addColumnSpec("Object", 'object')
@@ -112,7 +113,7 @@ class CutsModel(BaseTableModel):
     def insertRows(self, position, rows, parent = QModelIndex()):
         self.beginInsertRows(parent, position, position + rows - 1)
         for i in range(rows):
-            self.values.addCut(["name", "object", "type", 0, 0])
+            self.values.append(None)
         self.endInsertRows()
         return True
 
@@ -125,7 +126,7 @@ class CutsModel(BaseTableModel):
         return True
 
 
-class ObjectsModel(BaseTableModel):
+class ObjectsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(ObjectsModel, self).__init__(menu.objects, parent)
@@ -136,7 +137,25 @@ class ObjectsModel(BaseTableModel):
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
         self.addColumnSpec("Comment", 'comment')
 
-class ExternalsModel(BaseTableModel):
+    def data(self, index, role):
+        """Overloaded for experimental icon decoration."""
+        if index.isValid():
+            if index.column() == 0:
+                if role == Qt.DecorationRole:
+                    name = self.values[index.row()].name
+                    if name.startswith("MU"):
+                        return QIcon(":/icons/mu.svg")
+                    if name.startswith("EG"):
+                        return QIcon(":/icons/eg.svg")
+                    if name.startswith("TAU"):
+                        return QIcon(":/icons/tau.svg")
+                    if name.startswith("JET"):
+                        return QIcon(":/icons/jet.svg")
+                    if name.startswith("ET") or name.startswith("HT"):
+                        return QIcon(":/icons/esums.svg")
+        return super(ObjectsModel, self).data(index, role)
+
+class ExternalsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(ExternalsModel, self).__init__(menu.externals, parent)
@@ -148,7 +167,7 @@ class ExternalsModel(BaseTableModel):
         # self.addColumnSpec("ID", 'requirement_id', int, AlignRight, AlignRight)
         # self.addColumnSpec("ID2", 'ext_signal_id', int, AlignRight)
 
-class BinsModel(BaseTableModel):
+class BinsModel(AbstractTableModel):
 
     def __init__(self, menu, name, parent = None):
         super(BinsModel, self).__init__(menu.scales.bins[name], parent)
@@ -160,7 +179,7 @@ class BinsModel(BaseTableModel):
         self.addColumnSpec("Comment", 'comment')
         # self.addColumnSpec("ID", 'scale_id', int, AlignRight, AlignRight)
 
-class ExtSignalsModel(BaseTableModel):
+class ExtSignalsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(ExtSignalsModel, self).__init__(menu.extSignals.extSignals, parent)

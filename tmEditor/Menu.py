@@ -136,18 +136,19 @@ class Menu(object):
         # Add new objects to list.
         for item in algorithm.objects():
             if not self.objectByName(item):
-                print " add:", item
                 self.objects.append(toObject(item))
         # Add new external to list.
         for item in algorithm.externals():
             if not self.externalByName(item):
                 self.externals.append(toExternal(item))
-        print " global:", [o.name for o in self.objects]
-        print "--"
 
     def algorithmByName(self, name):
         """Returns algorithm item by its name or None if no such algorithm exists."""
         return (filter(lambda item: item.name == name, self.algorithms) or [None])[0]
+
+    def algorithmByIndex(self, index):
+        """Returns algorithm item by its index or None if no such algorithm exists."""
+        return (filter(lambda item: int(item.index) == int(index), self.algorithms) or [None])[0]
 
     def objectByName(self, name):
         """Returns object requirement item by its name or None if no such object requirement exists."""
@@ -524,6 +525,7 @@ class Object(AbstractDict):
 # ------------------------------------------------------------------------------
 
 class External(AbstractDict):
+
     @property
     def name(self):
         return self['name']

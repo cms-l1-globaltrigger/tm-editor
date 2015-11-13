@@ -12,6 +12,7 @@
 from tmEditor import (
     AboutDialog,
     OpenUrlDialog,
+    ImportDialog,
     Document,
     MdiArea,
     Toolbox,
@@ -71,41 +72,46 @@ class MainWindow(QMainWindow):
         self.openAct = QAction(self.tr("&Open..."), self)
         self.openAct.setShortcut(QKeySequence.Open)
         self.openAct.setStatusTip(self.tr("Open an existing file"))
-        self.openAct.setIcon(Toolbox.createIcon("actions", "document-open"))
+        self.openAct.setIcon(Toolbox.createIcon("document-open"))
         self.openAct.triggered.connect(self.onOpen)
         # Action for opening a file from URL.
         self.openUrlAct = QAction(self.tr("Open &URL..."), self)
         self.openUrlAct.setStatusTip(self.tr("Open a file from a remote location"))
+        self.openUrlAct.setIcon(Toolbox.createIcon("emblem-downloads"))
         self.openUrlAct.triggered.connect(self.onOpenUrl)
+        # Action for importing from another file.
+        self.importAct = QAction(self.tr("Import..."), self)
+        self.importAct.setStatusTip(self.tr("Import from existing file"))
+        self.importAct.triggered.connect(self.onImport)
         # Action for saving the current file.
         self.saveAct = QAction(self.tr("&Save"), self)
         self.saveAct.setShortcut(QKeySequence.Save)
         self.saveAct.setStatusTip(self.tr("Save the current file"))
-        self.saveAct.setIcon(Toolbox.createIcon("actions", "document-save"))
+        self.saveAct.setIcon(Toolbox.createIcon("document-save"))
         self.saveAct.triggered.connect(self.onSave)
         # Action for saving the current file with a different name.
-        self.saveAsAct = QAction(self.tr("&Save As..."), self)
+        self.saveAsAct = QAction(self.tr("Save &As..."), self)
         self.saveAsAct.setShortcut(QKeySequence.SaveAs)
         self.saveAsAct.setStatusTip(self.tr("Save the current file with a different name"))
-        self.saveAsAct.setIcon(Toolbox.createIcon("actions", "document-save-as"))
+        self.saveAsAct.setIcon(Toolbox.createIcon("document-save-as"))
         self.saveAsAct.triggered.connect(self.onSaveAs)
         # Action for closing the current file.
         self.closeAct = QAction(self.tr("&Close"), self)
         self.closeAct.setShortcut(QKeySequence.Close)
         self.closeAct.setStatusTip(self.tr("Close the current file"))
-        self.closeAct.setIcon(Toolbox.createIcon("actions", "window-close"))
+        self.closeAct.setIcon(Toolbox.createIcon("window-close"))
         self.closeAct.triggered.connect(self.onClose)
         # Action for quitting the program.
         self.quitAct = QAction(self.tr("&Quit"), self)
         self.quitAct.setShortcut(QKeySequence.Quit)
         self.quitAct.setStatusTip(self.tr("Quit the programm"))
-        self.quitAct.setIcon(Toolbox.createIcon("actions", "application-exit"))
+        self.quitAct.setIcon(Toolbox.createIcon("application-exit"))
         self.quitAct.triggered.connect(self.close)
         # Open contents help URL.
         self.contentsAction = QAction(self.tr("&Contents"), self)
         self.contentsAction.setShortcut(QKeySequence(Qt.Key_F1))
         self.contentsAction.setStatusTip(self.tr("Open L1 Trigger Menu online manual"))
-        self.contentsAction.setIcon(Toolbox.createIcon("actions", "help-about"))
+        self.contentsAction.setIcon(Toolbox.createIcon("help-about"))
         self.contentsAction.triggered.connect(self.onShowContents)
         # Action to raise about dialog.
         self.aboutAction = QAction(self.tr("&About"), self)
@@ -118,6 +124,8 @@ class MainWindow(QMainWindow):
         self.fileMenu = self.menuBar().addMenu(self.tr("&File"))
         self.fileMenu.addAction(self.openAct)
         self.fileMenu.addAction(self.openUrlAct)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.importAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.saveAct)
         self.fileMenu.addAction(self.saveAsAct)
@@ -135,6 +143,8 @@ class MainWindow(QMainWindow):
         self.toolbar.setMovable(False)
         self.toolbar.setFloatable(False)
         self.toolbar.addAction(self.openAct)
+        self.toolbar.addAction(self.openUrlAct)
+        self.toolbar.addSeparator()
         self.toolbar.addAction(self.saveAct)
         self.toolbar.addAction(self.saveAsAct)
 
@@ -171,6 +181,7 @@ class MainWindow(QMainWindow):
     def syncActions(self):
         """Disable some actions if no document is opened."""
         enabled = bool(self.mdiArea.count())
+        self.importAct.setEnabled(enabled)
         self.saveAct.setEnabled(enabled)
         self.saveAsAct.setEnabled(enabled)
         self.closeAct.setEnabled(enabled)
@@ -200,22 +211,31 @@ class MainWindow(QMainWindow):
                         raise RuntimeError("Unable to open URL")
                     fileSize = int(contentLength[0])
                     logging.info("fetching %s bytes from %s", fileSize, url)
-                    # Create a temorary file buffer.
-                    with tempfile.NamedTemporaryFile(bufsize = fileSize) as f:
-                        receivedSize = 0
-                        blockSize = 1024 * 8
-                        while True:
-                            buffer = u.read(blockSize)
-                            if not buffer:
-                                break
-                            receivedSize += len(buffer)
-                            f.write(buffer)
-                        # Reset file pointer so make sure document is read from
-                        # begin. Note: do not close the temporary file as it
-                        # will vanish (see python tempfile.NamedTemporaryFile).
-                        f.seek(0)
-                        # Create document by reading temporary file.
-                        document = Document(f.name, self)
+                    dialog = ProgressDialog(fileSize, self)
+                    dialog.setModal(True)
+                    dialog.show()
+                    try:
+                        # Create a temorary file buffer.
+                        with tempfile.NamedTemporaryFile(bufsize = fileSize) as f:
+                            receivedSize = 0
+                            blockSize = 1024 * 8
+                            while True:
+                                buffer = u.read(blockSize)
+                                if not buffer:
+                                    break
+                                receivedSize += len(buffer)
+                                f.write(buffer)
+                                dialog.setReceivedSize(receivedSize)
+                            # Reset file pointer so make sure document is read from
+                            # begin. Note: do not close the temporary file as it
+                            # will vanish (see python tempfile.NamedTemporaryFile).
+                            f.seek(0)
+                            # Create document by reading temporary file.
+                            document = Document(f.name, self)
+                        dialog.close()
+                    except:
+                        dialog.close()
+                        raise
             # Else it is a local filesystem path.
             else:
                 document = Document(filename, self)
@@ -249,6 +269,40 @@ class MainWindow(QMainWindow):
         self.loadDocument(dialog.url())
         dialog.storeRecentUrls()
 
+    def onImport(self):
+        """Import algorithms from another XML file."""
+        path = os.getcwd() # Default is user home dir on desktop environments.
+        if self.mdiArea.currentDocument():
+            path = os.path.dirname(self.mdiArea.currentDocument().filename())
+            filename = str(QFileDialog.getOpenFileName(self, self.tr("Import file..."),
+                path, self.tr("L1-Trigger Menus (*.xml)")))
+            if filename:
+                dialog = ImportDialog(filename, self.mdiArea.currentDocument().menu(), self)
+                dialog.setModal(True)
+                dialog.exec_()
+                if dialog.result() != QDialog.Accepted:
+                    return
+                # ADD OBJECTS TO DOCUMENT
+                # Damn... move that to document's logic...
+                document = self.mdiArea.currentDocument()
+                menu = document.menu()
+                try:
+                    for cut in dialog.cuts:
+                        menu.addCut(**cut)
+                    for algorithm in dialog.algorithms:
+                        menu.addAlgorithm(**algorithm)
+                        menu.updateAlgorithm(algorithm)
+                    document.algorithmsPage.top.model().setSourceModel(document.algorithmsPage.top.model().sourceModel())
+                    document.cutsPage.top.model().setSourceModel(document.cutsPage.top.model().sourceModel())
+                    document.objectsPage.top.model().setSourceModel(document.objectsPage.top.model().sourceModel())
+                    # Damn... move that to document's logic...
+                except (RuntimeError, ValueError), e:
+                    QMessageBox.critical(self,
+                        self.tr("Import error"),
+                        str(e),
+                    )
+
+
     def onSave(self):
         document = self.mdiArea.currentDocument()
         try:
@@ -278,6 +332,7 @@ class MainWindow(QMainWindow):
                     self.tr("Failed to write XML menu"),
                     str(e),
                 )
+        self.syncActions()
 
     def onClose(self):
         """Removes the current active document."""
@@ -301,9 +356,32 @@ class MainWindow(QMainWindow):
                 return
         event.accept()
 
-# -----------------------------------------------------------------------------
-#  Main application routine
-# -----------------------------------------------------------------------------
+#
+# Download progress dialog.
+#
+
+class ProgressDialog(QDialog):
+    """Dialog with progress bar displaying the donload progress."""
+
+    def __init__(self, bytes, parent = None):
+        super(ProgressDialog, self).__init__(parent)
+        flags = self.windowFlags()
+        flags &= ~Qt.WindowCloseButtonHint
+        flags |= Qt.WindowMinimizeButtonHint
+        self.setWindowFlags(flags)
+        self.setWindowTitle(self.tr("Loading..."))
+        self.progressBar = QProgressBar(self)
+        self.progressBar.setMaximum(bytes)
+        layout = QVBoxLayout()
+        layout.addWidget(self.progressBar)
+        self.setLayout(layout)
+
+    def setReceivedSize(self, bytes):
+        self.progressBar.setValue(bytes)
+
+#
+# Main application routine
+#
 
 def main():
     app = QApplication(sys.argv)
