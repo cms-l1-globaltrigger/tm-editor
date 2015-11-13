@@ -1,6 +1,6 @@
 tm-editor (0.1.7-1) extra; urgency=medium
 
-  * Importing algorithms from another XML document.
+  * Importing algorithms from another XML document (experimental).
   * Improved Open URL dialog, including download progress bar.
   * Improved Algorithm editor, including graphical index selection and
     a more reliable undo/redo queue.

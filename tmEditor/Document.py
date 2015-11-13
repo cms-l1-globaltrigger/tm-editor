@@ -232,7 +232,7 @@ class Document(QWidget):
         return None, item
 
     def getUnusedAlgorithmIndices(self):
-        free = [i for i in range(512)]
+        free = [i for i in range(MaxAlgorithms)]
         for algorithm in self.menu().algorithms:
             if int(algorithm.index) in free:
                 free.remove(int(algorithm.index))
@@ -349,6 +349,41 @@ class Document(QWidget):
             item.bottom.setNotice(self.tr("New external requirements are created directly in the algorithm editor."), Toolbox.createIcon("info"))
         else:
             item.bottom.toolbar.hide()
+
+    def importCuts(self, cuts):
+        """Import cuts from another menu."""
+        for cut in cuts:
+            self.menu().addCut(**cut)
+        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+
+    def importAlgorithms(self, algorithms):
+        """Import algorithms from another menu."""
+        for algorithm in algorithms:
+            for cut in algorithm.cuts():
+                if not self.menu().cutByName(cut):
+                    raise RuntimeError("Missing cut {cut}, unable to to import algorithm {algorithm.name}".format(**locals()))
+            import_index = 0
+            original_name = algorithm.name
+            while self.menu().algorithmByName(algorithm.name):
+                name = "{original_name}_import{import_index}".format(**locals())
+                algorithm['name'] = name
+                import_index += 1
+            if import_index:
+                QMessageBox.information(self,
+                    self.tr("Renamed algorithm"),
+                    QString("Renamed algorithm <em>%1</em> to <em>%2</em> as the name is already used.").arg(original_name).arg(algorithm.name)
+                )
+            if self.menu().algorithmByIndex(algorithm.index):
+                index = self.getUnusedAlgorithmIndices()[0]
+                QMessageBox.information(self,
+                    self.tr("Relocating algorithm"),
+                    QString("Moving algorithm <em>%1</em> from already used index %2 to free index %3.").arg(algorithm.name).arg(algorithm.index).arg(index),
+                )
+                algorithm['index'] = index
+            self.menu().addAlgorithm(**algorithm)
+            self.menu().updateAlgorithm(algorithm)
+        self.algorithmsPage.top.model().setSourceModel(self.algorithmsPage.top.model().sourceModel())
+        self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
 
     def addItem(self):
         try:

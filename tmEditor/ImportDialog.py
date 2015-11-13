@@ -76,15 +76,10 @@ class ImportDialog(QDialog):
         for index in self.tableView.selectedIndexes():
             if index.column() == 0:
                 # Use the assigned proxy model to map the index.
+                #
+                # CLEAN UP THE MESS
                 index = self.tableView.model().mapToSource(index)
                 algorithm = self.menu.algorithms[index.row()]
-                if self.baseMenu.algorithmByIndex(algorithm.index):
-                    freeIndices = [i for i in range(MaxAlgorithms) if self.menu.algorithmByIndex(i) is None]
-                    algorithm.index = freeIndices[0]
-                    QMessageBox.information(self,
-                        self.tr("Relocating"),
-                        QString("Moving algorithm <em>%1</em> from already used index %2 to free index %3.").arg(algorithm.name).arg(algorithm.index).arg(freeIndices[0]),
-                    )
                 self.algorithms.append(algorithm)
                 for name in algorithm.cuts():
                     cut = self.menu.cutByName(name)

@@ -285,20 +285,11 @@ class MainWindow(QMainWindow):
                 dialog.exec_()
                 if dialog.result() != QDialog.Accepted:
                     return
-                # ADD OBJECTS TO DOCUMENT
-                # Damn... move that to document's logic...
-                document = self.mdiArea.currentDocument()
-                menu = document.menu()
+                # Import cuts and algorithms.
                 try:
-                    for cut in dialog.cuts:
-                        menu.addCut(**cut)
-                    for algorithm in dialog.algorithms:
-                        menu.addAlgorithm(**algorithm)
-                        menu.updateAlgorithm(algorithm)
-                    document.algorithmsPage.top.model().setSourceModel(document.algorithmsPage.top.model().sourceModel())
-                    document.cutsPage.top.model().setSourceModel(document.cutsPage.top.model().sourceModel())
-                    document.objectsPage.top.model().setSourceModel(document.objectsPage.top.model().sourceModel())
-                    # Damn... move that to document's logic...
+                    document = self.mdiArea.currentDocument()
+                    document.importCuts(dialog.cuts)
+                    document.importAlgorithms(dialog.algorithms)
                 except (RuntimeError, ValueError), e:
                     QMessageBox.critical(self,
                         self.tr("Import error"),
