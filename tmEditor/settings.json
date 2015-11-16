@@ -243,7 +243,7 @@
       "precision": 1,
       "stepwidth": 0.1,
       "title": "Delta-R",
-      "description": "Applies delta-R restriction to combination of two objects.<br/>&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span>"
+      "description": "Applies delta-R restriction to combination of two objects.<br/><br/>&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span>"
     },
     {
       "name": "MASS",
@@ -252,7 +252,8 @@
       "objects": ["MU", "EG", "JET", "TAU"],
       "precision": 1,
       "step": 0.2,
-      "title": "Invariant mass restriction."
+      "title": "Invariant mass",
+      "description": "Applies invariant mass restriction to combination of two objects.<br/><br/>M = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span>"
     },
     {
       "enabled": false,
