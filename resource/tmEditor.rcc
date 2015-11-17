@@ -7,5 +7,6 @@
     <file alias="icons/jet.svg">share/tm-editor/icons/16x16/object_jet.svg</file>
     <file alias="icons/tau.svg">share/tm-editor/icons/16x16/object_tau.svg</file>
     <file alias="icons/esums.svg">share/tm-editor/icons/16x16/object_esums.svg</file>
+    <file alias="icons/compare.svg">share/tm-editor/icons/16x16/compare.svg</file>
   </qresource>
 </RCC>

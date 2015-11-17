@@ -11,6 +11,7 @@
       "name": "MU-PHI",
       "object": "MU",
       "type": "PHI",
+      "unit": "rad",
       "title": "Muon phi",
       "description": "Restricts valid phi range for muon object requirement."
     },
@@ -56,6 +57,7 @@
       "object": "MU",
       "type": "CHG",
       "title": "Muon charge",
+      "data_exclusive": true,
       "data": {
         "0": "positive",
         "1": "negative"
@@ -71,9 +73,11 @@
       "name": "EG-PHI",
       "object": "EG",
       "type": "PHI",
+      "unit": "rad",
       "title": "Electron/gamma phi"
     },
     {
+      "enabled": false,
       "name": "EG-QLTY",
       "object": "EG",
       "type": "QLTY",
@@ -119,9 +123,11 @@
       "name": "JET-PHI",
       "object": "JET",
       "type": "PHI",
+      "unit": "rad",
       "title": "Jet phi"
     },
     {
+      "enabled": false,
       "name": "JET-QLTY",
       "object": "JET",
       "type": "QLTY",
@@ -155,9 +161,11 @@
       "name": "TAU-PHI",
       "object": "TAU",
       "type": "PHI",
+      "unit": "rad",
       "title": "Tau phi"
     },
     {
+      "enabled": false,
       "name": "TAU-QLTY",
       "object": "TAU",
       "type": "QLTY",
@@ -197,12 +205,14 @@
       "name": "ETM-PHI",
       "object": "ETM",
       "type": "PHI",
+      "unit": "rad",
       "title": "Missing energy phi"
     },
     {
       "name": "HTM-PHI",
       "object": "HTM",
       "type": "PHI",
+      "unit": "rad",
       "title": "Missing energy phi"
     },
     {
@@ -212,8 +222,9 @@
       "objects": ["MU", "EG", "JET", "TAU"],
       "title": "Charge correlation",
       "description": "Applies charge correlation restriction to combination of two objects.\nExample: comb{MU20, MU20}[CHGCOR_OP]",
+      "data_exclusive": true,
       "data": {
-        "0": "same sign",
+        "0": "like sign",
         "1": "opposite sign"
       }
     },
@@ -232,6 +243,7 @@
       "type": "DPHI",
       "objects": ["MU", "EG", "JET", "TAU"],
       "precision": 3,
+      "unit": "rad",
       "title": "Delta phi",
       "description": "Applies delta phi restriction to combination of two objects."
     },
@@ -252,6 +264,7 @@
       "objects": ["MU", "EG", "JET", "TAU"],
       "precision": 1,
       "step": 0.2,
+      "unit": "GeV",
       "title": "Invariant mass",
       "description": "Applies invariant mass restriction to combination of two objects.<br/><br/>M = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span>"
     },

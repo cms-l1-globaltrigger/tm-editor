@@ -101,17 +101,17 @@ class DataField(QScrollArea):
         super(DataField, self).__init__(parent)
         self.clear()
 
-    def setEntries(self, labels):
+    def setEntries(self, labels, exclusive = False):
         """Labels require a sorted list data entry labels. The size determines
-        the overall size of data entries assigned."""
+        the overall size of data entries assigned. If set exclusive the default
+        chekc boxes are replaced by radio buttons."""
         self.clear()
         widget = QWidget(self)
         layout = QVBoxLayout(self)
         for label in labels:
-            checkBox = QCheckBox(label, self)
-            # checkBox.setToolTip()
-            self.checkBoxes.append(checkBox)
-            layout.addWidget(checkBox)
+            entry = QRadioButton(label, self) if exclusive else QCheckBox(label, self)
+            self.entries.append(entry)
+            layout.addWidget(entry)
         widget.setLayout(layout)
         self.setWidget(widget)
 
@@ -119,12 +119,12 @@ class DataField(QScrollArea):
         """Clears all data entries."""
         widget = QWidget(self)
         self.setWidget(widget)
-        self.checkBoxes = []
+        self.entries = []
 
     def data(self):
         """Returns comma separated list of enabled data entries."""
         indexes = []
-        for index, checkBox in enumerate(self.checkBoxes):
+        for index, checkBox in enumerate(self.entries):
             if checkBox.isChecked():
                 indexes.append(str(index))
         return ','.join(indexes)
@@ -134,8 +134,8 @@ class DataField(QScrollArea):
         # Convert from comma separated string list to list of integers.
         data = [int(index) for index in data.split(',')] if data else []
         for index in data:
-            if index < len(self.checkBoxes):
-                self.checkBoxes[index].setChecked(True)
+            if index < len(self.entries):
+                self.entries[index].setChecked(True)
 
 class CutEditorDialog(QDialog):
     """Dialog providing cut creation/editing interface."""
@@ -162,14 +162,20 @@ class CutEditorDialog(QDialog):
             # Check if item is disabled: { enabled: false } [optional]
             if spec.enabled:
                 self.typeComboBox.addItem(spec.name, spec)
+        # Sizes
+        unitLabelSizePolicy = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         # Minimum
         self.minimumLabel = QLabel(self.tr("Minimum"), self)
         self.minimumSpinBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
         self.minimumRangeSpinBox = QDoubleSpinBox(self)
+        self.minimumUnitLabel = QLabel(self)
+        self.minimumUnitLabel.setSizePolicy(unitLabelSizePolicy)
         # Maximum
         self.maximumLabel = QLabel(self.tr("Maximum"), self)
         self.maximumSpinBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
         self.maximumRangeSpinBox = QDoubleSpinBox(self)
+        self.maximumUnitLabel = QLabel(self)
+        self.maximumUnitLabel.setSizePolicy(unitLabelSizePolicy)
         # Data
         self.dataLabel = QLabel(self.tr("Data"), self)
         self.dataField = DataField(self)
@@ -194,11 +200,13 @@ class CutEditorDialog(QDialog):
         hbox = QHBoxLayout()
         hbox.addWidget(self.minimumSpinBox)
         hbox.addWidget(self.minimumRangeSpinBox)
+        hbox.addWidget(self.minimumUnitLabel)
         gridLayout.addLayout(hbox, 2, 1)
         gridLayout.addWidget(self.maximumLabel, 3, 0)
         hbox = QHBoxLayout()
         hbox.addWidget(self.maximumSpinBox)
         hbox.addWidget(self.maximumRangeSpinBox)
+        hbox.addWidget(self.maximumUnitLabel)
         gridLayout.addLayout(hbox, 3, 1)
         gridLayout.addWidget(self.dataLabel, 4, 0)
         gridLayout.addWidget(self.dataField, 4, 1)
@@ -293,8 +301,9 @@ class CutEditorDialog(QDialog):
         self.setName(cut.name)
         self.updateEntries()
         if cut.type in (tmGrammar.ISO, tmGrammar.QLTY, tmGrammar.CHGCOR):
+            spec = self.spec()
             self.setDataEnabled(True)
-            self.dataField.setEntries(self.spec().sorted_data)
+            self.dataField.setEntries(spec.sorted_data, spec.data_exclusive)
             self.setData(cut.data)
         else:
             self.setRangeEnabled(True)
@@ -330,6 +339,7 @@ class CutEditorDialog(QDialog):
         """Set range inputs enabled, diables data input."""
         # Determine type of spin boxes
         mode = self.type() in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI)
+        spec = self.spec()
         self.minimumLabel.setEnabled(enabled)
         self.minimumSpinBox.setEnabled(enabled and not mode)
         self.minimumRangeSpinBox.setEnabled(enabled and mode)
@@ -341,11 +351,15 @@ class CutEditorDialog(QDialog):
         self.minimumLabel.setVisible(enabled)
         self.minimumSpinBox.setVisible(enabled and not mode)
         self.minimumRangeSpinBox.setVisible(enabled and mode)
+        self.minimumUnitLabel.setVisible(enabled and len(spec.unit))
         self.maximumLabel.setVisible(enabled)
         self.maximumSpinBox.setVisible(enabled and not mode)
         self.maximumRangeSpinBox.setVisible(enabled and mode)
+        self.maximumUnitLabel.setVisible(enabled and len(spec.unit))
         self.dataLabel.setVisible(not enabled)
         self.dataField.setVisible(not enabled)
+        self.minimumUnitLabel.setText(spec.unit)
+        self.maximumUnitLabel.setText(spec.unit)
 
     def setDataEnabled(self, enabled):
         """Set data input enabled, diables range inputs."""
@@ -383,7 +397,7 @@ class CutEditorDialog(QDialog):
             info.append("<p>{spec.description}</p>".format(**locals()))
         if spec.data:
             self.setDataEnabled(True)
-            self.dataField.setEntries(spec.sorted_data)
+            self.dataField.setEntries(spec.sorted_data, spec.data_exclusive)
         # Delta ranges
         elif self.type() in tmGrammar.DR:
             self.setRangeEnabled(True)

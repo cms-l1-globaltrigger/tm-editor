@@ -383,7 +383,9 @@ class Document(QWidget):
             self.menu().addAlgorithm(**algorithm)
             self.menu().updateAlgorithm(algorithm)
         self.algorithmsPage.top.model().setSourceModel(self.algorithmsPage.top.model().sourceModel())
+        self.algorithmsPage.top.resizeColumnsToContents()
         self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
+        self.objectsPage.top.resizeColumnsToContents()
 
     def addItem(self):
         try:
@@ -410,10 +412,12 @@ class Document(QWidget):
         self.menu().addAlgorithm(**algorithm)
         self.menu().updateAlgorithm(self.menu().algorithmByName(algorithm.name)) # IMPORTANT: add/update new objects!
         item.top.model().setSourceModel(item.top.model().sourceModel())
+        self.algorithmsPage.top.resizeColumnsToContents()
         # REBUILD INDEX
         self.updateBottom()
         self.modified.emit()
         self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
+        self.objectsPage.top.resizeColumnsToContents()
         for name in algorithm.cuts():
             if not filter(lambda item: item.name == name, self.menu().cuts):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
@@ -462,6 +466,7 @@ class Document(QWidget):
         self.modified.emit()
         self.menu().updateAlgorithm(algorithm)
         self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
+        self.objectsPage.top.resizeColumnsToContents()
         for name in algorithm.cuts():
             if not filter(lambda item: item.name == name, self.menu().cuts):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
@@ -504,6 +509,7 @@ class Document(QWidget):
         self.menu().algorithms.append(algorithm)
         item.top.model().setSourceModel(item.top.model().sourceModel())
         self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
+        self.objectsPage.top.resizeColumnsToContents()
         # REBUILD INDEX
         self.updateBottom()
         self.modified.emit()
@@ -561,6 +567,7 @@ class Document(QWidget):
                 object = self.menu().objectByName(name)
                 self.menu().objects.remove(object)
             self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
+            self.objectsPage.top.resizeColumnsToContents()
             # REBUILD INDEX
             self.updateBottom()
             self.modified.emit()

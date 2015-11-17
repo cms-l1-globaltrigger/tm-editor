@@ -31,43 +31,71 @@ AlignCenter = Qt.AlignCenter | Qt.AlignVCenter
 class AbstractTableModel(QAbstractTableModel):
     """Abstract table model class to be inherited to display table data."""
 
-    ColumnSpec = namedtuple('ColumnSpec', 'title, key, format, alignment, headerAlignment')
+    ColumnSpec = namedtuple('ColumnSpec', 'title, key, format, textAlignment, decoration, headerToolTip, headerDecoration, headerSizeHint, headerTextAlignment')
 
     def __init__(self, values, parent = None):
         super(AbstractTableModel, self).__init__(parent)
         self.values = values
         self.columnSpecs = []
 
-    def addColumnSpec(self, title, key, format = str, alignment = AlignLeft, headerAlignment = AlignCenter):
-        spec = self.ColumnSpec(title, key, format, alignment, headerAlignment)
+    def addColumnSpec(self, title, key, format=str, textAlignment=AlignLeft, decoration=QVariant(), headerToolTip=QVariant(), headerDecoration=QVariant(), headerSizeHint=QVariant(), headerTextAlignment=AlignCenter):
+        """Add a column to be displayed, assign data using a key."""
+        spec = self.ColumnSpec(title, key, format, textAlignment, decoration, headerToolTip, headerDecoration, headerSizeHint, headerTextAlignment)
         self.columnSpecs.append(spec)
         return spec
 
+    def addEmptyColumn(self):
+        """Add an empty column. Can be used for appending empty space to small
+        tables with view columns to prevent last column to get stretched."""
+        self.columnSpecs.append(None)
+
+    def toolTip(self, row, column):
+        """Reimplement this to provide data specific tool tip informations."""
+        return QVariant()
+
     def rowCount(self, parent):
+        """Number of rows to be displayed."""
         return len(self.values)
 
     def columnCount(self, parent):
+        """Number of columns to be displayed."""
         return len(self.columnSpecs)
 
     def data(self, index, role):
+        """Returns cell specific data."""
         if not index.isValid():
             return QVariant()
         row, column = index.row(), index.column()
+        spec = self.columnSpecs[column]
+        if not spec:
+            return QVariant()
         if role == Qt.DisplayRole:
-            spec = self.columnSpecs[column]
-            if spec.key not in self.values[row].keys():
-                return QVariant()
-            return spec.format(self.values[row][spec.key])
+            if spec.key in self.values[row].keys():
+                return spec.format(self.values[row][spec.key])
         if role == Qt.TextAlignmentRole:
-            return self.columnSpecs[column].alignment
+            return spec.textAlignment
+        if role == Qt.DecorationRole:
+            return spec.decoration
+        if role == Qt.ToolTipRole:
+            return self.toolTip(row, column)
         return QVariant()
 
     def headerData(self, section, orientation, role):
+        """Returns header specific data."""
+        spec = self.columnSpecs[section]
+        if not spec:
+            return QVariant()
         if orientation == Qt.Horizontal:
             if role == Qt.DisplayRole:
-                return self.columnSpecs[section].title
+                return spec.title
             if role == Qt.TextAlignmentRole:
-                return self.columnSpecs[section].headerAlignment
+                return spec.headerTextAlignment
+            if role == Qt.DecorationRole:
+                return spec.headerDecoration
+            if role == Qt.ToolTipRole:
+                return spec.headerToolTip
+            if role == Qt.SizeHintRole:
+                return spec.headerSizeHint
         return QVariant()
 
 # ------------------------------------------------------------------------------
@@ -75,6 +103,7 @@ class AbstractTableModel(QAbstractTableModel):
 # ------------------------------------------------------------------------------
 
 class AlgorithmsModel(AbstractTableModel):
+    """Default algorithms table model."""
 
     def __init__(self, menu, parent = None):
         super(AlgorithmsModel, self).__init__(menu.algorithms, parent)
@@ -99,6 +128,7 @@ class AlgorithmsModel(AbstractTableModel):
         return True
 
 class CutsModel(AbstractTableModel):
+    """Default cuts table model."""
 
     def __init__(self, menu, parent = None):
         super(CutsModel, self).__init__(menu.cuts, parent)
@@ -125,17 +155,17 @@ class CutsModel(AbstractTableModel):
         self.endRemoveRows()
         return True
 
-
 class ObjectsModel(AbstractTableModel):
+    """Default object requirements table model."""
 
     def __init__(self, menu, parent = None):
         super(ObjectsModel, self).__init__(menu.objects, parent)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Type", 'type')
-        self.addColumnSpec("Comparison", 'comparison_operator', fComparison, AlignRight)
+        self.addColumnSpec("", 'comparison_operator', fComparison, headerToolTip="Comparison++", headerDecoration=QIcon(":/icons/compare.svg"), headerSizeHint=QSize(26, -1))
         self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
-        self.addColumnSpec("Comment", 'comment')
+        self.addEmptyColumn()
 
     def data(self, index, role):
         """Overloaded for experimental icon decoration."""
@@ -156,16 +186,16 @@ class ObjectsModel(AbstractTableModel):
         return super(ObjectsModel, self).data(index, role)
 
 class ExternalsModel(AbstractTableModel):
+    """Default external siganls requirements table model."""
 
     def __init__(self, menu, parent = None):
         super(ExternalsModel, self).__init__(menu.externals, parent)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
-        self.addColumnSpec("Comment", 'comment')
-        # self.addColumnSpec("ID", 'requirement_id', int, AlignRight, AlignRight)
-        # self.addColumnSpec("ID2", 'ext_signal_id', int, AlignRight)
+        self.addEmptyColumn()
 
 class BinsModel(AbstractTableModel):
+    """Default scale bins table model."""
 
     def __init__(self, menu, name, parent = None):
         super(BinsModel, self).__init__(menu.scales.bins[name], parent)
@@ -174,10 +204,10 @@ class BinsModel(AbstractTableModel):
         self.addColumnSpec("Number hex", 'number', fHex, AlignRight)
         self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
         self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
-        self.addColumnSpec("Comment", 'comment')
-        # self.addColumnSpec("ID", 'scale_id', int, AlignRight, AlignRight)
+        self.addEmptyColumn()
 
 class ExtSignalsModel(AbstractTableModel):
+    """Default external signals table model."""
 
     def __init__(self, menu, parent = None):
         super(ExtSignalsModel, self).__init__(menu.extSignals.extSignals, parent)
@@ -186,5 +216,4 @@ class ExtSignalsModel(AbstractTableModel):
         self.addColumnSpec("Label", 'label')
         self.addColumnSpec("Cable", 'cable')
         self.addColumnSpec("Channel", 'channel')
-        self.addColumnSpec("Description", 'description')
-        # self.addColumnSpec("ID", 'ext_signal_id', int, AlignRight)
+        self.addEmptyColumn()

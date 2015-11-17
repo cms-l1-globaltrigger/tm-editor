@@ -135,14 +135,18 @@ def createIcon(name):
 
 class CutSpec(object):
     def __init__(self, **kwargs):
+        self.enabled = kwargs.get('enabled', True)
         self.name = kwargs['name']
         self.object = kwargs['object']
         self.type = kwargs['type']
         self.objects = [item for item in kwargs.get('objects', [])]
+        self.precision = kwargs.get('precision', 0)
+        self.step = kwargs.get('step', 1)
+        self.unit = kwargs.get('unit', "")
         self.data = self._intdict(kwargs.get('data', {}))
+        self.data_exclusive = kwargs.get('data_exclusive', False)
         self.title = kwargs.get('title', "")
         self.description = kwargs.get('description', "")
-        self.enabled = kwargs.get('enabled', True)
     @property
     def sorted_data(self):
         """Returns sorted list of data dict values. Keys are converted to integers."""
