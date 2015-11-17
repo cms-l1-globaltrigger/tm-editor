@@ -16,7 +16,7 @@
       "name": "MU-PHI",
       "object": "MU",
       "type": "PHI",
-      "unit": "rad",
+      "range_unit": "rad",
       "title": "Muon phi",
       "description": "Restricts valid phi range for muon object requirement."
     },
@@ -78,7 +78,7 @@
       "name": "EG-PHI",
       "object": "EG",
       "type": "PHI",
-      "unit": "rad",
+      "range_unit": "rad",
       "title": "Electron/gamma phi"
     },
     {
@@ -128,7 +128,7 @@
       "name": "JET-PHI",
       "object": "JET",
       "type": "PHI",
-      "unit": "rad",
+      "range_unit": "rad",
       "title": "Jet phi"
     },
     {
@@ -166,7 +166,7 @@
       "name": "TAU-PHI",
       "object": "TAU",
       "type": "PHI",
-      "unit": "rad",
+      "range_unit": "rad",
       "title": "Tau phi"
     },
     {
@@ -210,14 +210,14 @@
       "name": "ETM-PHI",
       "object": "ETM",
       "type": "PHI",
-      "unit": "rad",
+      "range_unit": "rad",
       "title": "Missing energy phi"
     },
     {
       "name": "HTM-PHI",
       "object": "HTM",
       "type": "PHI",
-      "unit": "rad",
+      "range_unit": "rad",
       "title": "Missing energy phi"
     },
     {
@@ -238,7 +238,8 @@
       "object": "dist",
       "type": "DETA",
       "objects": ["MU", "EG", "JET", "TAU"],
-      "precision": 3,
+      "range_precision": 3,
+      "range_step": 0.001,
       "title": "Delta eta",
       "description": "Applies delta eta restriction to combination of two objects."
     },
@@ -247,8 +248,9 @@
       "object": "dist",
       "type": "DPHI",
       "objects": ["MU", "EG", "JET", "TAU"],
-      "precision": 3,
-      "unit": "rad",
+      "range_precision": 3,
+      "range_step": 0.001,
+      "range_unit": "rad",
       "title": "Delta phi",
       "description": "Applies delta phi restriction to combination of two objects."
     },
@@ -257,8 +259,8 @@
       "object": "dist",
       "type": "DR",
       "objects": ["MU", "EG", "JET", "TAU"],
-      "precision": 1,
-      "step": 0.1,
+      "range_precision": 1,
+      "range_step": 0.1,
       "title": "Delta-R",
       "description": "Applies delta-R restriction to combination of two objects.<br/><br/>&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span>"
     },
@@ -267,9 +269,9 @@
       "object": "mass",
       "type": "MASS",
       "objects": ["MU", "EG", "JET", "TAU"],
-      "precision": 1,
-      "step": 0.2,
-      "unit": "GeV",
+      "range_precision": 1,
+      "range_step": 0.2,
+      "range_unit": "GeV",
       "title": "Invariant mass",
       "description": "Applies invariant mass restriction to combination of two objects.<br/><br/>M = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span>"
     },
@@ -279,8 +281,8 @@
       "object": "future",
       "type": "FUTURE",
       "objects": ["FOO", "BAR"],
-      "precision": 1,
-      "step": 0.25,
+      "range_precision": 1,
+      "range_step": 0.25,
       "title": "Future cut placeholder (disabled)."
     }
   ]
