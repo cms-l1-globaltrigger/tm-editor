@@ -11,7 +11,9 @@
 
 from tmEditor import (
     Toolbox,
+    Settings,
 )
+from tmEditor.Menu import Cut
 import tmGrammar
 from collections import namedtuple
 import re, math, logging
@@ -124,8 +126,8 @@ class DataField(QScrollArea):
     def data(self):
         """Returns comma separated list of enabled data entries."""
         indexes = []
-        for index, checkBox in enumerate(self.entries):
-            if checkBox.isChecked():
+        for index, entry in enumerate(self.entries):
+            if entry.isChecked():
                 indexes.append(str(index))
         return ','.join(indexes)
 
@@ -140,7 +142,7 @@ class DataField(QScrollArea):
 class CutEditorDialog(QDialog):
     """Dialog providing cut creation/editing interface."""
 
-    CutSettings = [Toolbox.CutSpec(**cut) for cut in Toolbox.Settings['cuts']]
+    CutSettings = Settings.cutSettings()
 
     def __init__(self, menu, parent = None):
         """Param title is the applciation name, version the main applications
@@ -225,9 +227,11 @@ class CutEditorDialog(QDialog):
         self.suffixLineEdit.setText(self.tr("Unnamed"))
         self.updateEntries()
 
+    @property
     def spec(self):
-        return filter(lambda spec: spec.name == self.typename(), self.CutSettings)[0]
+        return filter(lambda spec: spec.name == self.typename, self.CutSettings)[0]
 
+    @property
     def name(self):
         return "{0}_{1}".format(self.typeComboBox.currentText(), self.suffixLineEdit.text())
 
@@ -237,25 +241,29 @@ class CutEditorDialog(QDialog):
         self.typeComboBox.setCurrentIndex(self.typeComboBox.findText(tokens[0]))
         self.suffixLineEdit.setText('_'.join(tokens[1:]))
 
+    @property
     def typename(self):
-        typename = str(self.typeComboBox.currentText())
-        return typename
+        return str(self.typeComboBox.currentText())
 
+    @property
     def type(self):
-        """Returns type name."""
-        return self.spec().type
+        return self.spec.type
 
+    @property
     def object(self):
-        """Returns object name."""
-        return self.spec().object
+        return self.spec.object
 
+    @property
     def suffix(self):
-        """Returns suffix."""
         return str(self.suffixLineEdit.text())
 
+    def setSuffix(self, text):
+        self.suffixLineEdit.setText(text)
+
+    @property
     def minimum(self):
         """Returns minimum."""
-        if self.type() in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
+        if self.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
             return self.minimumRangeSpinBox.value()
         return self.minimumSpinBox.value()
 
@@ -265,9 +273,10 @@ class CutEditorDialog(QDialog):
         self.minimumSpinBox.setValue(self.minimumSpinBox.nearest(value))
         self.minimumRangeSpinBox.setValue(float(value))
 
+    @property
     def maximum(self):
         """Returns maximum."""
-        if self.type() in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
+        if self.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
             return self.maximumRangeSpinBox.value()
         return self.maximumSpinBox.value()
 
@@ -277,6 +286,7 @@ class CutEditorDialog(QDialog):
         self.maximumSpinBox.setValue(self.maximumSpinBox.nearest(value))
         self.maximumRangeSpinBox.setValue(float(value))
 
+    @property
     def data(self):
         """Returns data string."""
         return self.dataField.data()
@@ -285,6 +295,7 @@ class CutEditorDialog(QDialog):
         self.setDataEnabled(True)
         self.dataField.setData(data)
 
+    @property
     def comment(self):
         """Returns comment text."""
         return str(self.commentTextEdit.toPlainText())
@@ -301,9 +312,8 @@ class CutEditorDialog(QDialog):
         self.setName(cut.name)
         self.updateEntries()
         if cut.type in (tmGrammar.ISO, tmGrammar.QLTY, tmGrammar.CHGCOR):
-            spec = self.spec()
             self.setDataEnabled(True)
-            self.dataField.setEntries(spec.sorted_data, spec.data_exclusive)
+            self.dataField.setEntries(self.spec.data_sorted, self.spec.data_exclusive)
             self.setData(cut.data)
         else:
             self.setRangeEnabled(True)
@@ -317,29 +327,45 @@ class CutEditorDialog(QDialog):
                 self.maximumSpinBox.setScale(scale)
                 self.maximumSpinBox.setValue(float(self.maximumSpinBox.nearest(cut.maximum)))
         if 'comment' in cut.keys():
-            self.commentTextEdit.setPlainText(cut['comment'])
+            self.setComment(cut['comment'])
 
     def updateCut(self, cut):
         """Update existing cut object with values from editor."""
         # TODO not effective, re-write.
-        assert cut.type == self.type()
-        assert cut.object == self.object()
-        cut['name'] = self.name()
+        assert cut.type == self.type
+        assert cut.object == self.object
+        cut['name'] = self.name
         if cut['data']:
             cut['minimum'] = ''
             cut['maximum'] = ''
-            cut['data'] = self.data()
+            cut['data'] = self.data
         else:
-            cut['minimum'] = self.minimum()
-            cut['maximum'] = self.maximum()
+            cut['minimum'] = self.minimum
+            cut['maximum'] = self.maximum
             cut['data'] = ''
-        cut['comment'] = str(self.commentTextEdit.toPlainText())
+        cut['comment'] = self.comment
+
+    def newCut(self):
+        cut = Cut(
+            name=self.name,
+            type=self.type,
+            object=self.object,
+            comment=self.comment,
+        )
+        if self.data:
+            cut['minimum'] = ''
+            cut['maximum'] = ''
+            cut['data'] = self.data
+        else:
+            cut['minimum'] = self.minimum
+            cut['maximum'] = self.maximum
+            cut['data'] = ''
+        return cut
 
     def setRangeEnabled(self, enabled):
         """Set range inputs enabled, diables data input."""
         # Determine type of spin boxes
-        mode = self.type() in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI)
-        spec = self.spec()
+        mode = self.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI)
         self.minimumLabel.setEnabled(enabled)
         self.minimumSpinBox.setEnabled(enabled and not mode)
         self.minimumRangeSpinBox.setEnabled(enabled and mode)
@@ -351,55 +377,37 @@ class CutEditorDialog(QDialog):
         self.minimumLabel.setVisible(enabled)
         self.minimumSpinBox.setVisible(enabled and not mode)
         self.minimumRangeSpinBox.setVisible(enabled and mode)
-        self.minimumUnitLabel.setVisible(enabled and len(spec.unit))
+        self.minimumUnitLabel.setVisible(enabled and bool(self.spec.unit))
         self.maximumLabel.setVisible(enabled)
         self.maximumSpinBox.setVisible(enabled and not mode)
         self.maximumRangeSpinBox.setVisible(enabled and mode)
-        self.maximumUnitLabel.setVisible(enabled and len(spec.unit))
+        self.maximumUnitLabel.setVisible(enabled and bool(self.spec.unit))
         self.dataLabel.setVisible(not enabled)
         self.dataField.setVisible(not enabled)
-        self.minimumUnitLabel.setText(spec.unit)
-        self.maximumUnitLabel.setText(spec.unit)
+        self.minimumUnitLabel.setText(self.spec.unit)
+        self.maximumUnitLabel.setText(self.spec.unit)
 
     def setDataEnabled(self, enabled):
         """Set data input enabled, diables range inputs."""
         self.setRangeEnabled(not enabled)
 
-    # Scales on the fly
-    def generateScale(self, type):
-        # DAMN ugly...
-        def dr(deta, dphi):
-            return math.sqrt(deta*deta+dphi*dphi)
-        def calc_(maximum):
-            return [{'number': i, 'minimum': i/1000., 'maximum': i/1000.+0.001} for i in xrange(int(maximum))]
-        scale = []
-        if type == tmGrammar.DETA:
-            scale = calc_(MaxDEta * 1000)
-        if type == tmGrammar.DPHI:
-            scale = calc_(MaxDPhi * 1000)
-        if type == tmGrammar.DR:
-            scale = calc_(dr(MaxDEta, MaxDPhi) * 1000)
-        return scale
-
     def updateEntries(self):
         """Update entries according to selected cut type."""
         # TODO not effective, re-write.
-        typename = self.typename()
-        spec = self.spec()
         self.minimumSpinBox.reset()
         self.maximumSpinBox.reset()
         self.dataField.clear()
         info = []
-        if spec.title:
-            spec._filename = ""
-            info.append("<h3>{spec.title}</h3>".format(**locals()))
-        if spec.description:
-            info.append("<p>{spec.description}</p>".format(**locals()))
-        if spec.data:
+        if self.spec.title:
+            self.spec._filename = ""
+            info.append("<h3>{self.spec.title}</h3>".format(**locals()))
+        if self.spec.description:
+            info.append("<p>{self.spec.description}</p>".format(**locals()))
+        if self.spec.data:
             self.setDataEnabled(True)
-            self.dataField.setEntries(spec.sorted_data, spec.data_exclusive)
+            self.dataField.setEntries(self.spec.data_sorted, self.spec.data_exclusive)
         # Delta ranges
-        elif self.type() in tmGrammar.DR:
+        elif self.type in tmGrammar.DR:
             self.setRangeEnabled(True)
             self.minimumRangeSpinBox.setRange(0, 10E10)
             self.minimumRangeSpinBox.setValue(0)
@@ -409,7 +417,7 @@ class CutEditorDialog(QDialog):
             self.maximumRangeSpinBox.setValue(0)
             self.maximumRangeSpinBox.setDecimals(1)
             self.maximumRangeSpinBox.setSingleStep(.1)
-        elif self.type() in (tmGrammar.DETA, tmGrammar.DPHI):
+        elif self.type in (tmGrammar.DETA, tmGrammar.DPHI):
             self.setRangeEnabled(True)
             self.minimumRangeSpinBox.setRange(0, 10E10)
             self.minimumRangeSpinBox.setValue(0)
@@ -421,7 +429,7 @@ class CutEditorDialog(QDialog):
             self.maximumRangeSpinBox.setSingleStep(.001)
             # info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
         # Invariant mass
-        elif self.type() in tmGrammar.MASS:
+        elif self.type in tmGrammar.MASS:
             self.setRangeEnabled(True)
             self.minimumRangeSpinBox.setRange(0, 10E10)
             self.minimumRangeSpinBox.setValue(0)
@@ -434,16 +442,17 @@ class CutEditorDialog(QDialog):
         # Ranges
         else:
             self.setRangeEnabled(True)
-            scale = self.menu.scales.bins[self.typename()]
+            scale = self.menu.scales.bins[self.typename]
 
             self.minimumSpinBox.setScale(scale)
             self.maximumSpinBox.setScale(scale)
 
-            self.minimumSpinBox.setValue(self.minimumSpinBox.minimum())
-            self.maximumSpinBox.setValue(self.maximumSpinBox.maximum())
-
             minimum = self.minimumSpinBox.minimum()
             maximum = self.maximumSpinBox.maximum()
+
+            self.minimumSpinBox.setValue(minimum)
+            self.maximumSpinBox.setValue(maximum)
+
             info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
         if not self.typeComboBox.isEnabled():
             info.append("<p><strong>Note:</strong> Changing an existing cut's type is not allowed.</p>")
@@ -451,5 +460,7 @@ class CutEditorDialog(QDialog):
 
     def accept(self):
         """Perform consistency checks befor accepting changes."""
-        # Ugh...
+        if self.spec.data and not self.data:
+            QMessageBox.warning(self, self.tr("No data"), self.tr("It is not possible to create a cut without assigning a data selection."))
+            return
         super(CutEditorDialog, self).accept()

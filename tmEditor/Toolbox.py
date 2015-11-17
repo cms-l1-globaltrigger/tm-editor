@@ -57,16 +57,6 @@ def query(data, **kwargs):
         return sum([entry[key] == value for key, value in kwargs.items()])
     return filter(lambda entry: lookup(entry, **kwargs), data)
 
-def readSettings():
-    """Read settings from JSON side file."""
-    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'settings.json')
-    with open(filename) as handle:
-        settings = json.loads(handle.read())
-    return settings
-
-Settings = readSettings()
-"""Storing static settings."""
-
 # ------------------------------------------------------------------------------
 #  String formatting functions
 # ------------------------------------------------------------------------------
@@ -128,37 +118,6 @@ def createIcon(name):
         if QFile.exists(filename):
             icon.addFile(filename)
     return icon
-
-# ------------------------------------------------------------------------------
-#  Specs
-# ------------------------------------------------------------------------------
-
-class CutSpec(object):
-    def __init__(self, **kwargs):
-        self.enabled = kwargs.get('enabled', True)
-        self.name = kwargs['name']
-        self.object = kwargs['object']
-        self.type = kwargs['type']
-        self.objects = [item for item in kwargs.get('objects', [])]
-        self.precision = kwargs.get('precision', 0)
-        self.step = kwargs.get('step', 1)
-        self.unit = kwargs.get('unit', "")
-        self.data = self._intdict(kwargs.get('data', {}))
-        self.data_exclusive = kwargs.get('data_exclusive', False)
-        self.title = kwargs.get('title', "")
-        self.description = kwargs.get('description', "")
-    @property
-    def sorted_data(self):
-        """Returns sorted list of data dict values. Keys are converted to integers."""
-        return [self.data[key] for key in sorted([int(key) for key in self.data.keys()])]
-    def items(self):
-        """Returns dict containing specifications items."""
-        return dict(name=self.name, object=self.object, type=self.type,
-            objects=self.objects, data=self.data, sorted_data=self.sorted_data,
-            title=self.title, description=self.description, enabled=self.enabled)
-    def _intdict(self, d):
-        """Returns dictionary with keys converted to integers (assuming strings)."""
-        return dict([(int(key), value) for key, value in d.items()])
 
 # -----------------------------------------------------------------------------
 #  Common widgets

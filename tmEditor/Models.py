@@ -162,7 +162,7 @@ class ObjectsModel(AbstractTableModel):
         super(ObjectsModel, self).__init__(menu.objects, parent)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Type", 'type')
-        self.addColumnSpec("", 'comparison_operator', fComparison, headerToolTip="Comparison++", headerDecoration=QIcon(":/icons/compare.svg"), headerSizeHint=QSize(26, -1))
+        self.addColumnSpec("", 'comparison_operator', fComparison, headerToolTip="Comparison", headerDecoration=QIcon(":/icons/compare.svg"), headerSizeHint=QSize(26, -1))
         self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
         self.addEmptyColumn()

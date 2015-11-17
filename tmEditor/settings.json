@@ -1,4 +1,9 @@
 {
+  "application": {
+    "title": "L1-Trigger Menu Editor",
+    "version": "0.1.8",
+    "release": "1"
+  },
   "cuts": [
     {
       "name": "MU-ETA",
@@ -253,7 +258,7 @@
       "type": "DR",
       "objects": ["MU", "EG", "JET", "TAU"],
       "precision": 1,
-      "stepwidth": 0.1,
+      "step": 0.1,
       "title": "Delta-R",
       "description": "Applies delta-R restriction to combination of two objects.<br/><br/>&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span>"
     },

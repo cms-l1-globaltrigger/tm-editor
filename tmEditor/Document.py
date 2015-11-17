@@ -14,6 +14,7 @@
 import tmGrammar
 
 from tmEditor import Toolbox
+from tmEditor import Settings
 
 from tmEditor import CutEditorDialog
 from tmEditor import AlgorithmEditorDialog
@@ -21,7 +22,7 @@ from tmEditor import AlgorithmFormatter
 from tmEditor import AlgorithmSyntaxHighlighter
 
 from tmEditor import Menu
-from tmEditor.Menu import Algorithm, Object, toObject
+from tmEditor.Menu import Algorithm, Cut, Object, toObject
 
 from tmEditor.Models import *
 from tmEditor.Toolbox import (
@@ -56,6 +57,8 @@ class Document(QWidget):
 
     modified = pyqtSignal()
     """This signal is emitted whenever the content of the document changes."""
+
+    CutSettings = Settings.cutSettings()
 
     def __init__(self, filename, parent = None):
         super(Document, self).__init__(parent)
@@ -282,8 +285,7 @@ class Document(QWidget):
                             typename = data['type']
                         else:
                             typename = "{0}-{1}".format(data['object'], data['type'])
-                        CutSettings = [Toolbox.CutSpec(**cut) for cut in Toolbox.Settings['cuts']]
-                        data_ = filter(lambda entry: entry.name == typename, CutSettings)[0].data
+                        data_ = filter(lambda entry: entry.name == typename, self.CutSettings)[0].data
                         for n in data['data'].split(','):
                             fdata.append("{0} ({1})".format(data_[int(n)], int(n)))
                         fdata = ', '.join(fdata)
@@ -430,13 +432,7 @@ class Document(QWidget):
         if dialog.result() != QDialog.Accepted:
             return
         self.setModified(True)
-        self.menu().addCut(name=dialog.name(),
-            object=dialog.object(),
-            type=dialog.type(),
-            minimum=dialog.minimum() if not dialog.data() else '',
-            maximum=dialog.maximum() if not dialog.data() else '',
-            data=dialog.data() if dialog.data() else '',
-            comment=dialog.comment())
+        self.menu().addCut(**dialog.newCut())
         self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
 
     def editItem(self):
@@ -527,19 +523,14 @@ class Document(QWidget):
     def copyCut(self, index, item):
         dialog = CutEditorDialog(self.menu(), self)
         dialog.setModal(True)
-        cut = self.menu().cuts[index.row()]
-        dialog.loadCut(cut)
+        dialog.loadCut(self.menu().cuts[index.row()])
+        dialog.setSuffix('_'.join([dialog.suffix, 'copy']))
+        dialog.suffixLineEdit.setEnabled(True) # todo
         dialog.exec_()
         if dialog.result() != QDialog.Accepted:
             return
         self.setModified(True)
-        self.menu().addCut(name=dialog.name(),
-            object=dialog.object(),
-            type=dialog.type(),
-            minimum=dialog.minimum() or '',
-            maximum=dialog.maximum() or '',
-            data=dialog.data() or '',
-            comment=dialog.comment())
+        self.menu().addCut(**dialog.newCut())
         self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
 
     def removeItem(self):
