@@ -133,6 +133,13 @@ class AlgorithmEditor(QMainWindow):
         self.libraryWidget.selected.connect(self.onInsertItem)
         dock.setWidget(self.libraryWidget)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        dock = QDockWidget(self.tr("Comment"), self)
+        dock.setFeatures(QDockWidget.NoDockWidgetFeatures)
+        # dock.setAllowedAreas(Qt.BottomDockWidgetArea)
+        self.commentEdit = QPlainTextEdit(self)
+        self.commentEdit.setMaximumHeight(42)
+        dock.setWidget(self.commentEdit)
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
 
     def index(self):
         return int(self.indexSpinBox.value())
@@ -154,10 +161,10 @@ class AlgorithmEditor(QMainWindow):
         self.textEdit.setPlainText(self.formatter.humanize(expression))
 
     def comment(self):
-        return ""
+        return str(self.commentEdit.toPlainText())
 
     def setComment(self, comment):
-        pass
+        self.commentEdit.setPlainText(comment)
 
     def isModified(self):
         return self._isModified
@@ -566,13 +573,13 @@ class LibraryWidget(QWidget):
 
     def onInsert(self):
         """Insert selected item from active library list."""
-        widget = self.tabWidget.currentWidget()
-        item = widget.currentItem()
-        if isinstance(widget, QTreeWidget):
-            if item.parent(): # Ignore top level items.
+        if self.insertButton.isEnabled():
+            widget = self.tabWidget.currentWidget()
+            item = widget.currentItem()
+            if isinstance(widget, QTreeWidget):
                 self.selected.emit(item.text(0))
-        if isinstance(widget, QListWidget):
-            self.selected.emit(item.text())
+            if isinstance(widget, QListWidget):
+                self.selected.emit(item.text())
 
 # -----------------------------------------------------------------------------
 #  Index selection dialog.

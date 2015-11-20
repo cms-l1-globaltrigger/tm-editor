@@ -463,7 +463,7 @@ class Cut(AbstractDict):
 
     def __eq__(self, item):
         """Distinquish cuts by it's uinque name."""
-        return (self.object, self.type) == (item.object, item.type)
+        return (self.name, self.object, self.type, self.minimum, self.maximum, self.data) == (item.name, item.object, item.type, item.minimum, item.maximum, item.data)
 
     def __lt__(self, item):
         """Custom sorting by object and type."""
