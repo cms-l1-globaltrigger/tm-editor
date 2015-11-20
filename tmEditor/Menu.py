@@ -356,6 +356,14 @@ class Algorithm(AbstractDict):
     def comment(self):
         return self['comment'] if 'comment' in self.keys() else ""
 
+    def __eq__(self, item):
+        """Distinquish algorithms."""
+        return (self.index, self.name, self.expression) == (item.index, item.name, item.expression)
+
+    def __lt__(self, item):
+        """Custom sorting by index, name and expression."""
+        return (self.index, self.name, self.expression) < (item.index, item.name, item.expression)
+
     def isValid(self):
         return tmTable.isAlgorithm(self.toRow())
 
@@ -453,9 +461,13 @@ class Cut(AbstractDict):
     def data(self):
         return self['data']
 
-    def __eq__(self, cut):
+    def __eq__(self, item):
         """Distinquish cuts by it's uinque name."""
-        return self.name == cut.name and self.object == cut.object and self.type == cut.type
+        return (self.object, self.type) == (item.object, item.type)
+
+    def __lt__(self, item):
+        """Custom sorting by object and type."""
+        return (self.object, self.type) < (item.object, item.type)
 
     def isValid(self):
         return tmTable.isCut(self.toRow())
@@ -504,13 +516,19 @@ class Object(AbstractDict):
     def signature(self):
         return "{name}{threshold}{bx_offset}".format(**self)
 
-    def __eq__(self, object):
+    def __eq__(self, item):
         """Distinquish objects."""
         return \
-            self.type == object.type and \
-            self.comparison_operator == object.comparison_operator and \
-            self.threshold == object.threshold and \
-            self.bx_offset == object.bx_offset
+            self.type == item.type and \
+            self.comparison_operator == item.comparison_operator and \
+            self.threshold == item.threshold and \
+            self.bx_offset == item.bx_offset
+
+    def __lt__(self, item):
+        """Custom sorting by type, threshold and offset."""
+        return \
+            (self.type, float(self.threshold), int(self.bx_offset)) < \
+            (item.type, float(item.threshold), int(item.bx_offset))
 
     def isValid(self):
         return tmTable.isObjectRequirement(self.toRow())

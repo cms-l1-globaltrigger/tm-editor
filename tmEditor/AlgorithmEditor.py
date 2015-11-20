@@ -414,27 +414,28 @@ class LibraryWidget(QWidget):
         self.menu = menu
         self.tabWidget = QTabWidget(self)
         # Build list of objects.
-        self.objectsList = QListWidget(self)
-        self.tabWidget.addTab(self.objectsList, "&Objects")
+        self.objectsTree = QTreeWidget(self)
+        self.objectsTree.headerItem().setHidden(True)
+        self.tabWidget.addTab(self.objectsTree, self.tr("&Objects"))
         # Build list of cuts.
-        self.cutsList = QListWidget(self)
-        self.tabWidget.addTab(self.cutsList, "&Cuts")
+        self.cutsTree = QTreeWidget(self)
+        self.cutsTree.headerItem().setHidden(True)
+        self.tabWidget.addTab(self.cutsTree, self.tr("&Cuts"))
         # Build list of externals.
         self.externalsList = QListWidget(self)
-        self.tabWidget.addTab(self.externalsList, "&Exts")
+        self.tabWidget.addTab(self.externalsList, self.tr("&Exts"))
         # Build list of function templates.
         self.functionsList = QListWidget(self)
         self.functionsList.addItems([name for name, _ in self.Functions])
-        self.tabWidget.addTab(self.functionsList, "&Funcs")
+        self.tabWidget.addTab(self.functionsList, self.tr("&Funcs"))
         # Build list of operators.
         self.operatorsList = QListWidget(self)
         self.operatorsList.addItems([name for name, _ in self.Operators])
-        self.tabWidget.addTab(self.operatorsList, "O&ps")
+        self.tabWidget.addTab(self.operatorsList, self.tr("O&ps"))
         # Insert button.
         self.insertButton = QPushButton(Toolbox.createIcon("insert-text"), self.tr("&Insert"), self)
         self.insertButton.clicked.connect(self.onInsert)
         self.insertButton.setDefault(False)
-        ###self.insertButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         # Wizard option.
         self.wizardCheckBox = QCheckBox(self.tr("Use &wizard"), self)
         # Preview widget.
@@ -451,10 +452,10 @@ class LibraryWidget(QWidget):
         gridLayout.addWidget(self.previewLabel, 2, 0, 1, 3)
         self.setLayout(gridLayout)
         # Setup connections.
-        self.objectsList.currentRowChanged.connect(self.onPreview)
-        self.objectsList.itemDoubleClicked.connect(self.onInsert)
-        self.cutsList.currentRowChanged.connect(self.onPreview)
-        self.cutsList.itemDoubleClicked.connect(self.onInsert)
+        self.objectsTree.currentItemChanged.connect(self.onPreview)
+        self.objectsTree.itemDoubleClicked.connect(self.onInsert)
+        self.cutsTree.currentItemChanged.connect(self.onPreview)
+        self.cutsTree.itemDoubleClicked.connect(self.onInsert)
         self.externalsList.currentRowChanged.connect(self.onPreview)
         self.externalsList.itemDoubleClicked.connect(self.onInsert)
         self.functionsList.currentRowChanged.connect(self.onPreview)
@@ -466,24 +467,39 @@ class LibraryWidget(QWidget):
     def initContents(self):
         """Populate library lists with content from menu."""
         # Build list of objects.
-        self.objectsList.clear()
-        for name in sorted([obj.name for obj in self.menu.objects]):
+        self.objectsTree.clear()
+        topLevelItems = {}
+        for object in sorted(self.menu.objects): # Applies custom sort of class
             icon = QIcon()
-            if name.startswith("MU"):
+            if object.type in (tmGrammar.MU, ):
                 icon.addPixmap(QIcon(":/icons/mu.svg").pixmap(12, 12))
-            if name.startswith("EG"):
+            if object.type in (tmGrammar.EG, ):
                 icon.addPixmap(QIcon(":/icons/eg.svg").pixmap(12, 12))
-            if name.startswith("TAU"):
+            if object.type in (tmGrammar.TAU, ):
                 icon.addPixmap(QIcon(":/icons/tau.svg").pixmap(12, 12))
-            if name.startswith("JET"):
+            if object.type in (tmGrammar.JET, ):
                 icon.addPixmap(QIcon(":/icons/jet.svg").pixmap(12, 12))
-            if name.startswith("ET") or name.startswith("HT"):
+            if object.type in (tmGrammar.ETT, tmGrammar.HTT, tmGrammar.ETM, tmGrammar.HTM):
                 icon.addPixmap(QIcon(":/icons/esums.svg").pixmap(12, 12))
-            item = QListWidgetItem(icon, name)
-            self.objectsList.addItem(item)
+            if not object.type in topLevelItems.keys():
+                item = QTreeWidgetItem(self.objectsTree, [object.type])
+                item.setIcon(0, icon)
+                topLevelItems[object.type] = item
+            item = QTreeWidgetItem(topLevelItems[object.type], [object.name])
+            item.setIcon(0, icon)
         # Build list of cuts.
-        self.cutsList.clear()
-        self.cutsList.addItems(sorted([cut.name for cut in self.menu.cuts]))
+        self.cutsTree.clear()
+        topLevelItems = {}
+        for cut in sorted(self.menu.cuts): # Applies custom sort of class
+            if not cut.object in topLevelItems.keys():
+                if cut.object not in (tmGrammar.comb, tmGrammar.mass):
+                    topLevelItems[cut.object] = QTreeWidgetItem(self.cutsTree, [cut.object])
+            if not (cut.object, cut.type) in topLevelItems.keys():
+                if cut.object in (tmGrammar.comb, tmGrammar.mass):
+                    topLevelItems[(cut.object, cut.type)] = QTreeWidgetItem(self.cutsTree, [cut.type])
+                else:
+                    topLevelItems[(cut.object, cut.type)] = QTreeWidgetItem(topLevelItems[cut.object], [cut.type])
+            item = QTreeWidgetItem(topLevelItems[(cut.object, cut.type)], [cut.name])
         # Build list of externals.
         self.externalsList.clear()
         self.externalsList.addItems(sorted([external.name for external in self.menu.externals]))
@@ -504,10 +520,10 @@ class LibraryWidget(QWidget):
         self.wizardCheckBox.setEnabled(False)
         tab = self.tabWidget.currentWidget()
         # Objects
-        if tab == self.objectsList:
-            if not self.objectsList.currentItem(): return # empty list
-            item = self.menu.objectByName(self.objectsList.currentItem().text())
-            self.wizardCheckBox.setEnabled(True)
+        if tab == self.objectsTree:
+            if not self.objectsTree.currentItem(): return # empty list
+            item = self.menu.objectByName(self.objectsTree.currentItem().text(0))
+            # self.wizardCheckBox.setEnabled(True)
             if not item: return
             item = dict(**item) # Copy
             item['threshold'] = Toolbox.fThreshold(item['threshold'])
@@ -515,9 +531,9 @@ class LibraryWidget(QWidget):
             self.previewLabel.setText(self.ObjectPreview.format(**item))
             self.insertButton.setEnabled(True)
         # Cuts
-        elif tab == self.cutsList:
-            if not self.cutsList.currentItem(): return # empty list
-            item = self.menu.cutByName(self.cutsList.currentItem().text())
+        elif tab == self.cutsTree:
+            if not self.cutsTree.currentItem(): return # empty list
+            item = self.menu.cutByName(self.cutsTree.currentItem().text(0))
             if not item: return
             item = dict(**item) # Copy
             item['minimum'] = Toolbox.fCut(item['minimum'])
@@ -550,7 +566,13 @@ class LibraryWidget(QWidget):
 
     def onInsert(self):
         """Insert selected item from active library list."""
-        self.selected.emit(self.tabWidget.currentWidget().currentItem().text())
+        widget = self.tabWidget.currentWidget()
+        item = widget.currentItem()
+        if isinstance(widget, QTreeWidget):
+            if item.parent(): # Ignore top level items.
+                self.selected.emit(item.text(0))
+        if isinstance(widget, QListWidget):
+            self.selected.emit(item.text())
 
 # -----------------------------------------------------------------------------
 #  Index selection dialog.
