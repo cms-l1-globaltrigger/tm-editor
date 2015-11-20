@@ -347,9 +347,12 @@ class AlgorithmEditorDialog(QDialog):
         except AlgorithmSyntaxError, e:
             # TODO the tmGrammar parser errors ar not user friendly.
             #       think about how to translate the messages in a user readable way.
-            QMessageBox.warning(self, "Algorithm Syntax Error", str(e))
+            QMessageBox.warning(self, self.tr("Algorithm Syntax Error"), str(e))
         except ValueError, e:
-            QMessageBox.warning(self, "Invalid expression", str(e))
+            # Make sure to highlight the errornous part in the text editor.
+            self.editor.textEdit.moveCursor(QTextCursor.Start)
+            self.editor.textEdit.find(str(e))
+            QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("Found invalid expression near:<br/>%1").arg(str(e)))
         else:
             super(AlgorithmEditorDialog, self).accept()
 
