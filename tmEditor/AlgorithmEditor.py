@@ -23,6 +23,7 @@ from PyQt4.QtGui import *
 
 import sys, os
 import logging
+import re
 
 MaxAlgorithms = 512
 
@@ -80,6 +81,10 @@ class AlgorithmEditor(QMainWindow):
         self.formatExpandAct = QAction(self.tr("&Expand"), self)
         self.formatExpandAct.setIcon(Toolbox.createIcon("zoom-in"))
         self.formatExpandAct.triggered.connect(self.onFormatExpand)
+        self.parseAct = QAction(self.tr("&Check expression"), self)
+        self.parseAct.setIcon(Toolbox.createIcon("view-refresh"))
+        self.parseAct.triggered.connect(self.onParse)
+        self.parseAct.setEnabled(False) # for the time being
         self.undoAct = QAction(self.tr("&Undo"), self)
         self.undoAct.setShortcut(QKeySequence.Undo)
         self.undoAct.setIcon(Toolbox.createIcon("edit-undo"))
@@ -95,6 +100,8 @@ class AlgorithmEditor(QMainWindow):
     def createMenus(self):
         """Create menus."""
         self.editMenu = self.menuBar().addMenu(self.tr("&Edit"))
+        self.editMenu.addAction(self.parseAct)
+        self.editMenu.addSeparator()
         self.editMenu.addAction(self.undoAct)
         self.editMenu.addAction(self.redoAct)
         self.editMenu.addSeparator()
@@ -110,7 +117,8 @@ class AlgorithmEditor(QMainWindow):
         self.toolbar = self.addToolBar("Toolbar")
         self.toolbar.setMovable(False)
         self.toolbar.setFloatable(False)
-        # self.toolbar.addSeparator()
+        self.toolbar.addAction(self.parseAct)
+        self.toolbar.addSeparator()
         self.toolbar.addAction(self.undoAct)
         self.toolbar.addAction(self.redoAct)
         self.toolbar.addSeparator()
@@ -155,7 +163,7 @@ class AlgorithmEditor(QMainWindow):
 
     def expression(self):
         """Returns a machine readable formatted version of the loaded algorithm."""
-        return self.formatter.machinize(str(self.textEdit.toPlainText()))
+        return self.formatter.mechanize(str(self.textEdit.toPlainText()))
 
     def setExpression(self, expression):
         self.textEdit.setPlainText(self.formatter.humanize(expression))
@@ -235,6 +243,9 @@ class AlgorithmEditor(QMainWindow):
                 text = text + " "
         cursor.insertText(text)
         self.textEdit.ensureCursorVisible()
+
+    def onParse(self):
+        pass
 
     def updateFreeIndices(self, ignore = None):
         # Get list of free indices.
@@ -321,11 +332,11 @@ class AlgorithmEditorDialog(QDialog):
         algorithm['expression'] = self.expression()
         algorithm['comment'] = self.comment()
 
-    def accept(self):
+    def parse(self):
         try:
             # Validate algorithm expression.
             validator = AlgorithmSyntaxValidator()
-            validator.validate(self.expression())
+            validator.validate(self.expression()) # mechanized expression
             for algorithm in self.editor.menu.algorithms:
                 if algorithm is self.loadedAlgorithm:
                     continue
@@ -344,16 +355,28 @@ class AlgorithmEditorDialog(QDialog):
             algorithm = Algorithm(expression = self.expression())
             algorithm.objects()
             algorithm.cuts()
-        except AlgorithmSyntaxError, e:
+        except (AlgorithmSyntaxError, ValueError), e:
             # TODO the tmGrammar parser errors ar not user friendly.
             #       think about how to translate the messages in a user readable way.
-            QMessageBox.warning(self, self.tr("Algorithm Syntax Error"), str(e))
-        except ValueError, e:
+            token = str(e).strip()
+            print token
+            c = re.compile("\w+\:\:\w+\s*\'([^\']*)\'")
+            result = c.match(token)
+            if result:
+                token = result.group(1)
+                print "FOUND", token
+            else:
+                token = self.editor.formatter.humanize(token)
             # Make sure to highlight the errornous part in the text editor.
+            self.editor.setExpression(self.editor.expression()) # humanize expression
             self.editor.textEdit.moveCursor(QTextCursor.Start)
-            self.editor.textEdit.find(str(e))
-            QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("Found invalid expression near:<br/>%1").arg(str(e)))
-        else:
+            self.editor.textEdit.find(token)
+            QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("Found invalid expression near:<br/>%1").arg(token))
+            return False
+        return True
+
+    def accept(self):
+        if self.parse():
             super(AlgorithmEditorDialog, self).accept()
 
     def closeEvent(self, event):

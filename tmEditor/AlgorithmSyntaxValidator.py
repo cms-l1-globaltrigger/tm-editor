@@ -23,8 +23,6 @@ from tmEditor.Menu import (
     isObject,
     isCut,
     isFunction,
-    toObject,
-    toExternal,
     functionObjects,
     functionCuts,
     functionObjectsCuts,

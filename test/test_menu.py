@@ -6,13 +6,11 @@
 import unittest
 
 import tmGrammar
+from tmGrammar import isGate as isOperator
+from tmGrammar import isObject, isFunction
 from tmEditor.Menu import (
     Object,
     External,
-    isOperator,
-    isObject,
-    isCut,
-    isFunction,
     toObject,
     toExternal,
     functionObjects,
@@ -40,17 +38,9 @@ class MenuTests(unittest.TestCase):
         self.assertFalse(isObject("AND"))
         self.assertFalse(isObject("NOT"))
 
-    def test_isCut(self):
-        self.assertTrue(isCut("MU-ISO_Q"))
-        self.assertTrue(isCut("EG-ETA_Q"))
-        self.assertTrue(isCut("JET-PHI_Q"))
-        self.assertFalse(isCut("comb"))
-        self.assertFalse(isCut("AND"))
-        self.assertFalse(isCut("MU20"))
-
     def test_isFunction(self):
         self.assertTrue(isFunction("comb{MU20,MU10}"))
-        self.assertTrue(isFunction("dist{MU100,JET100}"))
+        self.assertTrue(isFunction("dist{MU100,JET100}[DPHI_Q]"))
         self.assertTrue(isFunction("dist{MU20[MU-PHI_Q],MU10[MU-PHI_Q]}[DPHI_Q]"))
         self.assertFalse(isFunction("MU-ISO_Q"))
         self.assertFalse(isFunction("AND"))

@@ -560,7 +560,7 @@ class External(AbstractDict):
         return tmTable.isExternalRequirement(self.toRow())
 
 # ------------------------------------------------------------------------------
-#  Helper functions (wrapping weird tmGrammar API).
+#  Helper functions (wrapping/avoiding weird tmGrammar API).
 # ------------------------------------------------------------------------------
 
 def isOperator(token):
