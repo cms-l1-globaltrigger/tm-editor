@@ -9,18 +9,19 @@
 
 from distutils.core import setup
 from glob import glob
+import subprocess
 
 setup(
-    name = 'tmEditor',
-    version = '0.1.8',
+    name = "tmEditor",
+    version = subprocess.check_output("python2 tmEditor/version.py --version".split()),
     description = "Trigger Menu Editor for uGT upgrade",
     author = "Bernhard Arnold",
     author_email = "bernhard.arnold@cern.ch",
     url = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/GlobalTriggerUpgradeL1T-uTme",
-    packages = ['tmEditor', ],
+    packages = ["tmEditor", ],
     data_files = [],
     scripts = [
-        'scripts/tm-editor',
+        "scripts/tm-editor",
     ],
-    provides = ['tmEditor', ],
+    provides = ["tmEditor", ],
 )

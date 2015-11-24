@@ -145,8 +145,7 @@ class CutEditorDialog(QDialog):
     CutSettings = Settings.cutSettings()
 
     def __init__(self, menu, parent = None):
-        """Param title is the applciation name, version the main applications
-        version."""
+        """Param title is the applciation name."""
         super(CutEditorDialog, self).__init__(parent)
         # Dialog appeareance
         self.setWindowTitle(self.tr("Cut Editor"))

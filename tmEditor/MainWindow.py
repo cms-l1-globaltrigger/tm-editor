@@ -28,9 +28,6 @@ import webbrowser
 import logging
 import sys, os, re
 
-__version__ = '0.1.8'
-"""Applciation Version (edit this to increment the release version)."""
-
 L1ContentsURL = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/GlobalTriggerUpgradeL1T-uTme"
 
 # NOTE: Bugfix for PyQt4.6
@@ -42,8 +39,6 @@ if not hasattr(QKeySequence, 'Quit'):
 # -----------------------------------------------------------------------------
 
 class MainWindow(QMainWindow):
-
-    Version = __version__
 
     def __init__(self, parent = None):
         super(MainWindow, self).__init__(parent)
@@ -339,7 +334,7 @@ class MainWindow(QMainWindow):
 
     def onShowAbout(self):
         """Raise about this application dialog."""
-        dialog = AboutDialog(self.windowTitle(), self.Version, self)
+        dialog = AboutDialog(self.windowTitle(), self)
         dialog.exec_()
 
     def closeEvent(self, event):

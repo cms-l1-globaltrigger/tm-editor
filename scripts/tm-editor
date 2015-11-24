@@ -8,6 +8,7 @@
 #
 
 import tmEditor
+from tmEditor.version import VERSION, PKG_RELEASE
 
 from PyQt4.QtCore import QSettings
 from PyQt4.QtGui import QApplication
@@ -33,7 +34,7 @@ def parse():
     )
     parser.add_argument('-V', '--version',
         action = 'version',
-        version = "%(prog)s {0}".format(tmEditor.MainWindow.Version),
+        version = "%(prog)s {0}-{1}".format(VERSION, PKG_RELEASE),
         help = "show the application's version",
     )
     return parser.parse_args()
@@ -54,7 +55,7 @@ def main():
     # Create application window.
     try:
         app = QApplication(sys.argv)
-        logging.debug("launching L1-Trigger Menu Editor, version %s", tmEditor.MainWindow.Version)
+        logging.debug("launching L1-Trigger Menu Editor, version %s-%s", VERSION, PKG_RELEASE)
         # Create/Load application settings.
         app.setOrganizationName("HEPHY")
         app.setOrganizationDomain("hephy.at")

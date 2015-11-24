@@ -9,6 +9,7 @@
 """About dialog.
 """
 
+from tmEditor.version import VERSION, PKG_RELEASE
 from tmEditor import (
     Toolbox,
     tmeditor_rc,
@@ -30,9 +31,8 @@ L1ApplicationContributors = (
 class AboutDialog(QDialog):
     """About dialog providing information on the application and credits."""
 
-    def __init__(self, title, version, parent = None):
-        """Param title is the applciation name, version the main applications
-        version."""
+    def __init__(self, title, parent = None):
+        """Param title is the applciation name."""
         super(AboutDialog, self).__init__(parent)
         self.setWindowTitle(self.tr("About %1").arg(title))
         self.setWindowIcon(QIcon(':icons/tm-editor.svg'))
@@ -64,7 +64,7 @@ class AboutDialog(QDialog):
             self.tr("%0").arg(title),
             self.tr("Graphical editor for L1-Trigger Menus for the CERN CMS L1-Global Trigger."))
         )
-        self.aboutTextEdit.setText(self.tr("%0<br /><br />Version %1").arg(title).arg(version))
+        self.aboutTextEdit.setText(self.tr("%0<br /><br />Version %1-%2").arg(title).arg(VERSION).arg(PKG_RELEASE))
         self.authorsTextEdit.setText(self._userlist(L1ApplicationAuthors))
         self.thanksTextEdit.setText(self._userlist(L1ApplicationContributors))
 

@@ -2,7 +2,9 @@ tm-editor (0.1.8-1) extra; urgency=medium
 
   * Introduced exclusive data selection for cuts (MU-CHG and CHGCOR).
   * Introduced optional units for cut range values.
+  * Added sort proxies for table views.
   * Disabled support for Eg/Jet/Tau-QLTY cuts (not implemented in hardware).
+  * Removed obsolete tempfile environment module.
   * A bunch of visual improvements for table views and description areas.
 
  -- Bernhard Arnold <bernhard.arnold@cern.ch>  Tue, 17 Nov 2015 13:35:38 +0100
