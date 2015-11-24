@@ -9,7 +9,6 @@
 import Toolbox
 import Settings
 
-from TempFileEnvironment import TempFileEnvironment
 from Menu import Menu
 
 from AlgorithmFormatter import AlgorithmFormatter

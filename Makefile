@@ -22,6 +22,9 @@ tmxsd_dir = $(rootdir)/tmXsd
 tmtable_dir = $(rootdir)/tmTable
 tmgrammar_dir = $(rootdir)/tmGrammar
 
+# Lang
+tmlang = en_US.UTF-8
+
 # Dependencies
 
 corelibs = \
@@ -100,7 +103,8 @@ install: all
 	echo "#!/bin/bash" > $(prefix)/bin/$(package)
 	echo "export LD_LIBRARY_PATH=/usr/lib/$(package):\$$LD_LIBRARY_PATH" >> $(prefix)/bin/$(package)
 	echo "export PYTHONPATH=/usr/lib/$(package):\$$PYTHONPATH" >> $(prefix)/bin/$(package)
-	echo "export TM_EDITOR_XSD_DIR=/usr/share/$(package)/xsd" >> $(prefix)/bin/$(package)
+	echo "export UTM_XSD_DIR=/usr/share/$(package)/xsd" >> $(prefix)/bin/$(package)
+	echo "export LC_ALL=$(tmlang)" >> $(prefix)/bin/$(package)
 	echo "/usr/lib/$(package)/$(package) \"\$$@\"" >> $(prefix)/bin/$(package)
 	chmod +x $(prefix)/bin/$(package)
 

@@ -25,6 +25,7 @@ from tmEditor import Menu
 from tmEditor.Menu import Algorithm, Cut, Object, toObject
 
 from tmEditor.Models import *
+from tmEditor.Proxies import *
 from tmEditor.Toolbox import (
     fAlgorithm,
     fCut,
@@ -70,11 +71,11 @@ class Document(QWidget):
         # Create table views.
         algorithmsTableView = self.createProxyTableView("algorithmsTableView", AlgorithmsModel(self.menu(), self))
         algorithmsTableView.resizeColumnsToContents()
-        cutsTableView = self.createProxyTableView("cutsTableView", CutsModel(self.menu(), self))
+        cutsTableView = self.createProxyTableView("cutsTableView", CutsModel(self.menu(), self), proxyclass=CutsModelProxy)
         cutsTableView.resizeColumnsToContents()
-        objectsTableView = self.createProxyTableView("objectsTableView", ObjectsModel(self.menu(), self))
+        objectsTableView = self.createProxyTableView("objectsTableView", ObjectsModel(self.menu(), self), proxyclass=ObjectsModelProxy)
         objectsTableView.resizeColumnsToContents()
-        externalsTableView = self.createProxyTableView("externalsTableView", ExternalsModel(self.menu(), self))
+        externalsTableView = self.createProxyTableView("externalsTableView", ExternalsModel(self.menu(), self), proxyclass=ExternalsModelProxy)
         externalsTableView.resizeColumnsToContents()
         binsTableViews = {}
         for scale in self.menu().scales.bins.keys():
@@ -151,9 +152,9 @@ class Document(QWidget):
         self.menuPage.top.commentTextEdit.setPlainText(self.menu().menu['comment'] if 'comment' in self.menu().menu else '')
         #self.bottomWidget.setText("<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
 
-    def createProxyTableView(self, name, model):
+    def createProxyTableView(self, name, model, proxyclass=QSortFilterProxyModel):
         """Factory to create new QTableView view using a QSortFilterProxyModel."""
-        proxyModel = QSortFilterProxyModel(self)
+        proxyModel = proxyclass(self)
         proxyModel.setSourceModel(model)
         tableView = TableView(self)
         tableView.setObjectName(name)

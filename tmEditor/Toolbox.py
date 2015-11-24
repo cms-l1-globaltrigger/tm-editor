@@ -43,7 +43,7 @@ def getRootDir():
 def getXsdDir():
     """Returns path for XSD files."""
     try:
-        return getenv('TM_EDITOR_XSD_DIR')
+        return getenv('UTM_XSD_DIR')
     except RuntimeError:
         return os.path.join(getRootDir(), 'tmXsd')
 

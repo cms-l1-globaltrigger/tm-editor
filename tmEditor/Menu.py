@@ -16,11 +16,9 @@ import tmTable
 import tmGrammar
 
 from tmEditor import Toolbox
-from tmEditor import TempFileEnvironment
 
 import uuid
 import shutil
-import tempfile
 import logging
 import re
 import sys, os
@@ -184,62 +182,59 @@ class Menu(object):
         """Read XML menu from file. Provided for convenience."""
         filename = os.path.abspath(filename)
 
-        # Create virtual filesystem environment.
-        with TempFileEnvironment(filename) as env:
+        # Load tables from XML file.
+        menu = tmTable.Menu()
+        scale = tmTable.Scale()
+        ext_signal = tmTable.ExtSignal()
 
-            # Load tables from XML file.
-            menu = tmTable.Menu()
-            scale = tmTable.Scale()
-            ext_signal = tmTable.ExtSignal()
+        # Read from XML file.
+        logging.debug("reading XML file from `%s'", filename)
+        warnings = tmTable.xml2menu(filename, menu, scale, ext_signal)
 
-            # Read from XML file.
-            logging.debug("reading XML file from `%s'", filename)
-            warnings = tmTable.xml2menu(env.filename, menu, scale, ext_signal)
+        if warnings:
+            messange = "Failed to read XML menu {filename}\n{warnings}".format(**locals())
+            logging.error(messange)
+            raise RuntimeError(messange)
 
-            # Handle errors only after removing the temporary files.
-            if warnings:
-                messange = "Failed to read XML menu {filename}\n{warnings}".format(**locals())
-                logging.error(messange)
-                raise RuntimeError(messange)
-
-            # Populate the containers.
-            self.menu = dict(menu.menu.items())
-            # Add algorithms
-            for algorithm in menu.algorithms:
-                algorithm = Algorithm(algorithm.items())
-                logging.debug("adding algorithm `%s'", algorithm)
-                self.addAlgorithm(**algorithm)
-            # Add cuts
-            for cuts in menu.cuts.values():
-                for cut in cuts:
-                    cut = Cut(cut.items())
-                    if not cut in self.cuts:
-                        logging.debug("adding cut `%s'", cut)
-                        self.addCut(**cut)
-            # Add objects
-            for objs in menu.objects.values():
-                for obj in objs:
-                    obj = Object(obj.items())
-                    if not obj in self.objects:
-                        logging.debug("adding object requirements `%s'", obj)
-                        self.addObject(**obj)
-            # Add externals
-            for externals in menu.externals.values():
-                for external in externals:
-                    external = External(external.items())
-                    if not external in self.externals:
-                        logging.debug("adding external signal `%s'", external)
-                        self.addExternal(**external)
-            self.scales = scale
-            self.extSignals = ext_signal
+        # Populate the containers.
+        self.menu = dict(menu.menu.items())
+        # Add algorithms
+        for algorithm in menu.algorithms:
+            algorithm = Algorithm(algorithm.items())
+            logging.debug("adding algorithm `%s'", algorithm)
+            self.addAlgorithm(**algorithm)
+        # Add cuts
+        for cuts in menu.cuts.values():
+            for cut in cuts:
+                cut = Cut(cut.items())
+                if not cut in self.cuts:
+                    logging.debug("adding cut `%s'", cut)
+                    self.addCut(**cut)
+        # Add objects
+        for objs in menu.objects.values():
+            for obj in objs:
+                obj = Object(obj.items())
+                if not obj in self.objects:
+                    logging.debug("adding object requirements `%s'", obj)
+                    self.addObject(**obj)
+        # Add externals
+        for externals in menu.externals.values():
+            for external in externals:
+                external = External(external.items())
+                if not external in self.externals:
+                    logging.debug("adding external signal `%s'", external)
+                    self.addExternal(**external)
+        self.scales = scale
+        self.extSignals = ext_signal
 
     def saveXml(self, filename):
         """Provided for convenience."""
         filename = os.path.abspath(filename)
 
-        # Create virtual filesystem environment.
-        with TempFileEnvironment(filename) as env:
+        pwd = os.getcwd()
+        os.chdir(Toolbox.getXsdDir())
 
+        try:
             logging.debug("regenerating menu UUID")
             self.menu['uuid_menu'] = str(uuid.uuid4())
 
@@ -254,6 +249,7 @@ class Menu(object):
             for algorithm in self.algorithms:
 
                 if not algorithm.isValid():
+                    os.chdir(pwd)
                     raise RuntimeError("Invalid algorithm ({algorithm.index}): {algorithm.name}".format(**locals()))
 
                 row = algorithm.toRow()
@@ -301,13 +297,12 @@ class Menu(object):
 
             # Write to XML file.
             logging.debug("writing XML file to `%s'", filename)
-            warnings = tmTable.menu2xml(menu, self.scales, self.extSignals, filename)
+            tmTable.menu2xml(menu, self.scales, self.extSignals, filename)
 
-            # Handle errors only after removing the temporary files.
-            if warnings:
-                messange = "Failed to write XML menu {filename}\n{warnings}".format(**locals())
-                logging.error(messange)
-                raise RuntimeError(messange)
+
+        except:
+            os.chdir(pwd)
+            raise
 
 # ------------------------------------------------------------------------------
 #  Abstract base container class.
@@ -466,8 +461,8 @@ class Cut(AbstractDict):
         return (self.name, self.object, self.type, self.minimum, self.maximum, self.data) == (item.name, item.object, item.type, item.minimum, item.maximum, item.data)
 
     def __lt__(self, item):
-        """Custom sorting by object and type."""
-        return (self.object, self.type) < (item.object, item.type)
+        """Custom sorting by type and object and suffix name."""
+        return (self.type, self.object, self.suffix) < (item.type, item.object, item.suffix)
 
     def isValid(self):
         return tmTable.isCut(self.toRow())
@@ -527,8 +522,8 @@ class Object(AbstractDict):
     def __lt__(self, item):
         """Custom sorting by type, threshold and offset."""
         return \
-            (self.type, float(self.threshold), int(self.bx_offset)) < \
-            (item.type, float(item.threshold), int(item.bx_offset))
+            (self.type, float(self.threshold.replace('p', '.')), int(self.bx_offset)) < \
+            (item.type, float(item.threshold.replace('p', '.')), int(item.bx_offset))
 
     def isValid(self):
         return tmTable.isObjectRequirement(self.toRow())
@@ -549,12 +544,23 @@ class External(AbstractDict):
         return self['name']
 
     @property
+    def basename(self):
+        result = re.match("([\w\d\._]+)([+-]\d+)?", self.name)
+        if result:
+            return result.group(1)
+        return self.name
+
+    @property
     def bx_offset(self):
         return self['bx_offset']
 
     def __eq__(self, object):
         """Distinquish objects."""
-        return self.name == object.name and self.bx_offset == object.bx_offset
+        return self.basename == object.basename and int(self.bx_offset) == int(object.bx_offset)
+
+    def __lt__(self, item):
+        """Custom sorting by basename and offset."""
+        return (self.basename, int(self.bx_offset)) < (item.basename, int(item.bx_offset))
 
     def isValid(self):
         return tmTable.isExternalRequirement(self.toRow())
