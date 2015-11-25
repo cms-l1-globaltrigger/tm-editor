@@ -2,11 +2,21 @@
   <qresource>
     <file alias="icons/tm-editor.svg">share/icons/hicolor/scalable/apps/tm-editor.svg</file>
     <file alias="icons/document-import.svg">share/tm-editor/icons/24x24/document-import.svg</file>
-    <file alias="icons/mu.svg">share/tm-editor/icons/16x16/object_mu.svg</file>
-    <file alias="icons/eg.svg">share/tm-editor/icons/16x16/object_eg.svg</file>
-    <file alias="icons/jet.svg">share/tm-editor/icons/16x16/object_jet.svg</file>
-    <file alias="icons/tau.svg">share/tm-editor/icons/16x16/object_tau.svg</file>
-    <file alias="icons/esums.svg">share/tm-editor/icons/16x16/object_esums.svg</file>
+    <file alias="icons/mu.svg">share/tm-editor/icons/13x13/mu.svg</file>
+    <file alias="icons/eg.svg">share/tm-editor/icons/13x13/eg.svg</file>
+    <file alias="icons/jet.svg">share/tm-editor/icons/13x13/jet.svg</file>
+    <file alias="icons/tau.svg">share/tm-editor/icons/13x13/tau.svg</file>
+    <file alias="icons/esums.svg">share/tm-editor/icons/13x13/esums.svg</file>
+    <file alias="icons/eta.svg">share/tm-editor/icons/13x13/eta.svg</file>
+    <file alias="icons/phi.svg">share/tm-editor/icons/13x13/phi.svg</file>
+    <file alias="icons/iso.svg">share/tm-editor/icons/13x13/iso.svg</file>
+    <file alias="icons/qlty.svg">share/tm-editor/icons/13x13/qlty.svg</file>
+    <file alias="icons/chg.svg">share/tm-editor/icons/13x13/chg.svg</file>
+    <file alias="icons/chgcor.svg">share/tm-editor/icons/13x13/chgcor.svg</file>
+    <file alias="icons/deta.svg">share/tm-editor/icons/13x13/deta.svg</file>
+    <file alias="icons/dphi.svg">share/tm-editor/icons/13x13/dphi.svg</file>
+    <file alias="icons/dr.svg">share/tm-editor/icons/13x13/dr.svg</file>
+    <file alias="icons/mass.svg">share/tm-editor/icons/13x13/mass.svg</file>
     <file alias="icons/compare.svg">share/tm-editor/icons/16x16/compare.svg</file>
   </qresource>
 </RCC>

@@ -27,6 +27,9 @@ import re
 
 MaxAlgorithms = 512
 
+def miniIcon(name):
+    return QIcon(":/icons/{name}.svg".format(name=name)).pixmap(13, 13)
+
 # -----------------------------------------------------------------------------
 #  Algorithm editor window
 # -----------------------------------------------------------------------------
@@ -505,15 +508,15 @@ class LibraryWidget(QWidget):
         for object in sorted(self.menu.objects): # Applies custom sort of class
             icon = QIcon()
             if object.type in (tmGrammar.MU, ):
-                icon.addPixmap(QIcon(":/icons/mu.svg").pixmap(12, 12))
+                icon.addPixmap(miniIcon("mu"))
             if object.type in (tmGrammar.EG, ):
-                icon.addPixmap(QIcon(":/icons/eg.svg").pixmap(12, 12))
+                icon.addPixmap(miniIcon("eg"))
             if object.type in (tmGrammar.TAU, ):
-                icon.addPixmap(QIcon(":/icons/tau.svg").pixmap(12, 12))
+                icon.addPixmap(miniIcon("tau"))
             if object.type in (tmGrammar.JET, ):
-                icon.addPixmap(QIcon(":/icons/jet.svg").pixmap(12, 12))
+                icon.addPixmap(miniIcon("jet"))
             if object.type in (tmGrammar.ETT, tmGrammar.HTT, tmGrammar.ETM, tmGrammar.HTM):
-                icon.addPixmap(QIcon(":/icons/esums.svg").pixmap(12, 12))
+                icon.addPixmap(miniIcon("esums"))
             if not object.type in topLevelItems.keys():
                 item = QTreeWidgetItem(self.objectsTree, [object.type])
                 item.setIcon(0, icon)

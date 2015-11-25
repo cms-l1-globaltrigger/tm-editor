@@ -24,6 +24,9 @@ AlignLeft = Qt.AlignLeft | Qt.AlignVCenter
 AlignRight = Qt.AlignRight | Qt.AlignVCenter
 AlignCenter = Qt.AlignCenter | Qt.AlignVCenter
 
+def miniIcon(name):
+    return QIcon(":/icons/{name}.svg".format(name=name)).pixmap(13, 13)
+
 # ------------------------------------------------------------------------------
 #  Base models
 # ------------------------------------------------------------------------------
@@ -140,6 +143,15 @@ class CutsModel(AbstractTableModel):
         self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
         self.addColumnSpec("Data", 'data')
 
+    def data(self, index, role):
+        """Overloaded for experimental icon decoration."""
+        if index.isValid():
+            if index.column() == 0:
+                if role == Qt.DecorationRole:
+                    cut = self.values[index.row()]
+                    return miniIcon(cut.type.lower())
+        return super(CutsModel, self).data(index, role)
+
     def insertRows(self, position, rows, parent = QModelIndex()):
         self.beginInsertRows(parent, position, position + rows - 1)
         for i in range(rows):
@@ -174,15 +186,15 @@ class ObjectsModel(AbstractTableModel):
                 if role == Qt.DecorationRole:
                     name = self.values[index.row()].name
                     if name.startswith("MU"):
-                        return QIcon(":/icons/mu.svg")
+                        return miniIcon("mu")
                     if name.startswith("EG"):
-                        return QIcon(":/icons/eg.svg")
+                        return miniIcon("eg")
                     if name.startswith("TAU"):
-                        return QIcon(":/icons/tau.svg")
+                        return miniIcon("tau")
                     if name.startswith("JET"):
-                        return QIcon(":/icons/jet.svg")
+                        return miniIcon("jet")
                     if name.startswith("ET") or name.startswith("HT"):
-                        return QIcon(":/icons/esums.svg")
+                        return miniIcon("esums")
         return super(ObjectsModel, self).data(index, role)
 
 class ExternalsModel(AbstractTableModel):

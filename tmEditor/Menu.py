@@ -207,7 +207,7 @@ class Menu(object):
         for cuts in menu.cuts.values():
             for cut in cuts:
                 cut = Cut(cut.items())
-                if not cut in self.cuts:
+                if not self.cutByName(cut.name):
                     logging.debug("adding cut `%s'", cut)
                     self.addCut(**cut)
         # Add objects
@@ -458,7 +458,8 @@ class Cut(AbstractDict):
 
     def __eq__(self, item):
         """Distinquish cuts by it's uinque name."""
-        return (self.name, self.object, self.type, self.minimum, self.maximum, self.data) == (item.name, item.object, item.type, item.minimum, item.maximum, item.data)
+        return self.name == item.name
+        #return (self.name, self.object, self.type, self.minimum, self.maximum, self.data) == (item.name, item.object, item.type, item.minimum, item.maximum, item.data)
 
     def __lt__(self, item):
         """Custom sorting by type and object and suffix name."""
