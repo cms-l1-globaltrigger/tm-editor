@@ -110,7 +110,6 @@ class AlgorithmsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(AlgorithmsModel, self).__init__(menu.algorithms, parent)
-        self.formatter = AlgorithmFormatter()
         self.addColumnSpec("Index", 'index', int, AlignRight)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Expression", 'expression', fAlgorithm)

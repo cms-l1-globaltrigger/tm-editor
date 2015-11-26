@@ -43,7 +43,6 @@ class AlgorithmEditor(QMainWindow):
         self.setWindowTitle(self.tr("Algorithm Editor"))
         self.resize(720, 480)
         self.menu = menu
-        self.formatter = AlgorithmFormatter()
         self.setModified(False)
         #
         self.indexSpinBox = Toolbox.ListSpinBox([0], self)
@@ -166,10 +165,11 @@ class AlgorithmEditor(QMainWindow):
 
     def expression(self):
         """Returns a machine readable formatted version of the loaded algorithm."""
-        return self.formatter.mechanize(str(self.textEdit.toPlainText()))
+        expression = str(self.textEdit.toPlainText())
+        return AlgorithmFormatter.compress(expression)
 
     def setExpression(self, expression):
-        self.textEdit.setPlainText(self.formatter.humanize(expression))
+        self.textEdit.setPlainText(AlgorithmFormatter.normalize(expression))
 
     def comment(self):
         return str(self.commentEdit.toPlainText())
@@ -218,12 +218,12 @@ class AlgorithmEditor(QMainWindow):
 
     def onFormatCompact(self):
         modified = self.isModified() # Formatting does not count as change.
-        self.replacePlainText(self.formatter.humanize(self.expression()))
+        self.replacePlainText(AlgorithmFormatter.normalize(self.expression()))
         self.setModified(modified)
 
     def onFormatExpand(self):
         modified = self.isModified() # Formatting does not count as change.
-        self.replacePlainText(self.formatter.expanded(self.expression()))
+        self.replacePlainText(AlgorithmFormatter.cascade(self.expression()))
         self.setModified(modified)
 
     def onInsertItem(self, text):
@@ -369,7 +369,7 @@ class AlgorithmEditorDialog(QDialog):
                 token = result.group(1)
                 print "FOUND", token
             else:
-                token = self.editor.formatter.humanize(token)
+                token = AlgorithmFormatter.normalize(token)
             # Make sure to highlight the errornous part in the text editor.
             self.editor.setExpression(self.editor.expression()) # humanize expression
             self.editor.textEdit.moveCursor(QTextCursor.Start)

@@ -6,7 +6,16 @@
 # Last changed date : $Date: $
 #
 
-"""Algorithm formatter class.
+"""Algorithm expression formatter.
+
+Compress an algorithm expression before assining it to tmGrammar functions:
+>>> AlgorithmFormatter.compress(expression)
+
+Normalize an algorithm expression optimized for human readability:
+>>> AlgorithmFormatter.normalize(expression)
+
+Cascade an algorithm expression to increase human readability:
+>>> AlgorithmFormatter.cascade(expression)
 """
 
 import tmGrammar
@@ -15,9 +24,6 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 __all__ = ['AlgorithmFormatter', ]
-
-EOL = "\n"
-INDENT = "  "
 
 class AlgorithmFormatter(object):
     """Formatter class used to format user input to the (currently very)
@@ -31,18 +37,25 @@ class AlgorithmFormatter(object):
     Separators = (',', )
     Spaces = (' ', '\t', '\r', '\n')
 
-    def tokenize(self, expression):
-        """Solid algorithm expression tokenization."""
+    @staticmethod
+    def tokenize(expression):
+        """Robust algorithm expression tokenization, splitting expression in
+        objects, functions, cuts and paranthesis.
+
+        >>> tokenize("comb{MU20[MU-ISO_1],MU10}")
+        ['comb', '{', 'MU20', '[', 'MU-ISO_1', ']', ',', 'MU10', '}']
+        """
         tokens = []
         token = []
         for char in expression:
             # Ignore spaces, append optional previous token.
-            if char in self.Spaces:
+            if char in AlgorithmFormatter.Spaces:
                 if token:
                     tokens.append(''.join(token))
                 token = []
             # Append optional previous token, append separator.
-            elif char in self.Separators or char in self.Paranthesis:
+            elif char in AlgorithmFormatter.Separators or \
+                 char in AlgorithmFormatter.Paranthesis:
                 if token:
                     tokens.append(''.join(token))
                 tokens.append(char)
@@ -54,89 +67,95 @@ class AlgorithmFormatter(object):
             tokens.append(''.join(token))
         return tokens
 
-    def sanitize(self, expression):
-        """Returns sanitized tokens auto correcting some frequent mistakes."""
+    @staticmethod
+    def sanitize(expression):
+        """Returns sanitized tokens auto correcting some frequent mistakes, like
+        lower case operators, upper case function names, and removes occurences
+        of multiple commas and trailing commas.
+
+        >>> tokens = sanitize("MU10 and COMB{JET20, ,JET10, }")
+        ['MU10', 'AND', 'comb', '{', 'JET20', ',', 'JET10', '}']
+        """
         tokens = []
-        for i, token in enumerate(self.tokenize(expression)):
-            # Make sure operators ar upper case.
-            if token.upper() in self.Operators:
+        for i, token in enumerate(AlgorithmFormatter.tokenize(expression)):
+            # Make sure operators are upper case.
+            if token.upper() in AlgorithmFormatter.Operators:
                 token = token.upper()
             # Make sure function names are lower case.
-            elif token.lower() in self.Functions:
+            elif token.lower() in AlgorithmFormatter.Functions:
                 token = token.lower()
             # Remove multiple commas.
-            elif token in self.Separators:
-                if tokens and tokens[-1] in self.Separators:
+            elif token in AlgorithmFormatter.Separators:
+                if tokens and tokens[-1] in AlgorithmFormatter.Separators:
                     tokens = tokens[:-1]
             # Remove trailing commas.
-            elif token in self.ClosingParanthesis:
-                if tokens and tokens[-1] in self.Separators:
+            elif token in AlgorithmFormatter.ClosingParanthesis:
+                if tokens and tokens[-1] in AlgorithmFormatter.Separators:
                     tokens = tokens[:-1]
             tokens.append(token)
         return tokens
 
-    def mechanize(self, expression):
-        """Return expression applying strict foramtting required by tmGrammar classes."""
+    @staticmethod
+    def compress(expression):
+        """Return expression applying strict foramtting required by tmGrammar.
+
+        >>> compress("comb{MU40, MU30, MU20, MU10, }")
+        'comb{MU40,MU30,MU20,MU10}'
+        """
         tokens = []
-        for i, token in enumerate(self.sanitize(expression)):
-            if token in self.Operators:
+        for i, token in enumerate(AlgorithmFormatter.sanitize(expression)):
+            if token in AlgorithmFormatter.Operators:
                 token = " {token} ".format(token = token)
             tokens.append(token)
         return ''.join(tokens)
 
-    def humanize(self, expression):
-        """Returns expression applying a human readable formatting."""
-        expression = self.mechanize(expression)
-        expression = expression.replace(",", ", ")
-        expression = expression.replace("(", " ( ")
-        expression = expression.replace(")", " ) ")
-        expression = expression.replace("  ", " ") # Ugh, thats still ugly ;D
+    @staticmethod
+    def normalize(expression):
+        """Returns expression applying a human readable formatting.
+
+        >>> normalize("comb{MU40,MU30,MU20,MU10}")
+        'comb{MU40, MU30, MU20, MU10}'
+        """
+        expression = AlgorithmFormatter.compress(expression)
+        rules = ((",", ", "), ("(", " ( "), (")", " ) "), ("  ", " "), )
+        for src, dst in rules:
+            expression.replace(src, dst)
         return expression.strip()
 
-    def expanded(self, expression):
-        """Return expression applying an expanding formatting."""
-        expression = self.mechanize(expression)
-        # TODO: now that's way not the best approach at all, use regular expressions instead...
-        expression = expression.replace(",", ", ")
-        temp = []
-        i = 0
-        level = 0
-        while i < len(expression):
-            if expression[i].startswith('('):
-                level += 1
-                temp.append(expression[i])
-                temp.append(EOL)
-                temp.append(INDENT * level)
-                i += 1
-            elif expression[i:i+2].startswith(tmGrammar.OR):
-                temp.append(EOL)
-                temp.append(INDENT * level)
-                temp.append(expression[i:i+2])
-                temp.append(EOL)
-                temp.append(INDENT * level)
-                i += 3
-            elif expression[i:i+3].startswith(tmGrammar.AND):
-                temp.append(EOL)
-                temp.append(INDENT * level)
-                temp.append(expression[i:i+3])
-                temp.append(EOL)
-                temp.append(INDENT * level)
-                i += 4
-            elif expression[i:i+3].startswith(tmGrammar.XOR):
-                temp.append(EOL)
-                temp.append(INDENT * level)
-                temp.append(expression[i:i+3])
-                temp.append(EOL)
-                temp.append("  " * (level))
-                i += 4
-            elif expression[i].startswith(')'):
-                if level: level -= 1
-                temp.append(EOL)
-                temp.append(INDENT * level)
-                temp.append(expression[i])
-                i += 1
-            else:
-                temp.append(expression[i])
-                i += 1
+    @staticmethod
+    def cascade(expression, tabwidth = 2, ws = " ", eol = "\n"):
+        """Return expression applying an cascading formatting.
 
-        return ''.join(temp)
+        >>> print cascade("MU10 AND (JET20 OR TAU20)")
+        MU10
+        AND
+        (
+          JET20
+          OR
+          TAU20
+        )
+        """
+        tokens = AlgorithmFormatter.sanitize(expression)
+        level = 0
+        result = []
+        previous = None
+        def indent(): return ws * tabwidth * level
+        for token in tokens:
+            if token == ')':
+                level -= 1
+            if token in (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR):
+                result += (eol, indent(), ws, token)
+            elif token in ('(', ')'):
+                result += (eol if previous else '', indent(), token)
+            else:
+                if previous in ('(', ):
+                    result += (eol, indent(), token)
+                elif previous in (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR):
+                    result += (eol, indent(), token)
+                else:
+                    result += (token, )
+            if token == '(':
+                level += 1
+            previous = token
+
+        return ''.join(result)

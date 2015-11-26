@@ -24,8 +24,6 @@ import sys, os
 import json, re
 from operator import attrgetter
 
-Formatter = AlgorithmFormatter()
-
 # ------------------------------------------------------------------------------
 #  Low level helper functions
 # ------------------------------------------------------------------------------
@@ -64,10 +62,8 @@ def query(data, **kwargs):
 def fSeparate(text, separator = ' '):
     return ''.join([str(token) for token in (separator, text, separator)])
 
-def fAlgorithm(expr):
-    """Experimental HTML syntax highlighting for algorithm expressions."""
-    expr = Formatter.humanize(expr)
-    return expr
+def fAlgorithm(expression):
+    return AlgorithmFormatter.normalize(expression)
 
 def fCut(value):
     try:

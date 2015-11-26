@@ -18,7 +18,6 @@ from tmEditor import Settings
 
 from tmEditor import CutEditorDialog
 from tmEditor import AlgorithmEditorDialog
-from tmEditor import AlgorithmFormatter
 from tmEditor import AlgorithmSyntaxHighlighter
 
 from tmEditor import Menu
@@ -65,7 +64,6 @@ class Document(QWidget):
         super(Document, self).__init__(parent)
         # Attributes
         self.loadMenu(filename)
-        self.formatter = AlgorithmFormatter()
         # Layout
         self.setContentsMargins(0, 0, 0, 0)
         # Create table views.
