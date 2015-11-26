@@ -11,7 +11,7 @@
 Usage example
 -------------
 
->>> validator = AlgorithmSyntaxValidator()
+>>> validator = AlgorithmSyntaxValidator(scales)
 >>> validator.validate(expression)
 
 """
@@ -41,7 +41,8 @@ __all__ = ['AlgorithmSyntaxValidator', ]
 class SyntaxValidator(object):
     """Base class to be inherited by custom syntax validator classes."""
 
-    def __init__(self):
+    def __init__(self, scales):
+        self.scales = scales
         self.rules = []
 
     def validate(self, expression):
@@ -50,10 +51,13 @@ class SyntaxValidator(object):
 
     def addRule(self, cls):
         """Add a syntx rule class. Creates and tores an instance of the class."""
-        self.rules.append(cls())
+        self.rules.append(cls(self))
 
 class SyntaxRule(object):
     """Base class to be inherited by custom syntax rule classes."""
+
+    def __init__(self, validator):
+        self.validator = validator
 
     def tokens(self, expression):
         """Parses algorithm expression and returns list of tokens."""
@@ -71,13 +75,13 @@ class SyntaxRule(object):
 
 class AlgorithmSyntaxError(Exception):
     """Exeption for algoithm syntax errors thrown by class AlgorithmSyntaxValidator."""
-    pass
+    token = None
 
 class AlgorithmSyntaxValidator(SyntaxValidator):
     """Algorithm syntax validator class."""
 
-    def __init__(self):
-        super(AlgorithmSyntaxValidator, self).__init__()
+    def __init__(self, scales):
+        super(AlgorithmSyntaxValidator, self).__init__(scales)
         self.addRule(CombBxOffset)
         self.addRule(DistNrObjects)
         self.addRule(DistDeltaEtaRange)
@@ -97,8 +101,10 @@ class CombBxOffset(SyntaxRule):
             objects = functionObjects(token)
             for i in range(len(objects)):
                 if int(objects[i].bx_offset) != int(objects[0].bx_offset):
-                    raise AlgorithmSyntaxError("All object requirements of function comb{{...}} must be of same bunch crossing offset.\n" \
+                    e = AlgorithmSyntaxError("All object requirements of function comb{{...}} must be of same bunch crossing offset.\n" \
                                                "Invalid expression near \"{token}\"".format(**locals()))
+                    e.token = token
+                    raise e
 
 class DistNrObjects(SyntaxRule):
     """Limit number of objects for distance function."""

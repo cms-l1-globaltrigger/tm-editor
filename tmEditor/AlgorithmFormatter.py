@@ -9,12 +9,15 @@
 """Algorithm expression formatter.
 
 Compress an algorithm expression before assining it to tmGrammar functions:
+
 >>> AlgorithmFormatter.compress(expression)
 
 Normalize an algorithm expression optimized for human readability:
+
 >>> AlgorithmFormatter.normalize(expression)
 
 Cascade an algorithm expression to increase human readability:
+
 >>> AlgorithmFormatter.cascade(expression)
 """
 
@@ -119,7 +122,7 @@ class AlgorithmFormatter(object):
         expression = AlgorithmFormatter.compress(expression)
         rules = ((",", ", "), ("(", " ( "), (")", " ) "), ("  ", " "), )
         for src, dst in rules:
-            expression.replace(src, dst)
+            expression = expression.replace(src, dst)
         return expression.strip()
 
     @staticmethod
@@ -128,10 +131,10 @@ class AlgorithmFormatter(object):
 
         >>> print cascade("MU10 AND (JET20 OR TAU20)")
         MU10
-        AND
+         AND
         (
           JET20
-          OR
+           OR
           TAU20
         )
         """

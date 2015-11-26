@@ -338,7 +338,7 @@ class AlgorithmEditorDialog(QDialog):
     def parse(self):
         try:
             # Validate algorithm expression.
-            validator = AlgorithmSyntaxValidator()
+            validator = AlgorithmSyntaxValidator(self.editor.menu.scales)
             validator.validate(self.expression()) # mechanized expression
             for algorithm in self.editor.menu.algorithms:
                 if algorithm is self.loadedAlgorithm:
@@ -358,11 +358,18 @@ class AlgorithmEditorDialog(QDialog):
             algorithm = Algorithm(expression = self.expression())
             algorithm.objects()
             algorithm.cuts()
-        except (AlgorithmSyntaxError, ValueError), e:
-            # TODO the tmGrammar parser errors ar not user friendly.
+        except AlgorithmSyntaxError, e:
+            if e.token:
+                # Make sure to highlight the errornous part in the text editor.
+                self.editor.setExpression(self.editor.expression()) # normalize expression
+                self.editor.textEdit.moveCursor(QTextCursor.Start)
+                self.editor.textEdit.find(AlgorithmFormatter.normalize(e.token))
+            QMessageBox.warning(self, self.tr("Invalid expression"), str(e))
+            return False
+        except ValueError, e:
+            # TODO the tmGrammar parser errors are not user friendly.
             #       think about how to translate the messages in a user readable way.
             token = str(e).strip()
-            print token
             c = re.compile("\w+\:\:\w+\s*\'([^\']*)\'")
             result = c.match(token)
             if result:
@@ -371,7 +378,7 @@ class AlgorithmEditorDialog(QDialog):
             else:
                 token = AlgorithmFormatter.normalize(token)
             # Make sure to highlight the errornous part in the text editor.
-            self.editor.setExpression(self.editor.expression()) # humanize expression
+            self.editor.setExpression(self.editor.expression()) # normalize expression
             self.editor.textEdit.moveCursor(QTextCursor.Start)
             self.editor.textEdit.find(token)
             QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("Found invalid expression near:<br/>%1").arg(token))
@@ -381,6 +388,9 @@ class AlgorithmEditorDialog(QDialog):
     def accept(self):
         if self.parse():
             super(AlgorithmEditorDialog, self).accept()
+
+    def reject(self):
+        self.close() # Will call closeEvent
 
     def closeEvent(self, event):
         """On window close event."""
