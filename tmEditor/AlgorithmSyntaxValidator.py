@@ -11,7 +11,7 @@
 Usage example
 -------------
 
->>> validator = AlgorithmSyntaxValidator(scales)
+>>> validator = AlgorithmSyntaxValidator(menu)
 >>> validator.validate(expression)
 
 """
@@ -32,7 +32,7 @@ from tmEditor.Menu import (
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-__all__ = ['AlgorithmSyntaxValidator', ]
+__all__ = ['AlgorithmSyntaxValidator', 'AlgorithmSyntaxError']
 
 # -----------------------------------------------------------------------------
 #  Base classes
@@ -41,8 +41,8 @@ __all__ = ['AlgorithmSyntaxValidator', ]
 class SyntaxValidator(object):
     """Base class to be inherited by custom syntax validator classes."""
 
-    def __init__(self, scales):
-        self.scales = scales
+    def __init__(self, menu):
+        self.menu = menu # menu handle
         self.rules = []
 
     def validate(self, expression):
@@ -80,8 +80,8 @@ class AlgorithmSyntaxError(Exception):
 class AlgorithmSyntaxValidator(SyntaxValidator):
     """Algorithm syntax validator class."""
 
-    def __init__(self, scales):
-        super(AlgorithmSyntaxValidator, self).__init__(scales)
+    def __init__(self, menu):
+        super(AlgorithmSyntaxValidator, self).__init__(menu)
         self.addRule(CombBxOffset)
         self.addRule(DistNrObjects)
         self.addRule(DistDeltaEtaRange)
@@ -127,21 +127,29 @@ class DistDeltaEtaRange(SyntaxRule):
     """Validates that delta-eta cut ranges does not exceed assigned objects limits."""
 
     def validate(self, expression):
+        menu = self.validator.menu
         for token in self.tokens(expression):
             if not isFunction(token):
                 continue
             if not token.startswith(tmGrammar.dist):
                 continue
-            cuts = functionCuts(token)
-            for cut in cuts:
-                if not cut.startswith(tmGrammar.DETA):
-                    continue
-                objects = functionObjects(token)
-                print objects
-                # print "{"
-                # for object in objects:
-                #     o = tmGrammar.Object_Item()
-                #     if not tmGrammar.Object_parser(object, o):
-                #         raise AlgorithmSyntaxError("not an object")
-                #     print " ", o.getObjectName()
-                # print "}"
+            for name in functionCuts(token):
+                cut = menu.cutByName(name)
+                if cut.type == tmGrammar.DETA:
+                    for object in functionObjects(token):
+                        scale = filter(lambda scale: scale['object']==object.type and scale['type']=='ETA', menu.scales.scales)[0]
+                        minimum = 0
+                        maximum = abs(float(scale['minimum'])) + float(scale['maximum'])
+                        if not (minimum <= float(cut.minimum) <= maximum):
+                            raise AlgorithmSyntaxError("Cut \"{name}\" minimum limit of {cut.minimum} exceed valid object DETA range of {minimum}".format(**locals()))
+                        if not (minimum <= float(cut.maximum) <= maximum):
+                            raise AlgorithmSyntaxError("Cut \"{name}\" maximum limit of {cut.maximum} exceed valid object DETA range of {maximum}".format(**locals()))
+                if cut.type == tmGrammar.DPHI:
+                    for object in functionObjects(token):
+                        scale = filter(lambda scale: scale['object']==object.type and scale['type']=='PHI', menu.scales.scales)[0]
+                        minimum = 0
+                        maximum = float(scale['maximum']) / 2.
+                        if not (minimum <= float(cut.minimum) <= maximum):
+                            raise AlgorithmSyntaxError("Cut \"{name}\" minimum limit of {cut.minimum} exceed valid object DPHI range of {minimum}".format(**locals()))
+                        if not (minimum <= float(cut.maximum) <= maximum):
+                            raise AlgorithmSyntaxError("Cut \"{name}\" maximum limit of {cut.maximum} exceed valid object DPHI range of {maximum}".format(**locals()))

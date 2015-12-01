@@ -304,6 +304,34 @@ class Menu(object):
             os.chdir(pwd)
             raise
 
+    # def validate(self):
+    #     for algorithm in self.algorithms:
+    #         for token in tokens(algorithm.expression):
+    #             if not isFunction(token):
+    #                 continue
+    #             if not token.startswith(tmGrammar.dist):
+    #                 continue
+    #             for name in functionCuts(token):
+    #                 cut = self.cutByName(name)
+    #                 if cut.type == tmGrammar.DETA:
+    #                     for object in functionObjects(token):
+    #                         scale = filter(lambda scale: scale['object']==object.type and scale['type']=='ETA', self.scales.scales)[0]
+    #                         minimum = 0
+    #                         maximum = abs(float(scale['minimum'])) + float(scale['maximum'])
+    #                         if not (minimum <= float(cut.minimum) <= maximum):
+    #                             raise RuntimeError("Cut \"{name}\" minimum limit of {cut.minimum} exceed valid object DETA range of {minimum}".format(**locals()))
+    #                         if not (minimum <= float(cut.maximum) <= maximum):
+    #                             raise RuntimeError("Cut \"{name}\" maximum limit of {cut.maximum} exceed valid object DETA range of {maximum}".format(**locals()))
+    #                 if cut.type == tmGrammar.DPHI:
+    #                     for object in functionObjects(token):
+    #                         scale = filter(lambda scale: scale['object']==object.type and scale['type']=='PHI', self.scales.scales)[0]
+    #                         minimum = 0
+    #                         maximum = float(scale['maximum']) / 2.
+    #                         if not (minimum <= float(cut.minimum) <= maximum):
+    #                             raise RuntimeError("Cut \"{name}\" minimum limit of {cut.minimum} exceed valid object DPHI range of {minimum}".format(**locals()))
+    #                         if not (minimum <= float(cut.maximum) <= maximum):
+    #                             raise RuntimeError("Cut \"{name}\" maximum limit of {cut.maximum} exceed valid object DPHI range of {maximum}".format(**locals()))
+
 # ------------------------------------------------------------------------------
 #  Abstract base container class.
 # ------------------------------------------------------------------------------
@@ -652,3 +680,10 @@ def objectCuts(token):
     if not tmGrammar.Object_parser(token, o):
         raise ValueError(token)
     return list(o.cuts)
+
+def tokens(self, expression):
+    """Parses algorithm expression and returns list of tokens."""
+    tmGrammar.Algorithm_Logic.clear()
+    if not tmGrammar.Algorithm_parser(expression):
+        raise AlgorithmSyntaxError("Failed to parse algorithm expression `{expression}'".format(**locals()))
+    return tmGrammar.Algorithm_Logic.getTokens()

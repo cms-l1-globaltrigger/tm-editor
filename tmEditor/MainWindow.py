@@ -205,9 +205,9 @@ class MainWindow(QMainWindow):
                     meta = u.info()
                     # Get byte size of remote content.
                     contentLength = meta.getheaders("Content-Length")
-                    if not contentLength:
-                        raise RuntimeError("Unable to open URL")
-                    fileSize = int(contentLength[0])
+                    #if not contentLength:
+                    #    raise RuntimeError("Unable to open URL")
+                    fileSize = int(contentLength[0]) if contentLength else 2**10
                     logging.info("fetching %s bytes from %s", fileSize, url)
                     dialog = ProgressDialog(fileSize, self)
                     dialog.setModal(True)

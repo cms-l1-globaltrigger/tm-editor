@@ -338,7 +338,7 @@ class AlgorithmEditorDialog(QDialog):
     def parse(self):
         try:
             # Validate algorithm expression.
-            validator = AlgorithmSyntaxValidator(self.editor.menu.scales)
+            validator = AlgorithmSyntaxValidator(self.editor.menu)
             validator.validate(self.expression()) # mechanized expression
             for algorithm in self.editor.menu.algorithms:
                 if algorithm is self.loadedAlgorithm:

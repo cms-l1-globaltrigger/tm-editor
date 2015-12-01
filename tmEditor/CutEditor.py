@@ -462,4 +462,12 @@ class CutEditorDialog(QDialog):
         if self.spec.data and not self.data:
             QMessageBox.warning(self, self.tr("No data"), self.tr("It is not possible to create a cut without assigning a data selection."))
             return
+        # Make sure that changes are compliant with algorithm combinations.
+        # TODO
+        # for algorithm in self.menu.algorithms:
+        #     try:
+        #         validate(algorithm.expression)
+        #     except RuntimeError, e:
+        #         QMessageBox.warning(self, self.tr("Exceeding limits"), str(e))
+        #         return
         super(CutEditorDialog, self).accept()

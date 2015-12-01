@@ -142,14 +142,14 @@ class CutsModel(AbstractTableModel):
         self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
         self.addColumnSpec("Data", 'data')
 
-    def data(self, index, role):
-        """Overloaded for experimental icon decoration."""
-        if index.isValid():
-            if index.column() == 0:
-                if role == Qt.DecorationRole:
-                    cut = self.values[index.row()]
-                    return miniIcon(cut.type.lower())
-        return super(CutsModel, self).data(index, role)
+    # def data(self, index, role):
+    #     """Overloaded for experimental icon decoration."""
+    #     if index.isValid():
+    #         if index.column() == 0:
+    #             if role == Qt.DecorationRole:
+    #                 cut = self.values[index.row()]
+    #                 return miniIcon(cut.type.lower())
+    #     return super(CutsModel, self).data(index, role)
 
     def insertRows(self, position, rows, parent = QModelIndex()):
         self.beginInsertRows(parent, position, position + rows - 1)
