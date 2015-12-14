@@ -198,7 +198,7 @@ class Document(QWidget):
         self.setFilename(filename)
         self.setName(os.path.basename(filename))
         self._menu = Menu()
-        self._menu.loadXml(filename)
+        self._menu.readXml(filename)
 
     def saveMenu(self, filename = None):
         """Save menu to filename."""
@@ -216,7 +216,7 @@ class Document(QWidget):
         filename = filename or self.filename()
         self._menu.menu['name'] = str(self.menuPage.top.nameLineEdit.text())
         self._menu.menu['comment'] = str(self.menuPage.top.commentTextEdit.toPlainText())
-        self._menu.saveXml(filename)
+        self._menu.writeXml(filename)
         self.setFilename(filename)
         self.setName(os.path.basename(filename))
         self.setModified(False)

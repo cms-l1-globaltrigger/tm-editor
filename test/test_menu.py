@@ -9,6 +9,7 @@ import tmGrammar
 from tmGrammar import isGate as isOperator
 from tmGrammar import isObject, isFunction
 from tmEditor.Menu import (
+    Menu,
     Object,
     External,
     toObject,
@@ -18,6 +19,7 @@ from tmEditor.Menu import (
     functionObjectsCuts,
     objectCuts,
 )
+import tempfile
 
 class MenuTests(unittest.TestCase):
 
@@ -106,6 +108,21 @@ class MenuTests(unittest.TestCase):
         }
         for token, ref in cases.items():
             self.assertEqual(objectCuts(token), ref)
+
+    def test_serdes(self):
+        menu = Menu()
+        menu.addObject("MU10", "MU", 10)
+        menu.addObject("MU20", "MU", 20)
+        menu.addCut("MU-ETA_2p1", "MU", "ETA", -2.1, +2.1)
+        menu.addAlgorithm(42, "L1_DoubleMu_er2p1", "comb{MU20, MU10}[MU-ETA_2p1]")
+        file, filename = tempfile.mkstemp()
+        open(filename).close()
+        menu.writeXml(filename)
+        menu = Menu()
+        menu.readXml(filename)
+        print menu.algorithms
+        print menu.cuts
+        print menu.objects
 
 if __name__ == '__main__':
     unittest.main()

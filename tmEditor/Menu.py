@@ -31,7 +31,7 @@ DEFAULT_UUID = '00000000-0000-0000-0000-000000000000'
 FORMAT_FLOAT = '+23.16E'
 """Floating point string format."""
 
-ObjectCodes = {
+ObjectNameMap = {
     tmGrammar.Muon: tmGrammar.MU,
     tmGrammar.Egamma: tmGrammar.EG,
     tmGrammar.Jet: tmGrammar.JET,
@@ -42,29 +42,12 @@ ObjectCodes = {
     tmGrammar.Vector: tmGrammar.HTM,
     tmGrammar.External: tmGrammar.EXT,
 }
-
-OperatorList = (
-    tmGrammar.AND,
-    tmGrammar.OR,
-    tmGrammar.XOR,
-    tmGrammar.NOT,
-)
-
-ObjectComparisonList = (
-    tmGrammar.EQ,
-    tmGrammar.NE,
-    tmGrammar.GE,
-    tmGrammar.GT,
-    tmGrammar.LE,
-    tmGrammar.LT,
-)
-
-CUT_MAPPING = {
-
-}
+"""Mapping object type enumeration to actual object names."""
 
 class Menu(object):
-    """L1-Trigger Menu container class."""
+    """L1-Trigger Menu container class. Provides methods to read and write XML
+    menu files and adding and removing contents.
+    """
 
     def __init__(self, filename = None):
         self.menu = {}
@@ -75,7 +58,7 @@ class Menu(object):
         self.scales = None
         self.extSignals = None
         if filename:
-            self.loadXml(filename)
+            self.readXml(filename)
 
     def addObject(self, name, type, threshold, requirement_id = 0, comparison_operator = '.ge.', bx_offset = 0, comment = ""):
         """Provided for convenience."""
@@ -160,6 +143,19 @@ class Menu(object):
         """Returns external signal item by its name or None if no such external signal exists."""
         return (filter(lambda item: item.name == name, self.externals) or [None])[0]
 
+    def scaleMeta(self, objectType, scaleType):
+        """Returns scale information for object by scale."""
+        if isinstance(objectType, int):
+            objectType = ObjectNameMap[objectType] # Cast from enumeration to name
+        return (filter(lambda item: item['object']==objectType and item['type']==scaleType, self.scales.scales) or [None])[0]
+
+    def scaleBins(self, objectType, scaleType):
+        """Returns bins for object by scale."""
+        if isinstance(objectType, int):
+            objectType = ObjectNameMap[objectType] # Cast from enumeration to name
+        key = '{objectType}-{scaleType}'.format(**locals())
+        return self.scales.bins[key] if key in self.scales.bins else None
+
     def orphanedObjects(self):
         """Returns list of orphaned object names not referenced by any algorithm."""
         tags = [object.name for object in self.objects]
@@ -178,7 +174,7 @@ class Menu(object):
                     tags.remove(name)
         return tags
 
-    def loadXml(self, filename):
+    def readXml(self, filename):
         """Read XML menu from file. Provided for convenience."""
         filename = os.path.abspath(filename)
 
@@ -227,7 +223,7 @@ class Menu(object):
         self.scales = scale
         self.extSignals = ext_signal
 
-    def saveXml(self, filename):
+    def writeXml(self, filename):
         """Provided for convenience."""
         filename = os.path.abspath(filename)
 
@@ -394,7 +390,7 @@ class Algorithm(AbstractDict):
         """Returns list of tokens of algorithm expression. Paranthesis is not included."""
         tmGrammar.Algorithm_Logic.clear()
         if not tmGrammar.Algorithm_parser(self.expression):
-            raise ValueError()
+            raise ValueError("Failed to parse algorithm expression")
         return list(tmGrammar.Algorithm_Logic.getTokens())
 
     def objects(self):
@@ -614,6 +610,10 @@ def isFunction(token):
     """Retruns True if token is a function."""
     return filter(lambda item: token.startswith(item), tmGrammar.functionName) != []
 
+def thresholdFloat(string):
+    """Converts threshold string representation (eg. 2p1) to flaoting point value."""
+    return float('.'.join(string.split('p')[:2]))
+
 def toObject(token):
     """Returns an object's dict."""
     o = tmGrammar.Object_Item()
@@ -622,7 +622,7 @@ def toObject(token):
     return Object(
         name = o.getObjectName(),
         threshold = o.threshold,
-        type = ObjectCodes[o.type],
+        type = ObjectNameMap[o.type],
         comparison_operator = o.comparison,
         bx_offset = o.bx_offset,
         comment = "",

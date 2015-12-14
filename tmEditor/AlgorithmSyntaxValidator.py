@@ -23,10 +23,12 @@ from tmEditor.Menu import (
     isObject,
     isCut,
     isFunction,
+    thresholdFloat,
     functionObjects,
     functionCuts,
     functionObjectsCuts,
     objectCuts,
+    ObjectNameMap,
 )
 
 from PyQt4.QtCore import *
@@ -66,6 +68,33 @@ class SyntaxRule(object):
             raise AlgorithmSyntaxError("Failed to parse algorithm expression `{expression}'".format(**locals()))
         return tmGrammar.Algorithm_Logic.getTokens()
 
+    def toObjectItem(self, token):
+        item = tmGrammar.Object_Item()
+        if not tmGrammar.Object_parser(token, item):
+            raise AlgorithmSyntaxError(
+                "Invalid object statement `{item.message}`".format(**locals()),
+                token
+            )
+        return item
+
+    def toFunctionItem(self, token):
+        item = tmGrammar.Function_Item()
+        if not tmGrammar.Function_parser(token, item):
+            raise AlgorithmSyntaxError(
+                "Invalid function statement `{item.message}`".format(**locals()),
+                token
+            )
+        return item
+
+    def toCutItem(self, token):
+        item = tmGrammar.Cut_Item()
+        if not tmGrammar.Cut_parser(token, item):
+            raise AlgorithmSyntaxError(
+                "Invalid cut statement `{item.message}` at object {token}".format(**locals()),
+                token
+            )
+        return item
+
     def validate(self, expression):
         raise NotImplementedError()
 
@@ -75,16 +104,70 @@ class SyntaxRule(object):
 
 class AlgorithmSyntaxError(Exception):
     """Exeption for algoithm syntax errors thrown by class AlgorithmSyntaxValidator."""
-    token = None
+    def __init__(self, message, token = None):
+        super(AlgorithmSyntaxError, self).__init__(message)
+        self.token = token
 
 class AlgorithmSyntaxValidator(SyntaxValidator):
     """Algorithm syntax validator class."""
 
     def __init__(self, menu):
         super(AlgorithmSyntaxValidator, self).__init__(menu)
+        self.addRule(BasicSyntax)
         self.addRule(CombBxOffset)
+        self.addRule(ObjectThresholds)
         self.addRule(DistNrObjects)
         self.addRule(DistDeltaEtaRange)
+
+class BasicSyntax(SyntaxRule):
+    """Validates basic algorithm syntax."""
+
+    def validate(self, expression):
+        for token in self.tokens(expression):
+            # Validate object
+            if isObject(token):
+                o = self.toObjectItem(token)
+                for cut in o.cuts:
+                    self.toCutItem(cut)
+            # Validate function
+            if isFunction(token):
+                f = self.toFunctionItem(token)
+                for cut in f.cuts:
+                    self.toCutItem(cut)
+
+class ObjectThresholds(SyntaxRule):
+    """Validates object thresholds."""
+
+    def validate(self, expression):
+        # TODO... better to use floating point representation and compare by string?!
+        def validateThreshold(menu, token, object):
+            scale = menu.scaleMeta(object.type, 'ET')
+            threshold = thresholdFloat(object.threshold)
+            minimum = float(scale['minimum'])
+            maximum = float(scale['maximum'])
+            step = float(scale['step'])
+            # Check range
+            if not (minimum <= threshold <= maximum):
+                raise AlgorithmSyntaxError(
+                    "Object threshold exceeding scale limits ({minimum:.1f}..{maximum:.1f}) near `{token}`".format(**locals()),
+                    token
+                )
+            # Check step
+            bins = menu.scaleBins(object.type, 'ET')
+            if not filter(lambda bin: float(bin['minimum'])==threshold or float(bin['maximum'])==threshold, bins):
+                raise AlgorithmSyntaxError(
+                    "Invalid threshold `{object.threshold}` at object `{token}`".format(**locals()),
+                    token
+                )
+        for token in self.tokens(expression):
+            # Validate object
+            if isObject(token):
+                object = self.toObjectItem(token)
+                validateThreshold(self.validator.menu, token, object)
+            # Validate function
+            if isFunction(token):
+                for object in functionObjects(token):
+                    validateThreshold(self.validator.menu, token, object)
 
 class CombBxOffset(SyntaxRule):
     """Validates that all objects of a combination function use the same BX offset."""
@@ -101,10 +184,8 @@ class CombBxOffset(SyntaxRule):
             objects = functionObjects(token)
             for i in range(len(objects)):
                 if int(objects[i].bx_offset) != int(objects[0].bx_offset):
-                    e = AlgorithmSyntaxError("All object requirements of function comb{{...}} must be of same bunch crossing offset.\n" \
-                                               "Invalid expression near \"{token}\"".format(**locals()))
-                    e.token = token
-                    raise e
+                    raise AlgorithmSyntaxError("All object requirements of function comb{{...}} must be of same bunch crossing offset.\n" \
+                                               "Invalid expression near \"{token}\"".format(**locals()), token)
 
 class DistNrObjects(SyntaxRule):
     """Limit number of objects for distance function."""
