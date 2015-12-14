@@ -12,6 +12,7 @@ Contents:
 
    cuts.rst
    library.rst
+   AlgorithmFormatter.rst
    tutorials.rst
 
 Indices and tables

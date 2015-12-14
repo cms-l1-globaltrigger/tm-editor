@@ -5,7 +5,7 @@ tmEditor Package Documentation
 -----------------------
 
 `Toolbox` module
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 .. module:: tmEditor.Toolbox
 
