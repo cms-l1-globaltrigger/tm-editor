@@ -139,6 +139,125 @@ class DataField(QScrollArea):
             if index < len(self.entries):
                 self.entries[index].setChecked(True)
 
+# ------------------------------------------------------------------------------
+#
+# ------------------------------------------------------------------------------
+
+class EtaGraph(QWidget):
+    """Graphical ETA cut representation."""
+
+    Margin = 10
+    Radius = 50
+    Length = 100
+    FontSize = 7
+
+    def __init__(self, parent = None):
+        """Constructur, takes optional reference to parent widget."""
+        super(EtaGraph, self).__init__(parent)
+        self.setRange(-5, 5)
+        self.setFixedSize(self.Margin * 2 + self.Length, self.Margin * 2 + self.Radius)
+
+    def setRange(self, lower, upper):
+        """Set lower and upper bounding of range."""
+        self.lower = lower
+        self.upper = upper
+
+    def range(self):
+        """Returns tuple containing lower and upper bounding of range."""
+        return self.lower, self.upper
+
+    def getPoint(self, value):
+        """Calculate pixel coordinate for an ETA value."""
+        stepX = (self.Length / 2) / 2.5
+        stepY = self.Radius / 2.5
+        if 2.5 < value <= 5.0:
+            return QPoint(self.Margin + self.Length, self.Margin + round(stepY * (value - 2.5)))
+        if 0. < value <= 2.5:
+            return QPoint(self.Margin + self.Length / 2 + round(stepX * value), self.Margin)
+        if -2.5 <= value <= 0.:
+            return QPoint(self.Margin + self.Length / 2 + round(stepX * value), self.Margin)
+        if -5.0 <= value < -2.5:
+            return QPoint(self.Margin, self.Margin + abs(round(stepY * (value + 2.5))))
+        raise ValueError()
+
+    def paintEvent(self, event):
+        """Paint ETA cut graph on windget."""
+        lower, upper = self.range()
+        painter = QPainter(self)
+        painter.setBrush(Qt.white)
+        # Draw Background
+        painter.drawRect(self.Margin, self.Margin, self.Length, self.Radius)
+        painter.setPen(QPen(Qt.transparent))
+        painter.setBrush(Qt.red)
+        # Draw Polygon
+        polygon = QPolygon()
+        polygon.append(QPoint(self.Margin + self.Length / 2, self.Margin + self.Radius))
+        polygon.append(self.getPoint(upper))
+        if upper > 2.5 and lower < 2.5:
+            polygon.append(QPoint(self.Margin + self.Length, self.Margin))
+        if lower < -2.5 and upper > -2.5:
+            polygon.append(QPoint(self.Margin, self.Margin))
+        polygon.append(self.getPoint(lower))
+        painter.drawPolygon(polygon)
+        # Draw frames
+        painter.setPen(QPen(Qt.black))
+        painter.setBrush(Qt.transparent)
+        painter.drawRect(self.Margin, self.Margin, self.Length / 2, self.Radius)
+        painter.drawRect(self.Margin + self.Length / 2, self.Margin, self.Length / 2, self.Radius)
+        painter.setFont(QFont('Sans', self.FontSize))
+        painter.drawText(QPoint(self.Margin + self.Length / 2 - 2, self.Margin - 1), "0")
+        painter.drawText(QPoint(0, (self.Margin + self.Radius) + self.FontSize / 2), u"-5")
+        painter.drawText(QPoint(self.Margin + self.Length + 1, (self.Margin + self.Radius) + self.FontSize / 2), u"5")
+
+# ------------------------------------------------------------------------------
+#
+# ------------------------------------------------------------------------------
+
+class PhiGraph(QWidget):
+    """Graphical PHI cut representation."""
+
+    Margin = 8
+    Radius = 30
+    FontSize = 7
+
+    def __init__(self, parent):
+        """Constructur, takes optional reference to parent widget."""
+        super(PhiGraph, self).__init__(parent)
+        self.setRange(0, 360 * 16)
+        self.setFixedSize((self.Margin + self.Radius) * 2, (self.Margin + self.Radius) * 2)
+
+    def setRange(self, lower, upper):
+        """Set lower and upper bounding of range."""
+        self.lower = lower
+        self.upper = upper
+
+    def range(self):
+        """Returns tuple containing lower and upper bounding of range."""
+        return self.lower, self.upper
+
+    def paintEvent(self, event):
+        """Paint PHI cut graph on windget."""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        rectangle = QRect(self.Margin, self.Margin, self.Radius * 2, self.Radius * 2)
+        painter.setPen(QPen(Qt.transparent))
+        painter.setBrush(Qt.white)
+        painter.drawPie(rectangle, 0, 360 * 16)
+        painter.setBrush(Qt.red)
+        lower, upper = self.range()
+        lower = math.degrees(lower)
+        upper = math.degrees(upper)
+        if (lower < upper):
+            painter.drawPie(rectangle, lower * 16, (upper-lower) * 16)
+        else:
+            painter.drawPie(rectangle, lower * 16, (360 - lower + upper) * 16)
+        painter.setPen(QPen(Qt.black))
+        painter.setBrush(Qt.transparent)
+        painter.drawArc(rectangle, 0, 360 * 16)
+        painter.setFont(QFont('Sans', self.FontSize))
+        painter.drawText(QPoint(self.Radius * 2 + self.Margin + 2, (self.Margin + self.Radius) + self.FontSize / 2), u"0")
+        painter.drawText(QPoint(0, (self.Margin + self.Radius) + self.FontSize / 2), u"π")
+
 class CutEditorDialog(QDialog):
     """Dialog providing cut creation/editing interface."""
 
@@ -168,18 +287,26 @@ class CutEditorDialog(QDialog):
         # Minimum
         self.minimumLabel = QLabel(self.tr("Minimum"), self)
         self.minimumSpinBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
+        self.minimumSpinBox.valueChanged.connect(self.updateGraphs)
         self.minimumRangeSpinBox = QDoubleSpinBox(self)
         self.minimumUnitLabel = QLabel(self)
         self.minimumUnitLabel.setSizePolicy(unitLabelSizePolicy)
         # Maximum
         self.maximumLabel = QLabel(self.tr("Maximum"), self)
         self.maximumSpinBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
+        self.maximumSpinBox.valueChanged.connect(self.updateGraphs)
         self.maximumRangeSpinBox = QDoubleSpinBox(self)
         self.maximumUnitLabel = QLabel(self)
         self.maximumUnitLabel.setSizePolicy(unitLabelSizePolicy)
         # Data
         self.dataLabel = QLabel(self.tr("Data"), self)
         self.dataField = DataField(self)
+        # Eta preview
+        self.etaLabel = QLabel(self.tr("Preview"), self)
+        self.etaGraph = EtaGraph(self)
+        # Phi preview
+        self.phiLabel = QLabel(self.tr("Preview"), self)
+        self.phiGraph = PhiGraph(self)
         # Comment
         self.commentLabel = QLabel(self.tr("Comment"), self)
         self.commentTextEdit = QPlainTextEdit(self)
@@ -209,12 +336,16 @@ class CutEditorDialog(QDialog):
         hbox.addWidget(self.maximumRangeSpinBox)
         hbox.addWidget(self.maximumUnitLabel)
         gridLayout.addLayout(hbox, 3, 1)
-        gridLayout.addWidget(self.dataLabel, 4, 0)
-        gridLayout.addWidget(self.dataField, 4, 1)
-        gridLayout.addWidget(self.commentLabel, 5, 0)
-        gridLayout.addWidget(self.commentTextEdit, 5, 1, 1, 2)
-        gridLayout.addWidget(self.infoTextEdit, 0, 2, 5, 1)
-        gridLayout.addWidget(buttonBox, 6, 0, 1, 3)
+        gridLayout.addWidget(self.etaLabel, 4, 0)
+        gridLayout.addWidget(self.etaGraph, 4, 1)
+        gridLayout.addWidget(self.phiLabel, 5, 0)
+        gridLayout.addWidget(self.phiGraph, 5, 1)
+        gridLayout.addWidget(self.dataLabel, 6, 0)
+        gridLayout.addWidget(self.dataField, 6, 1)
+        gridLayout.addWidget(self.commentLabel, 7, 0)
+        gridLayout.addWidget(self.commentTextEdit, 7, 1, 1, 2)
+        gridLayout.addWidget(self.infoTextEdit, 0, 2, 7, 1)
+        gridLayout.addWidget(buttonBox, 8, 0, 1, 3)
         self.setLayout(gridLayout)
         # Setup connections.
         self.typeComboBox.currentIndexChanged.connect(self.updateEntries)
@@ -396,6 +527,10 @@ class CutEditorDialog(QDialog):
         self.minimumSpinBox.reset()
         self.maximumSpinBox.reset()
         self.dataField.clear()
+        self.etaLabel.hide()
+        self.etaGraph.hide()
+        self.phiLabel.hide()
+        self.phiGraph.hide()
         info = []
         if self.spec.title:
             self.spec._filename = ""
@@ -452,10 +587,26 @@ class CutEditorDialog(QDialog):
             self.minimumSpinBox.setValue(minimum)
             self.maximumSpinBox.setValue(maximum)
 
+            if self.type == tmGrammar.ETA:
+                self.etaLabel.show()
+                self.etaGraph.show()
+            if self.type == tmGrammar.PHI:
+                self.phiLabel.show()
+                self.phiGraph.show()
+            self.updateGraphs()
+
             info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
         if not self.typeComboBox.isEnabled():
             info.append("<p><strong>Note:</strong> Changing an existing cut's type is not allowed.</p>")
         self.infoTextEdit.setText("\n".join(info))
+
+    def updateGraphs(self, value = None):
+        if self.type == tmGrammar.ETA:
+            self.etaGraph.setRange(float(self.minimumSpinBox.value()), float(self.maximumSpinBox.value()))
+            self.etaGraph.update()
+        if self.type == tmGrammar.PHI:
+            self.phiGraph.setRange(float(self.minimumSpinBox.value()), float(self.maximumSpinBox.value()))
+            self.phiGraph.update()
 
     def accept(self):
         """Perform consistency checks befor accepting changes."""

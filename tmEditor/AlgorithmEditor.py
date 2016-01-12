@@ -548,7 +548,10 @@ class LibraryWidget(QWidget):
             item = QTreeWidgetItem(topLevelItems[(cut.object, cut.type)], [cut.name])
         # Build list of externals.
         self.externalsList.clear()
-        self.externalsList.addItems(sorted([external.name for external in self.menu.externals]))
+        names = [external.name for external in self.menu.externals]
+        names += ['EXT_' + external['name'] for external in self.menu.extSignals.extSignals]
+        names = sorted(set(names))
+        self.externalsList.addItems(names)
         # Refresh UI.
         self.onPreview()
         # Default message.
@@ -590,6 +593,7 @@ class LibraryWidget(QWidget):
         # Externals
         elif tab == self.externalsList:
             if not self.externalsList.currentItem(): return # empty list
+            self.insertButton.setEnabled(True)
             item = self.menu.externalByName(self.externalsList.currentItem().text())
             if not item: return
             self.previewLabel.setText(self.ExternalPreview.format(**item))

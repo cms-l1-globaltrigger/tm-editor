@@ -21,7 +21,8 @@ from tmEditor import AlgorithmEditorDialog
 from tmEditor import AlgorithmSyntaxHighlighter
 
 from tmEditor import Menu
-from tmEditor.Menu import Algorithm, Cut, Object, toObject
+from tmEditor.Menu import Algorithm, Cut, Object, External, toObject
+from tmEditor.CutEditor import EtaGraph, PhiGraph
 
 from tmEditor.Models import *
 from tmEditor.Proxies import *
@@ -37,6 +38,7 @@ from tmEditor.Toolbox import (
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+import math
 import sys, os
 
 MaxAlgorithms = 512
@@ -202,6 +204,7 @@ class Document(QWidget):
 
     def saveMenu(self, filename = None):
         """Save menu to filename."""
+        # Warn before loosing cuts
         orphans = self._menu.orphanedCuts()
         if len(orphans) > 1:
             QMessageBox.information(self,
@@ -259,70 +262,36 @@ class Document(QWidget):
             item.bottom.setButtonsEnabled(True)
         elif index and item and isinstance(item.top, TableView):
             data = dict([(key, value) for key, value in item.top.model().sourceModel().values[index.row()].items()]) # Local copy
-            text = []
+            rows = item.top.selectionModel().selectedRows()
             if item is self.algorithmsPage:
-                rows = item.top.selectionModel().selectedRows()
                 if 1 < len(rows):
-                    text.append("Selected {0} algorithms.".format(len(rows)))
+                    item.bottom.setText("Selected {0} algorithms.".format(len(rows)))
                 else:
-                    data['expression'] = fAlgorithm(data['expression'])
-                    text.append("<h2>{name} ({index})</h2>")
-                    text.append("<p><strong>Expression:</strong></p><p><code>{expression}</code></p>")
-                    if 'comment' in data.keys() and data['comment']:
-                        text.append("<p><strong>Comment:</strong></p><p><code>{comment}</code></p>")
+                    item.bottom.loadAlgorithm(Algorithm(**data))
             elif item is self.cutsPage:
-                rows = item.top.selectionModel().selectedRows()
                 if 1 < len(rows):
-                    text.append("Selected {0} cuts.".format(len(rows)))
+                    item.bottom.setText("Selected {0} cuts.".format(len(rows)))
                 else:
-                    data['maximum'], data['minimum'] = fCut(data['maximum']), fCut(data['minimum'])
-                    text.append("<h2>{name}</h2>")
-                    text.append("<p><strong>Type:</strong> {object}</p>")
-                    if data['data']:
-                        fdata = []
-                        if data['object'] == tmGrammar.comb:
-                            typename = data['type']
-                        else:
-                            typename = "{0}-{1}".format(data['object'], data['type'])
-                        data_ = filter(lambda entry: entry.name == typename, self.CutSettings)[0].data
-                        for n in data['data'].split(','):
-                            fdata.append("{0} ({1})".format(data_[int(n)], int(n)))
-                        fdata = ', '.join(fdata)
-                        text.append("<p><strong>Data:</strong> {translation}</p>".format(translation = fdata))
-                    else:
-                        text.append("<p><strong>Minimum:</strong> {minimum}</p>")
-                        text.append("<p><strong>Maximum:</strong> {maximum}</p>")
-                    if 'comment' in data.keys() and data['comment']:
-                        text.append("<p><strong>Comment:</strong></p><p><code>{comment}</code></p>")
+                    item.bottom.loadCut(Cut(**data))
             elif item is self.objectsPage:
-                rows = item.top.selectionModel().selectedRows()
                 if 1 < len(rows):
-                    text.append("Selected {0} object requiremetns.".format(len(rows)))
+                    item.bottom.setText("Selected {0} object requiremetns.".format(len(rows)))
                 else:
-                    data['threshold'] = fThreshold(str(data['threshold']))
-                    data['bx_offset'] = fBxOffset(data['bx_offset'])
-                    text.append("<h2>{name}</h2>")
-                    text.append("<p><strong>Type:</strong> {type}</p>")
-                    text.append("<p><strong>Threshold:</strong> {threshold}</p>")
-                    text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
+                    item.bottom.loadObject(Object(**data))
             elif item is self.externalsPage:
-                rows = item.top.selectionModel().selectedRows()
                 if 1 < len(rows):
-                    text.append("Selected {0} external signals.".format(len(rows)))
+                    item.bottom.setText("Selected {0} external signals.".format(len(rows)))
                 else:
-                    data['bx_offset'] = fBxOffset(data['bx_offset'])
-                    text.append("<h2>{name}</h2>")
-                    text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
-                    if 'comment' in data.keys() and data['comment']:
-                        text.append("<p><strong>Comment:</strong></p><p><code>{comment}</code></p>")
+                    item.bottom.loadExternal(External(**data))
             elif item in self.scalesTypePages.values():
+                text = []
                 data['name'] = item.name
                 text.append("<h2>Scale {name}</h2>")
                 text.append("<p><strong>Number:</strong> {number}</p>")
                 data['maximum'], data['minimum'] = fCut(data['maximum']), fCut(data['minimum'])
                 text.append("<p><strong>Minimum:</strong> {minimum}</p>")
                 text.append("<p><strong>Maximum:</strong> {maximum}</p>")
-            item.bottom.setText(''.join(text).format(**data))
+                item.bottom.setText(''.join(text).format(**data))
             item.bottom.setButtonsEnabled(True)
         else:
             item.bottom.setText("Nothing selected...")
@@ -419,6 +388,8 @@ class Document(QWidget):
         self.modified.emit()
         self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
         self.objectsPage.top.resizeColumnsToContents()
+        self.externalsPage.top.model().setSourceModel(self.externalsPage.top.model().sourceModel())
+        self.externalsPage.top.resizeColumnsToContents()
         for name in algorithm.cuts():
             if not filter(lambda item: item.name == name, self.menu().cuts):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
@@ -462,6 +433,8 @@ class Document(QWidget):
         self.menu().updateAlgorithm(algorithm)
         self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
         self.objectsPage.top.resizeColumnsToContents()
+        self.externalsPage.top.model().setSourceModel(self.externalsPage.top.model().sourceModel())
+        self.externalsPage.top.resizeColumnsToContents()
         for name in algorithm.cuts():
             if not filter(lambda item: item.name == name, self.menu().cuts):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
@@ -505,6 +478,8 @@ class Document(QWidget):
         item.top.model().setSourceModel(item.top.model().sourceModel())
         self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
         self.objectsPage.top.resizeColumnsToContents()
+        self.externalsPage.top.model().setSourceModel(self.externalsPage.top.model().sourceModel())
+        self.externalsPage.top.resizeColumnsToContents()
         # REBUILD INDEX
         self.updateBottom()
         self.modified.emit()
@@ -558,6 +533,8 @@ class Document(QWidget):
                 self.menu().objects.remove(object)
             self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
             self.objectsPage.top.resizeColumnsToContents()
+            self.externalsPage.top.model().setSourceModel(self.externalsPage.top.model().sourceModel())
+            self.externalsPage.top.resizeColumnsToContents()
             # REBUILD INDEX
             self.updateBottom()
             self.modified.emit()
@@ -735,17 +712,52 @@ class BottomWidget(QWidget):
         self.textEdit = QTextEdit(self)
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("BottomWidgetTextEdit")
-        self.textEdit.setStyleSheet("""#BottomWidgetTextEdit {
+        self.textEdit.setStyleSheet("""
+        #BottomWidgetTextEdit {
             border: 0;
             background-color: #eee;
         }""")
-        layout = QVBoxLayout()
+        self.etaGraph = EtaGraph(self)
+        self.etaGraphBox = QGroupBox(self.tr("Eta preview"), self)
+        box = QVBoxLayout()
+        box.addWidget(self.etaGraph)
+        self.etaGraphBox.setLayout(box)
+        self.etaGraphBox.setAlignment(Qt.AlignTop)
+        self.etaGraphBox.setObjectName("EtaGraphBox")
+        self.etaGraphBox.setStyleSheet("""
+        #EtaGraphBox {
+            background-color: #eee;
+        }""")
+
+        self.phiGraph = PhiGraph(self)
+        self.phiGraphBox = QGroupBox(self.tr("Phi preview"), self)
+        box = QVBoxLayout()
+        box.addWidget(self.phiGraph)
+        self.phiGraphBox.setLayout(box)
+        self.phiGraphBox.setAlignment(Qt.AlignTop)
+        self.phiGraphBox.setObjectName("PhiGraphBox")
+        self.phiGraphBox.setStyleSheet("""
+        #PhiGraphBox {
+            background-color: #eee;
+        }""")
+
+        layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        layout.addWidget(self.toolbar)
-        layout.addWidget(self.notice)
-        layout.addWidget(self.textEdit)
+        layout.addWidget(self.toolbar, 0, 0, 1, 3)
+        layout.addWidget(self.notice, 1, 0, 1, 3)
+        layout.addWidget(self.textEdit, 2, 0)
+        layout.addWidget(self.etaGraphBox, 2, 1)
+        layout.addWidget(self.phiGraphBox, 2, 2)
         self.setLayout(layout)
+        self.clearEtaGraph()
+        self.clearPhiGraph()
+
+    def reset(self):
+        self.clearNotice()
+        self.clearEtaGraph()
+        self.clearPhiGraph()
+        self.setText("")
 
     def setNotice(self, text, icon = None):
         self.notice.show()
@@ -766,6 +778,22 @@ class BottomWidget(QWidget):
         self.copyButton.setEnabled(enabled)
         self.removeButton.setEnabled(enabled)
 
+    def clearEtaGraph(self):
+        #self.etaGraph.reset()
+        self.etaGraphBox.hide()
+
+    def clearPhiGraph(self):
+        #self.phiGraph.reset()
+        self.phiGraphBox.hide()
+
+    def setEtaGraph(self, lower, upper):
+        self.etaGraph.setRange(lower, upper)
+        self.etaGraphBox.show()
+
+    def setPhiGraph(self, lower, upper):
+        self.phiGraph.setRange(lower, upper)
+        self.phiGraphBox.show()
+
     def setText(self, message):
         self.textEdit.setText(message)
 
@@ -780,3 +808,97 @@ class BottomWidget(QWidget):
 
     def onRemove(self):
         self.removeTriggered.emit()
+
+    # Load params from item
+
+    def loadAlgorithm(self, algorithm):
+        self.reset()
+        # Format expression
+        expression = fAlgorithm(algorithm.expression)
+        text = []
+        text.append("<h2>{algorithm.name} ({algorithm.index})</h2>")
+        text.append("<p><strong>Expression:</strong></p>")
+        text.append("<p><code>{expression}</code></p>")
+        if algorithm.comment:
+            text.append("<p><strong>Comment:</strong></p>")
+            text.append("<p><code>{algorithm.comment}</code></p>")
+        # List used objects.
+        objects = algorithm.objects()
+        if objects:
+            text.append("<p><strong>Used objects:</strong></p>")
+            text.append("<p><ul>")
+            for object in objects:
+                text.append("<li>{object}</li>".format(**locals()))
+            text.append("</ul></p>")
+        # List used objects.
+        cuts = algorithm.cuts()
+        if cuts:
+            text.append("<p><strong>Used cuts:</strong></p>")
+            text.append("<p><ul>")
+            for cut in cuts:
+                text.append("<li>{cut}</li>".format(**locals()))
+            text.append("</ul></p>")
+        # List used external signals.
+        externals = algorithm.externals()
+        if externals:
+            text.append("<p><strong>Used externals:</strong></p>")
+            text.append("<p><ul>")
+            for external in externals:
+                text.append("<li>{external}</li>".format(**locals()))
+            text.append("</ul></p>")
+        self.setText("".join(text).format(**locals()))
+
+    def loadCut(self, cut):
+        self.reset()
+        # Format expression
+        minimum = fCut(cut.minimum)
+        maximum = fCut(cut.maximum)
+        text = []
+        text.append("<h2>{cut.name}</h2>")
+        text.append("<p><strong>Type:</strong> {cut.object}</p>")
+        if cut.data:
+            fdata = []
+            if cut.object == tmGrammar.comb:
+                typename = cut.type
+            else:
+                typename = "{0}-{1}".format(cut.object, cut.type)
+            data_ = filter(lambda entry: entry.name == typename, Settings.cutSettings())[0].data
+            for n in cut.data.split(','):
+                fdata.append("<li>[{1}] {0}</li>".format(data_[int(n)], int(n)))
+            fdata = ''.join(fdata)
+            text.append("<p><strong>Data:</strong></p><p><ul>{translation}</ul></p>".format(translation = fdata))
+        else:
+            text.append("<p><strong>Minimum:</strong> {minimum}</p>")
+            text.append("<p><strong>Maximum:</strong> {maximum}</p>")
+        if cut.comment:
+            text.append("<p><strong>Comment:</strong></p>")
+            text.append("<p><code>{cut.comment}</code></p>")
+        self.setText("".join(text).format(**locals()))
+        if cut.type == tmGrammar.ETA:
+            self.setEtaGraph(float(cut.minimum), float(cut.maximum))
+        elif cut.type == tmGrammar.PHI:
+            self.setPhiGraph(float(cut.minimum), float(cut.maximum))
+
+    def loadObject(self, object):
+        self.reset()
+        threshold = fThreshold(str(object.threshold))
+        bx_offset = fBxOffset(object.bx_offset)
+        text = []
+        text.append("<h2>{object.name}</h2>")
+        text.append("<p><strong>Type:</strong> {object.type}</p>")
+        text.append("<p><strong>Threshold:</strong> {threshold}</p>")
+        text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
+        if object.comment:
+            text.append("<p><strong>Comment:</strong></p>")
+            text.append("<p><code>{object.comment}</code></p>")
+        self.setText("".join(text).format(**locals()))
+
+    def loadExternal(self, external):
+        self.reset()
+        bx_offset = fBxOffset(external.bx_offset)
+        text = []
+        text.append("<h2>{external.name}</h2>")
+        text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
+        if external.comment:
+            text.append("<p><strong>Comment:</strong></p><p><code>{external.comment}</code></p>")
+        self.setText("".join(text).format(**locals()))

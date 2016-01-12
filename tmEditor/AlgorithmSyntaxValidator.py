@@ -21,6 +21,7 @@ import tmGrammar
 from tmEditor.Menu import (
     isOperator,
     isObject,
+    isExternal,
     isCut,
     isFunction,
     thresholdFloat,
@@ -124,16 +125,25 @@ class BasicSyntax(SyntaxRule):
 
     def validate(self, expression):
         for token in self.tokens(expression):
+            # Validate operators
+            if isOperator(token):
+                pass
             # Validate object
-            if isObject(token):
+            elif isObject(token):
                 o = self.toObjectItem(token)
                 for cut in o.cuts:
                     self.toCutItem(cut)
             # Validate function
-            if isFunction(token):
+            elif isFunction(token):
                 f = self.toFunctionItem(token)
                 for cut in f.cuts:
                     self.toCutItem(cut)
+            # Validate externals
+            elif isExternal(token):
+                pass
+            else:
+                raise AlgorithmSyntaxError("Invalid token `{token}`".format(**locals()), token)
+
 
 class ObjectThresholds(SyntaxRule):
     """Validates object thresholds."""

@@ -8,8 +8,6 @@
 
 """Menu container, wrapping tmTable and XML bindings.
 
-TODO: still lacking of external signals handling...
-
 """
 
 import tmTable
@@ -109,11 +107,6 @@ class Menu(object):
         self.algorithms.append(algorithm)
 
     def updateAlgorithm(self, algorithm):
-        #print "updateAlgorithm()"
-        #print " global:", [o.name for o in self.objects]
-        #print " pre:", algorithm.objects()
-        #if algorithm not in self.algorithms: # MALICIOUS
-        #    self.algorithms.append(algorithm)
         # Add new objects to list.
         for item in algorithm.objects():
             if not self.objectByName(item):
@@ -159,6 +152,15 @@ class Menu(object):
     def orphanedObjects(self):
         """Returns list of orphaned object names not referenced by any algorithm."""
         tags = [object.name for object in self.objects]
+        for algorithm in self.algorithms:
+            for name in algorithm.objects():
+                if name in tags:
+                    tags.remove(name)
+        return tags
+
+    def orphanedExternals(self):
+        """Returns list of orphaned externals names not referenced by any algorithm."""
+        tags = [external.name for external in self.externals]
         for algorithm in self.algorithms:
             for name in algorithm.objects():
                 if name in tags:
@@ -402,10 +404,20 @@ class Algorithm(AbstractDict):
                 if not object.name in objects:
                     objects.add(object.name)
             if isFunction(token):
-                for object in functionObjects(token): # Cast to objects required to fetch complete name.
+                for object in functionObjects(token):
                     if not object.name in objects:
                         objects.add(object.name)
         return list(objects)
+
+    def externals(self):
+        """Returns list of external names used in the algorithm's expression."""
+        externals = set()
+        for token in self.tokens():
+            if isExternal(token):
+                external = toExternal(token)
+                if not external.name in externals:
+                    externals.add(external.name)
+        return list(externals)
 
     def cuts(self):
         """Returns list of cut names used in the algorithm's expression."""
@@ -423,20 +435,6 @@ class Algorithm(AbstractDict):
                     if not cut in cuts:
                         cuts.add(cut)
         return list(cuts)
-
-    def externals(self):
-        """Returns list of externals names used in the algorithm's expression."""
-        externals = set()
-        for token in self.tokens():
-            if isOperator(token):
-                continue
-            if isObject(token):
-                continue
-            if isFunction(token):
-                continue
-            # Must be an external I would guess...
-            externals.add(token)
-        return list(externals)
 
 # ------------------------------------------------------------------------------
 #  Cut's container class.
@@ -479,6 +477,10 @@ class Cut(AbstractDict):
     @property
     def data(self):
         return self['data']
+
+    @property
+    def comment(self):
+        return self['comment'] if 'comment' in self.keys() else ''
 
     def __eq__(self, item):
         """Distinquish cuts by it's uinque name."""
@@ -579,6 +581,10 @@ class External(AbstractDict):
     def bx_offset(self):
         return self['bx_offset']
 
+    @property
+    def comment(self):
+        return self['comment'] if 'comment' in self.keys() else ''
+
     def __eq__(self, object):
         """Distinquish objects."""
         return self.basename == object.basename and int(self.bx_offset) == int(object.bx_offset)
@@ -600,7 +606,12 @@ def isOperator(token):
 
 def isObject(token):
     """Retruns True if token is an object."""
+    if token.startswith(tmGrammar.EXT): return False
     return filter(lambda item: token.startswith(item), tmGrammar.objectName) != []
+
+def isExternal(token):
+    """Retruns True if token is an external signal."""
+    return token.startswith(tmGrammar.EXT)
 
 def isCut(token):
     """Retruns True if token is a cut."""

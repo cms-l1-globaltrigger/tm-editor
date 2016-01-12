@@ -1,3 +1,12 @@
+tm-editor (0.1.9-1) extra; urgency=medium
+
+  * Handling external signals with EXT prefix as specified.
+  * Improved Algorithm editor, listing externals signals from scale set too.
+  * More informative previews for algorithms.
+  * Added eta and phi diagrams in cut preview.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Tue, 12 Jan 2016 16:14:13 +0100
+
 tm-editor (0.1.8-1) extra; urgency=medium
 
   * Introduced exclusive data selection for cuts (MU-CHG and CHGCOR).
