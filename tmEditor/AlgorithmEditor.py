@@ -21,6 +21,7 @@ from tmEditor.Menu import Algorithm
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+import webbrowser
 import sys, os
 import logging
 import re
@@ -278,9 +279,10 @@ class AlgorithmEditorDialog(QDialog):
         self.setWindowTitle(self.editor.windowTitle())
         self.resize(720, 480)
         self.setSizeGripEnabled(True)
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Help | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
+        buttonBox.helpRequested.connect(self.showHelp)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.editor)
@@ -393,17 +395,28 @@ class AlgorithmEditorDialog(QDialog):
     def reject(self):
         self.close() # Will call closeEvent
 
+    def showHelp(self):
+        """Raise remote contents help."""
+        webbrowser.open_new_tab("http://globaltrigger.hephy.at/upgrade/tme/userguide#create-algorithms")
+
     def closeEvent(self, event):
         """On window close event."""
         if self.editor.isModified():
-            reply = QMessageBox.warning(self, "Close algorithm editor",
-                QString("The algorithm \"%1\" has been modified.\n" \
-                        "Do you want to apply your changes or discard them?").arg(self.name()),
-                QMessageBox.Cancel | QMessageBox.Close | QMessageBox.Apply, QMessageBox.Cancel)
-            if reply == QMessageBox.Cancel:
+            mbox = QMessageBox(self)
+            mbox.setIcon(QMessageBox.Question)
+            mbox.setWindowTitle(self.tr("Close algorithm editor"))
+            mbox.setText(self.tr(
+                "The algorithm \"%1\" has been modified.\n" \
+                "Do you want to apply your changes or discard them?").arg(self.name()))
+            mbox.addButton(QMessageBox.Cancel)
+            mbox.addButton(QMessageBox.Apply)
+            mbox.addButton(QPushButton(self.tr("Discard changes")), QMessageBox.DestructiveRole)
+            mbox.setDefaultButton(QMessageBox.Cancel)
+            mbox.exec_()
+            if mbox.result() == QMessageBox.Cancel:
                 event.ignore()
                 return
-            if reply == QMessageBox.Apply:
+            if mbox.result() == QMessageBox.Apply:
                 self.accept()
                 if self.result() != QDialog.Accepted:
                     event.ignore()

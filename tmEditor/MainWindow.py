@@ -28,7 +28,7 @@ import webbrowser
 import logging
 import sys, os, re
 
-L1ContentsURL = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/GlobalTriggerUpgradeL1T-uTme"
+L1ContentsURL = "http://globaltrigger.hephy.at/upgrade/tme/userguide"
 
 # NOTE: Bugfix for PyQt4.6
 if not hasattr(QKeySequence, 'Quit'):

@@ -18,5 +18,6 @@
     <file alias="icons/dr.svg">share/tm-editor/icons/13x13/dr.svg</file>
     <file alias="icons/mass.svg">share/tm-editor/icons/13x13/mass.svg</file>
     <file alias="icons/compare.svg">share/tm-editor/icons/16x16/compare.svg</file>
+    <file alias="changelog">share/tm-editor/changelog</file>
   </qresource>
 </RCC>

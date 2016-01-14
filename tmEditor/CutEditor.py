@@ -16,6 +16,8 @@ from tmEditor import (
 from tmEditor.Menu import Cut
 import tmGrammar
 from collections import namedtuple
+
+import webbrowser
 import re, math, logging
 
 from PyQt4.QtCore import *
@@ -315,9 +317,10 @@ class CutEditorDialog(QDialog):
         self.infoTextEdit = QTextEdit(self)
         self.infoTextEdit.setReadOnly(True)
         # Button box
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Help | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
+        buttonBox.helpRequested.connect(self.showHelp)
         # Create layout.
         gridLayout = QGridLayout()
         gridLayout.addWidget(self.typeLabel, 0, 0)
@@ -622,3 +625,7 @@ class CutEditorDialog(QDialog):
         #         QMessageBox.warning(self, self.tr("Exceeding limits"), str(e))
         #         return
         super(CutEditorDialog, self).accept()
+
+    def showHelp(self):
+        """Raise remote contents help."""
+        webbrowser.open_new_tab("http://globaltrigger.hephy.at/upgrade/tme/userguide#create-cuts")

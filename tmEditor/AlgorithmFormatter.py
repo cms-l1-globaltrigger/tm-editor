@@ -160,5 +160,8 @@ class AlgorithmFormatter(object):
             if token == '(':
                 level += 1
             previous = token
+            # Separate after commas
+            if token == ',':
+                result += (ws, )
 
         return ''.join(result)

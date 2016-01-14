@@ -43,7 +43,18 @@ swigmods = \
 
 .PHONY: all install rpm rpmbuild deb debbuild clean rpmclean debclean
 
-all: tmEditor/tmeditor_rc.py
+all: rcc
+
+# -----------------------------------------------------------------------------
+#  Resource processing.
+# -----------------------------------------------------------------------------
+rcc: resource/share/$(package)/changelog tmEditor/tmeditor_rc.py
+
+# -----------------------------------------------------------------------------
+#  Distribute a copy og the changelog.
+# -----------------------------------------------------------------------------
+resource/share/$(package)/changelog: changelog
+	cp $< $@
 
 # -----------------------------------------------------------------------------
 #  Generating PyQT4 resource module.

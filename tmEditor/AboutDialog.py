@@ -41,12 +41,15 @@ class AboutDialog(QDialog):
         self.titleLabel = QLabel(self)
         self.aboutTextEdit = QTextEdit(self)
         self.aboutTextEdit.setReadOnly(True)
+        self.changelogTextEdit = QTextEdit(self)
+        self.changelogTextEdit.setReadOnly(True)
         self.authorsTextEdit = QTextEdit(self)
         self.authorsTextEdit.setReadOnly(True)
         self.thanksTextEdit  = QTextEdit(self)
         self.thanksTextEdit.setReadOnly(True)
         self.tabs = QTabWidget(self)
         self.tabs.addTab(self.aboutTextEdit, self.tr("&About"))
+        self.tabs.addTab(self.changelogTextEdit, self.tr("&Changelog"))
         self.tabs.addTab(self.authorsTextEdit, self.tr("A&uthors"))
         self.tabs.addTab(self.thanksTextEdit, self.tr("&Thanks to"))
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Close)
@@ -65,9 +68,20 @@ class AboutDialog(QDialog):
             self.tr("Graphical editor for L1-Trigger Menus for the CERN CMS L1-Global Trigger."))
         )
         self.aboutTextEdit.setText(self.tr("%0<br /><br />Version %1-%2").arg(title).arg(VERSION).arg(PKG_RELEASE))
+        self.changelogTextEdit.setText(self._readfile(":changelog"))
         self.authorsTextEdit.setText(self._userlist(L1ApplicationAuthors))
         self.thanksTextEdit.setText(self._userlist(L1ApplicationContributors))
 
     def _userlist(self, userlist, separator = "<br />"):
         """Return HTML containing full name and email address of a user list tuple."""
         return separator.join(["{0} &lt;{1}&gt;".format(name, email) for name, email in userlist])
+
+    def _readfile(self, filename):
+        lines = []
+        file = QFile(filename)
+        if not file.open(QIODevice.ReadOnly | QIODevice.Text):
+            return ''
+        istream = QTextStream(file)
+        while not istream.atEnd():
+           lines.append(str(istream.readLine()))
+        return "\n".join(lines)
