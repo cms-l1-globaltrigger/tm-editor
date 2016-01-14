@@ -139,6 +139,7 @@ class AlgorithmEditor(QMainWindow):
         dock = QDockWidget(self.tr("Library"), self)
         dock.setFeatures(QDockWidget.NoDockWidgetFeatures)
         dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        dock.setMinimumWidth(280)
         self.libraryWidget = LibraryWidget(self.menu, dock)
         self.libraryWidget.selected.connect(self.onInsertItem)
         dock.setWidget(self.libraryWidget)
