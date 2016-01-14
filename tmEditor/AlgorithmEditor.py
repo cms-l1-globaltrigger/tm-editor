@@ -261,7 +261,8 @@ class AlgorithmEditor(QMainWindow):
         indices = set(range(MaxAlgorithms)) - reserved
         if ignore is not None:
             indices.add(ignore)
-        self.indexSpinBox.setValues(list(indices))
+        if indices:
+            self.indexSpinBox.setValues(list(indices))
         if ignore is not None:
             self.indexSpinBox.setValue(ignore)
 
