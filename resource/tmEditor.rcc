@@ -2,6 +2,7 @@
   <qresource>
     <file alias="icons/tm-editor.svg">share/icons/hicolor/scalable/apps/tm-editor.svg</file>
     <file alias="icons/document-import.svg">share/tm-editor/icons/24x24/document-import.svg</file>
+    <file alias="icons/wizard.svg">share/tm-editor/icons/24x24/wizard.svg</file>
     <file alias="icons/mu.svg">share/tm-editor/icons/13x13/mu.svg</file>
     <file alias="icons/eg.svg">share/tm-editor/icons/13x13/eg.svg</file>
     <file alias="icons/jet.svg">share/tm-editor/icons/13x13/jet.svg</file>
@@ -18,6 +19,10 @@
     <file alias="icons/dr.svg">share/tm-editor/icons/13x13/dr.svg</file>
     <file alias="icons/mass.svg">share/tm-editor/icons/13x13/mass.svg</file>
     <file alias="icons/compare.svg">share/tm-editor/icons/16x16/compare.svg</file>
+    <file alias="icons/16/format-compact.svg">share/tm-editor/icons/16x16/format-compact.svg</file>
+    <file alias="icons/16/format-cascade.svg">share/tm-editor/icons/16x16/format-cascade.svg</file>
+    <file alias="icons/24/format-compact.svg">share/tm-editor/icons/24x24/format-compact.svg</file>
+    <file alias="icons/24/format-cascade.svg">share/tm-editor/icons/24x24/format-cascade.svg</file>
     <file alias="changelog">share/tm-editor/changelog</file>
   </qresource>
 </RCC>

@@ -24,6 +24,7 @@ def makeKeyword(key):
 class AlgorithmSyntaxHighlighter(QSyntaxHighlighter):
     """Syntax highighter class for algorithm expressions."""
     HighlightingRule = namedtuple('HighlightingRule', 'format, pattern')
+
     def __init__(self, document):
         """Attribute *document* requires a text document instance or a text
         edit widget instance to apply syntax highlighting on.
@@ -49,6 +50,7 @@ class AlgorithmSyntaxHighlighter(QSyntaxHighlighter):
         rule = self.HighlightingRule(functionFormat,
             QRegExp("\\b{tmGrammar.comb}|{tmGrammar.dist}|{tmGrammar.mass}+(?=\\{{)".format(tmGrammar = tmGrammar)))
         self.highlightingRules.append(rule)
+
     def highlightBlock(self, text):
         for rule in self.highlightingRules:
             expression = QRegExp(rule.pattern)

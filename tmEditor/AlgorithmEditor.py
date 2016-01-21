@@ -12,11 +12,11 @@
 import tmGrammar
 from tmEditor import AlgorithmFormatter
 from tmEditor import AlgorithmSyntaxHighlighter
-from tmEditor import AlgorithmSyntaxValidator
-from tmEditor.AlgorithmSyntaxValidator import AlgorithmSyntaxError
+from tmEditor import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 from tmEditor import Toolbox
 from tmEditor import Menu
 from tmEditor.Menu import Algorithm
+from tmEditor.CodeEditor import CodeEditor
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -42,7 +42,7 @@ class AlgorithmEditor(QMainWindow):
         super(AlgorithmEditor, self).__init__(parent)
         # Setup window
         self.setWindowTitle(self.tr("Algorithm Editor"))
-        self.resize(720, 480)
+        self.resize(800, 500)
         self.menu = menu
         self.setModified(False)
         #
@@ -52,22 +52,27 @@ class AlgorithmEditor(QMainWindow):
         self.indexSpinBox.setMinimumWidth(60)
         self.nameComboBox = QLineEdit(self)
         self.nameComboBox.setMinimumWidth(300)
+        self.validator = AlgorithmSyntaxValidator(self.menu)
         # Create actions and toolbars.
         self.createActions()
         self.createMenus()
         self.createToolbar()
         self.createDocks()
         # Setup main widgets
-        self.textEdit = QTextEdit(self)
-        font = self.textEdit.font()
-        font.setFamily("Monospace")
-        self.textEdit.setFont(font)
+        self.textEdit = CodeEditor(self)
         self.textEdit.setFrameShape(QFrame.NoFrame)
-        self.textEdit.setCursorWidth(2)
+        self.messageBar = MessageBarWidget(self)
+        centralWidget = QWidget(self)
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self.textEdit, 0, 0)
+        layout.addWidget(self.messageBar, 1, 0)
+        centralWidget.setLayout(layout)
         # Setup editor syntax highlighter.
-        self.highlighter = AlgorithmSyntaxHighlighter(self.textEdit)
+        self.highlighter = AlgorithmSyntaxHighlighter(self.textEdit.document())
         # Setup layout
-        self.setCentralWidget(self.textEdit)
+        self.setCentralWidget(centralWidget)
         # Setup properties (as last step).
         self.setIndex(0)
         self.setName(self.tr("L1_Unnamed"))
@@ -79,11 +84,11 @@ class AlgorithmEditor(QMainWindow):
     def createActions(self):
         """Create actions."""
         self.formatCompactAct = QAction(self.tr("&Compact"), self)
-        self.formatCompactAct.setIcon(Toolbox.createIcon("zoom-out"))
+        self.formatCompactAct.setIcon(Toolbox.createIcon("format-compact"))
         self.formatCompactAct.triggered.connect(self.onFormatCompact)
-        self.formatExpandAct = QAction(self.tr("&Expand"), self)
-        self.formatExpandAct.setIcon(Toolbox.createIcon("zoom-in"))
-        self.formatExpandAct.triggered.connect(self.onFormatExpand)
+        self.formatCascadeAct = QAction(self.tr("&Cascade"), self)
+        self.formatCascadeAct.setIcon(Toolbox.createIcon("format-cascade"))
+        self.formatCascadeAct.triggered.connect(self.onFormatCascade)
         self.parseAct = QAction(self.tr("&Check expression"), self)
         self.parseAct.setIcon(Toolbox.createIcon("view-refresh"))
         self.parseAct.triggered.connect(self.onParse)
@@ -96,6 +101,9 @@ class AlgorithmEditor(QMainWindow):
         self.redoAct.setShortcut(QKeySequence.Redo)
         self.redoAct.setIcon(Toolbox.createIcon("edit-redo"))
         self.redoAct.triggered.connect(self.onRedo)
+        self.wizardAct = QAction(self.tr("&Wizards"), self)
+        self.wizardAct.setIcon(Toolbox.createIcon("wizard"))
+        self.wizardAct.triggered.connect(self.onWizard)
         self.selectIndexAct = QAction(self.tr("Select &Index"), self)
         self.selectIndexAct.setIcon(Toolbox.createIcon("search"))
         self.selectIndexAct.triggered.connect(self.onSelectIndex)
@@ -108,10 +116,11 @@ class AlgorithmEditor(QMainWindow):
         self.editMenu.addAction(self.undoAct)
         self.editMenu.addAction(self.redoAct)
         self.editMenu.addSeparator()
+        # TODO self.editMenu.addAction(self.wizardAct)
         self.editMenu.addAction(self.selectIndexAct)
         self.formatMenu = self.menuBar().addMenu(self.tr("&Format"))
         self.formatMenu.addAction(self.formatCompactAct)
-        self.formatMenu.addAction(self.formatExpandAct)
+        self.formatMenu.addAction(self.formatCascadeAct)
         # self.helpMenu = self.menuBar().addMenu(self.tr("&Help"))
 
     def createToolbar(self):
@@ -125,8 +134,10 @@ class AlgorithmEditor(QMainWindow):
         self.toolbar.addAction(self.undoAct)
         self.toolbar.addAction(self.redoAct)
         self.toolbar.addSeparator()
+        # TODO self.toolbar.addAction(self.wizardAct)
+        # self.toolbar.addSeparator()
         self.toolbar.addAction(self.formatCompactAct)
-        self.toolbar.addAction(self.formatExpandAct)
+        self.toolbar.addAction(self.formatCascadeAct)
         self.toolbar.addSeparator()
         self.toolbar.addWidget(QLabel(self.tr("  Name "), self))
         self.toolbar.addWidget(self.nameComboBox)
@@ -202,6 +213,15 @@ class AlgorithmEditor(QMainWindow):
         self.setModified(True)
         self.undoAct.setEnabled(self.textEdit.document().isUndoAvailable())
         self.redoAct.setEnabled(self.textEdit.document().isRedoAvailable())
+        try:
+            self.validator.validate(self.expression())
+        except AlgorithmSyntaxError, e:
+            if e.token:
+                self.messageBar.setFatalMessage(self.tr("Error near %1").arg(e.token))
+            else:
+                self.messageBar.setFatalMessage(self.tr("Error: %1").arg(str(e)))
+        else:
+            self.messageBar.setMessage(self.tr("Expression OK"))
 
     def onIndexChanged(self):
         pass
@@ -223,7 +243,7 @@ class AlgorithmEditor(QMainWindow):
         self.replacePlainText(AlgorithmFormatter.normalize(self.expression()))
         self.setModified(modified)
 
-    def onFormatExpand(self):
+    def onFormatCascade(self):
         modified = self.isModified() # Formatting does not count as change.
         self.replacePlainText(AlgorithmFormatter.cascade(self.expression()))
         self.setModified(modified)
@@ -248,6 +268,9 @@ class AlgorithmEditor(QMainWindow):
                 text = text + " "
         cursor.insertText(text)
         self.textEdit.ensureCursorVisible()
+
+    def onWizard(self):
+        pass
 
     def onParse(self):
         pass
@@ -278,7 +301,7 @@ class AlgorithmEditorDialog(QDialog):
         self.editor = AlgorithmEditor(menu)
         self.loadedAlgorithm = None
         self.setWindowTitle(self.editor.windowTitle())
-        self.resize(720, 480)
+        self.resize(800, 500)
         self.setSizeGripEnabled(True)
         buttonBox = QDialogButtonBox(QDialogButtonBox.Help | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
@@ -378,7 +401,6 @@ class AlgorithmEditorDialog(QDialog):
             result = c.match(token)
             if result:
                 token = result.group(1)
-                print "FOUND", token
             else:
                 token = AlgorithmFormatter.normalize(token)
             # Make sure to highlight the errornous part in the text editor.
@@ -426,6 +448,34 @@ class AlgorithmEditorDialog(QDialog):
                 return
         event.accept()
         self.reject()
+
+# -----------------------------------------------------------------------------
+#  Message bar widget
+# -----------------------------------------------------------------------------
+
+class MessageBarWidget(QWidget):
+    """Message bar widget to show expression problems."""
+
+    def __init__(self, parent = None):
+        super(MessageBarWidget, self).__init__(parent)
+        self.icon = QLabel(self)
+        self.icon.setPixmap(Toolbox.createIcon("dialog-warning").pixmap(16, 16))
+        self.icon.setFixedSize(16, 16)
+        self.message = QLabel(self)
+        self.message.setWordWrap(True)
+        layout = QHBoxLayout()
+        layout.setContentsMargins(10, 10, 0, 0)
+        layout.addWidget(self.icon)
+        layout.addWidget(self.message)
+        self.setLayout(layout)
+
+    def setMessage(self, text):
+        self.icon.hide()
+        self.message.setText(QString("<span style=\"color:green;\">%1</span>").arg(text))
+
+    def setFatalMessage(self, text):
+        self.icon.show()
+        self.message.setText(QString("<span style=\"color:red;\">%1</span>").arg(text))
 
 # -----------------------------------------------------------------------------
 #  Library widget

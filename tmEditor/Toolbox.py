@@ -113,6 +113,12 @@ def createIcon(name):
         filename = ":/icons/{name}.svg".format(**locals())
         if QFile.exists(filename):
             icon.addFile(filename)
+        filename = ":/icons/16/{name}.svg".format(**locals())
+        if QFile.exists(filename):
+            icon.addPixmap(QPixmap(filename))
+        filename = ":/icons/24/{name}.svg".format(**locals())
+        if QFile.exists(filename):
+            icon.addPixmap(QPixmap(filename))
     return icon
 
 # -----------------------------------------------------------------------------

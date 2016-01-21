@@ -1,0 +1,342 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+import sys, os, time, random
+
+import tmGrammar as tm
+from tmEditor.Menu import Menu
+
+MaxAlgorithms = 512
+
+class CutSpec(object):
+    def __init__(self, name, count = 1):
+        self.name = name
+        self.count = count
+
+class ObjSpec(object):
+    def __init__(self, name, cuts = []):
+        self.name = name
+        self.cuts = list(cuts)
+
+class FuncSpec(object):
+    def __init__(self, name, cuts, objects):
+        self.name = name
+        self.cuts = list(cuts)
+        self.objects = list(objects)
+
+class Settings:
+    # Object cuts
+    ETA = CutSpec(tm.ETA, 2)
+    PHI = CutSpec(tm.PHI, 2)
+    ISO = CutSpec(tm.ISO, 1)
+    QLTY = CutSpec(tm.QLTY, 1)
+
+    # Function cuts
+    DETA = CutSpec(tm.DETA, 2)
+    DPHI = CutSpec(tm.DPHI, 2)
+    MASS = CutSpec(tm.MASS, 2)
+    CHGCOR = CutSpec(tm.CHGCOR, 1)
+
+    # Objects
+    MU = ObjSpec(tm.MU, [ETA, PHI, ISO, QLTY])
+    EG = ObjSpec(tm.EG, [ETA, PHI])
+    JET = ObjSpec(tm.JET, [ETA, PHI])
+    TAU = ObjSpec(tm.TAU, [ETA, PHI])
+    ETM = ObjSpec(tm.ETM, [PHI])
+    HTM = ObjSpec(tm.HTM, [PHI])
+    ETT = ObjSpec(tm.ETT)
+    HTT = ObjSpec(tm.HTT)
+
+    Objects = [MU, EG, JET, TAU, ETM, HTM, ETT, HTT]
+
+    # Functions
+    Functions = (
+        FuncSpec("Single", [], [MU, EG, JET, TAU, ETM, HTM, ETT, HTT]),
+        FuncSpec("Double", [], [MU, EG, JET, TAU]),
+        FuncSpec("Triple", [], [MU, EG, JET, TAU]),
+        FuncSpec("Quad", [], [MU, EG, JET, TAU]),
+        FuncSpec("Dist", [DETA, DPHI], [MU, EG, JET, TAU, ETM, HTM]), # etm, htm will be handled separately
+        FuncSpec("Mass", [MASS], [MU, EG, JET, TAU]),
+    )
+
+class MenuGenerator(Menu):
+    def __init__(self, filename):
+        super(MenuGenerator, self).__init__(filename)
+        self.reset() # clear contents
+    def reset(self):
+        self.menu['name'] = ("L1Menu_Autogen_%s" % time.time()).split('.')[0]
+        self.menu['comment'] = "Auto generated menu by Trigger Menu Wizard"
+        self.menu['is_valid'] = "1"
+        self.algorithms = []
+        self.cuts = []
+        self.objects = []
+        self.externals = []
+    def randObjects(self, types, count = 1):
+        objects = []
+        for i in range(count):
+            type = random.choice(types)
+            threshold = random.choice(self.scales.bins["%s-ET" % type])['minimum']
+            name = "%s%s" % (type, "{0:.1f}".format(float(threshold)).replace('.', 'p'))
+            self.addObjSpec(name, type, threshold)
+            objects.append(name)
+        return objects
+    def randCuts(self, object, type, count = 1):
+        cuts = []
+        for i in range(count):
+            if object in (tm.mass, tm.dist):
+                name = "%s_%s" % (type, len(self.cuts))
+            else:
+                name = "%s-%s_%s" % (object, type, len(self.cuts))
+            if type in (tm.ISO, tm.QLTY):
+                minimum, maximum = '', ''
+                data = '0'
+            else:
+                minimum, maximum = sorted([
+                    random.choice(self.scales.scales["%s-%s" % (object, type)])['minimum'],
+                    random.choice(self.scales.scales["%s-%s" % (object, type)])['maximum']
+                ])
+                data = ''
+            print "cut", name, object, type, minimum, maximum, data
+            self.addCutSpec(name, object, type, minimum=minimum, maximum=maximum, data=data)
+            cuts.append(name)
+        return cuts
+    def update(self, data):
+        objects = set()
+        cuts = []
+        algorithms = []
+        objectTypes = [o.name for o in data.objects]
+        for i in range(data.count):
+            expressions = []
+            for _ in range(data.multiplicator):
+                if data.name == "Single":
+                    expressions.append(self.randObjects(objectTypes)[0])
+                elif data.name in "Double":
+                    expressions.append("comb{{{0}}}".format(",".join(self.randObjects(objectTypes, 2))))
+                elif data.name == "Triple":
+                    expressions.append("comb{{{0}}}".format(",".join(self.randObjects(objectTypes, 3))))
+                elif data.name == "Quad":
+                    expressions.append("comb{{{0}}}".format(",".join(self.randObjects(objectTypes, 4))))
+                elif data.name == "Dist":
+                    objs = self.randObjects(objectTypes, 2)
+                    expressions.append("dist{{{0}}}[{1}]".format(",".join(self.randObjects(objectTypes, 2)), self.randCuts(tm.dist, tm.DETA)[0]))
+                elif data.name == "Mass":
+                    objs = self.randObjects(objectTypes, 2)
+                    expressions.append("mass{{{0}}}[{1}]".format(",".join(self.randObjects(objectTypes, 2)), self.randCuts(tm.mass, tm.MASS)[0]))
+            algorithms.append(dict(
+                index=len(self.algorithms) + i,
+                name="L1_Autogen_%s_%s" % (i, data.name.title()),
+                expression=" AND ".join(expressions)
+            ))
+        for obj in objects:
+            self.addObjSpec(**obj)
+        for cut in cuts:
+            self.addCuts(**cut)
+        for algorithm in algorithms:
+            print algorithm
+            self.addAlgorithm(**algorithm)
+
+class GeneratorWidget(QWidget):
+    def __init__(self, parent = None):
+        super(GeneratorWidget, self).__init__(parent)
+        # Count
+        self.countSpinBox = QSpinBox(self)
+        self.countSpinBox.setRange(0, MaxAlgorithms)
+        # Function
+        self.functionComboBox = QComboBox(self)
+        # Multiplicator
+        self.multiSpinBox = QSpinBox(self)
+        self.multiSpinBox.setRange(1, 16)
+        # Function cuts
+        self.functionCuts = []
+        for function in Settings.Functions:
+            self.functionComboBox.addItem(function.name, function)
+            for cut in function.cuts:
+                box = QSpinBox(self)
+                box.setRange(0, cut.count)
+                box.setSuffix(self.tr("x %1").arg(cut.name))
+                box.userData = cut
+                self.functionCuts.append(box)
+        self.objects = []
+        self.objectCuts = {}
+        for object_ in Settings.Objects:
+            box = QCheckBox(self.tr(object_.name), self)
+            box.userData = object_
+            self.objects.append(box)
+            self.objectCuts[object_] = []
+            for cut in object_.cuts:
+                box = QSpinBox(self)
+                box.setRange(0, cut.count)
+                box.setSuffix(self.tr("x %1").arg(cut.name))
+                box.userData = cut
+                self.objectCuts[object_].append(box)
+        # Layout
+        layout = QGridLayout()
+        layout.addWidget(QLabel(self.tr("Count"), self), 0, 0)
+        layout.addWidget(self.countSpinBox, 0, 1)
+        layout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum), 0, 16)
+        layout.addWidget(QLabel(self.tr("Function"), self), 1, 0)
+        layout.addWidget(self.functionComboBox, 1, 1)
+        layout.addWidget(QLabel(self.tr("Multiplicator"), self), 2, 0)
+        layout.addWidget(self.multiSpinBox, 2, 1)
+        layout.addWidget(QLabel(self.tr("Function Cuts"), self), 3, 0)
+        for i, cut in enumerate(self.functionCuts):
+            layout.addWidget(cut, 3, i + 1)
+        layout.addWidget(QLabel(self.tr("Objects/Cuts"), self), 4, 0)
+        for i, object_ in enumerate(self.objects):
+            layout.addWidget(object_, 4 + i, 1)
+            for j, cut in enumerate(self.objectCuts[object_.userData]):
+                layout.addWidget(cut, 4 + i, 2 + j)
+        layout.addItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding), 16, 0)
+        self.setLayout(layout)
+        # Setup slots
+        self.countSpinBox.valueChanged.connect(self.countChanged)
+        self.functionComboBox.currentIndexChanged.connect(self.functionChanged)
+        # Call slots
+        self.countChanged(self.countSpinBox.value()) # disable initial generator
+    def countChanged(self, value):
+        """Enables widgets if count greater then zero, else disables them."""
+        self.functionComboBox.setEnabled(value)
+        for widget in self.functionCuts:
+            widget.setEnabled(value)
+        self.multiSpinBox.setEnabled(value)
+        for widget in self.objects:
+            widget.setEnabled(value)
+            for widget in self.objectCuts[widget.userData]:
+                widget.setEnabled(value)
+        self.functionChanged(self.functionComboBox.currentIndex())
+    def functionChanged(self, index):
+        """Enables or disabled widgets by function attributes."""
+        function = self.functionComboBox.itemData(index).toPyObject()
+        for widget in self.functionCuts:
+            widget.setEnabled(widget.userData in function.cuts)
+        for widget in self.objects:
+            widget.setEnabled(widget.userData in function.objects)
+            for widget2 in self.objectCuts[widget.userData]:
+                widget2.setEnabled(widget.isEnabled())
+    def count(self):
+        return self.countSpinBox.value()
+    def multiplicator(self):
+        return self.multiSpinBox.value()
+    def data(self):
+        cuts = []
+        for widget in self.functionCuts:
+            if widget.isEnabled():
+                cuts.append(Settings.CutSpec(widget.userData.name, widget.userData.count))
+        objects = []
+        for widget in self.objects:
+            if widget.isEnabled():
+                cuts = []
+                for widget2 in self.objectCuts[widget.userData]:
+                    if widget2.isEnabled() and widget2.value():
+                        cuts.append(Settings.CutSpec(widget2.userData.name, widget2.value()))
+                objects.append(Settings.ObjSpec(widget.userData.name, cuts))
+        function = Settings.FuncSpec(self.functionComboBox.itemData(self.functionComboBox.currentIndex()).toPyObject().name, cuts, objects)
+        function.count = self.count()
+        function.multiplicator = self.multiplicator()
+        return function
+
+class MainWindow(QWidget):
+    def __init__(self, parent = None):
+        super(MainWindow, self).__init__(parent)
+        self.setWindowTitle(self.tr("Trigger Menu Wizard"))
+        self.resize(640, 480)
+        # Setup tab widget
+        self.tabWidget = QTabWidget(self)
+        self.tabWidget.setDocumentMode(True)
+        self.tabWidget.setTabsClosable(True)
+        self.tabWidget.tabCloseRequested.connect(self.tabWidget.removeTab)
+        self.tabWidget.tabCounter = 1
+        self.addButton = QPushButton(self.tr("+"), self)
+        self.addButton.setStyleSheet("font: 23px bolder; min-width: 28px; max-width: 28px; margin: 0px;")
+        self.addButton.clicked.connect(self.addGeneratorTab)
+        self.tabWidget.setCornerWidget(self.addButton)
+        # Setup introduction text area
+        self.textEdit = QTextEdit(self)
+        self.textEdit.setReadOnly(True)
+        self.textEdit.setText(QString(
+            "<h1>Trigger Menu Wizard</h1>"
+            "<p>Generating randomized trigger menus for software and firmware validation.</p>"
+            "<p>Use as many generators as required to create different sets of algorithms.</p>"
+            "<h2>Quick Guide</h2>"
+            "<p>Click <strong>Load XML...</strong> to load an existing XML menu to retrieve a scale set for the new menu to be generated.</p>"
+            "<p>Setup generators as required. Add new generators with the add button on the top right.</p>"
+            "<p>Click <strong>Generate XML...</strong> to select a location and filename for the generated menu.</p>"
+            "<h2>About Generators</h2>"
+            "<p><strong>Count</strong> defines the number of algorithms are generated by a generator. "
+            "However take note that the sum of all generator counts can not exceed the maximum allowed "
+            "algorithm count of %1</p>"
+            "<p><strong>Multiplicator</strong> will duplicate each statement with AND's and OR's. "
+            "It can be used for generating cross conditions like <pre>MU10 AND JET10</pre></p>"
+            "<p>Function cuts allow to define how many of cuts are applied to a function</p>"
+        ).arg(MaxAlgorithms))
+        index = self.tabWidget.addTab(self.textEdit, self.tr("Introduction")) # add introduction tab
+        self.tabWidget.tabBar().setTabButton(0, QTabBar.RightSide, None) # remove tab close button.
+        self.addGeneratorTab() # add initial generator tab
+        self.tabWidget.setCurrentIndex(index) # raise introduction tab
+        self.loadButton = QPushButton(self.tr("&Load XML..."), self)
+        self.loadButton.clicked.connect(self.loadXml)
+        self.generateButton = QPushButton(self.tr("&Generate XML..."), self)
+        self.generateButton.clicked.connect(self.generateXml)
+        self.generateButton.setEnabled(False)
+        self.quitButton = QPushButton(self.tr("&Quit"), self)
+        self.quitButton.clicked.connect(self.close)
+        # Setup layouts
+        vbox = QVBoxLayout()
+        vbox.setContentsMargins(0, 0, 0, 0)
+        vbox.addWidget(self.tabWidget)
+        hbox = QHBoxLayout()
+        hbox.setContentsMargins(5, 0, 5, 5)
+        hbox.addWidget(self.loadButton)
+        hbox.addWidget(QLabel(self.tr("Load scales from XML menu"), self))
+        hbox.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        hbox.addWidget(self.generateButton)
+        hbox.addWidget(self.quitButton)
+        vbox.addLayout(hbox)
+        self.setLayout(vbox)
+    def addGeneratorTab(self):
+        """Add new generator page."""
+        widget = GeneratorWidget(self)
+        text = self.tr("Generator %1").arg(self.tabWidget.tabCounter)
+        index = self.tabWidget.addTab(widget, text)
+        self.tabWidget.tabCounter += 1
+        self.tabWidget.setCurrentIndex(index)
+    def loadXml(self, filename = ''):
+        if not filename:
+            filename = QFileDialog.getOpenFileName(self, self.tr("Open XML Menu"),
+                QDir.currentPath(), self.tr("XML files (*.xml)"))
+        if not filename:
+            return
+        try:
+            self.generator = MenuGenerator(str(filename))
+        except Exception, e:
+            message = QErrorMessage(self)
+            message.showMessage(str(e))
+            raise
+        self.generateButton.setEnabled(True)
+    def generateXml(self, filename = ''):
+        if not filename:
+            filename = QFileDialog.getSaveFileName(self, self.tr("Save XML Menu"),
+                QDir.currentPath(), self.tr("XML files (*.xml)"))
+        if not filename:
+            return
+        try:
+            for i in range(self.tabWidget.count()):
+                widget = self.tabWidget.widget(i)
+                if isinstance(widget, GeneratorWidget):
+                    self.generator.update(widget.data())
+            self.generator.writeXml(str(filename))
+        except Exception, e:
+            message = QErrorMessage(self)
+            message.showMessage(str(e))
+            raise
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    if len(sys.argv) > 1:
+        window.loadXml(sys.argv[1])
+    window.show()
+    sys.exit(app.exec_())
