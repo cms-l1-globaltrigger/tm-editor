@@ -92,7 +92,6 @@ class AlgorithmEditor(QMainWindow):
         self.parseAct = QAction(self.tr("&Check expression"), self)
         self.parseAct.setIcon(Toolbox.createIcon("view-refresh"))
         self.parseAct.triggered.connect(self.onParse)
-        self.parseAct.setEnabled(False) # for the time being
         self.undoAct = QAction(self.tr("&Undo"), self)
         self.undoAct.setShortcut(QKeySequence.Undo)
         self.undoAct.setIcon(Toolbox.createIcon("edit-undo"))
@@ -273,7 +272,13 @@ class AlgorithmEditor(QMainWindow):
         pass
 
     def onParse(self):
-        pass
+        try:
+            self.validator.validate(self.expression())
+        except AlgorithmSyntaxError, e:
+            if e.token:
+                QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("%1 near %2").arg(str(e)).arg(e.token))
+            else:
+                QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("%1").arg(str(e)))
 
     def updateFreeIndices(self, ignore = None):
         # Get list of free indices.
