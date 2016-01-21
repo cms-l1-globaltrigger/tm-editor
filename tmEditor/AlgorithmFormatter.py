@@ -155,6 +155,8 @@ class AlgorithmFormatter(object):
                     result += (eol, indent(), token)
                 elif previous in (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR):
                     result += (eol, indent(), token)
+                elif previous in (tmGrammar.NOT, ):
+                    result += (ws, token)
                 else:
                     result += (token, )
             if token == '(':
