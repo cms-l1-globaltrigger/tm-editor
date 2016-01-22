@@ -24,12 +24,12 @@ from tmEditor.Menu import (
     isExternal,
     isCut,
     isFunction,
+    toObject,
     thresholdFloat,
     functionObjects,
     functionCuts,
     functionObjectsCuts,
     objectCuts,
-    ObjectNameMap,
 )
 
 from PyQt4.QtCore import *
@@ -151,7 +151,7 @@ class ObjectThresholds(SyntaxRule):
     def validate(self, expression):
         # TODO... better to use floating point representation and compare by string?!
         def validateThreshold(menu, token, object):
-            scale = menu.scaleMeta(object.type, 'ET')
+            scale = menu.scaleMeta(object, 'ET')
             threshold = thresholdFloat(object.threshold)
             minimum = float(scale['minimum'])
             maximum = float(scale['maximum'])
@@ -163,7 +163,7 @@ class ObjectThresholds(SyntaxRule):
                     token
                 )
             # Check step
-            bins = menu.scaleBins(object.type, 'ET')
+            bins = menu.scaleBins(object, 'ET')
             if not filter(lambda bin: float(bin['minimum'])==threshold or float(bin['maximum'])==threshold, bins):
                 raise AlgorithmSyntaxError(
                     "Invalid threshold `{object.threshold}` at object `{token}`".format(**locals()),

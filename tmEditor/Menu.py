@@ -29,18 +29,25 @@ DEFAULT_UUID = '00000000-0000-0000-0000-000000000000'
 FORMAT_FLOAT = '+23.16E'
 """Floating point string format."""
 
-ObjectNameMap = {
-    tmGrammar.Muon: tmGrammar.MU,
-    tmGrammar.Egamma: tmGrammar.EG,
-    tmGrammar.Jet: tmGrammar.JET,
-    tmGrammar.Tau: tmGrammar.TAU,
-    tmGrammar.Scaler: tmGrammar.ETT,
-    tmGrammar.Vector: tmGrammar.ETM,
-    tmGrammar.Scaler: tmGrammar.HTT,
-    tmGrammar.Vector: tmGrammar.HTM,
-    tmGrammar.External: tmGrammar.EXT,
-}
-"""Mapping object type enumeration to actual object names."""
+ObjectTypes = (
+    tmGrammar.MU,
+    tmGrammar.EG,
+    tmGrammar.JET,
+    tmGrammar.TAU,
+    tmGrammar.ETT,
+    tmGrammar.HTT,
+    tmGrammar.ETM,
+    tmGrammar.HTM,
+    tmGrammar.EXT,
+)
+
+def getObjectType(name):
+    """Mapping object type enumeration to actual object names."""
+    # WORKAROUND
+    for type in ObjectTypes:
+        if name.startswith(type):
+            return type
+    raise RuntimeError("invalid object type")
 
 class Menu(object):
     """L1-Trigger Menu container class. Provides methods to read and write XML
@@ -136,16 +143,14 @@ class Menu(object):
         """Returns external signal item by its name or None if no such external signal exists."""
         return (filter(lambda item: item.name == name, self.externals) or [None])[0]
 
-    def scaleMeta(self, objectType, scaleType):
+    def scaleMeta(self, object, scaleType):
         """Returns scale information for object by scale."""
-        if isinstance(objectType, int):
-            objectType = ObjectNameMap[objectType] # Cast from enumeration to name
+        objectType = getObjectType(object.getObjectName())
         return (filter(lambda item: item['object']==objectType and item['type']==scaleType, self.scales.scales) or [None])[0]
 
-    def scaleBins(self, objectType, scaleType):
+    def scaleBins(self, object, scaleType):
         """Returns bins for object by scale."""
-        if isinstance(objectType, int):
-            objectType = ObjectNameMap[objectType] # Cast from enumeration to name
+        objectType = getObjectType(object.getObjectName())
         key = '{objectType}-{scaleType}'.format(**locals())
         return self.scales.bins[key] if key in self.scales.bins else None
 
@@ -633,7 +638,7 @@ def toObject(token):
     return Object(
         name = o.getObjectName(),
         threshold = o.threshold,
-        type = ObjectNameMap[o.type],
+        type = getObjectType(o.getObjectName()),
         comparison_operator = o.comparison,
         bx_offset = o.bx_offset,
         comment = "",
