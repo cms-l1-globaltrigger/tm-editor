@@ -145,12 +145,12 @@ class Menu(object):
 
     def scaleMeta(self, object, scaleType):
         """Returns scale information for object by scale."""
-        objectType = getObjectType(object.getObjectName())
+        objectType = getObjectType(object.name)
         return (filter(lambda item: item['object']==objectType and item['type']==scaleType, self.scales.scales) or [None])[0]
 
     def scaleBins(self, object, scaleType):
         """Returns bins for object by scale."""
-        objectType = getObjectType(object.getObjectName())
+        objectType = getObjectType(object.name)
         key = '{objectType}-{scaleType}'.format(**locals())
         return self.scales.bins[key] if key in self.scales.bins else None
 
