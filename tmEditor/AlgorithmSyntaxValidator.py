@@ -66,7 +66,7 @@ class SyntaxRule(object):
         """Parses algorithm expression and returns list of tokens."""
         tmGrammar.Algorithm_Logic.clear()
         if not tmGrammar.Algorithm_parser(expression):
-            raise AlgorithmSyntaxError("Failed to parse algorithm expression `{expression}'".format(**locals()))
+            raise AlgorithmSyntaxError("Invalid expression `{expression}'".format(**locals()))
         return tmGrammar.Algorithm_Logic.getTokens()
 
     def toObjectItem(self, token):

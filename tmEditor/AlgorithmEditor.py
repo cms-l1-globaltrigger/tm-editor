@@ -17,6 +17,10 @@ from tmEditor import Toolbox
 from tmEditor import Menu
 from tmEditor.Menu import Algorithm
 from tmEditor.CodeEditor import CodeEditor
+from tmEditor.CommonWidgets import (
+    FilterLineEdit,
+    RestrictedLineEdit,
+)
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -50,8 +54,10 @@ class AlgorithmEditor(QMainWindow):
         self.updateFreeIndices()
         self.indexSpinBox.setMaximum(MaxAlgorithms)
         self.indexSpinBox.setMinimumWidth(60)
-        self.nameComboBox = QLineEdit(self)
-        self.nameComboBox.setMinimumWidth(300)
+        self.nameLineEdit = RestrictedLineEdit(self)
+        self.nameLineEdit.setPrefix('L1_')
+        self.nameLineEdit.setRegexPattern('L1_[a-zA-Z0-9_]+')
+        self.nameLineEdit.setMinimumWidth(300)
         self.validator = AlgorithmSyntaxValidator(self.menu)
         # Create actions and toolbars.
         self.createActions()
@@ -62,6 +68,7 @@ class AlgorithmEditor(QMainWindow):
         self.textEdit = CodeEditor(self)
         self.textEdit.setFrameShape(QFrame.NoFrame)
         self.messageBar = MessageBarWidget(self)
+        self.messageBar.setMaximumSize(400, 31) # HACK
         centralWidget = QWidget(self)
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -100,9 +107,10 @@ class AlgorithmEditor(QMainWindow):
         self.redoAct.setShortcut(QKeySequence.Redo)
         self.redoAct.setIcon(Toolbox.createIcon("edit-redo"))
         self.redoAct.triggered.connect(self.onRedo)
-        self.wizardAct = QAction(self.tr("&Wizards"), self)
+        self.wizardAct = QAction(self.tr("&Wizard"), self)
         self.wizardAct.setIcon(Toolbox.createIcon("wizard"))
         self.wizardAct.triggered.connect(self.onWizard)
+        self.wizardAct.setEnabled(False)
         self.selectIndexAct = QAction(self.tr("Select &Index"), self)
         self.selectIndexAct.setIcon(Toolbox.createIcon("search"))
         self.selectIndexAct.triggered.connect(self.onSelectIndex)
@@ -115,7 +123,7 @@ class AlgorithmEditor(QMainWindow):
         self.editMenu.addAction(self.undoAct)
         self.editMenu.addAction(self.redoAct)
         self.editMenu.addSeparator()
-        # TODO self.editMenu.addAction(self.wizardAct)
+        self.editMenu.addAction(self.wizardAct)
         self.editMenu.addAction(self.selectIndexAct)
         self.formatMenu = self.menuBar().addMenu(self.tr("&Format"))
         self.formatMenu.addAction(self.formatCollapseAct)
@@ -133,13 +141,13 @@ class AlgorithmEditor(QMainWindow):
         self.toolbar.addAction(self.undoAct)
         self.toolbar.addAction(self.redoAct)
         self.toolbar.addSeparator()
-        # TODO self.toolbar.addAction(self.wizardAct)
-        # self.toolbar.addSeparator()
+        self.toolbar.addAction(self.wizardAct)
+        self.toolbar.addSeparator()
         self.toolbar.addAction(self.formatCollapseAct)
         self.toolbar.addAction(self.formatExpandAct)
         self.toolbar.addSeparator()
         self.toolbar.addWidget(QLabel(self.tr("  Name "), self))
-        self.toolbar.addWidget(self.nameComboBox)
+        self.toolbar.addWidget(self.nameLineEdit)
         self.toolbar.addWidget(QLabel(self.tr("  Index "), self))
         self.toolbar.addWidget(self.indexSpinBox)
         self.toolbar.addAction(self.selectIndexAct)
@@ -170,10 +178,10 @@ class AlgorithmEditor(QMainWindow):
         self.indexSpinBox.setValue(int(index))
 
     def name(self):
-        return self.nameComboBox.text()
+        return self.nameLineEdit.text()
 
     def setName(self, name):
-        self.nameComboBox.setText(name)
+        self.nameLineEdit.setText(name)
 
     def expression(self):
         """Returns a machine readable formatted version of the loaded algorithm."""
@@ -477,10 +485,12 @@ class MessageBarWidget(QWidget):
     def setMessage(self, text):
         self.icon.hide()
         self.message.setText(QString("<span style=\"color:green;\">%1</span>").arg(text))
+        self.message.setToolTip(text)
 
     def setFatalMessage(self, text):
         self.icon.show()
         self.message.setText(QString("<span style=\"color:red;\">%1</span>").arg(text))
+        self.message.setToolTip(text)
 
 # -----------------------------------------------------------------------------
 #  Library widget
@@ -528,6 +538,19 @@ class LibraryWidget(QWidget):
     def __init__(self, menu, parent = None):
         super(LibraryWidget, self).__init__(parent)
         self.menu = menu
+        # Filter
+        self.filterBar = QWidget(self)
+        self.filterBar.setAutoFillBackground(True)
+        self.filterBar.filterLabel = QLabel(self.tr("Filter"), self.filterBar)
+        self.filterBar.filterLineEdit = FilterLineEdit(self.filterBar)
+        self.filterBar.filterLineEdit.textChanged.connect(self.setFilterText)
+        hbox = QHBoxLayout()
+        hbox.setContentsMargins(0, 0, 0, 0)
+        hbox.addWidget(self.filterBar.filterLabel)
+        hbox.addWidget(self.filterBar.filterLineEdit)
+        self.filterBar.setLayout(hbox)
+        self.filterBar.setEnabled(False)
+        # Tabs
         self.tabWidget = QTabWidget(self)
         # Build list of objects.
         self.objectsTree = QTreeWidget(self)
@@ -562,10 +585,11 @@ class LibraryWidget(QWidget):
         # Layout
         gridLayout = QGridLayout()
         gridLayout.setContentsMargins(1, 1, 1, 1)
-        gridLayout.addWidget(self.tabWidget, 0, 0, 1, 3)
-        gridLayout.addWidget(self.insertButton, 1, 0)
-        gridLayout.addWidget(self.wizardCheckBox, 1, 1)
-        gridLayout.addWidget(self.previewLabel, 2, 0, 1, 3)
+        gridLayout.addWidget(self.filterBar, 0, 0, 1, 3)
+        gridLayout.addWidget(self.tabWidget, 1, 0, 1, 3)
+        gridLayout.addWidget(self.insertButton, 2, 0)
+        gridLayout.addWidget(self.wizardCheckBox, 2, 1)
+        gridLayout.addWidget(self.previewLabel, 3, 0, 1, 3)
         self.setLayout(gridLayout)
         # Setup connections.
         self.objectsTree.currentItemChanged.connect(self.onPreview)
@@ -693,6 +717,9 @@ class LibraryWidget(QWidget):
                 self.selected.emit(item.text(0))
             if isinstance(widget, QListWidget):
                 self.selected.emit(item.text())
+
+    def setFilterText(self, text):
+        print text
 
 # -----------------------------------------------------------------------------
 #  Index selection dialog.

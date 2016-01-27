@@ -73,6 +73,8 @@ class Document(QWidget):
         self.loadMenu(filename)
         # Layout
         self.setContentsMargins(0, 0, 0, 0)
+        #
+        self._pages = []
         # Create table views.
         algorithmsTableView = self.createProxyTableView("algorithmsTableView", AlgorithmsModel(self.menu(), self))
         algorithmsTableView.resizeColumnsToContents()
@@ -116,10 +118,13 @@ class Document(QWidget):
         self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee;}")
         # Filter bar
         self.filterBar = QWidget(self)
-        self.filterBar.filterLabel = QLabel(self.tr("Filter:"), self.filterBar)
+        self.filterBar.setAutoFillBackground(True)
+        self.filterBar.filterLabel = QLabel(self.tr("Filter"), self.filterBar)
         self.filterBar.filterLineEdit = FilterLineEdit(self.filterBar)
         self.filterBar.filterLineEdit.textChanged.connect(self.setFilterText)
         hbox = QHBoxLayout()
+        hbox.setContentsMargins(10, 0, 0, 0)
+        hbox.addItem(QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
         hbox.addWidget(self.filterBar.filterLabel)
         hbox.addWidget(self.filterBar.filterLineEdit)
         self.filterBar.setLayout(hbox)
@@ -190,13 +195,14 @@ class Document(QWidget):
             self.topStack.addWidget(top)
         if 0 > self.bottomStack.indexOf(bottom):
             self.bottomStack.addWidget(bottom)
+        self._pages.append(page)
         return page
 
     def setFilterText(self, text):
-        self.algorithmsPage.top.model().setFilterWildcard(text)
-        self.cutsPage.top.model().setFilterWildcard(text)
-        self.objectsPage.top.model().setFilterWildcard(text)
-        self.externalsPage.top.model().setFilterWildcard(text)
+        index, item = self.getSelection()
+        excludedPages = [self.menuPage, self.scalesPage, ]
+        if item not in excludedPages:
+            item.top.model().setFilterWildcard(text)
 
     def filename(self):
         return self._filename
@@ -273,6 +279,10 @@ class Document(QWidget):
         if item and hasattr(item.top, 'sortByColumn'):
             item.top.sortByColumn(0, Qt.AscendingOrder)
         self.topStack.setCurrentWidget(item.top)
+        excludedPages = [self.menuPage, self.scalesPage, ]
+        self.filterBar.setEnabled(item not in excludedPages)
+        self.filterBar.filterLineEdit.setText("")
+        self.setFilterText("")
         self.updateBottom()
 
     def updateBottom(self):
