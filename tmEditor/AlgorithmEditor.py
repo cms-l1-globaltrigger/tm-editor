@@ -83,12 +83,12 @@ class AlgorithmEditor(QMainWindow):
 
     def createActions(self):
         """Create actions."""
-        self.formatCompactAct = QAction(self.tr("&Compact"), self)
-        self.formatCompactAct.setIcon(Toolbox.createIcon("format-compact"))
-        self.formatCompactAct.triggered.connect(self.onFormatCompact)
-        self.formatCascadeAct = QAction(self.tr("&Cascade"), self)
-        self.formatCascadeAct.setIcon(Toolbox.createIcon("format-cascade"))
-        self.formatCascadeAct.triggered.connect(self.onFormatCascade)
+        self.formatCollapseAct = QAction(self.tr("&Collapse"), self)
+        self.formatCollapseAct.setIcon(Toolbox.createIcon("format-compact"))
+        self.formatCollapseAct.triggered.connect(self.onFormatCollapse)
+        self.formatExpandAct = QAction(self.tr("&Expand"), self)
+        self.formatExpandAct.setIcon(Toolbox.createIcon("format-cascade"))
+        self.formatExpandAct.triggered.connect(self.onFormatExpand)
         self.parseAct = QAction(self.tr("&Check expression"), self)
         self.parseAct.setIcon(Toolbox.createIcon("view-refresh"))
         self.parseAct.triggered.connect(self.onParse)
@@ -118,8 +118,8 @@ class AlgorithmEditor(QMainWindow):
         # TODO self.editMenu.addAction(self.wizardAct)
         self.editMenu.addAction(self.selectIndexAct)
         self.formatMenu = self.menuBar().addMenu(self.tr("&Format"))
-        self.formatMenu.addAction(self.formatCompactAct)
-        self.formatMenu.addAction(self.formatCascadeAct)
+        self.formatMenu.addAction(self.formatCollapseAct)
+        self.formatMenu.addAction(self.formatExpandAct)
         # self.helpMenu = self.menuBar().addMenu(self.tr("&Help"))
 
     def createToolbar(self):
@@ -135,8 +135,8 @@ class AlgorithmEditor(QMainWindow):
         self.toolbar.addSeparator()
         # TODO self.toolbar.addAction(self.wizardAct)
         # self.toolbar.addSeparator()
-        self.toolbar.addAction(self.formatCompactAct)
-        self.toolbar.addAction(self.formatCascadeAct)
+        self.toolbar.addAction(self.formatCollapseAct)
+        self.toolbar.addAction(self.formatExpandAct)
         self.toolbar.addSeparator()
         self.toolbar.addWidget(QLabel(self.tr("  Name "), self))
         self.toolbar.addWidget(self.nameComboBox)
@@ -237,14 +237,14 @@ class AlgorithmEditor(QMainWindow):
             logging.debug("Selected new algorithm index %d", dialog.index)
             self.setIndex(dialog.index)
 
-    def onFormatCompact(self):
+    def onFormatCollapse(self):
         modified = self.isModified() # Formatting does not count as change.
         self.replacePlainText(AlgorithmFormatter.normalize(self.expression()))
         self.setModified(modified)
 
-    def onFormatCascade(self):
+    def onFormatExpand(self):
         modified = self.isModified() # Formatting does not count as change.
-        self.replacePlainText(AlgorithmFormatter.cascade(self.expression()))
+        self.replacePlainText(AlgorithmFormatter.expand(self.expression()))
         self.setModified(modified)
 
     def onInsertItem(self, text):

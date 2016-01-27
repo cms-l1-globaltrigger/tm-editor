@@ -19,6 +19,7 @@
     <file alias="icons/dr.svg">share/tm-editor/icons/13x13/dr.svg</file>
     <file alias="icons/mass.svg">share/tm-editor/icons/13x13/mass.svg</file>
     <file alias="icons/compare.svg">share/tm-editor/icons/16x16/compare.svg</file>
+    <file alias="icons/16/edit-clear.svg">share/tm-editor/icons/16x16/edit-clear.svg</file>
     <file alias="icons/16/format-compact.svg">share/tm-editor/icons/16x16/format-compact.svg</file>
     <file alias="icons/16/format-cascade.svg">share/tm-editor/icons/16x16/format-cascade.svg</file>
     <file alias="icons/24/format-compact.svg">share/tm-editor/icons/24x24/format-compact.svg</file>

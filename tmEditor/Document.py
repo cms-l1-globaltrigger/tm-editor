@@ -22,7 +22,12 @@ from tmEditor import AlgorithmSyntaxHighlighter
 
 from tmEditor import Menu
 from tmEditor.Menu import Algorithm, Cut, Object, External, toObject
-from tmEditor.CutEditor import EtaGraph, PhiGraph
+from tmEditor.CommonWidgets import (
+    FilterLineEdit,
+    RestrictedLineEdit,
+    EtaCutChart,
+    PhiCutChart,
+)
 
 from tmEditor.Models import *
 from tmEditor.Proxies import *
@@ -84,7 +89,9 @@ class Document(QWidget):
         #
         menuView = QWidget(self)
         menuView.menu = self.menu()
-        menuView.nameLineEdit = QLineEdit(self)
+        menuView.nameLineEdit = RestrictedLineEdit(self)
+        menuView.nameLineEdit.setPrefix("L1Menu_")
+        menuView.nameLineEdit.setRegexPattern("L1Menu_[a-zA-Z0-9_]+")
         menuView.commentTextEdit = QPlainTextEdit(self)
         menuView.commentTextEdit.setMaximumHeight(50)
         vbox = QVBoxLayout()
@@ -107,6 +114,15 @@ class Document(QWidget):
         self.navigationTreeWidget.headerItem().setHidden(True)
         self.navigationTreeWidget.setObjectName("navigationTreeWidget")
         self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee;}")
+        # Filter bar
+        self.filterBar = QWidget(self)
+        self.filterBar.filterLabel = QLabel(self.tr("Filter:"), self.filterBar)
+        self.filterBar.filterLineEdit = FilterLineEdit(self.filterBar)
+        self.filterBar.filterLineEdit.textChanged.connect(self.setFilterText)
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.filterBar.filterLabel)
+        hbox.addWidget(self.filterBar.filterLineEdit)
+        self.filterBar.setLayout(hbox)
         # Stacks
         self.topStack = QStackedWidget(self)
         self.bottomStack = QStackedWidget(self)
@@ -135,6 +151,7 @@ class Document(QWidget):
         self.vsplitter.addWidget(self.navigationTreeWidget)
         self.vsplitter.setOpaqueResize(False)
         self.hsplitter = SlimSplitter(Qt.Vertical, self)
+        self.hsplitter.addWidget(self.filterBar)
         self.hsplitter.addWidget(self.topStack)
         self.hsplitter.addWidget(self.bottomStack)
         self.vsplitter.addWidget(self.hsplitter)
@@ -155,6 +172,8 @@ class Document(QWidget):
     def createProxyTableView(self, name, model, proxyclass=QSortFilterProxyModel):
         """Factory to create new QTableView view using a QSortFilterProxyModel."""
         proxyModel = proxyclass(self)
+        proxyModel.setFilterKeyColumn(-1)
+        proxyModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
         proxyModel.setSourceModel(model)
         tableView = TableView(self)
         tableView.setObjectName(name)
@@ -172,6 +191,12 @@ class Document(QWidget):
         if 0 > self.bottomStack.indexOf(bottom):
             self.bottomStack.addWidget(bottom)
         return page
+
+    def setFilterText(self, text):
+        self.algorithmsPage.top.model().setFilterWildcard(text)
+        self.cutsPage.top.model().setFilterWildcard(text)
+        self.objectsPage.top.model().setFilterWildcard(text)
+        self.externalsPage.top.model().setFilterWildcard(text)
 
     def filename(self):
         return self._filename
@@ -717,27 +742,27 @@ class BottomWidget(QWidget):
             border: 0;
             background-color: #eee;
         }""")
-        self.etaGraph = EtaGraph(self)
-        self.etaGraphBox = QGroupBox(self.tr("Eta preview"), self)
+        self.EtaCutChart = EtaCutChart(self)
+        self.EtaCutChartBox = QGroupBox(self.tr("Eta preview"), self)
         box = QVBoxLayout()
-        box.addWidget(self.etaGraph)
-        self.etaGraphBox.setLayout(box)
-        self.etaGraphBox.setAlignment(Qt.AlignTop)
-        self.etaGraphBox.setObjectName("EtaGraphBox")
-        self.etaGraphBox.setStyleSheet("""
-        #EtaGraphBox {
+        box.addWidget(self.EtaCutChart)
+        self.EtaCutChartBox.setLayout(box)
+        self.EtaCutChartBox.setAlignment(Qt.AlignTop)
+        self.EtaCutChartBox.setObjectName("EtaCutChartBox")
+        self.EtaCutChartBox.setStyleSheet("""
+        #EtaCutChartBox {
             background-color: #eee;
         }""")
 
-        self.phiGraph = PhiGraph(self)
-        self.phiGraphBox = QGroupBox(self.tr("Phi preview"), self)
+        self.PhiCutChart = PhiCutChart(self)
+        self.PhiCutChartBox = QGroupBox(self.tr("Phi preview"), self)
         box = QVBoxLayout()
-        box.addWidget(self.phiGraph)
-        self.phiGraphBox.setLayout(box)
-        self.phiGraphBox.setAlignment(Qt.AlignTop)
-        self.phiGraphBox.setObjectName("PhiGraphBox")
-        self.phiGraphBox.setStyleSheet("""
-        #PhiGraphBox {
+        box.addWidget(self.PhiCutChart)
+        self.PhiCutChartBox.setLayout(box)
+        self.PhiCutChartBox.setAlignment(Qt.AlignTop)
+        self.PhiCutChartBox.setObjectName("PhiCutChartBox")
+        self.PhiCutChartBox.setStyleSheet("""
+        #PhiCutChartBox {
             background-color: #eee;
         }""")
 
@@ -747,16 +772,16 @@ class BottomWidget(QWidget):
         layout.addWidget(self.toolbar, 0, 0, 1, 3)
         layout.addWidget(self.notice, 1, 0, 1, 3)
         layout.addWidget(self.textEdit, 2, 0)
-        layout.addWidget(self.etaGraphBox, 2, 1)
-        layout.addWidget(self.phiGraphBox, 2, 2)
+        layout.addWidget(self.EtaCutChartBox, 2, 1)
+        layout.addWidget(self.PhiCutChartBox, 2, 2)
         self.setLayout(layout)
-        self.clearEtaGraph()
-        self.clearPhiGraph()
+        self.clearEtaCutChart()
+        self.clearPhiCutChart()
 
     def reset(self):
         self.clearNotice()
-        self.clearEtaGraph()
-        self.clearPhiGraph()
+        self.clearEtaCutChart()
+        self.clearPhiCutChart()
         self.setText("")
 
     def setNotice(self, text, icon = None):
@@ -778,21 +803,21 @@ class BottomWidget(QWidget):
         self.copyButton.setEnabled(enabled)
         self.removeButton.setEnabled(enabled)
 
-    def clearEtaGraph(self):
-        #self.etaGraph.reset()
-        self.etaGraphBox.hide()
+    def clearEtaCutChart(self):
+        #self.EtaCutChart.reset()
+        self.EtaCutChartBox.hide()
 
-    def clearPhiGraph(self):
-        #self.phiGraph.reset()
-        self.phiGraphBox.hide()
+    def clearPhiCutChart(self):
+        #self.PhiCutChart.reset()
+        self.PhiCutChartBox.hide()
 
-    def setEtaGraph(self, lower, upper):
-        self.etaGraph.setRange(lower, upper)
-        self.etaGraphBox.show()
+    def setEtaCutChart(self, lower, upper):
+        self.EtaCutChart.setRange(lower, upper)
+        self.EtaCutChartBox.show()
 
-    def setPhiGraph(self, lower, upper):
-        self.phiGraph.setRange(lower, upper)
-        self.phiGraphBox.show()
+    def setPhiCutChart(self, lower, upper):
+        self.PhiCutChart.setRange(lower, upper)
+        self.PhiCutChartBox.show()
 
     def setText(self, message):
         self.textEdit.setText(message)
@@ -875,9 +900,9 @@ class BottomWidget(QWidget):
             text.append("<p><code>{cut.comment}</code></p>")
         self.setText("".join(text).format(**locals()))
         if cut.type == tmGrammar.ETA:
-            self.setEtaGraph(float(cut.minimum), float(cut.maximum))
+            self.setEtaCutChart(float(cut.minimum), float(cut.maximum))
         elif cut.type == tmGrammar.PHI:
-            self.setPhiGraph(float(cut.minimum), float(cut.maximum))
+            self.setPhiCutChart(float(cut.minimum), float(cut.maximum))
 
     def loadObject(self, object):
         self.reset()

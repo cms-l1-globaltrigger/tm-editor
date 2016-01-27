@@ -18,7 +18,7 @@ Normalize an algorithm expression optimized for human readability:
 
 Cascade an algorithm expression to increase human readability:
 
->>> AlgorithmFormatter.cascade(expression)
+>>> AlgorithmFormatter.expand(expression)
 """
 
 import tmGrammar
@@ -126,10 +126,10 @@ class AlgorithmFormatter(object):
         return expression.strip()
 
     @staticmethod
-    def cascade(expression, tabwidth = 2, ws = " ", eol = "\n"):
-        """Return expression applying an cascading formatting.
+    def expand(expression, tabwidth = 2, ws = " ", eol = "\n"):
+        """Return expression applying an expanded formatting.
 
-        >>> print cascade("MU10 AND (JET20 OR TAU20)")
+        >>> print expand("MU10 AND (JET20 OR TAU20)")
         MU10
          AND
         (
