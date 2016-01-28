@@ -7,6 +7,9 @@
 #
 
 """Algorithm editor main window and dialog.
+
+    This module requires intense cleanup!
+
 """
 
 import tmGrammar
@@ -34,6 +37,7 @@ import re
 MaxAlgorithms = 512
 
 def miniIcon(name):
+    """Returns mini icon to be used for items in list and tree views."""
     return QIcon(":/icons/{name}.svg".format(name=name)).pixmap(13, 13)
 
 # -----------------------------------------------------------------------------
@@ -69,7 +73,6 @@ class AlgorithmEditor(QMainWindow):
         self.textEdit = CodeEditor(self)
         self.textEdit.setFrameShape(QFrame.NoFrame)
         self.messageBar = MessageBarWidget(self)
-        self.messageBar.setMaximumSize(400, 31) # HACK
         centralWidget = QWidget(self)
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -89,6 +92,9 @@ class AlgorithmEditor(QMainWindow):
         self.textEdit.textChanged.connect(self.onTextChanged)
         self.indexSpinBox.valueChanged.connect(self.onIndexChanged)
         # Call slots
+        self.parseTimer = QTimer(self)
+        self.parseTimer.setSingleShot(True)
+        self.parseTimer.timeout.connect(self.onTextChangedDelayed)
         self.onTextChanged()
 
     def createActions(self):
@@ -222,6 +228,10 @@ class AlgorithmEditor(QMainWindow):
         self.setModified(True)
         self.undoAct.setEnabled(self.textEdit.document().isUndoAvailable())
         self.redoAct.setEnabled(self.textEdit.document().isRedoAvailable())
+        self.parseTimer.start(1000)
+        self.messageBar.setMessage(self.tr("parsing..."))
+
+    def onTextChangedDelayed(self):
         try:
             self.validator.validate(self.expression())
         except AlgorithmSyntaxError, e:
@@ -281,7 +291,8 @@ class AlgorithmEditor(QMainWindow):
     def onWizard(self):
         dialog = ObjectEditorDialog(self.menu, self)
         dialog.exec_()
-        self.onInsertItem(dialog.toExpression())
+        if dialog.result() == QDialog.Accepted:
+            self.onInsertItem(dialog.toExpression())
 
     def onParse(self):
         try:
@@ -475,11 +486,14 @@ class MessageBarWidget(QWidget):
 
     def __init__(self, parent = None):
         super(MessageBarWidget, self).__init__(parent)
+        self.setMaximumHeight(31)
         self.icon = QLabel(self)
         self.icon.setPixmap(Toolbox.createIcon("dialog-warning").pixmap(16, 16))
         self.icon.setFixedSize(16, 16)
-        self.message = QLabel(self)
-        self.message.setWordWrap(True)
+        self.message = QTextEdit(self)
+        self.message.setReadOnly(True)
+        self.message.setMinimumHeight(31)
+        self.message.setStyleSheet("QTextEdit {border: 0; background: transparent;}")
         layout = QHBoxLayout()
         layout.setContentsMargins(10, 10, 0, 0)
         layout.addWidget(self.icon)
@@ -547,7 +561,7 @@ class LibraryWidget(QWidget):
         self.filterBar.setAutoFillBackground(True)
         self.filterBar.filterLabel = QLabel(self.tr("Filter"), self.filterBar)
         self.filterBar.filterLineEdit = FilterLineEdit(self.filterBar)
-        self.filterBar.filterLineEdit.textChanged.connect(self.setFilterText)
+        # self.filterBar.filterLineEdit.textChanged.connect()
         hbox = QHBoxLayout()
         hbox.setContentsMargins(0, 0, 0, 0)
         hbox.addWidget(self.filterBar.filterLabel)
@@ -574,16 +588,9 @@ class LibraryWidget(QWidget):
         self.functionsList.addItems([name for name, _ in self.Functions])
         self.tabWidget.addTab(self.functionsList, self.tr("&Funcs"))
         # Build list of operators.
-        self.operatorsListModel = QStandardItemModel(self)
-        for name, _ in self.Operators:
-            item = QStandardItem(name)
-            item.setEditable(False)
-            self.operatorsListModel.appendRow([item])
-        self.operatorsListProxy = QSortFilterProxyModel(self)
-        self.operatorsListProxy.setSourceModel(self.operatorsListModel)
-        self.operatorsListView = QListView(self)
-        self.operatorsListView.setModel(self.operatorsListProxy)
-        self.tabWidget.addTab(self.operatorsListView, self.tr("O&ps"))
+        self.operatorsList = QListWidget(self)
+        self.operatorsList.addItems([name for name, _ in self.Operators])
+        self.tabWidget.addTab(self.operatorsList, self.tr("O&ps"))
         # Insert button.
         self.insertButton = QPushButton(Toolbox.createIcon("insert-text"), self.tr("&Insert"), self)
         self.insertButton.clicked.connect(self.onInsert)
@@ -613,8 +620,8 @@ class LibraryWidget(QWidget):
         self.externalsList.itemDoubleClicked.connect(self.onInsert)
         self.functionsList.currentRowChanged.connect(self.onPreview)
         self.functionsList.itemDoubleClicked.connect(self.onInsert)
-        self.operatorsListView.selectionModel().currentRowChanged.connect(self.onPreview)
-        self.operatorsListView.doubleClicked.connect(self.onInsert)
+        self.operatorsList.selectionModel().currentRowChanged.connect(self.onPreview)
+        self.operatorsList.doubleClicked.connect(self.onInsert)
         self.tabWidget.currentChanged.connect(self.onPreview)
 
     def initContents(self):
@@ -686,6 +693,7 @@ class LibraryWidget(QWidget):
             item['bx_offset'] = Toolbox.fBxOffset(item['bx_offset'])
             self.previewLabel.setText(self.ObjectPreview.format(**item))
             self.insertButton.setEnabled(True)
+            self.wizardCheckBox.setEnabled(True)
         # Cuts
         elif tab == self.cutsTree:
             if not self.cutsTree.currentItem(): return # empty list
@@ -713,33 +721,22 @@ class LibraryWidget(QWidget):
             self.previewLabel.setText(self.Functions[row][1])
             self.insertButton.setEnabled(True)
         # Operators
-        elif tab == self.operatorsListView:
-            data = currentData(tab)
-            print ".", data, type(data)
-            if data:
-                self.previewLabel.setText(data)
-                self.insertButton.setEnabled(True)
-        # TODO Not implemented
-        self.wizardCheckBox.setEnabled(False)
+        elif tab == self.operatorsList:
+            row = self.operatorsList.currentRow()
+            self.wizardCheckBox.setEnabled(True)
+            if row < 0: return
+            self.previewLabel.setText(self.Operators[row][1])
+            self.insertButton.setEnabled(True)
 
     def onInsert(self):
         """Insert selected item from active library list."""
         if self.insertButton.isEnabled():
             widget = self.tabWidget.currentWidget()
-            if isinstance(widget, QListView):
-                data = currentData(widget)
-                if data:
-                    self.selected.emit(data)
-                return
             item = widget.currentItem()
             if isinstance(widget, QTreeWidget):
                 self.selected.emit(item.text(0))
             if isinstance(widget, QListWidget):
                 self.selected.emit(item.text())
-
-    def setFilterText(self, text):
-        print text
-        self.operatorsListProxy.setFilterWildcard(text)
 
 # helper
 def currentData(widget):

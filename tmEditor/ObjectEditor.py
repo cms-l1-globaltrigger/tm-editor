@@ -48,6 +48,9 @@ def threshold(value):
     """Converts floating point value to threshold expression."""
     return 'p'.join(format(float(value), '.1f').split('.')).replace('p0', '')
 
+def scaleMeta(menu, object, type):
+    return (filter(lambda item: item['object']==object and item['type']==type, menu.scales.scales) or [None])[0]
+
 class ObjectEditorDialog(QDialog):
     def __init__(self, menu, parent = None):
         """Constructor, takes a reference to a menu and an optional parent."""
@@ -55,6 +58,7 @@ class ObjectEditorDialog(QDialog):
         self.menu = menu
         self.ui = ObjectEditorUi(self)
         self.initCuts()
+        self.updateObjectType()
         self.ui.typeComboBox.currentIndexChanged.connect(self.updateObjectType)
         self.ui.compareComboBox.currentIndexChanged.connect(self.updateInfoText)
         self.ui.thresholdSpinBox.valueChanged.connect(self.updateInfoText)
@@ -64,23 +68,26 @@ class ObjectEditorDialog(QDialog):
         # self.ui.buttonBox.helpRequested.connect(self.showHelp)
         self.updateInfoText()
     def updateObjectType(self):
+        objectType = self.objectType()
+        scale = scaleMeta(self.menu, objectType, 'ET')
+        self.ui.thresholdSpinBox.setRange(float(scale['minimum']), float(scale['maximum']))
         self.updateInfoText()
         self.initCuts()
     def initCuts(self):
         """Initialize list of checkable cuts."""
-        self.model = QStandardItemModel(self)
-        self.model._items = []
+        self.cutModel = QStandardItemModel(self)
+        self.cutModel._items = []
         for cut in self.menu.cuts:
             if cut.object == self.objectType():
                 item = cutItem(cut.name)
-                self.model.appendRow(item)
-                self.model._items.append(item)
-        proxy = QSortFilterProxyModel(self)
-        proxy.setFilterKeyColumn(-1) # Filter all collumns
-        proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        proxy.setSourceModel(self.model)
-        self.model.itemChanged.connect(self.updateInfoText)
-        self.ui.cutListView.setModel(proxy)
+                self.cutModel.appendRow(item)
+                self.cutModel._items.append(item)
+        self.cutProxy = QSortFilterProxyModel(self)
+        self.cutProxy.setFilterKeyColumn(-1) # Filter all collumns
+        self.cutProxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.cutProxy.setSourceModel(self.cutModel)
+        self.cutModel.itemChanged.connect(self.updateInfoText)
+        self.ui.cutListView.setModel(self.cutProxy)
         self.ui.filterLineEdit.textChanged.connect(self.updateFilter)
     def updateFilter(self, text):
         """Update cut filter."""
@@ -96,7 +103,7 @@ class ObjectEditorDialog(QDialog):
         return threshold(self.ui.thresholdSpinBox.value())
     def selectedCuts(self):
         """Retruns list of checked cuts."""
-        return [str(item.text()) for item in filter(lambda item: item.checkState() == Qt.Checked, self.model._items)]
+        return [str(item.text()) for item in filter(lambda item: item.checkState() == Qt.Checked, self.cutModel._items)]
     def toExpression(self):
         """Returns object expression selected by the inputs."""
         expression = [self.objectType()]
@@ -119,7 +126,7 @@ class ObjectEditorDialog(QDialog):
     def updateInfoText(self):
         """Update info box text."""
         objectType = self.objectType()
-        scale = (filter(lambda item: item['object']==objectType and item['type']=='ET', self.menu.scales.scales) or [None])[0]
+        scale = scaleMeta(self.menu, objectType, 'ET')
         minThreshold = float(scale['minimum'])
         maxThreshold = float(scale['maximum'])
         expression = self.toExpression()
