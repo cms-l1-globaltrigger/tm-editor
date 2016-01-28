@@ -64,9 +64,14 @@ class SyntaxRule(object):
 
     def tokens(self, expression):
         """Parses algorithm expression and returns list of tokens."""
+        # Make sure to clear static algorithm logic.
         tmGrammar.Algorithm_Logic.clear()
+        # Check for empty expression
+        if not expression.strip():
+            raise AlgorithmSyntaxError("Empty expression")
         if not tmGrammar.Algorithm_parser(expression):
             raise AlgorithmSyntaxError("Invalid expression `{expression}'".format(**locals()))
+        print tmGrammar.Algorithm_Logic.getTokens()
         return tmGrammar.Algorithm_Logic.getTokens()
 
     def toObjectItem(self, token):
@@ -122,8 +127,8 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
 
 class BasicSyntax(SyntaxRule):
     """Validates basic algorithm syntax."""
-
     def validate(self, expression):
+        previous = ''
         for token in self.tokens(expression):
             # Validate operators
             if isOperator(token):
@@ -143,6 +148,7 @@ class BasicSyntax(SyntaxRule):
                 pass
             else:
                 raise AlgorithmSyntaxError("Invalid token `{token}`".format(**locals()), token)
+            previous = token
 
 
 class ObjectThresholds(SyntaxRule):

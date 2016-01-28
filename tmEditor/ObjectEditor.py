@@ -4,6 +4,7 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+import tmGrammar
 from tmEditor.CommonWidgets import (
     PrefixedSpinBox,
     FilterLineEdit,
@@ -11,54 +12,125 @@ from tmEditor.CommonWidgets import (
 
 import sys, os
 
-__all__ = ['ObjectEditor', ]
+__all__ = ['ObjectEditorDialog', ]
 
-Objects = ['MU', 'EG', 'JET', 'TAU', 'ETM', 'HTM', 'ETT', 'ETM', ]
+Objects = [
+    tmGrammar.MU,
+    tmGrammar.EG,
+    tmGrammar.JET,
+    tmGrammar.TAU,
+    tmGrammar.ETM,
+    tmGrammar.HTM,
+    tmGrammar.ETT,
+    tmGrammar.ETM,
+]
 
-def headerItem(text):
-    item = QStandardItem(text)
-    item.setSelectable(False)
-    font = item.font()
-    font.setBold(True)
-    item.setFont(font)
-    return item
+ObjectCuts = [
+    tmGrammar.ETA,
+    tmGrammar.PHI,
+    tmGrammar.ISO,
+    tmGrammar.QLTY,
+    tmGrammar.CHG,
+]
+
+GE = '.ge.'
+EQ = '.eq.'
 
 def cutItem(text, checked = False):
+    """Created a checkable cut item."""
     item = QStandardItem(text)
     item.setCheckable(True)
     if checked:
         item.setCheckState(Qt.Checked)
     return item
 
-Cuts = [
-    headerItem('Eta cuts'),
-    cutItem('MU-ETA_CEN (-1.4 ... +1.4)'),
-    cutItem('MU-ETA_FWD (+3.1 ... +5.0)'),
-    headerItem('Phi cuts'),
-    cutItem('MU-PHI_TOP (0 ... 3.146)', True),
-    cutItem('MU-PHI_BOTTOM (3.146 ... 6.291)'),
-    headerItem('Quality cuts'),
-    cutItem('MU-QLTY_LOW (0,1,2,3)'),
-]
+def threshold(value):
+    """Converts floating point value to threshold expression."""
+    return 'p'.join(format(float(value), '.1f').split('.')).replace('p0', '')
 
-class ObjectEditor(QDialog):
-    def __init__(self, parent = None):
-        super(ObjectEditor, self).__init__(parent)
+class ObjectEditorDialog(QDialog):
+    def __init__(self, menu, parent = None):
+        """Constructor, takes a reference to a menu and an optional parent."""
+        super(ObjectEditorDialog, self).__init__(parent)
+        self.menu = menu
         self.ui = ObjectEditorUi(self)
         self.initCuts()
+        self.ui.typeComboBox.currentIndexChanged.connect(self.updateObjectType)
+        self.ui.compareComboBox.currentIndexChanged.connect(self.updateInfoText)
+        self.ui.thresholdSpinBox.valueChanged.connect(self.updateInfoText)
+        self.ui.offsetSpinBox.valueChanged.connect(self.updateInfoText)
+        self.ui.buttonBox.accepted.connect(self.accept)
+        self.ui.buttonBox.rejected.connect(self.reject)
+        # self.ui.buttonBox.helpRequested.connect(self.showHelp)
+        self.updateInfoText()
+    def updateObjectType(self):
+        self.updateInfoText()
+        self.initCuts()
     def initCuts(self):
-        model = QStandardItemModel(self)
-        for item in Cuts:
-            model.appendRow(item)
+        """Initialize list of checkable cuts."""
+        self.model = QStandardItemModel(self)
+        self.model._items = []
+        for cut in self.menu.cuts:
+            if cut.object == self.objectType():
+                item = cutItem(cut.name)
+                self.model.appendRow(item)
+                self.model._items.append(item)
         proxy = QSortFilterProxyModel(self)
-        proxy.setFilterKeyColumn(-1)
+        proxy.setFilterKeyColumn(-1) # Filter all collumns
         proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        proxy.setSourceModel(model)
+        proxy.setSourceModel(self.model)
+        self.model.itemChanged.connect(self.updateInfoText)
         self.ui.cutListView.setModel(proxy)
-        self.ui.filterLineEdit.textChanged.connect(self.filterCuts)
-    def filterCuts(self, text):
-        # HACK: filter but ignore header items.
-        self.ui.cutListView.model().setFilterRegExp(QString("%1|\scuts$").arg(QRegExp.escape(text)))
+        self.ui.filterLineEdit.textChanged.connect(self.updateFilter)
+    def updateFilter(self, text):
+        """Update cut filter."""
+        self.ui.cutListView.model().setFilterWildcard(text)
+    def objectType(self):
+        """Returns object type."""
+        return str(self.ui.typeComboBox.currentText())
+    def comparisonType(self):
+        """Returns comparison type."""
+        return str(self.ui.compareComboBox.itemData(self.ui.compareComboBox.currentIndex()).toPyObject())
+    def thresholdExpr(self):
+        """Returns formatted object threshold."""
+        return threshold(self.ui.thresholdSpinBox.value())
+    def selectedCuts(self):
+        """Retruns list of checked cuts."""
+        return [str(item.text()) for item in filter(lambda item: item.checkState() == Qt.Checked, self.model._items)]
+    def toExpression(self):
+        """Returns object expression selected by the inputs."""
+        expression = [self.objectType()]
+        if self.comparisonType() != GE:
+            expression.append(self.comparisonType())
+        expression.append(self.thresholdExpr())
+        offset = self.ui.offsetSpinBox.value()
+        if offset != 0:
+            expression.append(format(offset, '+d'))
+        # Compile list of cuts
+        cuts = self.selectedCuts()
+        if cuts:
+            expression.append('[')
+            buffer = []
+            for cut in cuts:
+                buffer.append(cut)
+            expression.append(', '.join(buffer))
+            expression.append(']')
+        return ''.join(expression)
+    def updateInfoText(self):
+        """Update info box text."""
+        objectType = self.objectType()
+        scale = (filter(lambda item: item['object']==objectType and item['type']=='ET', self.menu.scales.scales) or [None])[0]
+        minThreshold = float(scale['minimum'])
+        maxThreshold = float(scale['maximum'])
+        expression = self.toExpression()
+        text = []
+        text.append('<h3>{objectType} Object Requirement</h3>')
+        text.append('<p>Valid threshold: {minThreshold:.1f} GeV - {maxThreshold:.1f} GeV (0.5 GeV steps)</p>')
+        text.append('<h4>Preview</h4>')
+        text.append('<p><pre>{expression}</pre></p>')
+        self.ui.infoTextEdit.setText(''.join(text).format(**locals()))
+    def showHelp(self):
+        pass
 
 class ObjectEditorUi:
     def __init__(self, context):
@@ -70,8 +142,8 @@ class ObjectEditorUi:
         self.typeComboBox.addItems(Objects)
         self.typeComboBox.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.compareComboBox = QComboBox(context)
-        self.compareComboBox.addItem('=>', '.ge.')
-        self.compareComboBox.addItem('==', '.eq.')
+        self.compareComboBox.addItem('=>', GE)
+        self.compareComboBox.addItem('==', EQ)
         self.thresholdSpinBox = QDoubleSpinBox(context)
         self.thresholdSpinBox.setDecimals(1)
         self.thresholdSpinBox.setSingleStep(.5)
@@ -89,11 +161,11 @@ class ObjectEditorUi:
         self.filterLabel.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.filterLineEdit = FilterLineEdit(context)
         self.infoTextEdit = QTextEdit(context)
-        self.infoTextEdit.setText("<h3>Muon Object Requirement</h3><p>Valid threshold: 0.0 - 1023.5 GeV (0.5 GeV steps)</p>")
         self.infoTextEdit.setReadOnly(True)
         self.infoTextEdit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
         self.buttonBox = QDialogButtonBox(context)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.Help|QDialogButtonBox.Apply|QDialogButtonBox.Cancel)
+        #self.buttonBox.setStandardButtons(QDialogButtonBox.Help|QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
         layout = QGridLayout()
         layout.addWidget(self.objectLabel, 0, 0)
         hbox = QHBoxLayout()
@@ -113,7 +185,10 @@ class ObjectEditorUi:
         context.setLayout(layout)
 
 if __name__ == '__main__':
+    import sys
+    from tmEditor import Menu
     app = QApplication(sys.argv)
-    window = ObjectEditor()
+    menu = Menu(sys.argv[1])
+    window = ObjectEditor(menu)
     window.show()
     sys.exit(app.exec_())

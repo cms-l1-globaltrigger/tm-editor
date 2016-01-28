@@ -17,6 +17,7 @@ from tmEditor import Toolbox
 from tmEditor import Menu
 from tmEditor.Menu import Algorithm
 from tmEditor.CodeEditor import CodeEditor
+from tmEditor.ObjectEditor import ObjectEditorDialog
 from tmEditor.CommonWidgets import (
     FilterLineEdit,
     RestrictedLineEdit,
@@ -87,6 +88,8 @@ class AlgorithmEditor(QMainWindow):
         self.setComment("")
         self.textEdit.textChanged.connect(self.onTextChanged)
         self.indexSpinBox.valueChanged.connect(self.onIndexChanged)
+        # Call slots
+        self.onTextChanged()
 
     def createActions(self):
         """Create actions."""
@@ -110,7 +113,6 @@ class AlgorithmEditor(QMainWindow):
         self.wizardAct = QAction(self.tr("&Wizard"), self)
         self.wizardAct.setIcon(Toolbox.createIcon("wizard"))
         self.wizardAct.triggered.connect(self.onWizard)
-        self.wizardAct.setEnabled(False)
         self.selectIndexAct = QAction(self.tr("Select &Index"), self)
         self.selectIndexAct.setIcon(Toolbox.createIcon("search"))
         self.selectIndexAct.triggered.connect(self.onSelectIndex)
@@ -224,9 +226,9 @@ class AlgorithmEditor(QMainWindow):
             self.validator.validate(self.expression())
         except AlgorithmSyntaxError, e:
             if e.token:
-                self.messageBar.setFatalMessage(self.tr("Error near %1").arg(e.token))
+                self.messageBar.setErrorMessage(self.tr("Error near %1").arg(e.token))
             else:
-                self.messageBar.setFatalMessage(self.tr("Error: %1").arg(str(e)))
+                self.messageBar.setErrorMessage(str(e))
         else:
             self.messageBar.setMessage(self.tr("Expression OK"))
 
@@ -277,7 +279,9 @@ class AlgorithmEditor(QMainWindow):
         self.textEdit.ensureCursorVisible()
 
     def onWizard(self):
-        pass
+        dialog = ObjectEditorDialog(self.menu, self)
+        dialog.exec_()
+        self.onInsertItem(dialog.toExpression())
 
     def onParse(self):
         try:
@@ -487,7 +491,7 @@ class MessageBarWidget(QWidget):
         self.message.setText(QString("<span style=\"color:green;\">%1</span>").arg(text))
         self.message.setToolTip(text)
 
-    def setFatalMessage(self, text):
+    def setErrorMessage(self, text):
         self.icon.show()
         self.message.setText(QString("<span style=\"color:red;\">%1</span>").arg(text))
         self.message.setToolTip(text)
@@ -550,6 +554,8 @@ class LibraryWidget(QWidget):
         hbox.addWidget(self.filterBar.filterLineEdit)
         self.filterBar.setLayout(hbox)
         self.filterBar.setEnabled(False)
+        self.filterBar.setVisible(False)
+
         # Tabs
         self.tabWidget = QTabWidget(self)
         # Build list of objects.
@@ -568,9 +574,16 @@ class LibraryWidget(QWidget):
         self.functionsList.addItems([name for name, _ in self.Functions])
         self.tabWidget.addTab(self.functionsList, self.tr("&Funcs"))
         # Build list of operators.
-        self.operatorsList = QListWidget(self)
-        self.operatorsList.addItems([name for name, _ in self.Operators])
-        self.tabWidget.addTab(self.operatorsList, self.tr("O&ps"))
+        self.operatorsListModel = QStandardItemModel(self)
+        for name, _ in self.Operators:
+            item = QStandardItem(name)
+            item.setEditable(False)
+            self.operatorsListModel.appendRow([item])
+        self.operatorsListProxy = QSortFilterProxyModel(self)
+        self.operatorsListProxy.setSourceModel(self.operatorsListModel)
+        self.operatorsListView = QListView(self)
+        self.operatorsListView.setModel(self.operatorsListProxy)
+        self.tabWidget.addTab(self.operatorsListView, self.tr("O&ps"))
         # Insert button.
         self.insertButton = QPushButton(Toolbox.createIcon("insert-text"), self.tr("&Insert"), self)
         self.insertButton.clicked.connect(self.onInsert)
@@ -600,8 +613,8 @@ class LibraryWidget(QWidget):
         self.externalsList.itemDoubleClicked.connect(self.onInsert)
         self.functionsList.currentRowChanged.connect(self.onPreview)
         self.functionsList.itemDoubleClicked.connect(self.onInsert)
-        self.operatorsList.currentRowChanged.connect(self.onPreview)
-        self.operatorsList.itemDoubleClicked.connect(self.onInsert)
+        self.operatorsListView.selectionModel().currentRowChanged.connect(self.onPreview)
+        self.operatorsListView.doubleClicked.connect(self.onInsert)
         self.tabWidget.currentChanged.connect(self.onPreview)
 
     def initContents(self):
@@ -700,11 +713,12 @@ class LibraryWidget(QWidget):
             self.previewLabel.setText(self.Functions[row][1])
             self.insertButton.setEnabled(True)
         # Operators
-        elif tab == self.operatorsList:
-            row = self.operatorsList.currentRow()
-            if row < 0: return
-            self.previewLabel.setText(self.Operators[row][1])
-            self.insertButton.setEnabled(True)
+        elif tab == self.operatorsListView:
+            data = currentData(tab)
+            print ".", data, type(data)
+            if data:
+                self.previewLabel.setText(data)
+                self.insertButton.setEnabled(True)
         # TODO Not implemented
         self.wizardCheckBox.setEnabled(False)
 
@@ -712,6 +726,11 @@ class LibraryWidget(QWidget):
         """Insert selected item from active library list."""
         if self.insertButton.isEnabled():
             widget = self.tabWidget.currentWidget()
+            if isinstance(widget, QListView):
+                data = currentData(widget)
+                if data:
+                    self.selected.emit(data)
+                return
             item = widget.currentItem()
             if isinstance(widget, QTreeWidget):
                 self.selected.emit(item.text(0))
@@ -720,6 +739,14 @@ class LibraryWidget(QWidget):
 
     def setFilterText(self, text):
         print text
+        self.operatorsListProxy.setFilterWildcard(text)
+
+# helper
+def currentData(widget):
+    rows = widget.selectionModel().selectedRows()
+    if rows:
+        return rows[0].data().toPyObject()
+    return
 
 # -----------------------------------------------------------------------------
 #  Index selection dialog.
@@ -790,3 +817,12 @@ class AlgorithmSelectionDialog(QDialog):
         """Get new index from the button."""
         self.index = int(str(self.sender().text())) # From QString to integer.
         self.accept()
+
+if __name__ == '__main__':
+    import sys
+    from tmEditor import Menu
+    app = QApplication(sys.argv)
+    menu = Menu(sys.argv[1])
+    window = AlgorithmEditorDialog(menu)
+    window.show()
+    sys.exit(app.exec_())
