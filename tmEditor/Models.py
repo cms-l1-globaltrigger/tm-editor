@@ -18,7 +18,7 @@ from PyQt4.QtGui import *
 from collections import namedtuple
 
 __all__ = ['AlgorithmsModel', 'CutsModel', 'ObjectsModel', 'ExternalsModel',
-    'BinsModel', 'ExtSignalsModel', ]
+    'ScalesModel', 'BinsModel', 'ExtSignalsModel', ]
 
 AlignLeft = Qt.AlignLeft | Qt.AlignVCenter
 AlignRight = Qt.AlignRight | Qt.AlignVCenter
@@ -203,6 +203,19 @@ class ExternalsModel(AbstractTableModel):
         super(ExternalsModel, self).__init__(menu.externals, parent)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
+        self.addEmptyColumn()
+
+class ScalesModel(AbstractTableModel):
+    """Default scales table model."""
+
+    def __init__(self, menu, parent = None):
+        super(ScalesModel, self).__init__(menu.scales.scales, parent)
+        self.addColumnSpec("Object", 'object')
+        self.addColumnSpec("Type", 'type')
+        self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
+        self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
+        self.addColumnSpec("Step", 'step', fCut, AlignRight)
+        self.addColumnSpec("Bitwidth", 'n_bits', int, AlignRight)
         self.addEmptyColumn()
 
 class BinsModel(AbstractTableModel):

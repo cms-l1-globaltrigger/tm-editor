@@ -116,6 +116,20 @@ def dist_rpm(package, version, revision):
     open(filename, 'w').write("\n".join(spec).format(**locals()))
     # subprocess.check_call(['rpmbuild', '-v', '-bb', os.path.join('rpm', 'RPMBUILD', 'SPECS', '{package}.spec'.format(**locals()))])
 
+def dist_lxplus(self, package, version, revision):
+    distdir = "_lxplusdist"
+    basename = "{package}-{version}-{revision}".format(**locals())
+    if os.path.exists(distdir):
+        shutil.rmtree(distdir)
+    os.makedirs(distdir)
+    os.makedirs(os.path.join(distdir, "bin"))
+    os.makedirs(os.path.join(distdir, "lib"))
+    copy('tmEditor', rpm_dir+'/tmEditor', ignored=['*.pyc', '*.pyo', '.svn'])
+    tarballname = "{basename}.tar.gz".format(**locals())
+    tar = tarfile.open(tarballname, "w:gz")
+    tar.add("_lxplus_dist", basename)
+    tar.close()
+
 def read_version():
     proc = subprocess.Popen(['python', 'tmEditor/version.py', '--version'], stdout=subprocess.PIPE)
     return proc.stdout.read().strip()
@@ -127,7 +141,7 @@ def read_revision():
 if __name__ == '__main__':
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('type', choices = ['rpm'])
+    parser.add_argument('type', choices = ['rpm', 'lxplus'])
     args = parser.parse_args()
     # Attributes
     version = read_version()
@@ -135,4 +149,6 @@ if __name__ == '__main__':
     package = 'tm-editor'
     if args.type == 'rpm':
         dist_rpm(package, version, revision)
+    if args.type == 'lxplus':
+        dist_lxplus(package, version, revison)
     sys.exit()

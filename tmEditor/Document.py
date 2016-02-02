@@ -46,7 +46,7 @@ from PyQt4.QtGui import *
 import math
 import sys, os
 
-MaxAlgorithms = 512
+from tmEditor.AlgorithmEditor import MaxAlgorithms
 
 # ------------------------------------------------------------------------------
 #  Document widget
@@ -84,6 +84,8 @@ class Document(QWidget):
         objectsTableView.resizeColumnsToContents()
         externalsTableView = self.createProxyTableView("externalsTableView", ExternalsModel(self.menu(), self), proxyclass=ExternalsModelProxy)
         externalsTableView.resizeColumnsToContents()
+        scalesTableView = self.createProxyTableView("scalesTableView", ScalesModel(self.menu(), self), proxyclass=ScalesModelProxy)
+        scalesTableView.resizeColumnsToContents()
         binsTableViews = {}
         for scale in self.menu().scales.bins.keys():
             binsTableViews[scale] = self.createProxyTableView("{scale}TableView".format(**locals()), BinsModel(self.menu(), scale, self))
@@ -137,10 +139,7 @@ class Document(QWidget):
         self.cutsPage = self.addPage("Cuts", cutsTableView, self.bottomWidget, self.menuPage)
         self.objectsPage = self.addPage("Object Requirements", objectsTableView, self.bottomWidget, self.menuPage)
         self.externalsPage = self.addPage("External Requirements", externalsTableView, self.bottomWidget, self.menuPage)
-        label = QLabel("Select a scale set...", self)
-        label.setAutoFillBackground(True)
-        label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        self.scalesPage = self.addPage("Scales", label, self.bottomWidget)
+        self.scalesPage = self.addPage("Scales", scalesTableView, self.bottomWidget)
         self.scalesTypePages = {}
         for scale in self.menu().scales.bins.keys():
             self.scalesTypePages[scale] = self.addPage(scale, binsTableViews[scale], self.bottomWidget, self.scalesPage)
@@ -288,7 +287,11 @@ class Document(QWidget):
     def updateBottom(self):
         index, item = self.getSelection()
         # Generic preview...
+        if hasattr(item.bottom, 'reset'):
+            item.bottom.reset()
+        self.bottomStack.show()
         if item is self.menuPage:
+            self.bottomStack.hide()
             text = []
             for key, value in self.menu().menu.items():
                 if value == '\x00': value = "" # Overwrite NULL characters
@@ -318,6 +321,20 @@ class Document(QWidget):
                     item.bottom.setText("Selected {0} external signals.".format(len(rows)))
                 else:
                     item.bottom.loadExternal(External(**data))
+            elif item is self.scalesPage:
+                if 1 < len(rows):
+                    item.bottom.setText("Selected {0} scale sets.".format(len(rows)))
+                else:
+                    text = []
+                    text.append("<p><strong>Object:</strong> {object}</p>")
+                    text.append("<p><strong>Type:</strong> {type}</p>")
+                    data['maximum'], data['minimum'] = fCut(data['maximum']), fCut(data['minimum'])
+                    text.append("<p><strong>Minimum:</strong> {minimum}</p>")
+                    text.append("<p><strong>Maximum:</strong> {maximum}</p>")
+                    data['step'] = fCut(data['step'])
+                    text.append("<p><strong>Step:</strong> {step}</p>")
+                    text.append("<p><strong>Bitwidth:</strong> {n_bits}</p>")
+                    item.bottom.setText(''.join(text).format(**data))
             elif item in self.scalesTypePages.values():
                 text = []
                 data['name'] = item.name
@@ -327,8 +344,24 @@ class Document(QWidget):
                 text.append("<p><strong>Minimum:</strong> {minimum}</p>")
                 text.append("<p><strong>Maximum:</strong> {maximum}</p>")
                 item.bottom.setText(''.join(text).format(**data))
+            elif item is self.extSignalsPage:
+                if 1 < len(rows):
+                    item.bottom.setText("Selected {0} external signals.".format(len(rows)))
+                else:
+                    text = []
+                    text.append("<h2>{name}</h2>")
+                    text.append("<p><strong>System:</strong> {system}</p>")
+                    text.append("<p><strong>Name:</strong> {name}</p>")
+                    if 'label' in data.keys():
+                        text.append("<p><strong>Label:</strong> {label}</p>")
+                    text.append("<p><strong>Cable:</strong> {cable}</p>")
+                    text.append("<p><strong>Channel:</strong> {channel}</p>")
+                    if 'description' in data.keys():
+                        text.append("<p><strong>Description:</strong> {description}</p>")
+                    item.bottom.setText(''.join(text).format(**data))
             item.bottom.setButtonsEnabled(True)
         else:
+            item.bottom.reset()
             item.bottom.setText("Nothing selected...")
             item.bottom.setButtonsEnabled(False)
         item.bottom.clearNotice()

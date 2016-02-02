@@ -247,6 +247,8 @@ debbuild: all
 
 clean:
 	rm -rf tmEditor/tmeditor_rc.py
+	rm -rf `find tmEditor -name '*.pyc'`
+	rm -rf `find tmEditor -name '*.pyo'`
 
 rpmclean:
 	rm -rf rpm

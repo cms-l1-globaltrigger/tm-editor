@@ -290,6 +290,12 @@ class AlgorithmEditor(QMainWindow):
 
     def onWizard(self):
         dialog = ObjectEditorDialog(self.menu, self)
+        selection = self.textEdit.textCursor().selection().toPlainText()
+        selection = str(selection)
+        try:
+            dialog.loadObject(selection)
+        except RuntimeError:
+            pass
         dialog.exec_()
         if dialog.result() == QDialog.Accepted:
             self.onInsertItem(dialog.toExpression())
@@ -733,10 +739,19 @@ class LibraryWidget(QWidget):
         if self.insertButton.isEnabled():
             widget = self.tabWidget.currentWidget()
             item = widget.currentItem()
+            if widget is self.objectsTree:
+                    if self.wizardCheckBox.isChecked():
+                        dialog = ObjectEditorDialog(self.menu, self)
+                        dialog.loadObject(item.text(0))
+                        dialog.exec_()
+                        self.selected.emit(dialog.toExpression())
+                        return
             if isinstance(widget, QTreeWidget):
                 self.selected.emit(item.text(0))
+                return
             if isinstance(widget, QListWidget):
                 self.selected.emit(item.text())
+                return
 
 # helper
 def currentData(widget):

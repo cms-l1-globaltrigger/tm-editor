@@ -1,7 +1,9 @@
 tm-editor (0.1.10-1) extra; urgency=medium
 
   * Added support for XOR operator.
-  * Improved Algorithm editor, new exit on changes dialog.
+  * Added filter inputs for various tables.
+  * Added object requirement wizard to algorithm editor.
+  * Improved algorithm editor, new exit on changes dialog.
   * Fixed algorithm expression formatting.
   * Added help in algorithm and cut editor dialog.
 

@@ -14,7 +14,7 @@ from tmEditor.Menu import toObject, toExternal
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-__all__ = ["ObjectsModelProxy", "CutsModelProxy", "ExternalsModelProxy"]
+__all__ = ["ObjectsModelProxy", "CutsModelProxy", "ExternalsModelProxy", "ScalesModelProxy"]
 
 #
 # Objects model proxy
@@ -94,3 +94,30 @@ class ExternalsModelProxy(QSortFilterProxyModel):
 
     def __toExternal(self, index):
         return toExternal(self.sourceModel().data(index, Qt.DisplayRole))
+
+#
+# Scales model proxy
+#
+
+class ScalesModelProxy(QSortFilterProxyModel):
+    """Custom cuts sort/filter proxy."""
+
+    MinimumColumn = 2
+    MaximumColumn = 3
+    StepColumn = 4
+    BitsColumn = 5
+
+    def __init__(self, parent = None):
+        super(ScalesModelProxy, self).__init__(parent)
+
+    def lessThan(self, left, right):
+        """Custom range sorting."""
+        if left.column() in (self.MinimumColumn, self.MaximumColumn, self.StepColumn, self.BitsColumn):
+            try:
+                return self.__toFloat(left) < self.__toFloat(right)
+            except ValueError:
+                pass
+        return super(ScalesModelProxy, self).lessThan(left, right)
+
+    def __toFloat(self, index):
+        return float(self.sourceModel().data(index, Qt.DisplayRole))

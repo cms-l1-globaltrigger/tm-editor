@@ -5,6 +5,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import tmGrammar
+from tmEditor.Menu import toObject
 from tmEditor.CommonWidgets import (
     PrefixedSpinBox,
     FilterLineEdit,
@@ -138,6 +139,11 @@ class ObjectEditorDialog(QDialog):
         self.ui.infoTextEdit.setText(''.join(text).format(**locals()))
     def showHelp(self):
         pass
+    def loadObject(self, object):
+        object = toObject(str(object))
+        self.ui.typeComboBox.setCurrentIndex(self.ui.typeComboBox.findText(object.type))
+        self.ui.thresholdSpinBox.setValue(float(object.threshold.replace('p', '.')))
+        self.ui.offsetSpinBox.setValue(int(object.bx_offset))
 
 class ObjectEditorUi:
     def __init__(self, context):
