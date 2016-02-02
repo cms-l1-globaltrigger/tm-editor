@@ -119,17 +119,8 @@ class Document(QWidget):
         self.navigationTreeWidget.setObjectName("navigationTreeWidget")
         self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee;}")
         # Filter bar
-        self.filterBar = QWidget(self)
-        self.filterBar.setAutoFillBackground(True)
-        self.filterBar.filterLabel = QLabel(self.tr("Filter"), self.filterBar)
-        self.filterBar.filterLineEdit = FilterLineEdit(self.filterBar)
-        self.filterBar.filterLineEdit.textChanged.connect(self.setFilterText)
-        hbox = QHBoxLayout()
-        hbox.setContentsMargins(10, 0, 0, 0)
-        hbox.addItem(QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        hbox.addWidget(self.filterBar.filterLabel)
-        hbox.addWidget(self.filterBar.filterLineEdit)
-        self.filterBar.setLayout(hbox)
+        self.filterWidget = TextFilterWidget(self)
+        self.filterWidget.textChanged.connect(self.setFilterText)
         # Stacks
         self.topStack = QStackedWidget(self)
         self.bottomStack = QStackedWidget(self)
@@ -155,7 +146,7 @@ class Document(QWidget):
         self.vsplitter.addWidget(self.navigationTreeWidget)
         self.vsplitter.setOpaqueResize(False)
         self.hsplitter = SlimSplitter(Qt.Vertical, self)
-        self.hsplitter.addWidget(self.filterBar)
+        self.hsplitter.addWidget(self.filterWidget)
         self.hsplitter.addWidget(self.topStack)
         self.hsplitter.addWidget(self.bottomStack)
         self.vsplitter.addWidget(self.hsplitter)
@@ -199,9 +190,9 @@ class Document(QWidget):
 
     def setFilterText(self, text):
         index, item = self.getSelection()
-        excludedPages = [self.menuPage, self.scalesPage, ]
+        excludedPages = [self.menuPage, ]
         if item not in excludedPages:
-            item.top.model().setFilterWildcard(text)
+            item.top.model().setFilterFixedString(text)
 
     def filename(self):
         return self._filename
@@ -278,9 +269,10 @@ class Document(QWidget):
         if item and hasattr(item.top, 'sortByColumn'):
             item.top.sortByColumn(0, Qt.AscendingOrder)
         self.topStack.setCurrentWidget(item.top)
-        excludedPages = [self.menuPage, self.scalesPage, ]
-        self.filterBar.setEnabled(item not in excludedPages)
-        self.filterBar.filterLineEdit.setText("")
+        excludedPages = [self.menuPage, ]
+        self.filterWidget.setEnabled(item not in excludedPages)
+        self.filterWidget.setVisible(item not in excludedPages)
+        self.filterWidget.filterLineEdit.setText("")
         self.setFilterText("")
         self.updateBottom()
 
@@ -461,6 +453,13 @@ class Document(QWidget):
         for name in algorithm.cuts():
             if not filter(lambda item: item.name == name, self.menu().cuts):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
+        # Select new entry TODO: better to implement insertRow in model!
+        proxy = item.top.model()
+        for row in range(proxy.rowCount()):
+            index = proxy.index(row, 1)
+            if index.data().toPyObject() == algorithm.name:
+                item.top.setCurrentIndex(index)
+                break
 
     def addCut(self, index, item):
         dialog = CutEditorDialog(self.menu(), self)
@@ -470,8 +469,16 @@ class Document(QWidget):
         if dialog.result() != QDialog.Accepted:
             return
         self.setModified(True)
-        self.menu().addCut(**dialog.newCut())
+        cut = dialog.newCut()
+        self.menu().addCut(**cut)
         self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # Select new entry TODO: better to implement insertRow in model!
+        proxy = item.top.model()
+        for row in range(proxy.rowCount()):
+            index = proxy.index(row, 0)
+            if index.data().toPyObject() == cut.name:
+                item.top.setCurrentIndex(index)
+                break
 
     def editItem(self):
         try:
@@ -482,7 +489,7 @@ class Document(QWidget):
                 self.editCut(index, item)
             self.updateBottom()
         except RuntimeError, e:
-                QMessageBox.warning(self, "Error", str(e))
+            QMessageBox.warning(self, "Error", str(e))
 
     def editAlgorithm(self, index, item):
         algorithm = self.menu().algorithms[index.row()]
@@ -680,6 +687,25 @@ class Page(QTreeWidgetItem):
             self.setFont(0, font)
 
 # ------------------------------------------------------------------------------
+#  Filter bar
+# ------------------------------------------------------------------------------
+
+class TextFilterWidget(QWidget):
+    textChanged = pyqtSignal(QString)
+    def __init__(self, parent = None):
+        super(TextFilterWidget, self).__init__(parent)
+        self.setAutoFillBackground(True)
+        self.filterLabel = QLabel(self.tr("Filter"), self)
+        self.filterLineEdit = FilterLineEdit(self)
+        self.filterLineEdit.textChanged.connect(lambda text: self.textChanged.emit(text))
+        hbox = QHBoxLayout()
+        hbox.setContentsMargins(10, 1, 1, 1)
+        hbox.addItem(QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        hbox.addWidget(self.filterLabel)
+        hbox.addWidget(self.filterLineEdit)
+        self.setLayout(hbox)
+
+# ------------------------------------------------------------------------------
 #  Common table view widget
 # ------------------------------------------------------------------------------
 
@@ -707,8 +733,6 @@ class TableView(QTableView):
         verticalHeader.setDefaultSectionSize(20)
         verticalHeader.hide()
         self.setSortingEnabled(True)
-        #
-        self.horizontalSectionWidths = {}
 
     def currentMappedIndex(self):
         """@returns current selected proxy mapped index, else None."""

@@ -291,10 +291,10 @@ class AlgorithmEditor(QMainWindow):
     def onWizard(self):
         dialog = ObjectEditorDialog(self.menu, self)
         selection = self.textEdit.textCursor().selection().toPlainText()
-        selection = str(selection)
         try:
-            dialog.loadObject(selection)
-        except RuntimeError:
+            if selection:
+                dialog.loadObject(str(selection))
+        except RuntimeError, ValueError:
             pass
         dialog.exec_()
         if dialog.result() == QDialog.Accepted:
