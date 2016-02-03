@@ -422,6 +422,7 @@ class AlgorithmEditorDialog(QDialog):
             for name in algorithm.cuts():
                 if not filter(lambda item: item.name == name, self.editor.menu.cuts):
                     raise AlgorithmSyntaxError("Undefined cut `{name}`".format(**locals()), name)
+            algorithm.externals()
         except AlgorithmSyntaxError, e:
             if e.token:
                 # Make sure to highlight the errornous part in the text editor.

@@ -568,6 +568,13 @@ class Document(QWidget):
         for name in algorithm.externals():
             if not filter(lambda item: item.name == name, self.menu().externals):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
+        # Select new entry TODO: better to implement insertRow in model!
+        proxy = item.top.model()
+        for row in range(proxy.rowCount()):
+            index = proxy.index(row, 1)
+            if index.data().toPyObject() == algorithm.name:
+                item.top.setCurrentIndex(index)
+                break
 
     def copyCut(self, index, item):
         dialog = CutEditorDialog(self.menu(), self)
@@ -579,8 +586,16 @@ class Document(QWidget):
         if dialog.result() != QDialog.Accepted:
             return
         self.setModified(True)
-        self.menu().addCut(**dialog.newCut())
+        cut = dialog.newCut()
+        self.menu().addCut(**cut)
         self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # Select new entry TODO: better to implement insertRow in model!
+        proxy = item.top.model()
+        for row in range(proxy.rowCount()):
+            index = proxy.index(row, 0)
+            if index.data().toPyObject() == cut.name:
+                item.top.setCurrentIndex(index)
+                break
 
     def removeItem(self):
         index, item = self.getSelection()
