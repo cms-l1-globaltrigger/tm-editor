@@ -23,7 +23,7 @@ Objects = [
     tmGrammar.ETM,
     tmGrammar.HTM,
     tmGrammar.ETT,
-    tmGrammar.ETM,
+    tmGrammar.HTT,
 ]
 
 ObjectCuts = [
