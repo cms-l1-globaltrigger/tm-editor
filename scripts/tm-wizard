@@ -6,7 +6,7 @@ from PyQt4.QtGui import *
 
 from collections import namedtuple
 import time
-import random
+import random, math
 import sys, os
 
 import tmGrammar
@@ -34,6 +34,7 @@ class Settings:
     # Function cuts
     DETA = CutSpec(tmGrammar.DETA, count=2)
     DPHI = CutSpec(tmGrammar.DPHI, count=2)
+    DR = CutSpec(tmGrammar.DR, count=2)
     MASS = CutSpec(tmGrammar.MASS, count=2)
     CHGCOR = CutSpec(tmGrammar.CHGCOR, count=1)
 
@@ -48,7 +49,7 @@ class Settings:
     HTT = ObjectSpec(tmGrammar.HTT, cuts=[])
 
     # All objects
-    Objects = [MU, EG, JET, TAU, ETM, HTM, ETT, HTT]
+    Objects = (MU, EG, JET, TAU, ETM, HTM, ETT, HTT)
 
     # Functions
     Functions = (
@@ -56,14 +57,17 @@ class Settings:
         FunctionSpec("Double", [], [MU, EG, JET, TAU]),
         FunctionSpec("Triple", [], [MU, EG, JET, TAU]),
         FunctionSpec("Quad", [], [MU, EG, JET, TAU]),
-#        FunctionSpec("Dist", [DETA, DPHI], [MU, EG, JET, TAU, ETM, HTM]), # etm, htm will be handled separately
-#        FunctionSpec("Mass", [MASS], [MU, EG, JET, TAU]),
+        FunctionSpec("Dist", [DETA, DPHI], [MU, EG, JET, TAU, ETM, HTM]), # etm, htm will be handled separately
+        FunctionSpec("DR", [DR], [MU, EG, JET, TAU]),
+        FunctionSpec("Mass", [MASS], [MU, EG, JET, TAU]),
     )
 
 class MenuGenerator(Menu):
+
     def __init__(self, filename):
         super(MenuGenerator, self).__init__(filename)
         self.reset() # clear contents
+
     def reset(self):
         self.menu['name'] = ("L1Menu_Autogen_%s" % time.time()).split('.')[0]
         self.menu['comment'] = "Auto generated menu by Trigger Menu Wizard"
@@ -72,9 +76,11 @@ class MenuGenerator(Menu):
         self.cuts = []
         self.objects = []
         self.externals = []
+
     def randomEtThreshold(self, type):
         value = float(random.choice(self.scales.bins["%s-ET" % type])['minimum'])
         return str(value).replace('.', 'p')
+
     def addRandomObjectCut(self, objectSpec):
         cuts = []
         for type, count in objectSpec.cuts:
@@ -105,6 +111,49 @@ class MenuGenerator(Menu):
                 self.addCut(name, type=type, object=objectSpec.name, minimum=minimum, maximum=maximum, data=data)
                 cuts.append(name)
         return ','.join(cuts)
+
+    def addRandomFunctionCut(self, funcSpec):
+        cuts = []
+        for type, count in funcSpec.cuts:
+            for i in range(random.randint(1, count)):
+                key, minimum, maximum, data = '', '', '', ''
+                object_ = ''
+                if type == tmGrammar.DETA:
+                    key = tmGrammar.DETA
+                    object_ = tmGrammar.dist
+                    minimum, maximum = sorted([
+                        random.randrange(0, 4000) / 1000.,
+                        random.randrange(0, 4000) / 1000.,
+                    ])
+                elif type == tmGrammar.DPHI:
+                    key = tmGrammar.DPHI
+                    object_ = tmGrammar.dist
+                    minimum, maximum = sorted([
+                        random.randrange(0, int(math.pi/2*1000)) / 1000.,
+                        random.randrange(0, int(math.pi/2*1000)) / 1000.,
+                    ])
+                elif type == tmGrammar.DR:
+                    key = tmGrammar.DR
+                    object_ = tmGrammar.dist
+                    minimum, maximum = sorted([
+                        random.randrange(0, 10000, 1) / 10.,
+                        random.randrange(0, 10000, 1) / 10.,
+                    ])
+                elif type == tmGrammar.MASS:
+                    key = tmGrammar.MASS
+                    object_ = tmGrammar.mass
+                    minimum, maximum = sorted([
+                        random.randrange(0, 10000, 2) / 10.,
+                        random.randrange(0, 10000, 2) / 10.,
+                    ])
+                else:
+                    continue # TODO
+                suffix = str(len(self.cuts) + len(cuts)) # simple enumeration
+                name = "{key}_{suffix}".format(**locals())
+                self.addCut(name, type=type, object=object_, minimum=minimum, maximum=maximum, data=data)
+                cuts.append(name)
+        return ','.join(cuts)
+
     def addRandomObject(self, objectSpecs):
         objectSpec = random.choice(objectSpecs)
         type = objectSpec.name
@@ -116,11 +165,15 @@ class MenuGenerator(Menu):
         if cutList:
             return "{name}[{cutList}]".format(**locals())
         return name
-    def addRandomObjects(self, objectSpecs, count, singleType=True):
-        if singleType:
+
+    def addRandomObjects(self, objectSpecs, count, mixedTypes=False):
+        if not mixedTypes: # pick one out
             objectSpecs = [random.choice(objectSpecs)]
         objects = [self.addRandomObject(objectSpecs) for i in range(count)]
+        alphabet=['MU', 'EG', 'TA', 'JE', 'ET', 'HT'] # qick and dirty sort, muons must be first in arg list
+        objects = sorted(objects, key=lambda value: alphabet.index(value[:2]))
         return ','.join(objects)
+
     def generate(self, data):
         print data
         for i in range(data.count):
@@ -131,19 +184,23 @@ class MenuGenerator(Menu):
                 if data.function.name == "Single":
                     expression.append(self.addRandomObject(data.function.objects))
                 elif data.function.name  == "Double":
-                    objectList = self.addRandomObjects(data.function.objects, 2, singleType=True)
+                    objectList = self.addRandomObjects(data.function.objects, 2, mixedTypes=False)
                     expression.append("comb{{{objectList}}}".format(**locals()))
                 elif data.function.name == "Triple":
-                    objectList = self.addRandomObjects(data.function.objects, 3, singleType=True)
+                    objectList = self.addRandomObjects(data.function.objects, 3, mixedTypes=False)
                     expression.append("comb{{{objectList}}}".format(**locals()))
                 elif data.function.name == "Quad":
-                    objectList = self.addRandomObjects(data.function.objects, 4, singleType=True)
+                    objectList = self.addRandomObjects(data.function.objects, 4, mixedTypes=False)
                     expression.append("comb{{{objectList}}}".format(**locals()))
-        #         elif data.name == "Dist":
-        #             expressions.append("comb{{{0}}}".format(",".join(objects)))
-        #         elif data.name == "Mass":
-        #             expressions.append("comb{{{0}}}".format(",".join(objects)))
-            index = len(self.algorithms) + i
+                elif data.function.name in ("Dist", "DR"):
+                    objectList = self.addRandomObjects(data.function.objects, 2, mixedTypes=True)
+                    distCutList = self.addRandomFunctionCut(data.function)
+                    expression.append("dist{{{objectList}}}[{distCutList}]".format(**locals()))
+                elif data.function.name == "Mass":
+                    objectList = self.addRandomObjects(data.function.objects, 2, mixedTypes=True)
+                    massCutList = self.addRandomFunctionCut(data.function)
+                    expression.append("mass{{{objectList}}}[{massCutList}]".format(**locals()))
+            index = len(self.algorithms)
             algorithm = dict(
                 index=index,
                 name="L1_Autogen_{index}".format(**locals()),
@@ -170,7 +227,8 @@ class GeneratorWidget(QWidget):
             self.functionComboBox.addItem(function.name, function)
             for cut in function.cuts:
                 box = QSpinBox(self)
-                box.setRange(0, cut.count)
+                minimum = 1 if cut.name in (tmGrammar.DR, tmGrammar.MASS) else 0
+                box.setRange(minimum, cut.count)
                 box.setSuffix(self.tr("x %1").arg(cut.name))
                 box.userData = cut
                 self.functionCuts.append(box)
@@ -211,6 +269,7 @@ class GeneratorWidget(QWidget):
         self.functionComboBox.currentIndexChanged.connect(self.functionChanged)
         # Call slots
         self.countChanged(self.countSpinBox.value()) # disable initial generator
+
     def countChanged(self, value):
         """Enables widgets if count greater then zero, else disables them."""
         self.functionComboBox.setEnabled(value)
@@ -222,6 +281,7 @@ class GeneratorWidget(QWidget):
             for widget in self.objectCuts[widget.userData.name]:
                 widget.setEnabled(value)
         self.functionChanged(self.functionComboBox.currentIndex())
+
     def functionChanged(self, index):
         """Enables or disabled widgets by function attributes."""
         function = self.functionComboBox.itemData(index).toPyObject()
@@ -231,12 +291,16 @@ class GeneratorWidget(QWidget):
             widget.setEnabled(widget.userData in function.objects)
             for widget2 in self.objectCuts[widget.userData.name]:
                 widget2.setEnabled(widget.isEnabled())
+
     def getFunctionCuts(self):
         return [CutSpec(widget.userData.name, widget.value()) for widget in self.functionCuts if widget.isEnabled() and widget.value()]
+
     def getObjectCuts(self, objectname):
         return [CutSpec(widget.userData.name, widget.value()) for widget in self.objectCuts[objectname] if widget.isEnabled() and widget.value()]
+
     def getObjects(self):
         return [ObjectSpec(widget.userData.name, self.getObjectCuts(widget.userData.name)) for widget in self.objects if widget.isEnabled() and widget.isChecked()]
+
     def data(self):
         """Return current generator setup."""
         count = self.countSpinBox.value()
@@ -248,6 +312,7 @@ class GeneratorWidget(QWidget):
         return GeneratorSpec(count, function, multiplicator)
 
 class MainWindow(QWidget):
+
     def __init__(self, parent = None):
         super(MainWindow, self).__init__(parent)
         self.setWindowTitle(self.tr("Trigger Menu Wizard"))
@@ -305,6 +370,7 @@ class MainWindow(QWidget):
         hbox.addWidget(self.quitButton)
         vbox.addLayout(hbox)
         self.setLayout(vbox)
+
     def addGeneratorTab(self):
         """Add new generator page."""
         widget = GeneratorWidget(self)
@@ -312,7 +378,8 @@ class MainWindow(QWidget):
         index = self.tabWidget.addTab(widget, text)
         self.tabWidget.tabCounter += 1
         self.tabWidget.setCurrentIndex(index)
-    def loadXml(self, filename = ''):
+
+    def loadXml(self, filename = None):
         if not filename:
             filename = QFileDialog.getOpenFileName(self, self.tr("Open XML Menu"),
                 QDir.currentPath(), self.tr("XML files (*.xml)"))
@@ -325,18 +392,21 @@ class MainWindow(QWidget):
             message.showMessage(str(e))
             raise
         self.generateButton.setEnabled(True)
-    def generateXml(self, filename = ''):
+
+    def generateXml(self, filename = None):
         if not filename:
             filename = QFileDialog.getSaveFileName(self, self.tr("Save XML Menu"),
                 QDir.currentPath(), self.tr("XML files (*.xml)"))
         if not filename:
             return
         try:
+            self.generator.reset() # Make sure to reset generated contents, else acculmulates
             for i in range(self.tabWidget.count()):
                 widget = self.tabWidget.widget(i)
                 if isinstance(widget, GeneratorWidget):
                     self.generator.generate(widget.data())
             self.generator.writeXml(str(filename))
+            self.generator.reset() # Make sure to reset generated contents, else acculmulates
         except Exception, e:
             message = QErrorMessage(self)
             message.showMessage(str(e))
