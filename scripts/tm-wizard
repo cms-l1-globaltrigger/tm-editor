@@ -7,6 +7,7 @@ from PyQt4.QtGui import *
 from collections import namedtuple
 import time
 import random, math
+import argparse
 import sys, os
 
 import tmGrammar
@@ -14,7 +15,13 @@ from tmEditor import Menu
 from tmEditor.Menu import toObject
 from tmEditor import Toolbox
 
-"""Draft GUI to generate random menus for VHDL synthesis tests."""
+"""Draft GUI to generate random menus for VHDL synthesis tests.
+
+class MenuGenerator, reads scales fom exisitng XML menu, generates a new random menu.
+class GeneratorWidget, input mask for generator
+class MainWindow, main window with tab widget holding generator masks
+
+"""
 
 MaxAlgorithms = 512
 
@@ -54,7 +61,7 @@ class Settings:
     # Functions
     Functions = (
         FunctionSpec("Single", [], [MU, EG, JET, TAU, ETM, HTM, ETT, HTT]),
-        FunctionSpec("Double", [], [MU, EG, JET, TAU]),
+        FunctionSpec("Double", [CHGCOR], [MU, EG, JET, TAU]),
         FunctionSpec("Triple", [], [MU, EG, JET, TAU]),
         FunctionSpec("Quad", [], [MU, EG, JET, TAU]),
         FunctionSpec("Dist", [DETA, DPHI], [MU, EG, JET, TAU, ETM, HTM]), # etm, htm will be handled separately
@@ -79,30 +86,27 @@ class MenuGenerator(Menu):
 
     def randomEtThreshold(self, type):
         value = float(random.choice(self.scales.bins["%s-ET" % type])['minimum'])
-        return str(value).replace('.', 'p')
+        return str(value).replace('.', 'p') # float to threshold
 
     def addRandomObjectCut(self, objectSpec):
         cuts = []
         for type, count in objectSpec.cuts:
             for i in range(random.randint(1, count)):
-                key, minimum, maximum, data = '', '', '', ''
+                minimum, maximum, data = '', '', ''
+                key = "{objectSpec.name}-{type}".format(**locals())
                 if type == tmGrammar.ETA:
-                    key = "{objectSpec.name}-{type}".format(**locals())
                     minimum, maximum = sorted([
                         random.choice(self.scales.bins[key])['minimum'],
                         random.choice(self.scales.bins[key])['maximum'],
-                    ], key=lambda item: float(item))
+                    ])
                 elif type == tmGrammar.PHI:
-                    key = "{objectSpec.name}-{type}".format(**locals())
-                    minimum, maximum = (
+                    minimum, maximum = sorted([
                         random.choice(self.scales.bins[key])['minimum'],
                         random.choice(self.scales.bins[key])['maximum'],
-                    )
+                    ])
                 elif type == tmGrammar.ISO:
-                    key = "{objectSpec.name}-{type}".format(**locals())
                     data = str(random.choice(range(2)))
                 elif type == tmGrammar.QLTY:
-                    key = "{objectSpec.name}-{type}".format(**locals())
                     data = str(random.choice(range(16)))
                 else:
                     continue # TODO
@@ -116,31 +120,29 @@ class MenuGenerator(Menu):
         cuts = []
         for type, count in funcSpec.cuts:
             for i in range(random.randint(1, count)):
-                key, minimum, maximum, data = '', '', '', ''
-                object_ = ''
-                if type == tmGrammar.DETA:
-                    key = tmGrammar.DETA
+                object_, minimum, maximum, data = '', '', '', ''
+                if type == tmGrammar.CHGCOR:
+                    object_ = tmGrammar.comb
+                    data = str(random.choice(range(2)))
+                elif type == tmGrammar.DETA:
                     object_ = tmGrammar.dist
                     minimum, maximum = sorted([
                         random.randrange(0, 4000) / 1000.,
                         random.randrange(0, 4000) / 1000.,
                     ])
                 elif type == tmGrammar.DPHI:
-                    key = tmGrammar.DPHI
                     object_ = tmGrammar.dist
                     minimum, maximum = sorted([
                         random.randrange(0, int(math.pi/2*1000)) / 1000.,
                         random.randrange(0, int(math.pi/2*1000)) / 1000.,
                     ])
                 elif type == tmGrammar.DR:
-                    key = tmGrammar.DR
                     object_ = tmGrammar.dist
                     minimum, maximum = sorted([
                         random.randrange(0, 10000, 1) / 10.,
                         random.randrange(0, 10000, 1) / 10.,
                     ])
                 elif type == tmGrammar.MASS:
-                    key = tmGrammar.MASS
                     object_ = tmGrammar.mass
                     minimum, maximum = sorted([
                         random.randrange(0, 10000, 2) / 10.,
@@ -149,7 +151,7 @@ class MenuGenerator(Menu):
                 else:
                     continue # TODO
                 suffix = str(len(self.cuts) + len(cuts)) # simple enumeration
-                name = "{key}_{suffix}".format(**locals())
+                name = "{type}_{suffix}".format(**locals())
                 self.addCut(name, type=type, object=object_, minimum=minimum, maximum=maximum, data=data)
                 cuts.append(name)
         return ','.join(cuts)
@@ -170,8 +172,8 @@ class MenuGenerator(Menu):
         if not mixedTypes: # pick one out
             objectSpecs = [random.choice(objectSpecs)]
         objects = [self.addRandomObject(objectSpecs) for i in range(count)]
-        alphabet=['MU', 'EG', 'TA', 'JE', 'ET', 'HT'] # qick and dirty sort, muons must be first in arg list
-        objects = sorted(objects, key=lambda value: alphabet.index(value[:2]))
+        alphabet=['MU', 'EG', 'TAU', 'JET', 'ETM', 'HTM', 'ETT', 'HTT'] # qick and dirty sort, muons must be first in arg list
+        objects = sorted(objects, key=lambda value: alphabet.index(toObject(value).type))
         return ','.join(objects)
 
     def generate(self, data):
@@ -412,10 +414,18 @@ class MainWindow(QWidget):
             message.showMessage(str(e))
             raise
 
-if __name__ == '__main__':
+def main():
+    # Parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename', default=None, help="load scales from XML menu")
+    args = parser.parse_args()
+    # Create application
     app = QApplication(sys.argv)
     window = MainWindow()
-    if len(sys.argv) > 1:
-        window.loadXml(sys.argv[1])
+    if args.filename:
+        window.loadXml(args.filename)
     window.show()
-    sys.exit(app.exec_())
+    return app.exec_()
+
+if __name__ == '__main__':
+    sys.exit(main())
