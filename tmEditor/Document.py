@@ -24,6 +24,7 @@ from tmEditor import Menu
 from tmEditor.Menu import Algorithm, Cut, Object, External, toObject
 from tmEditor.CommonWidgets import (
     FilterLineEdit,
+    ReadOnlyLineEdit,
     RestrictedLineEdit,
     EtaCutChart,
     PhiCutChart,
@@ -91,21 +92,8 @@ class Document(QWidget):
             binsTableViews[scale] = self.createProxyTableView("{scale}TableView".format(**locals()), BinsModel(self.menu(), scale, self))
         extSignalsTableView = self.createProxyTableView("externalsTableView", ExtSignalsModel(self.menu(), self))
         #
-        menuView = QWidget(self)
-        menuView.menu = self.menu()
-        menuView.nameLineEdit = RestrictedLineEdit(self)
-        menuView.nameLineEdit.setPrefix("L1Menu_")
-        menuView.nameLineEdit.setRegexPattern("L1Menu_[a-zA-Z0-9_]+")
-        menuView.commentTextEdit = QPlainTextEdit(self)
-        menuView.commentTextEdit.setMaximumHeight(50)
-        vbox = QVBoxLayout()
-        vbox.addWidget(QLabel(self.tr("Name:"), self))
-        vbox.addWidget(menuView.nameLineEdit)
-        vbox.addWidget(QLabel(self.tr("Comment:"), self))
-        vbox.addWidget(menuView.commentTextEdit)
-        vbox.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding))
-        menuView.setLayout(vbox)
-        menuView.setAutoFillBackground(True)
+        menuView = MenuWidget(self)
+        menuView.loadMenu(self.menu())
         #
         # Bottom widget
         self.bottomWidget = BottomWidget(self)
@@ -659,6 +647,48 @@ class Document(QWidget):
             self.updateBottom()
             self.modified.emit()
             self.setModified(True)
+
+# ------------------------------------------------------------------------------
+#  Menu information widget
+# ------------------------------------------------------------------------------
+
+class MenuWidget(QWidget):
+    """Menu information widget providing inputs for name and comment, shows
+    assigned scale set."""
+
+    def __init__(self, parent = None):
+        super(MenuWidget, self).__init__(parent)
+        self.nameLineEdit = RestrictedLineEdit(self)
+        self.nameLineEdit.setPrefix("L1Menu_")
+        self.nameLineEdit.setRegexPattern("L1Menu_[a-zA-Z0-9_]+")
+        self.commentTextEdit = QPlainTextEdit(self)
+        self.commentTextEdit.setMaximumHeight(80)
+        self.scaleSetLineEdit = ReadOnlyLineEdit(self)
+        self.extSignalSetLineEdit = ReadOnlyLineEdit(self)
+        vbox = QVBoxLayout()
+        vbox.addWidget(QLabel(self.tr("Name:"), self))
+        vbox.addWidget(self.nameLineEdit)
+        vbox.addWidget(QLabel(self.tr("Comment:"), self))
+        vbox.addWidget(self.commentTextEdit)
+        vbox.addWidget(QLabel(self.tr("Scale Set:"), self))
+        vbox.addWidget(self.scaleSetLineEdit)
+        vbox.addWidget(QLabel(self.tr("External Signal Set:"), self))
+        vbox.addWidget(self.extSignalSetLineEdit)
+        vbox.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding))
+        self.setLayout(vbox)
+        self.setAutoFillBackground(True)
+
+    def loadMenu(self, menu):
+        """Load input values from menu."""
+        self.nameLineEdit.setText(menu.menu['name'])
+        self.commentTextEdit.setPlainText(menu.menu['comment'])
+        self.scaleSetLineEdit.setText(menu.scales.scaleSet['name'])
+        self.extSignalSetLineEdit.setText(menu.extSignals.extSignalSet['name'])
+
+    def updateMenu(self, menu):
+        """Update menu with values from inputs."""
+        menu.menu['name'] = str(self.nameLineEdit.text())
+        menu.menu['comment'] = str(self.commentTextEdit.toPlainText())
 
 # ------------------------------------------------------------------------------
 #  Splitter and custom handle

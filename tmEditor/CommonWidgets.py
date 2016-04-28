@@ -38,6 +38,20 @@ class PrefixedSpinBox(QSpinBox):
     def textFromValue(self, value):
         return format(value, '+d') # prefix integers also with plus sign
 
+class ReadOnlyLineEdit(QLineEdit):
+    """Customized rad only line edit."""
+    def __init__(self, text = None, parent = None):
+        """
+        @param text the initial text to display.
+        @param parent optional parent widget.
+        """
+        super(ReadOnlyLineEdit, self).__init__(str(text) if text else "", parent)
+        self.setReadOnly(True)
+        # Set background to parent widget background.
+        palette = self.palette()
+        palette.setColor(QPalette.Base, palette.color(QPalette.Window))
+        self.setPalette(palette)
+
 class FilterLineEdit(QLineEdit):
     """Line edit with a clear button on the right side.
     Used for filter and search inputs.
