@@ -30,15 +30,24 @@ FORMAT_FLOAT = '+23.16E'
 """Floating point string format."""
 
 ObjectTypes = (
+    # Muon objects
     tmGrammar.MU,
+    # Calorimeter objects
     tmGrammar.EG,
     tmGrammar.JET,
     tmGrammar.TAU,
+    # Energy sums
     tmGrammar.ETT,
     tmGrammar.HTT,
     tmGrammar.ETM,
     tmGrammar.HTM,
+    # Externals
     tmGrammar.EXT,
+    # MinBias
+    tmGrammar.MBT0HFP, # Minimum Bias Threshold 0 HF+
+    tmGrammar.MBT1HFP, # Minimum Bias Threshold 1 HF+
+    tmGrammar.MBT0HFM, # Minimum Bias Threshold 0 HF-
+    tmGrammar.MBT1HFM, # Minimum Bias Threshold 1 HF-
 )
 
 def getObjectType(name):
@@ -48,6 +57,29 @@ def getObjectType(name):
         if name.startswith(type):
             return type
     raise RuntimeError("invalid object type")
+
+def patchCutOnRead(cut):
+    """Workaround, patch cut data after reading from XML file."""
+    if cut.type == tmGrammar.CHGCOR and cut.object == tmGrammar.comb:
+        logging.debug("patching cut `%s' data (workaround)", cut.name)
+        cut['data'] = cut.data.replace("ls", "0")
+        cut['data'] = cut.data.replace("os", "1")
+        cut['data'] = cut.data.replace("ss", "1") #
+    if cut.type == tmGrammar.CHG and cut.object == tmGrammar.MU:
+        logging.debug("patching cut `%s' data (workaround)", cut.name)
+        cut['data'] = cut.data.replace("positive", "0")
+        cut['data'] = cut.data.replace("negative", "1")
+
+def patchCutOnWrite(cut):
+    """Workaround, patch cut data before writing to XML file."""
+    if cut.type == tmGrammar.CHGCOR and cut.object == tmGrammar.comb:
+        logging.debug("patching cut `%s' data (workaround)", cut.name)
+        cut['data'] = cut.data.replace("0", "ls")
+        cut['data'] = cut.data.replace("1", "os")
+    if cut.type == tmGrammar.CHG and cut.object == tmGrammar.MU:
+        logging.debug("patching cut `%s' data (workaround)", cut.name)
+        cut['data'] = cut.data.replace("0", "positive")
+        cut['data'] = cut.data.replace("1", "negative")
 
 class Menu(object):
     """L1-Trigger Menu container class. Provides methods to read and write XML
@@ -212,6 +244,7 @@ class Menu(object):
                 cut = Cut(cut.items())
                 if not self.cutByName(cut.name):
                     logging.debug("adding cut `%s'", cut)
+                    patchCutOnRead(cut)
                     self.addCut(**cut)
         # Add objects
         for objs in menu.objects.values():
@@ -293,7 +326,7 @@ class Menu(object):
                     cut = self.cutByName(name)
                     if not cut:
                         raise RuntimeError("Invalid cut: {name}".format(**locals()))
-
+                    patchCutOnWrite(cut)
                     row = cut.toRow()
                     logging.debug("appending cut `%s'", name)
                     menu.cuts[algorithm.name] = menu.cuts[algorithm.name] + (row, )

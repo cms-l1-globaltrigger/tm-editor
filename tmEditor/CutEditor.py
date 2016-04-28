@@ -326,7 +326,7 @@ class CutEditorDialog(QDialog):
         self.suffixLineEdit.setEnabled(not filter(lambda algorithm: cut.name in algorithm.cuts(), self.menu.algorithms))
         self.setName(cut.name)
         self.updateEntries()
-        if cut.type in (tmGrammar.ISO, tmGrammar.QLTY, tmGrammar.CHGCOR):
+        if cut.type in (tmGrammar.ISO, tmGrammar.QLTY, tmGrammar.CHG, tmGrammar.CHGCOR):
             self.setDataEnabled(True)
             self.dataField.setEntries(self.spec.data_sorted, self.spec.data_exclusive)
             self.setData(cut.data)

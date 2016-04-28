@@ -71,19 +71,6 @@ class Settings(object):
         return str(self.items())
 
 #
-# Application settings class
-#
-
-class AppSettings(Settings):
-    """Application specific settings."""
-
-    def  __init__(self, **kwargs):
-        super(AppSettings, self).__init__()
-        self.add("title", "Trigger Menu Editor")
-        self.require("version")
-        self.update(**kwargs)
-
-#
 # Cut settings class
 #
 

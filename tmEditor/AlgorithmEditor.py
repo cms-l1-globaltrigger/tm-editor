@@ -235,10 +235,10 @@ class AlgorithmEditor(QMainWindow):
         try:
             self.validator.validate(self.expression())
         except AlgorithmSyntaxError, e:
-            if e.token:
-                self.messageBar.setErrorMessage(self.tr("Error near %1").arg(e.token))
-            else:
-                self.messageBar.setErrorMessage(str(e))
+            #if e.token:
+            #    self.messageBar.setErrorMessage(self.tr("Error near token `%1' %2").arg(e.token).arg(str(e)))
+            #else:
+            self.messageBar.setErrorMessage(str(e))
         else:
             self.messageBar.setMessage(self.tr("Expression OK"))
 

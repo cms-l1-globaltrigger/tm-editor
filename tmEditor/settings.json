@@ -1,9 +1,4 @@
 {
-  "application": {
-    "title": "L1-Trigger Menu Editor",
-    "version": "0.1.8",
-    "release": "1"
-  },
   "cuts": [
     {
       "name": "MU-ETA",
