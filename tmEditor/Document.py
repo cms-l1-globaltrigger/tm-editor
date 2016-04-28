@@ -681,7 +681,7 @@ class MenuWidget(QWidget):
     def loadMenu(self, menu):
         """Load input values from menu."""
         self.nameLineEdit.setText(menu.menu['name'])
-        self.commentTextEdit.setPlainText(menu.menu['comment'])
+        self.commentTextEdit.setPlainText(menu.menu['comment'] if 'comment' in menu.menu.keys() else "")
         self.scaleSetLineEdit.setText(menu.scales.scaleSet['name'])
         self.extSignalSetLineEdit.setText(menu.extSignals.extSignalSet['name'])
 
