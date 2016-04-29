@@ -105,6 +105,15 @@ class AbstractTableModel(QAbstractTableModel):
 #  Custom models
 # ------------------------------------------------------------------------------
 
+class MenuModel(AbstractTableModel):
+    """Default menu information model."""
+
+    def __init__(self, menu, parent = None):
+        super(CutsModel, self).__init__(menu.cuts, parent)
+        self.menu = menu
+        self.addColumnSpec("UUID", 'uuid_firmware')
+        self.addColumnSpec("Grammar version", 'grammar_version')
+
 class AlgorithmsModel(AbstractTableModel):
     """Default algorithms table model."""
 

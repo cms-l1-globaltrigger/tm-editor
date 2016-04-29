@@ -217,6 +217,10 @@ class Menu(object):
         """Read XML menu from file. Provided for convenience."""
         filename = os.path.abspath(filename)
 
+        # Check file accessible
+        if not os.path.isfile(filename):
+            raise RuntimeError("No such file `{filename}'".format(**locals()))
+
         # Load tables from XML file.
         menu = tmTable.Menu()
         scale = tmTable.Scale()
@@ -233,6 +237,7 @@ class Menu(object):
 
         # Populate the containers.
         self.menu = dict(menu.menu.items())
+        print self.menu
         # Add algorithms
         for algorithm in menu.algorithms:
             algorithm = Algorithm(algorithm.items())

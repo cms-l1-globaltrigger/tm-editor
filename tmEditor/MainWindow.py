@@ -237,10 +237,17 @@ class MainWindow(QMainWindow):
             # Else it is a local filesystem path.
             else:
                 document = Document(filename, self)
-        except (RuntimeError, OSError, urllib2.HTTPError, urllib2.URLError), e:
+        except (RuntimeError, OSError), e:
+            logging.error("Failed to open XML menu: %s", str(e))
             QMessageBox.critical(self,
                 self.tr("Failed to open XML menu"),
                 str(e),
+            )
+        except (urllib2.HTTPError, urllib2.URLError), e:
+            logging.error("Failed to download remote XML menu %s", filename)
+            QMessageBox.critical(self,
+                self.tr("Failed to download remote XML menu"),
+                QString("%1").arg(str(e.message)),
             )
         else:
             index = self.mdiArea.addDocument(document)
