@@ -186,6 +186,7 @@ rpmbuild: all
 	echo "Source:    %{name}-%{version}.tar.gz" >> rpm/$(package).spec
 	echo "Prefix:    /usr" >> rpm/$(package).spec
 	echo "Group:     Development/Tools" >> rpm/$(package).spec
+	echo "Requires:  xerces-c >= 3.0" >> rpm/$(package).spec
 	echo "Requires:  python >= 2.6" >> rpm/$(package).spec
 	echo "Requires:  python-argparse" >> rpm/$(package).spec
 	echo "Requires:	 PyQt4 >= 4.6" >> rpm/$(package).spec
@@ -233,7 +234,7 @@ debbuild: all
 	echo "Architecture: $(debian_arch)"  >> deb/control
 	echo "Maintainer: $(maintainer)" >> deb/control
 	echo "Installed-Size: $(shell du -sk . | awk '{print $1}')" >> deb/control
-	echo "Depends: python (>= 2.6), python-qt4 (>= 4.6), libc6 (>= 2.4), libxerces-c28 (>= 2.8), libxerces-c3.1 (>= 3.1), gnome-icon-theme" >> deb/control
+	echo "Depends: python (>= 2.6), python-qt4 (>= 4.6), libc6 (>= 2.4), libxerces-c3.1 (>= 3.1), gnome-icon-theme" >> deb/control
 	echo "Replaces: $(package)" >> deb/control
 	echo "Provides: $(package)" >> deb/control
 	echo "Section: gnome" >> deb/control
