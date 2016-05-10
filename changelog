@@ -3,6 +3,7 @@ tm-editor (0.1.11-0) extra; urgency=medium
   * Added support for MinBias triggers
   * Fixed muon charge and charge correlation cut data sets
   * Displaying scale set and external signal set in menu overview.
+  * Removed restriction preventing duplicated expressions.
 
  -- Bernhard  Arnold <bernhard.arnold@cern.ch>  Thu, 28 Apr 2016 11:38:32 +0200
 

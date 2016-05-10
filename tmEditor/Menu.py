@@ -237,7 +237,11 @@ class Menu(object):
 
         # Populate the containers.
         self.menu = dict(menu.menu.items())
-        print self.menu
+
+        # Show information about the menu.
+        for k, v in self.menu.iteritems():
+            logging.debug("%s: %s", k, v)
+
         # Add algorithms
         for algorithm in menu.algorithms:
             algorithm = Algorithm(algorithm.items())

@@ -410,9 +410,6 @@ class AlgorithmEditorDialog(QDialog):
                 if algorithm.name == self.name():
                     QMessageBox.warning(self, "Name used", "Algorithm name {0} already used (by index {1})".format(algorithm.name, algorithm.index))
                     return
-                if algorithm.expression == self.expression():
-                    QMessageBox.warning(self, "Expression used", "Algorithm expression {0} already used (by {1}, index {2})".format(algorithm.expression, algorithm.name, algorithm.index))
-                    return
                 # Check existance of cuts and external signals.
                 #
             # Temporary limited conistency check.
