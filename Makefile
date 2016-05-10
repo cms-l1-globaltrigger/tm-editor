@@ -193,7 +193,7 @@ rpmbuild: all
 	echo "Requires:  python-argparse" >> rpm/$(package).spec
 	echo "Requires:	 PyQt4 >= 4.6" >> rpm/$(package).spec
 	echo "Requires:  glibc >= 2.4" >> rpm/$(package).spec
-	echo "Requires:  libxerces-c-3_1 >= 3.1" >> rpm/$(package).spec
+	echo "Requires:  xerces-c >= 3.0" >> rpm/$(package).spec
 	echo "Requires:  gnome-icon-theme" >> rpm/$(package).spec
 	echo >> rpm/$(package).spec
 	echo "%description" >> rpm/$(package).spec
