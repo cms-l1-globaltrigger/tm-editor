@@ -41,6 +41,9 @@ swigmods = \
 	$(tmtable_dir)/tmTable.py \
 	$(tmgrammar_dir)/tmGrammar.py
 
+title = "Trigger Menu Editor"
+description = "Graphical editor for editing Level-1 trigger menu XML files."
+
 .PHONY: all install rpm rpmbuild deb debbuild clean rpmclean debclean
 
 all: rcc
@@ -186,13 +189,16 @@ rpmbuild: all
 	echo "Source:    %{name}-%{version}.tar.gz" >> rpm/$(package).spec
 	echo "Prefix:    /usr" >> rpm/$(package).spec
 	echo "Group:     Development/Tools" >> rpm/$(package).spec
-	echo "Requires:  xerces-c >= 3.0" >> rpm/$(package).spec
 	echo "Requires:  python >= 2.6" >> rpm/$(package).spec
 	echo "Requires:  python-argparse" >> rpm/$(package).spec
 	echo "Requires:	 PyQt4 >= 4.6" >> rpm/$(package).spec
+	echo "Requires:  glibc >= 2.4" >> rpm/$(package).spec
+	echo "Requires:  libxerces-c-3_1 >= 3.1" >> rpm/$(package).spec
+	echo "Requires:  gnome-icon-theme" >> rpm/$(package).spec
 	echo >> rpm/$(package).spec
 	echo "%description" >> rpm/$(package).spec
-	echo "a foobar app" >> rpm/$(package).spec
+	echo "$(title)" >> rpm/$(package).spec
+	echo " $(description)" >> rpm/$(package).spec
 	echo >> rpm/$(package).spec
 	echo "%prep" >> rpm/$(package).spec
 	echo "%setup -q" >> rpm/$(package).spec
@@ -240,8 +246,8 @@ debbuild: all
 	echo "Section: gnome" >> deb/control
 	echo "Priority: optional" >> deb/control
 	echo "Homepage: $(url)" >> deb/control
-	echo "Description: Trigger Menu Editor" >> deb/control
-	echo " Graphical editor for editing Level-1 trigger menu XML files." >> deb/control
+	echo "Description: $(title)" >> deb/control
+	echo " $(description)" >> deb/control
 	mv deb/control deb/$(pkgdir)/DEBIAN/.
 	echo "//     generateing DEBIAN package..."
 	fakeroot dpkg-deb -Zgzip -b deb/$(pkgdir) deb/$(pkgdir)-$(debian_arch).deb
