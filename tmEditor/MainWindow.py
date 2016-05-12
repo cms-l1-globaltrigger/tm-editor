@@ -191,49 +191,48 @@ class MainWindow(QMainWindow):
     def loadDocument(self, filename):
         """Load document from file or remote loaction and add it to the MDI area."""
         try:
-            # Test if filename is a remote URL.
-            result = re.match('(http|https|ftp|file)\:\/\/(.+)', filename)
+            # Test if filename is an URL.
+            result = re.match('\w+\:\/\/(.+)', filename)
             if result:
-                protocol, url = result.groups()
-                # Handle file protocol as local filesystem path.
-                if protocol == 'file':
-                    document = Document(url, self)
-                # Else try to download remote file to a temporary file.
-                else:
-                    url = filename
-                    u = urllib2.urlopen(url)
-                    meta = u.info()
-                    # Get byte size of remote content.
-                    contentLength = meta.getheaders("Content-Length")
-                    #if not contentLength:
-                    #    raise RuntimeError("Unable to open URL")
-                    fileSize = int(contentLength[0]) if contentLength else 2**10
-                    logging.info("fetching %s bytes from %s", fileSize, url)
-                    dialog = ProgressDialog(fileSize, self)
-                    dialog.setModal(True)
+                # Open remote URL
+                u = urllib2.urlopen(filename, timeout=4)
+                meta = u.info()
+                # Get byte size of remote content.
+                contentLength = meta.getheaders("Content-Length")
+                #if not contentLength:
+                #    raise RuntimeError("Unable to open URL")
+                fileSize = int(contentLength[0]) if contentLength else 0
+                #dialog.setMaximum(fileSize)
+                logging.info("fetching %s bytes from %s", fileSize or '*', filename)
+                try:
+                    dialog = QProgressDialog("Downloading...", "Abort", 0, fileSize, self)
+                    dialog.setWindowModality(Qt.WindowModal)
                     dialog.show()
-                    try:
-                        # Create a temorary file buffer.
-                        with tempfile.NamedTemporaryFile(bufsize = fileSize) as f:
-                            receivedSize = 0
-                            blockSize = 1024 * 8
-                            while True:
-                                buffer = u.read(blockSize)
-                                if not buffer:
-                                    break
-                                receivedSize += len(buffer)
-                                f.write(buffer)
-                                dialog.setReceivedSize(receivedSize)
-                            # Reset file pointer so make sure document is read from
-                            # begin. Note: do not close the temporary file as it
-                            # will vanish (see python tempfile.NamedTemporaryFile).
-                            f.seek(0)
-                            # Create document by reading temporary file.
-                            document = Document(f.name, self)
+                    QApplication.processEvents()
+                    # Create a temorary file buffer.
+                    with tempfile.NamedTemporaryFile(bufsize = fileSize or 2**21) as f:
+                        receivedSize = 0
+                        blockSize = 1024
+                        while True:
+                            buffer = u.read(blockSize)
+                            if not buffer:
+                                break
+                            receivedSize += len(buffer)
+                            f.write(buffer)
+                            QApplication.processEvents()
+                            if dialog.wasCanceled():
+                                return
+                            dialog.setValue(receivedSize);
+                        # Reset file pointer so make sure document is read from
+                        # begin. Note: do not close the temporary file as it
+                        # will vanish (see python tempfile.NamedTemporaryFile).
+                        f.seek(0)
+                        # Create document by reading temporary file.
+                        document = Document(f.name, self)
                         dialog.close()
-                    except:
-                        dialog.close()
-                        raise
+                except:
+                    dialog.close()
+                    raise
             # Else it is a local filesystem path.
             else:
                 document = Document(filename, self)
@@ -243,11 +242,17 @@ class MainWindow(QMainWindow):
                 self.tr("Failed to open XML menu"),
                 str(e),
             )
-        except (urllib2.HTTPError, urllib2.URLError), e:
+        except urllib2.HTTPError, e:
             logging.error("Failed to download remote XML menu %s", filename)
             QMessageBox.critical(self,
                 self.tr("Failed to download remote XML menu"),
-                QString("%1").arg(str(e.message)),
+                self.tr("HTTP error, failed to download from %1").arg(filename),
+            )
+        except urllib2.URLError, e:
+            logging.error("Failed to download remote XML menu %s", filename)
+            QMessageBox.critical(self,
+                self.tr("Failed to download remote XML menu"),
+                QString("URL error, failed to download from %1").arg(filename),
             )
         else:
             index = self.mdiArea.addDocument(document)
@@ -352,32 +357,9 @@ class MainWindow(QMainWindow):
                 return
         event.accept()
 
-#
-# Download progress dialog.
-#
-
-class ProgressDialog(QDialog):
-    """Dialog with progress bar displaying the donload progress."""
-
-    def __init__(self, bytes, parent = None):
-        super(ProgressDialog, self).__init__(parent)
-        flags = self.windowFlags()
-        flags &= ~Qt.WindowCloseButtonHint
-        flags |= Qt.WindowMinimizeButtonHint
-        self.setWindowFlags(flags)
-        self.setWindowTitle(self.tr("Loading..."))
-        self.progressBar = QProgressBar(self)
-        self.progressBar.setMaximum(bytes)
-        layout = QVBoxLayout()
-        layout.addWidget(self.progressBar)
-        self.setLayout(layout)
-
-    def setReceivedSize(self, bytes):
-        self.progressBar.setValue(bytes)
-
-#
-# Main application routine
-#
+# ------------------------------------------------------------------------------
+#  Main application routine
+# ------------------------------------------------------------------------------
 
 def main():
     app = QApplication(sys.argv)

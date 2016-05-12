@@ -56,20 +56,25 @@ def main():
     try:
         app = QApplication(sys.argv)
         logging.debug("launching L1-Trigger Menu Editor, version %s-%s", VERSION, PKG_RELEASE)
+
         # Create/Load application settings.
         app.setOrganizationName("HEPHY")
         app.setOrganizationDomain("hephy.at")
         app.setApplicationName("Trigger Menu Editor")
+
         # Init global settings.
         QSettings()
+
         # Create main window.
         window = tmEditor.MainWindow()
+        window.show()
+
         # Load documents from command line (optional).
         for filename in args.filenames:
             logging.debug("loading file %s", filename)
             window.loadDocument(filename)
-        # Take care window is shown.
-        window.show()
+            app.processEvents()
+
         return app.exec_()
     except RuntimeError, message:
         logging.error(message)
