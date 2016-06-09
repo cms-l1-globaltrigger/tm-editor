@@ -168,6 +168,8 @@ class ObjectThresholds(SyntaxRule):
                 tmGrammar.HTT: 'ET',
                 tmGrammar.ETM: 'ET',
                 tmGrammar.HTM: 'ET',
+                tmGrammar.ETTEM: 'ET',
+                tmGrammar.ETMHF: 'ET',
                 tmGrammar.MBT0HFP: 'COUNT',
                 tmGrammar.MBT1HFP: 'COUNT',
                 tmGrammar.MBT0HFM: 'COUNT',

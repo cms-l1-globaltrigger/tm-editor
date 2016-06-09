@@ -646,7 +646,7 @@ class LibraryWidget(QWidget):
                 icon.addPixmap(miniIcon("tau"))
             if object.type in (tmGrammar.JET, ):
                 icon.addPixmap(miniIcon("jet"))
-            if object.type in (tmGrammar.ETT, tmGrammar.HTT, tmGrammar.ETM, tmGrammar.HTM):
+            if object.type in (tmGrammar.ETT, tmGrammar.HTT, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETTEM, tmGrammar.ETMHF):
                 icon.addPixmap(miniIcon("esums"))
             if not object.type in topLevelItems.keys():
                 item = QTreeWidgetItem(self.objectsTree, [object.type])

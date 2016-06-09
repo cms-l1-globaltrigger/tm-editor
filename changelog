@@ -1,3 +1,9 @@
+tm-editor (0.1.12-0) extra; urgency=medium
+
+  * Added support for ETTEM/ETMHF triggers.
+
+ -- Bernhard  Arnold <bernhard.arnold@cern.ch>  Thu, 09 Jun 2016 18:55:01 +0200
+
 tm-editor (0.1.11-0) extra; urgency=medium
 
   * Added support for MinBias triggers

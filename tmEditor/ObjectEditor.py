@@ -24,6 +24,12 @@ Objects = [
     tmGrammar.HTM,
     tmGrammar.ETT,
     tmGrammar.HTT,
+    tmGrammar.ETTEM,
+    tmGrammar.ETMHF,
+    tmGrammar.MBT0HFP,
+    tmGrammar.MBT1HFP,
+    tmGrammar.MBT0HFM,
+    tmGrammar.MBT1HFM,
 ]
 
 ObjectCuts = [

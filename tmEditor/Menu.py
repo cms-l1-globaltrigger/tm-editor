@@ -41,6 +41,8 @@ ObjectTypes = (
     tmGrammar.HTT,
     tmGrammar.ETM,
     tmGrammar.HTM,
+    tmGrammar.ETTEM,
+    tmGrammar.ETMHF,
     # Externals
     tmGrammar.EXT,
     # MinBias
