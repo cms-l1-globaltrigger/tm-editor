@@ -11,6 +11,7 @@
  * PrefixedSpinBox
  * FilterLineEdit
  * RestrictedLineEdit
+ * ComboBoxPlus
 
  * EtaCutChart
  * PhiCutChart
@@ -116,6 +117,24 @@ class RestrictedLineEdit(QLineEdit):
             self.textChanged.disconnect()
             self.setText(self._prefix)
             self.textChanged.connect(self.validate)
+
+class ComboBoxPlus(QComboBox):
+    """Enhanced combo box, permits to enable/disable items.
+    >>> widget = ComboBoxPlus()
+    >>> widget.insertItem(0, "sample")
+    >>> widget.setItemEnabled(0, False)
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(ComboBoxPlus, self).__init__(*args, **kwargs)
+
+    def setItemEnabled(self, index, enabled):
+        """Enables or disables item at *index*."""
+        # HACK:
+        # see http://theworldwideinternet.blogspot.co.at/2011/01/disabling-qcombobox-items.html
+        # and also https://forum.qt.io/topic/27419/qcombobox-item-disable
+        modelIndex = self.model().index(index, 0)
+        self.model().setData(modelIndex, QVariant(33 if enabled else 0), Qt.UserRole -1)
 
 #
 # More complex widgets.

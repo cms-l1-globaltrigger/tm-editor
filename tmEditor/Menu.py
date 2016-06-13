@@ -598,15 +598,15 @@ class Object(AbstractDict):
     def __lt__(self, item):
         """Custom sorting by type, threshold and offset."""
         return \
-            (self.type, float(self.threshold.replace('p', '.')), int(self.bx_offset)) < \
-            (item.type, float(item.threshold.replace('p', '.')), int(item.bx_offset))
+            (self.type, thresholdFloat(self.threshold), int(self.bx_offset)) < \
+            (item.type, thresholdFloat(item.threshold), int(item.bx_offset))
 
     def isValid(self):
         return tmTable.isObjectRequirement(self.toRow())
 
     def toRow(self):
         row = super(Object, self).toRow()
-        row['threshold'] = format(float(row['threshold'].replace('p', '.')), FORMAT_FLOAT)
+        row['threshold'] = format(thresholdFloat(row['threshold']), FORMAT_FLOAT)
         return row
 
 # ------------------------------------------------------------------------------

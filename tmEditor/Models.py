@@ -34,14 +34,18 @@ def miniIcon(name):
 class AbstractTableModel(QAbstractTableModel):
     """Abstract table model class to be inherited to display table data."""
 
-    ColumnSpec = namedtuple('ColumnSpec', 'title, key, format, textAlignment, decoration, headerToolTip, headerDecoration, headerSizeHint, headerTextAlignment')
+    ColumnSpec = namedtuple('ColumnSpec', 'title, key, format, textAlignment, ' \
+                                          'decoration, headerToolTip, headerDecoration, ' \
+                                          'headerSizeHint, headerTextAlignment')
 
     def __init__(self, values, parent = None):
         super(AbstractTableModel, self).__init__(parent)
         self.values = values
         self.columnSpecs = []
 
-    def addColumnSpec(self, title, key, format=str, textAlignment=AlignLeft, decoration=QVariant(), headerToolTip=QVariant(), headerDecoration=QVariant(), headerSizeHint=QVariant(), headerTextAlignment=AlignCenter):
+    def addColumnSpec(self, title, key, format=str, textAlignment=AlignLeft,
+                      decoration=QVariant(), headerToolTip=QVariant(), headerDecoration=QVariant(),
+                      headerSizeHint=QVariant(), headerTextAlignment=AlignCenter):
         """Add a column to be displayed, assign data using a key."""
         spec = self.ColumnSpec(title, key, format, textAlignment, decoration, headerToolTip, headerDecoration, headerSizeHint, headerTextAlignment)
         self.columnSpecs.append(spec)

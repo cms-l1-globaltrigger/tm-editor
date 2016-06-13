@@ -82,16 +82,18 @@ def fThreshold(value):
     return "{0:.1f} GeV".format(float(value))
 
 def fComparison(value):
-    return dict(
-        eq = "==",
-        ge = ">=",
-        gt = ">",
-        le = "<=",
-        lt = "<",
-        ne = "!=",
-    )[str(value).strip('.')]
+    """Retruns formatted thresold comparisons signs."""
+    return {
+        tmGrammar.EQ: "==",
+        tmGrammar.GE: ">=",
+        tmGrammar.GT: ">",
+        tmGrammar.LE: "<=",
+        tmGrammar.LT: "<",
+        tmGrammar.NE: "!=",
+    }[str(value)]
 
 def fBxOffset(value):
+    """Retruns formatted BX offset."""
     return '0' if int(value) == 0 else format(int(value), '+d')
 
 # ------------------------------------------------------------------------------
