@@ -438,26 +438,32 @@ class CutEditorDialog(QDialog):
             self.maximumRangeSpinBox.setValue(1.)
         elif self.type in tmGrammar.DETA:
             self.setRangeEnabled(True)
-            self.minimumRangeSpinBox.setRange(0, +4.999E0)
+            scaleMu = filter(lambda scale: scale['object']==tmGrammar.MU and scale['type']==tmGrammar.ETA, self.menu.scales.scales)[0]
+            scaleCalo = filter(lambda scale: scale['object']==tmGrammar.JET and scale['type']==tmGrammar.ETA, self.menu.scales.scales)[0]
+            scale = scaleMu if scaleMu['maximum'] > scaleCalo['maximum'] else scaleCalo
+            minimum, maximum = float(scale['minimum']), float(scale['maximum'])
             self.minimumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.minimumRangeSpinBox.setSingleStep(self.spec.range_step)
+            self.minimumRangeSpinBox.setRange(minimum, maximum)
             self.minimumRangeSpinBox.setValue(0)
-            self.maximumRangeSpinBox.setRange(0, +4.999E0)
             self.maximumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.maximumRangeSpinBox.setSingleStep(self.spec.range_step)
-            self.maximumRangeSpinBox.setValue(+4.999E0)
+            self.maximumRangeSpinBox.setRange(minimum, maximum)
+            self.maximumRangeSpinBox.setValue(maximum)
             minimum, maximum = self.minimumRangeSpinBox.minimum(), self.maximumRangeSpinBox.maximum()
             info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
         elif self.type in tmGrammar.DPHI:
             self.setRangeEnabled(True)
-            self.minimumRangeSpinBox.setRange(0, math.pi)
-            self.minimumRangeSpinBox.setValue(0)
+            scale = filter(lambda scale: scale['object']==tmGrammar.MU and scale['type']==tmGrammar.PHI, self.menu.scales.scales)[0]
+            minimum, maximum = float(scale['minimum']), float(scale['maximum']) / 2.
             self.minimumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.minimumRangeSpinBox.setSingleStep(self.spec.range_step)
-            self.maximumRangeSpinBox.setRange(0, math.pi)
+            self.minimumRangeSpinBox.setRange(minimum, maximum)
+            self.minimumRangeSpinBox.setValue(0)
             self.maximumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.maximumRangeSpinBox.setSingleStep(self.spec.range_step)
-            self.maximumRangeSpinBox.setValue(math.pi)
+            self.maximumRangeSpinBox.setRange(minimum, maximum)
+            self.maximumRangeSpinBox.setValue(maximum)
             minimum, maximum = self.minimumRangeSpinBox.minimum(), self.maximumRangeSpinBox.maximum()
             info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
         # Invariant mass
