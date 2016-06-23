@@ -125,7 +125,7 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
         self.addRule(CombBxOffset)
         self.addRule(ObjectThresholds)
         self.addRule(DistNrObjects)
-        self.addRule(DistDeltaEtaRange)
+        self.addRule(DistDeltaRange)
 
 class BasicSyntax(SyntaxRule):
     """Validates basic algorithm syntax."""
@@ -154,7 +154,7 @@ class BasicSyntax(SyntaxRule):
 
 
 class ObjectThresholds(SyntaxRule):
-    """Validates object thresholds."""
+    """Validates object thresholds/counts."""
 
     def validate(self, expression):
         # TODO... better to use floating point representation and compare by string?!
@@ -175,7 +175,7 @@ class ObjectThresholds(SyntaxRule):
                 tmGrammar.MBT0HFM: 'COUNT',
                 tmGrammar.MBT1HFM: 'COUNT',
             }
-            scale = menu.scaleMeta(object, scaleTypes[object.name])
+            scale = menu.scaleMeta(object, scaleTypes[object.type])
             threshold = thresholdFloat(object.threshold)
             minimum = float(scale['minimum'])
             maximum = float(scale['maximum'])
@@ -187,7 +187,7 @@ class ObjectThresholds(SyntaxRule):
                     token
                 )
             # Check step
-            bins = menu.scaleBins(object, scaleTypes[object.name])
+            bins = menu.scaleBins(object, scaleTypes[object.type])
             if not filter(lambda bin: float(bin['minimum'])==threshold or float(bin['maximum'])==threshold, bins):
                 raise AlgorithmSyntaxError(
                     "Invalid threshold `{object.threshold}` at object `{token}`".format(**locals()),
@@ -196,7 +196,7 @@ class ObjectThresholds(SyntaxRule):
         for token in self.tokens(expression):
             # Validate object
             if isObject(token):
-                object = self.toObjectItem(token)
+                object = toObject(token)
                 validateThreshold(self.validator.menu, token, object)
             # Validate function
             if isFunction(token):
@@ -238,8 +238,8 @@ class DistNrObjects(SyntaxRule):
                 raise AlgorithmSyntaxError("Function dist{{...}} requires excactly two object requirements.\n" \
                                            "Invalid expression near \"{token}\"".format(**locals()))
 
-class DistDeltaEtaRange(SyntaxRule):
-    """Validates that delta-eta cut ranges does not exceed assigned objects limits."""
+class DistDeltaRange(SyntaxRule):
+    """Validates that delta-eta/phi cut ranges does not exceed assigned objects limits."""
 
     def validate(self, expression):
         menu = self.validator.menu
@@ -252,7 +252,7 @@ class DistDeltaEtaRange(SyntaxRule):
                 cut = menu.cutByName(name)
                 if cut.type == tmGrammar.DETA:
                     for object in functionObjects(token):
-                        scale = filter(lambda scale: scale['object']==object.type and scale['type']=='ETA', menu.scales.scales)[0]
+                        scale = filter(lambda scale: scale['object']==object.type and scale['type']==tmGrammar.ETA, menu.scales.scales)[0]
                         minimum = 0
                         maximum = abs(float(scale['minimum'])) + float(scale['maximum'])
                         if not (minimum <= float(cut.minimum) <= maximum):
@@ -261,7 +261,7 @@ class DistDeltaEtaRange(SyntaxRule):
                             raise AlgorithmSyntaxError("Cut \"{name}\" maximum limit of {cut.maximum} exceed valid object DETA range of {maximum}".format(**locals()))
                 if cut.type == tmGrammar.DPHI:
                     for object in functionObjects(token):
-                        scale = filter(lambda scale: scale['object']==object.type and scale['type']=='PHI', menu.scales.scales)[0]
+                        scale = filter(lambda scale: scale['object']==object.type and scale['type']==tmGrammar.PHI, menu.scales.scales)[0]
                         minimum = 0
                         maximum = float(scale['maximum']) / 2.
                         if not (minimum <= float(cut.minimum) <= maximum):

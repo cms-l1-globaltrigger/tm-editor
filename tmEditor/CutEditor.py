@@ -496,16 +496,21 @@ class CutEditorDialog(QDialog):
     def accept(self):
         """Perform consistency checks befor accepting changes."""
         if self.spec.data and not self.data:
-            QMessageBox.warning(self, self.tr("No data"), self.tr("It is not possible to create a cut without assigning a data selection."))
+            QMessageBox.warning(
+                self,
+                self.tr("No data"),
+                self.tr("It is not possible to create a cut without assigning a data selection.")
+            )
             return
-        # Make sure that changes are compliant with algorithm combinations.
-        # TODO
-        # for algorithm in self.menu.algorithms:
-        #     try:
-        #         validate(algorithm.expression)
-        #     except RuntimeError, e:
-        #         QMessageBox.warning(self, self.tr("Exceeding limits"), str(e))
-        #         return
+        # For all ranges (excepting PHI) minimum <= maximum
+        if self.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.ETA):
+            if self.minimum >= self.maximum:
+                QMessageBox.warning(
+                    self,
+                    self.tr("Invalid range"),
+                    self.tr("For non-phi cuts a range must follow: minimum <= maximum.")
+                )
+                return
         super(CutEditorDialog, self).accept()
 
     def showHelp(self):

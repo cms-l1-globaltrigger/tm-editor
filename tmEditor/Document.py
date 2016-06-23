@@ -252,6 +252,20 @@ class Document(QWidget):
                 free.remove(int(algorithm.index))
         return free
 
+    def getUniquAlgorithmName(self, basename="L1_Unnamed"):
+        """Returns eiter *basename* if not already used in menu, else tries to
+        find an unused basename with number suffix. Worst case returns just the
+        basename.
+        """
+        name = basename
+        if self.menu().algorithmByName(name):
+            # Default name is already used, try to find a derivate
+            for i in range(2, MaxAlgorithms):
+                name = "{basename}_{i}".format(**locals())
+                if not self.menu().algorithmByName(name):
+                    return name # got unused name!
+        return basename # no clue...
+
     def updateTop(self):
         index, item = self.getSelection()
         if item and hasattr(item.top, 'sortByColumn'):
@@ -419,7 +433,7 @@ class Document(QWidget):
         dialog = AlgorithmEditorDialog(self.menu(), self)
         dialog.setModal(True)
         dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
-        dialog.setName("L1_Unnamed")
+        dialog.setName(self.getUniquAlgorithmName(str(self.tr("L1_Unnamed"))))
         dialog.editor.setModified(False)
         dialog.exec_()
         if dialog.result() != QDialog.Accepted:

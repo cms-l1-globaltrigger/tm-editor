@@ -199,7 +199,9 @@ class ObjectEditorDialog(QDialog):
         pass
 
     def loadObject(self, object):
-        """Load dialog by values from object."""
+        """Load dialog by values from object. Will raise a ValueError if string
+        *object* is not a valid object.
+        """
         object = toObject(str(object))
         self.ui.typeComboBox.setCurrentIndex(self.ui.typeComboBox.findText(object.type))
         self.ui.thresholdSpinBox.setValue(thresholdFloat(object.threshold))

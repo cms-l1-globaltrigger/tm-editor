@@ -1,6 +1,8 @@
 tm-editor (0.1.12-0) extra; urgency=medium
 
   * Added support for ETTEM/ETMHF triggers.
+  * Bugfix for algorithm editor, creating functions was prevented by an error.
+  * Some minor bugfixes for algorithm/cut/object editor dialogs.
 
  -- Bernhard  Arnold <bernhard.arnold@cern.ch>  Thu, 09 Jun 2016 18:55:01 +0200
 

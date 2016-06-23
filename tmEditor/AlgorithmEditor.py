@@ -291,11 +291,13 @@ class AlgorithmEditor(QMainWindow):
     def onWizard(self):
         dialog = ObjectEditorDialog(self.menu, self)
         selection = self.textEdit.textCursor().selection().toPlainText()
-        try:
-            if selection:
+        if selection:
+            try:
+                # Will raise ValueError if selection is not a valid object
                 dialog.loadObject(str(selection))
-        except RuntimeError, ValueError:
-            pass
+            except ValueError:
+                # Ignore if some other text is selected
+                pass
         dialog.exec_()
         if dialog.result() == QDialog.Accepted:
             self.onInsertItem(dialog.toExpression())
