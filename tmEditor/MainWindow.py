@@ -203,7 +203,7 @@ class MainWindow(QMainWindow):
                 #    raise RuntimeError("Unable to open URL")
                 fileSize = int(contentLength[0]) if contentLength else 0
                 #dialog.setMaximum(fileSize)
-                logging.info("fetching %s bytes from %s", fileSize or '*', filename)
+                logging.info("fetching %s bytes from %s", fileSize or '<unknown>', filename)
                 try:
                     dialog = QProgressDialog("Downloading...", "Abort", 0, fileSize, self)
                     dialog.setWindowModality(Qt.WindowModal)
@@ -302,7 +302,6 @@ class MainWindow(QMainWindow):
                         self.tr("Import error"),
                         str(e),
                     )
-
 
     def onSave(self):
         document = self.mdiArea.currentDocument()

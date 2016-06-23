@@ -429,24 +429,37 @@ class CutEditorDialog(QDialog):
         elif self.type in tmGrammar.DR:
             self.setRangeEnabled(True)
             self.minimumRangeSpinBox.setRange(0, 10E10)
-            self.minimumRangeSpinBox.setValue(0)
             self.minimumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.minimumRangeSpinBox.setSingleStep(self.spec.range_step)
+            self.minimumRangeSpinBox.setValue(0)
             self.maximumRangeSpinBox.setRange(0, 10E10)
-            self.maximumRangeSpinBox.setValue(0)
             self.maximumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.maximumRangeSpinBox.setSingleStep(self.spec.range_step)
-        elif self.type in (tmGrammar.DETA, tmGrammar.DPHI):
+            self.maximumRangeSpinBox.setValue(1.)
+        elif self.type in tmGrammar.DETA:
             self.setRangeEnabled(True)
-            self.minimumRangeSpinBox.setRange(0, 10E10)
+            self.minimumRangeSpinBox.setRange(0, +4.999E0)
+            self.minimumRangeSpinBox.setDecimals(self.spec.range_precision)
+            self.minimumRangeSpinBox.setSingleStep(self.spec.range_step)
+            self.minimumRangeSpinBox.setValue(0)
+            self.maximumRangeSpinBox.setRange(0, +4.999E0)
+            self.maximumRangeSpinBox.setDecimals(self.spec.range_precision)
+            self.maximumRangeSpinBox.setSingleStep(self.spec.range_step)
+            self.maximumRangeSpinBox.setValue(+4.999E0)
+            minimum, maximum = self.minimumRangeSpinBox.minimum(), self.maximumRangeSpinBox.maximum()
+            info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
+        elif self.type in tmGrammar.DPHI:
+            self.setRangeEnabled(True)
+            self.minimumRangeSpinBox.setRange(0, math.pi)
             self.minimumRangeSpinBox.setValue(0)
             self.minimumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.minimumRangeSpinBox.setSingleStep(self.spec.range_step)
-            self.maximumRangeSpinBox.setRange(0, 10E10)
-            self.maximumRangeSpinBox.setValue(0)
+            self.maximumRangeSpinBox.setRange(0, math.pi)
             self.maximumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.maximumRangeSpinBox.setSingleStep(self.spec.range_step)
-            # info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
+            self.maximumRangeSpinBox.setValue(math.pi)
+            minimum, maximum = self.minimumRangeSpinBox.minimum(), self.maximumRangeSpinBox.maximum()
+            info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
         # Invariant mass
         elif self.type in tmGrammar.MASS:
             self.setRangeEnabled(True)
@@ -504,7 +517,7 @@ class CutEditorDialog(QDialog):
             return
         # For all ranges (excepting PHI) minimum <= maximum
         if self.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.ETA):
-            if self.minimum >= self.maximum:
+            if self.minimum > self.maximum:
                 QMessageBox.warning(
                     self,
                     self.tr("Invalid range"),
