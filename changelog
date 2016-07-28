@@ -1,11 +1,11 @@
-tm-editor (0.1.13-0) extra; urgency=medium
+tm-editor (0.1.13-1) extra; urgency=medium
 
   * Bugfixes for cut editor (creating new ETA/PHI cuts, duplicate names).
   * Fixed (again) muon charge and charge correlation cut data sets.
 
  -- Bernhard  Arnold <bernhard.arnold@cern.ch>  Thu, 28 Jul 2016 13:22:09 +0200
 
-tm-editor (0.1.12-0) extra; urgency=medium
+tm-editor (0.1.12-1) extra; urgency=medium
 
   * Added support for ETTEM/ETMHF triggers.
   * Bugfix for algorithm editor, creating functions was prevented by an error.
@@ -13,7 +13,7 @@ tm-editor (0.1.12-0) extra; urgency=medium
 
  -- Bernhard  Arnold <bernhard.arnold@cern.ch>  Thu, 09 Jun 2016 18:55:01 +0200
 
-tm-editor (0.1.11-0) extra; urgency=medium
+tm-editor (0.1.11-1) extra; urgency=medium
 
   * Added support for MinBias triggers.
   * Fixed muon charge and charge correlation cut data sets.
