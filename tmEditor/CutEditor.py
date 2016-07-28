@@ -155,6 +155,7 @@ class CutEditorDialog(QDialog):
         self.resize(600, 400)
         # Attributes
         self.menu = menu
+        self.loadedCut = None
         # Cut type
         self.typeLabel = QLabel(self.tr("Type"), self)
         self.typeComboBox = QComboBox(self)
@@ -277,7 +278,7 @@ class CutEditorDialog(QDialog):
 
     @property
     def minimum(self):
-        """Returns minimum."""
+        """Returns minimum in string representation."""
         if self.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
             return self.minimumRangeSpinBox.value()
         return self.minimumSpinBox.value()
@@ -290,7 +291,7 @@ class CutEditorDialog(QDialog):
 
     @property
     def maximum(self):
-        """Returns maximum."""
+        """Returns maximum in string representation."""
         if self.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.DPHI):
             return self.maximumRangeSpinBox.value()
         return self.maximumSpinBox.value()
@@ -322,6 +323,7 @@ class CutEditorDialog(QDialog):
     def loadCut(self, cut):
         """Load data from existing cut object, prevents change of type."""
         # TODO not effective, re-write.
+        self.loadedCut = cut
         self.typeComboBox.setEnabled(False)
         self.suffixLineEdit.setEnabled(not filter(lambda algorithm: cut.name in algorithm.cuts(), self.menu.algorithms))
         self.setName(cut.name)
@@ -426,7 +428,7 @@ class CutEditorDialog(QDialog):
             self.setDataEnabled(True)
             self.dataField.setEntries(self.spec.data_sorted, self.spec.data_exclusive)
         # Delta ranges
-        elif self.type in tmGrammar.DR:
+        elif self.type == tmGrammar.DR:
             self.setRangeEnabled(True)
             self.minimumRangeSpinBox.setRange(0, 10E10)
             self.minimumRangeSpinBox.setDecimals(self.spec.range_precision)
@@ -436,7 +438,7 @@ class CutEditorDialog(QDialog):
             self.maximumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.maximumRangeSpinBox.setSingleStep(self.spec.range_step)
             self.maximumRangeSpinBox.setValue(1.)
-        elif self.type in tmGrammar.DETA:
+        elif self.type == tmGrammar.DETA:
             self.setRangeEnabled(True)
             scaleMu = filter(lambda scale: scale['object']==tmGrammar.MU and scale['type']==tmGrammar.ETA, self.menu.scales.scales)[0]
             scaleCalo = filter(lambda scale: scale['object']==tmGrammar.JET and scale['type']==tmGrammar.ETA, self.menu.scales.scales)[0]
@@ -452,7 +454,7 @@ class CutEditorDialog(QDialog):
             self.maximumRangeSpinBox.setValue(maximum)
             minimum, maximum = self.minimumRangeSpinBox.minimum(), self.maximumRangeSpinBox.maximum()
             info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
-        elif self.type in tmGrammar.DPHI:
+        elif self.type == tmGrammar.DPHI:
             self.setRangeEnabled(True)
             scale = filter(lambda scale: scale['object']==tmGrammar.MU and scale['type']==tmGrammar.PHI, self.menu.scales.scales)[0]
             minimum, maximum = float(scale['minimum']), float(scale['maximum']) / 2.
@@ -467,7 +469,7 @@ class CutEditorDialog(QDialog):
             minimum, maximum = self.minimumRangeSpinBox.minimum(), self.maximumRangeSpinBox.maximum()
             info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
         # Invariant mass
-        elif self.type in tmGrammar.MASS:
+        elif self.type == tmGrammar.MASS:
             self.setRangeEnabled(True)
             self.minimumRangeSpinBox.setRange(0, 10E10)
             self.minimumRangeSpinBox.setValue(0)
@@ -523,11 +525,21 @@ class CutEditorDialog(QDialog):
             return
         # For all ranges (excepting PHI) minimum <= maximum
         if self.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.ETA):
-            if self.minimum > self.maximum:
+            if float(self.minimum) > float(self.maximum):
                 QMessageBox.warning(
                     self,
                     self.tr("Invalid range"),
                     self.tr("For non-phi cuts a range must follow: minimum <= maximum.")
+                )
+                return
+        # Name already used?
+        if self.name in [cut.name for cut in self.menu.cuts]:
+            duplicates = filter(lambda cut: cut.name == self.name, self.menu.cuts)
+            if not (self.loadedCut and self.loadedCut in duplicates): # ugly...
+                QMessageBox.warning(
+                    self,
+                    self.tr("Name already used"),
+                    self.tr("Suffix \"%1\" is already used with a cut of type \"%2\".").arg(self.suffix).arg(self.type)
                 )
                 return
         super(CutEditorDialog, self).accept()

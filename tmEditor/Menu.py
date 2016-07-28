@@ -62,7 +62,7 @@ def getObjectType(name):
 
 def patchCutOnRead(cut):
     """Workaround, patch cut data after reading from XML file."""
-    if cut.type == tmGrammar.CHGCOR and cut.object == tmGrammar.comb:
+    if cut.type == tmGrammar.CHGCOR and cut.object in (tmGrammar.comb, tmGrammar.dist):
         logging.debug("patching cut `%s' data (workaround)", cut.name)
         cut['data'] = cut.data.replace("ls", "0")
         cut['data'] = cut.data.replace("os", "1")
@@ -337,7 +337,7 @@ class Menu(object):
                     cut = self.cutByName(name)
                     if not cut:
                         raise RuntimeError("Invalid cut: {name}".format(**locals()))
-                    patchCutOnWrite(cut)
+                    patchCutOnWrite(Cut(cut)) # copy!
                     row = cut.toRow()
                     logging.debug("appending cut `%s'", name)
                     menu.cuts[algorithm.name] = menu.cuts[algorithm.name] + (row, )
