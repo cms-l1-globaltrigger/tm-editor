@@ -9,6 +9,8 @@ pkgdir = $(package)-$(version)-$(release)
 maintainer = Bernhard Arnold <bernhard.arnold@cern.ch>
 url = http://globaltrigger.hephy.at/
 timestamp := $(shell date)
+arch := $(shell uname -p)
+distro ?= linux
 
 # Only execute on debian systems
 debian_arch = $(shell dpkg --print-architecture)
@@ -44,7 +46,7 @@ swigmods = \
 title = "Trigger Menu Editor"
 description = "Graphical editor for editing Level-1 trigger menu XML files."
 
-.PHONY: all install rpm rpmbuild deb debbuild clean rpmclean debclean
+.PHONY: all install rpm rpmbuild deb debbuild tar tarbuild clean rpmclean debclean
 
 all: rcc
 
@@ -252,6 +254,47 @@ debbuild: all
 	echo "//     generateing DEBIAN package..."
 	fakeroot dpkg-deb -Zgzip -b deb/$(pkgdir) deb/$(pkgdir)-$(debian_arch).deb
 
+tar: tarbuild
+
+tarbuild: all
+	rm -rf tarball/$(pkgdir)-$(distro)-$(arch)
+	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)
+	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)
+	@echo "//     writing README..."
+	echo -e "tm-editor ${version}-${release} for ${distro} ${arch}\n" > tarball/$(pkgdir)-$(distro)-$(arch)/README
+	echo -e 'Dependecies:\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/README
+	echo -e '$$ sudo yum install python python-argparse PyQt4 xerces-c gnome-icon-theme\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/README
+	echo -e 'Run:\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/README
+	echo -e '$$ ./tm-editor [file|url ...]' >> tarball/$(pkgdir)-$(distro)-$(arch)/README
+	@echo "//     writing tm-editor wrapper..."
+	echo -e '#!/bin/bash\n' > tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
+	echo -e 'DIR="$$( cd "$$( dirname "$${BASH_SOURCE[0]}" )" && pwd )"' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
+	echo -e 'UTM_DIR=$$DIR/lib/tmeditor-'$(version)"\n" >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
+	echo -e '# Setup environment' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
+	echo -e 'source $$UTM_DIR/setup.sh\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
+	echo -e '# Source the external lib dir (not provided on lxplus)' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
+	echo -e 'export LD_LIBRARY_PATH=$$UTM_DIR/extern:$$LD_LIBRARY_PATH\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
+	echo -e '# Run editor' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
+	echo -e 'tm-editor $$@\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
+	echo -e 'exit $$?' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
+	chmod +x tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
+	cp ../setup.sh tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)
+	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/extern
+	cp $(shell find /usr -name 'libxerces-c-*.so') tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/extern
+	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmUtil
+	cp -r ../tmUtil/libtmutil.so tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmUtil/
+	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmXsd
+	cp -r ../tmXsd/{libtmxsd.so,*xsd,xsd-type} tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmXsd/
+	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmTable
+	cp -r ../tmTable/{libtmtable.so,_tmTable.so,tmTable.py} tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmTable/
+	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmGrammar
+	cp -r ../tmGrammar/{libtmgrammar.so,_tmGrammar.so,tmGrammar.py} tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmGrammar/
+	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmEventSetup
+	cp -r ../tmEventSetup/{libtmeventsetup.so,_tmEventSetup.so,tmEventSetup.py} tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmEventSetup/
+	@echo "//     packing tarball..."
+	cd tarball && tar czf $(pkgdir)-$(distro)-$(arch).tar.gz $(pkgdir)-$(distro)-$(arch)
+	@echo "done."
+
 clean:
 	rm -rf tmEditor/tmeditor_rc.py
 	rm -rf `find tmEditor -name '*.pyc'`
@@ -262,5 +305,8 @@ rpmclean:
 
 debclean:
 	rm -rf deb
+
+tarclean:
+	rm -rf tarball
 
 distclean: clean rpmclean debclean
