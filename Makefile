@@ -284,7 +284,9 @@ tarbuild: all
 	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmUtil
 	cp -r ../tmUtil/libtmutil.so tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmUtil/
 	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmXsd
-	cp -r ../tmXsd/{libtmxsd.so,*xsd,xsd-type} tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmXsd/
+	cp -r ../tmXsd/libtmxsd.so tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmXsd/
+	cp -r ../tmXsd/*.xsd tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmXsd/
+	cp -r ../tmXsd/xsd-type tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmXsd/
 	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmTable
 	cp -r ../tmTable/{libtmtable.so,_tmTable.so,tmTable.py} tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmTable/
 	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmGrammar

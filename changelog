@@ -1,3 +1,12 @@
+tm-editor (0.1.14-1) extra; urgency=medium
+
+  * Introduced function editor dialog.
+  * Added new insert/edit object/function actions to algorithm editor.
+  * Removed obsolete object wizard from algorithm editor.
+  * Reorganization of code base.
+
+ -- Bernhard  Arnold <bernhard.arnold@cern.ch>  Mon, 1 Aug 2016 16:46:11 +0200
+
 tm-editor (0.1.13-1) extra; urgency=medium
 
   * Bugfixes for cut editor (creating new ETA/PHI cuts, duplicate names).

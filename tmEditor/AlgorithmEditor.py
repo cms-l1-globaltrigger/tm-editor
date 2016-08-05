@@ -21,6 +21,7 @@ from tmEditor import Menu
 from tmEditor.Menu import Algorithm
 from tmEditor.CodeEditor import CodeEditor
 from tmEditor.ObjectEditor import ObjectEditorDialog
+from tmEditor.FunctionEditor import FunctionEditorDialog
 from tmEditor.CommonWidgets import (
     FilterLineEdit,
     RestrictedLineEdit,
@@ -39,6 +40,62 @@ MaxAlgorithms = 512
 def miniIcon(name):
     """Returns mini icon to be used for items in list and tree views."""
     return QIcon(":/icons/{name}.svg".format(name=name)).pixmap(13, 13)
+
+RegExObject = re.compile(r'[\w\.]+\d+(?:[\+\-]\d+)?(?:\[[^\]]+\])?')
+"""Precompiled regular expression for matching object requirements."""
+
+RegExFunction = re.compile(r'\w+\s*\{[^\}]+\}(?:\[[^\]]+\])?')
+"""Precompiled regular expression for matching function expressions."""
+
+def findObject(text, pos):
+    """Returns object requirement at position *pos* or None if nothing found."""
+    for result in RegExObject.finditer(text):
+        if result.start() <= pos < result.end():
+            return result.group(0), result.start(), result.end()
+
+def findFunction(text, pos):
+    """Returns function expression at position *pos* or None if nothing found."""
+    for result in RegExFunction.finditer(text):
+        if result.start() <= pos < result.end():
+            return result.group(0), result.start(), result.end()
+
+class ExpressionCodeEditor(CodeEditor):
+    editObject = pyqtSignal(tuple)
+    editFunction = pyqtSignal(tuple)
+
+    def __init__(self, parent=None):
+        super(ExpressionCodeEditor, self).__init__(parent)
+
+    def contextMenuEvent(self, event):
+        # Get context menu
+        menu = self.createStandardContextMenu()
+        menu.addSeparator()
+        # Add object requirement action
+        objAct = menu.addAction(self.tr("Edit &Object..."))
+        objAct.setEnabled(False)
+        # Add function action
+        funcAct = menu.addAction(self.tr("Edit &Function..."))
+        funcAct.setEnabled(False)
+        # Get text cursor position and expression text
+        pos = self.cursorForPosition(event.pos()).position()
+        text = str(self.toPlainText())
+        # If text below pointer position
+        if pos < len(text):
+            # Try to locate requirement and/or function at pointer position
+            objToken = findObject(text, pos)
+            funcToken = findFunction(text, pos)
+            # Enable requirement menu on success
+            if objToken:
+                objAct.setEnabled(True)
+                def call(): self.editObject.emit(objToken)
+                objAct.triggered.connect(call)
+            # Enable function menu on success
+            if funcToken:
+                funcAct.setEnabled(True)
+                def call(): self.editFunction.emit(funcToken)
+                funcAct.triggered.connect(call)
+        # Show context menu
+        menu.exec_(event.globalPos())
 
 # -----------------------------------------------------------------------------
 #  Algorithm editor window
@@ -70,8 +127,10 @@ class AlgorithmEditor(QMainWindow):
         self.createToolbar()
         self.createDocks()
         # Setup main widgets
-        self.textEdit = CodeEditor(self)
+        self.textEdit = ExpressionCodeEditor(self)
         self.textEdit.setFrameShape(QFrame.NoFrame)
+        self.textEdit.editObject.connect(self.onEditObject)
+        self.textEdit.editFunction.connect(self.onEditFunction)
         self.messageBar = MessageBarWidget(self)
         centralWidget = QWidget(self)
         layout = QGridLayout()
@@ -99,12 +158,6 @@ class AlgorithmEditor(QMainWindow):
 
     def createActions(self):
         """Create actions."""
-        self.formatCollapseAct = QAction(self.tr("&Collapse"), self)
-        self.formatCollapseAct.setIcon(Toolbox.createIcon("format-compact"))
-        self.formatCollapseAct.triggered.connect(self.onFormatCollapse)
-        self.formatExpandAct = QAction(self.tr("&Expand"), self)
-        self.formatExpandAct.setIcon(Toolbox.createIcon("format-cascade"))
-        self.formatExpandAct.triggered.connect(self.onFormatExpand)
         self.parseAct = QAction(self.tr("&Check expression"), self)
         self.parseAct.setIcon(Toolbox.createIcon("view-refresh"))
         self.parseAct.triggered.connect(self.onParse)
@@ -116,12 +169,21 @@ class AlgorithmEditor(QMainWindow):
         self.redoAct.setShortcut(QKeySequence.Redo)
         self.redoAct.setIcon(Toolbox.createIcon("edit-redo"))
         self.redoAct.triggered.connect(self.onRedo)
-        self.wizardAct = QAction(self.tr("&Wizard"), self)
-        self.wizardAct.setIcon(Toolbox.createIcon("wizard"))
-        self.wizardAct.triggered.connect(self.onWizard)
         self.selectIndexAct = QAction(self.tr("Select &Index"), self)
         self.selectIndexAct.setIcon(Toolbox.createIcon("search"))
         self.selectIndexAct.triggered.connect(self.onSelectIndex)
+        self.insertObjectAct = QAction(self.tr("Insert &Object..."), self)
+        self.insertObjectAct.setIcon(Toolbox.createIcon("wizard"))
+        self.insertObjectAct.triggered.connect(self.onInsertObject)
+        self.insertFunctionAct = QAction(self.tr("Insert &Function..."), self)
+        self.insertFunctionAct.setIcon(Toolbox.createIcon("wizard-function"))
+        self.insertFunctionAct.triggered.connect(self.onInsertFunction)
+        self.formatCollapseAct = QAction(self.tr("&Collapse"), self)
+        self.formatCollapseAct.setIcon(Toolbox.createIcon("format-compact"))
+        self.formatCollapseAct.triggered.connect(self.onFormatCollapse)
+        self.formatExpandAct = QAction(self.tr("&Expand"), self)
+        self.formatExpandAct.setIcon(Toolbox.createIcon("format-cascade"))
+        self.formatExpandAct.triggered.connect(self.onFormatExpand)
 
     def createMenus(self):
         """Create menus."""
@@ -131,8 +193,10 @@ class AlgorithmEditor(QMainWindow):
         self.editMenu.addAction(self.undoAct)
         self.editMenu.addAction(self.redoAct)
         self.editMenu.addSeparator()
-        self.editMenu.addAction(self.wizardAct)
         self.editMenu.addAction(self.selectIndexAct)
+        self.insertMenu = self.menuBar().addMenu(self.tr("&Insert"))
+        self.insertMenu.addAction(self.insertObjectAct)
+        self.insertMenu.addAction(self.insertFunctionAct)
         self.formatMenu = self.menuBar().addMenu(self.tr("&Format"))
         self.formatMenu.addAction(self.formatCollapseAct)
         self.formatMenu.addAction(self.formatExpandAct)
@@ -149,7 +213,9 @@ class AlgorithmEditor(QMainWindow):
         self.toolbar.addAction(self.undoAct)
         self.toolbar.addAction(self.redoAct)
         self.toolbar.addSeparator()
-        self.toolbar.addAction(self.wizardAct)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.insertObjectAct)
+        self.toolbar.addAction(self.insertFunctionAct)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.formatCollapseAct)
         self.toolbar.addAction(self.formatExpandAct)
@@ -218,6 +284,30 @@ class AlgorithmEditor(QMainWindow):
         cursor.movePosition(QTextCursor.End, QTextCursor.KeepAnchor)
         cursor.insertText(expression)
 
+    def onEditObject(self, token):
+        text = str(self.textEdit.toPlainText())
+        dialog = ObjectEditorDialog(self.menu, self)
+        dialog.loadObject(token[0])
+        dialog.exec_()
+        if dialog.result() == QDialog.Accepted:
+            self.textEdit.setPlainText(''.join((
+                text[:token[1]],
+                dialog.toExpression(),
+                text[token[2]:],
+            )))
+
+    def onEditFunction(self, token):
+        text = str(self.textEdit.toPlainText())
+        dialog = FunctionEditorDialog(self.menu, self)
+        dialog.loadFunction(token[0])
+        dialog.exec_()
+        if dialog.result() == QDialog.Accepted:
+            self.textEdit.setPlainText(''.join((
+                text[:token[1]],
+                dialog.toExpression(),
+                text[token[2]:],
+            )))
+
     def onUndo(self):
         self.textEdit.document().undo()
 
@@ -256,6 +346,18 @@ class AlgorithmEditor(QMainWindow):
         if dialog.exec_() == QDialog.Accepted:
             logging.debug("Selected new algorithm index %d", dialog.index)
             self.setIndex(dialog.index)
+
+    def onInsertObject(self):
+        dialog =ObjectEditorDialog(self.menu, self)
+        dialog.exec_()
+        if dialog.result() == QDialog.Accepted:
+            self.onInsertItem(dialog.toExpression())
+
+    def onInsertFunction(self):
+        dialog = FunctionEditorDialog(self.menu, self)
+        dialog.exec_()
+        if dialog.result() == QDialog.Accepted:
+            self.onInsertItem(dialog.toExpression())
 
     def onFormatCollapse(self):
         modified = self.isModified() # Formatting does not count as change.

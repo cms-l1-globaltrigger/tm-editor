@@ -6,8 +6,8 @@ from PyQt4.QtGui import *
 
 import tmGrammar
 from tmEditor import Toolbox
+from tmEditor.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.Menu import (
-    toObject,
     thresholdFloat,
 )
 from tmEditor.CommonWidgets import (
@@ -17,6 +17,7 @@ from tmEditor.CommonWidgets import (
 )
 
 import sys, os
+import re
 
 __all__ = ['ObjectEditorDialog', ]
 
@@ -66,32 +67,80 @@ def cutItem(text, checked = False):
 class ObjectEditorDialog(QDialog):
     """Object editor dialog class."""
 
-    def __init__(self, menu, parent = None):
+    def __init__(self, menu, parent=None):
         """Constructor, takes a reference to a menu and an optional parent."""
         super(ObjectEditorDialog, self).__init__(parent)
         self.menu = menu
-        self.ui = ObjectEditorUi(self)
+        self.setupUi()
         self.initObjectList(menu)
         self.initCuts()
         self.updateObjectType()
         # Connect signals
-        self.ui.typeComboBox.currentIndexChanged.connect(self.updateObjectType)
-        self.ui.compareComboBox.currentIndexChanged.connect(self.updateInfoText)
-        self.ui.thresholdSpinBox.valueChanged.connect(self.updateInfoText)
-        self.ui.offsetSpinBox.valueChanged.connect(self.updateInfoText)
-        self.ui.buttonBox.accepted.connect(self.accept)
-        self.ui.buttonBox.rejected.connect(self.reject)
-        # self.ui.buttonBox.helpRequested.connect(self.showHelp)
+        self.typeComboBox.currentIndexChanged.connect(self.updateObjectType)
+        self.compareComboBox.currentIndexChanged.connect(self.updateInfoText)
+        self.thresholdSpinBox.valueChanged.connect(self.updateInfoText)
+        self.offsetSpinBox.valueChanged.connect(self.updateInfoText)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
         self.updateInfoText()
+
+    def setupUi(self):
+        self.setWindowTitle(self.tr("Object Editor"))
+        self.resize(640, 380)
+        self.objectLabel = QLabel(self.tr("Object"), self)
+        self.objectLabel.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.typeComboBox = ComboBoxPlus(self)
+        self.typeComboBox.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.compareComboBox = QComboBox(self)
+        self.compareComboBox.addItem('=>', tmGrammar.GE)
+        self.compareComboBox.addItem('==', tmGrammar.EQ)
+        self.thresholdSpinBox = QDoubleSpinBox(self)
+        self.thresholdSpinBox.setDecimals(1)
+        self.thresholdSpinBox.setSingleStep(.5)
+        self.thresholdSpinBox.setSuffix(self.tr(" GeV"))
+        self.offsetSpinBox = PrefixedSpinBox(self)
+        self.offsetSpinBox.setRange(-2, 2)
+        self.offsetSpinBox.setValue(0)
+        self.offsetSpinBox.setSuffix(self.tr(" BX"))
+        self.cutLabel = QLabel(self.tr("Cuts"), self)
+        self.cutLabel.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.cutListView = QListView(self)
+        self.cutListView.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.cutListView.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.filterLabel = QLabel(self.tr("Filter"), self)
+        self.filterLabel.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.filterLineEdit = FilterLineEdit(self)
+        self.infoTextEdit = QTextEdit(self)
+        self.infoTextEdit.setReadOnly(True)
+        self.infoTextEdit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
+        self.buttonBox = QDialogButtonBox(self)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
+        layout = QGridLayout()
+        layout.addWidget(self.objectLabel, 0, 0)
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.typeComboBox)
+        hbox.addWidget(self.compareComboBox)
+        hbox.addWidget(self.thresholdSpinBox)
+        hbox.addWidget(self.offsetSpinBox)
+        layout.addLayout(hbox, 0, 1)
+        layout.addWidget(self.cutLabel, 1, 0)
+        layout.addWidget(self.cutListView, 1, 1)
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.filterLabel)
+        hbox.addWidget(self.filterLineEdit)
+        layout.addLayout(hbox, 2, 1)
+        layout.addWidget(self.infoTextEdit, 0, 2, 3, 1)
+        layout.addWidget(self.buttonBox, 3, 0, 1, 3)
+        self.setLayout(layout)
 
     def updateObjectType(self):
         objectType = self.objectType()
         if objectType in ThresholdObjects:
-            self.ui.thresholdSpinBox.setSuffix(" GeV")
-            self.ui.thresholdSpinBox.setDecimals(1)
+            self.thresholdSpinBox.setSuffix(" GeV")
+            self.thresholdSpinBox.setDecimals(1)
         elif objectType in CountObjects:
-            self.ui.thresholdSpinBox.setDecimals(0)
-            self.ui.thresholdSpinBox.setSuffix("")
+            self.thresholdSpinBox.setDecimals(0)
+            self.thresholdSpinBox.setSuffix("")
         scale = self.getScale(objectType)
         # Just to make sure...
         if scale is None:
@@ -100,23 +149,23 @@ class ObjectEditorDialog(QDialog):
                 QString("Missing scales for object of type %1").arg(objectType),
             )
             return
-        self.ui.thresholdSpinBox.setRange(float(scale['minimum']), float(scale['maximum']))
-        self.ui.thresholdSpinBox.setSingleStep(float(scale['step']))
+        self.thresholdSpinBox.setRange(float(scale['minimum']), float(scale['maximum']))
+        self.thresholdSpinBox.setSingleStep(float(scale['step']))
         self.updateInfoText()
         self.initCuts()
 
     def initObjectList(self, menu):
         """Initialize list of available objects. Ignores objects with no scales."""
         for index, name in enumerate(Objects):
-            self.ui.typeComboBox.addItem(name)
+            self.typeComboBox.addItem(name)
             if not self.getScale(name): # on missing scale (editng outdated XML?)
-                self.ui.typeComboBox.setItemEnabled(index, False)
+                self.typeComboBox.setItemEnabled(index, False)
 
     def initCuts(self):
         """Initialize list of checkable cuts."""
         self.cutModel = QStandardItemModel(self)
         self.cutModel._items = []
-        for cut in self.menu.cuts:
+        for cut in sorted(self.menu.cuts, key=lambda cut: cut.name):
             if cut.object == self.objectType():
                 item = cutItem(cut.name)
                 self.cutModel.appendRow(item)
@@ -126,8 +175,8 @@ class ObjectEditorDialog(QDialog):
         self.cutProxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.cutProxy.setSourceModel(self.cutModel)
         self.cutModel.itemChanged.connect(self.updateInfoText)
-        self.ui.cutListView.setModel(self.cutProxy)
-        self.ui.filterLineEdit.textChanged.connect(self.updateFilter)
+        self.cutListView.setModel(self.cutProxy)
+        self.filterLineEdit.textChanged.connect(self.updateFilter)
 
     def getScale(self, objectType):
         """Returns scale for object or None if not found."""
@@ -138,19 +187,19 @@ class ObjectEditorDialog(QDialog):
 
     def updateFilter(self, text):
         """Update cut filter."""
-        self.ui.cutListView.model().setFilterWildcard(text)
+        self.cutListView.model().setFilterWildcard(text)
 
     def objectType(self):
         """Returns object type."""
-        return str(self.ui.typeComboBox.currentText())
+        return str(self.typeComboBox.currentText())
 
     def comparisonType(self):
         """Returns comparison type."""
-        return str(self.ui.compareComboBox.itemData(self.ui.compareComboBox.currentIndex()).toPyObject())
+        return str(self.compareComboBox.itemData(self.compareComboBox.currentIndex()).toPyObject())
 
     def thresholdExpr(self):
         """Returns formatted object threshold."""
-        return 'p'.join(format(float(self.ui.thresholdSpinBox.value()), '.1f').split('.')).replace('p0', '')
+        return 'p'.join(format(float(self.thresholdSpinBox.value()), '.1f').split('.')).replace('p0', '')
 
     def selectedCuts(self):
         """Retruns list of checked cuts."""
@@ -162,7 +211,7 @@ class ObjectEditorDialog(QDialog):
         if self.comparisonType() != tmGrammar.GE:
             expression.append(self.comparisonType())
         expression.append(self.thresholdExpr())
-        offset = self.ui.offsetSpinBox.value()
+        offset = self.offsetSpinBox.value()
         if offset != 0:
             expression.append(format(offset, '+d'))
         # Compile list of cuts
@@ -192,73 +241,22 @@ class ObjectEditorDialog(QDialog):
             text.append('<p>Valid count: {minThreshold:.0f} - {maxThreshold:.0f}</p>')
         text.append('<h4>Preview</h4>')
         text.append('<p><pre>{expression}</pre></p>')
-        self.ui.infoTextEdit.setText(''.join(text).format(**locals()))
+        self.infoTextEdit.setText(''.join(text).format(**locals()))
 
-    def showHelp(self):
-        # TODO
-        pass
-
-    def loadObject(self, object):
+    def loadObject(self, token):
         """Load dialog by values from object. Will raise a ValueError if string
-        *object* is not a valid object.
+        *token* is not a valid object.
         """
-        object = toObject(str(object))
-        self.ui.typeComboBox.setCurrentIndex(self.ui.typeComboBox.findText(object.type))
-        self.ui.thresholdSpinBox.setValue(thresholdFloat(object.threshold))
-        self.ui.offsetSpinBox.setValue(int(object.bx_offset))
-
-class ObjectEditorUi(object):
-    """User interface for class ObjectEditor."""
-
-    def __init__(self, context):
-        context.setWindowTitle(context.tr("Object Editor"))
-        context.resize(640, 380)
-        self.objectLabel = QLabel(context.tr("Object"), context)
-        self.objectLabel.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
-        self.typeComboBox = ComboBoxPlus(context)
-        self.typeComboBox.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
-        self.compareComboBox = QComboBox(context)
-        self.compareComboBox.addItem('=>', tmGrammar.GE)
-        self.compareComboBox.addItem('==', tmGrammar.EQ)
-        self.thresholdSpinBox = QDoubleSpinBox(context)
-        self.thresholdSpinBox.setDecimals(1)
-        self.thresholdSpinBox.setSingleStep(.5)
-        self.thresholdSpinBox.setSuffix(context.tr(" GeV"))
-        self.offsetSpinBox = PrefixedSpinBox(context)
-        self.offsetSpinBox.setRange(-2, 2)
-        self.offsetSpinBox.setValue(0)
-        self.offsetSpinBox.setSuffix(context.tr(" BX"))
-        self.cutLabel = QLabel(context.tr("Cuts"), context)
-        self.cutLabel.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
-        self.cutListView = QListView(context)
-        self.cutListView.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.cutListView.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.filterLabel = QLabel(context.tr("Filter"), context)
-        self.filterLabel.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
-        self.filterLineEdit = FilterLineEdit(context)
-        self.infoTextEdit = QTextEdit(context)
-        self.infoTextEdit.setReadOnly(True)
-        self.infoTextEdit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
-        self.buttonBox = QDialogButtonBox(context)
-        #self.buttonBox.setStandardButtons(QDialogButtonBox.Help|QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
-        layout = QGridLayout()
-        layout.addWidget(self.objectLabel, 0, 0)
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.typeComboBox)
-        hbox.addWidget(self.compareComboBox)
-        hbox.addWidget(self.thresholdSpinBox)
-        hbox.addWidget(self.offsetSpinBox)
-        layout.addLayout(hbox, 0, 1)
-        layout.addWidget(self.cutLabel, 1, 0)
-        layout.addWidget(self.cutListView, 1, 1)
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.filterLabel)
-        hbox.addWidget(self.filterLineEdit)
-        layout.addLayout(hbox, 2, 1)
-        layout.addWidget(self.infoTextEdit, 0, 2, 3, 1)
-        layout.addWidget(self.buttonBox, 3, 0, 1, 3)
-        context.setLayout(layout)
+        o = tmGrammar.Object_Item()
+        if not tmGrammar.Object_parser(AlgorithmFormatter.compress(token), o):
+            raise ValueError(token)
+        self.typeComboBox.setCurrentIndex(self.typeComboBox.findText(o.name))
+        self.compareComboBox.setCurrentIndex(self.compareComboBox.findData(o.comparison))
+        self.thresholdSpinBox.setValue(thresholdFloat(o.threshold))
+        self.offsetSpinBox.setValue(int(o.bx_offset))
+        for cut in self.cutModel._items:
+            if cut.text() in list(o.cuts):
+                cut.setCheckState(Qt.Checked)
 
 if __name__ == '__main__':
     import sys

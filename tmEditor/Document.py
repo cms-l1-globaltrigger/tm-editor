@@ -66,8 +66,6 @@ class Document(QWidget):
     modified = pyqtSignal()
     """This signal is emitted whenever the content of the document changes."""
 
-    CutSettings = Settings.cutSettings()
-
     def __init__(self, filename, parent = None):
         super(Document, self).__init__(parent)
         # Attributes
@@ -800,32 +798,6 @@ class TableView(QTableView):
         if index:
             # Use the assigned proxy model to map the index.
             return self.model().mapToSource(index[0])
-
-# From http://stackoverflow.com/questions/1956542/how-to-make-item-view-render-rich-html-text-in-qt
-class HTMLDelegate(QStyledItemDelegate):
-    def paint(self, painter, option, index):
-        options = QStyleOptionViewItemV4(option)
-        self.initStyleOption(options, index)
-        style = QApplication.style() if options.widget is None else options.widget.style()
-        doc = QTextDocument()
-        doc.setHtml(options.text)
-        options.text = ""
-        style.drawControl(QStyle.CE_ItemViewItem, options, painter);
-        ctx = QAbstractTextDocumentLayout.PaintContext()
-        textRect = style.subElementRect(QStyle.SE_ItemViewItemText, options)
-        painter.save()
-        painter.translate(textRect.topLeft())
-        painter.setClipRect(textRect.translated(-textRect.topLeft()))
-        doc.documentLayout().draw(painter, ctx)
-        painter.restore()
-
-    def sizeHint(self, option, index):
-        options = QStyleOptionViewItemV4(option)
-        self.initStyleOption(options, index)
-        doc = QTextDocument()
-        doc.setHtml(options.text)
-        doc.setTextWidth(options.rect.width())
-        return QSize(doc.idealWidth(), doc.size().height())
 
 # ------------------------------------------------------------------------------
 #
