@@ -4,6 +4,7 @@ tm-editor (0.1.14-1) extra; urgency=medium
   * Added new insert/edit object/function actions to algorithm editor.
   * Removed obsolete object wizard from algorithm editor.
   * Added preferences dialog.
+  * Fixed duplicated cuts on import from other menu.
   * Reorganization of code base.
 
  -- Bernhard  Arnold <bernhard.arnold@cern.ch>  Mon, 1 Aug 2016 16:46:11 +0200

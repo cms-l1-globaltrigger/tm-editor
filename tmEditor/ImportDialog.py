@@ -18,33 +18,30 @@ Example usage:
 """
 
 from tmEditor.Models import AlgorithmsModel
+from tmEditor.AlgorithmEditor import MaxAlgorithms
 from tmEditor.Document import TableView
 from tmEditor.Menu import Menu
 from tmEditor import Toolbox
-from tmEditor.AlgorithmEditor import MaxAlgorithms
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 __all__ = ['ImportDialog', ]
 
-class ImportDialog(QDialog):
+class ImportDialog(QtGui.QDialog):
     """Dialog providing importing of algorithms from another XML file."""
 
     def __init__(self, filename, menu, parent = None):
         super(ImportDialog, self).__init__(parent)
-        # Dialog appeareance
-        self.setWindowTitle(self.tr("Import"))
-        self.setMinimumWidth(500)
         # Algorithm selection
         self.algorithms = []
         self.cuts = []
         self.baseMenu = menu
         self.menu = Menu(filename)
         if self.menu.scales.scaleSet['name'] != self.baseMenu.scales.scaleSet['name']:
-            QMessageBox.warning(self,
+            QtGui.QMessageBox.warning(self,
                 self.tr("Different scale sets"),
-                QString("Unable to import from <em>%1</em> as scale sets do not match.").arg(filename),
+                QtCore.QString("Unable to import from <em>%1</em> as scale sets do not match.").arg(filename),
             )
         # Important: sort out all duplicate algorithms !
         queue = []
@@ -53,26 +50,33 @@ class ImportDialog(QDialog):
                 queue.append(algorithm)
         for algorithm in queue:
             self.menu.algorithms.remove(algorithm)
+        self.setupUi()
+
+    def setupUi(self):
+        self.setWindowTitle(self.tr("Import"))
+        self.setMinimumWidth(500)
+
         model = AlgorithmsModel(self.menu, self)
-        proxyModel = QSortFilterProxyModel(self)
+        proxyModel = QtGui.QSortFilterProxyModel(self)
         proxyModel.setSourceModel(model)
         self.tableView = TableView(self)
         self.tableView.setObjectName("importDialogTabelView")
         self.tableView.setStyleSheet("#importDialogTabelView { border: 0; }")
         self.tableView.setModel(proxyModel)
-        self.tableView.sortByColumn(0, Qt.AscendingOrder)
+        self.tableView.sortByColumn(0, QtCore.Qt.AscendingOrder)
         # Button box
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        buttonBox.accepted.connect(self._import)
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox.accepted.connect(self.importSelected)
         buttonBox.rejected.connect(self.reject)
         # Create layout.
-        layout = QGridLayout()
+        layout = QtGui.QGridLayout()
         layout.addWidget(self.tableView)
         layout.addWidget(Toolbox.IconLabel(Toolbox.createIcon("info"), self.tr("Select available algorithms to import."), self))
         layout.addWidget(buttonBox)
         self.setLayout(layout)
 
-    def _import(self):
+    def importSelected(self):
+        """Import selected algorithms and auto adding new cuts."""
         for index in self.tableView.selectedIndexes():
             if index.column() == 0:
                 # Use the assigned proxy model to map the index.

@@ -381,9 +381,10 @@ class Document(QWidget):
             item.bottom.toolbar.hide()
 
     def importCuts(self, cuts):
-        """Import cuts from another menu."""
+        """Import cuts from another menu, ignores if cut already present."""
         for cut in cuts:
-            self.menu().addCut(**cut)
+            if not self.menu().cutByName(cut.name):
+                self.menu().addCut(**cut)
         self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
 
     def importAlgorithms(self, algorithms):
