@@ -31,7 +31,7 @@ L1ApplicationContributors = (
 class AboutDialog(QDialog):
     """About dialog providing information on the application and credits."""
 
-    def __init__(self, title, parent = None):
+    def __init__(self, title, parent=None):
         """Param title is the applciation name."""
         super(AboutDialog, self).__init__(parent)
         self.setWindowTitle(self.tr("About %1").arg(title))

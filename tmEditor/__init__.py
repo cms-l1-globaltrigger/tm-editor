@@ -20,6 +20,7 @@ from AlgorithmEditor import AlgorithmEditorDialog
 from CutEditor import CutEditorDialog
 
 from AboutDialog import AboutDialog
+from PreferencesDialog import PreferencesDialog
 from OpenUrlDialog import OpenUrlDialog
 from ImportDialog import ImportDialog
 from Document import Document

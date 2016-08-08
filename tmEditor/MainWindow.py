@@ -11,6 +11,7 @@
 
 from tmEditor import (
     AboutDialog,
+    PreferencesDialog,
     OpenUrlDialog,
     ImportDialog,
     Document,
@@ -103,16 +104,21 @@ class MainWindow(QMainWindow):
         self.quitAct.setStatusTip(self.tr("Quit the programm"))
         self.quitAct.setIcon(Toolbox.createIcon("application-exit"))
         self.quitAct.triggered.connect(self.close)
+        # Preferences.
+        self.preferencesAct = QAction(self.tr("&Preferences"), self)
+        self.preferencesAct.setStatusTip(self.tr("Configure the application"))
+        self.preferencesAct.setIcon(Toolbox.createIcon("gtk-preferences"))
+        self.preferencesAct.triggered.connect(self.onPreferences)
         # Open contents help URL.
-        self.contentsAction = QAction(self.tr("&Contents"), self)
-        self.contentsAction.setShortcut(QKeySequence(Qt.Key_F1))
-        self.contentsAction.setStatusTip(self.tr("Open L1 Trigger Menu online manual"))
-        self.contentsAction.setIcon(Toolbox.createIcon("help-about"))
-        self.contentsAction.triggered.connect(self.onShowContents)
+        self.contentsAct = QAction(self.tr("&Contents"), self)
+        self.contentsAct.setShortcut(QKeySequence(Qt.Key_F1))
+        self.contentsAct.setStatusTip(self.tr("Open L1 Trigger Menu online manual"))
+        self.contentsAct.setIcon(Toolbox.createIcon("help-about"))
+        self.contentsAct.triggered.connect(self.onShowContents)
         # Action to raise about dialog.
-        self.aboutAction = QAction(self.tr("&About"), self)
-        self.aboutAction.setStatusTip(self.tr("About this application"))
-        self.aboutAction.triggered.connect(self.onShowAbout)
+        self.aboutAct = QAction(self.tr("&About"), self)
+        self.aboutAct.setStatusTip(self.tr("About this application"))
+        self.aboutAct.triggered.connect(self.onShowAbout)
 
     def createMenus(self):
         """Create menus."""
@@ -128,10 +134,13 @@ class MainWindow(QMainWindow):
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.closeAct)
         self.fileMenu.addAction(self.quitAct)
+        # Edit menu
+        self.editMenu = self.menuBar().addMenu(self.tr("&Edit"))
+        self.editMenu.addAction(self.preferencesAct)
         # Help menu
         self.helpMenu = self.menuBar().addMenu(self.tr("&Help"))
-        self.helpMenu.addAction(self.contentsAction)
-        self.helpMenu.addAction(self.aboutAction)
+        self.helpMenu.addAction(self.contentsAct)
+        self.helpMenu.addAction(self.aboutAct)
 
     def createToolbar(self):
         """Create main toolbar and pin to top area."""
@@ -342,6 +351,11 @@ class MainWindow(QMainWindow):
     def onShowContents(self):
         """Raise remote contents help."""
         webbrowser.open_new_tab(L1ContentsURL)
+
+    def onPreferences(self):
+        """Raise preferences dialog."""
+        dialog = PreferencesDialog(self)
+        dialog.exec_()
 
     def onShowAbout(self):
         """Raise about this application dialog."""
