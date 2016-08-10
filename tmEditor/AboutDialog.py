@@ -10,13 +10,11 @@
 """
 
 from tmEditor.version import VERSION, PKG_RELEASE
-from tmEditor import (
-    Toolbox,
-    tmeditor_rc,
-)
+from tmEditor import Toolbox
+from tmEditor import tmeditor_rc
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 __all__ = ['AboutDialog', ]
 
@@ -28,34 +26,34 @@ L1ApplicationContributors = (
     (u"Vasile Ghete", "vasile.mihai.ghete@cern.ch"),
 )
 
-class AboutDialog(QDialog):
+class AboutDialog(QtGui.QDialog):
     """About dialog providing information on the application and credits."""
 
     def __init__(self, title, parent=None):
         """Param title is the applciation name."""
         super(AboutDialog, self).__init__(parent)
         self.setWindowTitle(self.tr("About %1").arg(title))
-        self.setWindowIcon(QIcon(':icons/tm-editor.svg'))
-        self.icon = QLabel(self)
-        self.icon.setPixmap(QPixmap(QIcon(':icons/tm-editor.svg').pixmap(QSize(32, 32))))
-        self.titleLabel = QLabel(self)
-        self.aboutTextEdit = QTextEdit(self)
+        self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
+        self.icon = QtGui.QLabel(self)
+        self.icon.setPixmap(QtGui.QPixmap(QtGui.QIcon(':icons/tm-editor.svg').pixmap(QtCore.QSize(32, 32))))
+        self.titleLabel = QtGui.QLabel(self)
+        self.aboutTextEdit = QtGui.QTextEdit(self)
         self.aboutTextEdit.setReadOnly(True)
-        self.changelogTextEdit = QTextEdit(self)
+        self.changelogTextEdit = QtGui.QTextEdit(self)
         self.changelogTextEdit.setReadOnly(True)
-        self.authorsTextEdit = QTextEdit(self)
+        self.authorsTextEdit = QtGui.QTextEdit(self)
         self.authorsTextEdit.setReadOnly(True)
-        self.thanksTextEdit  = QTextEdit(self)
+        self.thanksTextEdit  = QtGui.QTextEdit(self)
         self.thanksTextEdit.setReadOnly(True)
-        self.tabs = QTabWidget(self)
+        self.tabs = QtGui.QTabWidget(self)
         self.tabs.addTab(self.aboutTextEdit, self.tr("&About"))
         self.tabs.addTab(self.changelogTextEdit, self.tr("&Changelog"))
         self.tabs.addTab(self.authorsTextEdit, self.tr("A&uthors"))
         self.tabs.addTab(self.thanksTextEdit, self.tr("&Thanks to"))
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Close)
+        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
         self.buttonBox.clicked.connect(self.close)
-        layout = QVBoxLayout()
-        hbox = QHBoxLayout()
+        layout = QtGui.QVBoxLayout()
+        hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.icon)
         hbox.addWidget(self.titleLabel)
         layout.addLayout(hbox)
@@ -78,10 +76,10 @@ class AboutDialog(QDialog):
 
     def _readfile(self, filename):
         lines = []
-        file = QFile(filename)
-        if not file.open(QIODevice.ReadOnly | QIODevice.Text):
+        file = QtCore.QFile(filename)
+        if not file.open(QtCore.QIODevice.ReadOnly | QtCore.QIODevice.Text):
             return ''
-        istream = QTextStream(file)
+        istream = QtCore.QTextStream(file)
         while not istream.atEnd():
            lines.append(str(istream.readLine()))
         return "\n".join(lines)

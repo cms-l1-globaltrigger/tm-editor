@@ -11,8 +11,8 @@
 
 from tmEditor.Menu import toObject, toExternal
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 __all__ = ["ObjectsModelProxy", "CutsModelProxy", "ExternalsModelProxy", "ScalesModelProxy"]
 
@@ -20,7 +20,7 @@ __all__ = ["ObjectsModelProxy", "CutsModelProxy", "ExternalsModelProxy", "Scales
 # Objects model proxy
 #
 
-class ObjectsModelProxy(QSortFilterProxyModel):
+class ObjectsModelProxy(QtGui.QSortFilterProxyModel):
     """Custom objects sort/filter proxy."""
 
     NameColumn = 0
@@ -36,20 +36,20 @@ class ObjectsModelProxy(QSortFilterProxyModel):
         if left.column() == self.NameColumn:
             return self.__toObject(left) < self.__toObject(right)
         if left.column() == self.ThresholdColumn:
-            return float(self.sourceModel().data(left, Qt.DisplayRole).split()[0]) < \
-                float(self.sourceModel().data(right, Qt.DisplayRole).split()[0])
+            return float(self.sourceModel().data(left, QtCore.Qt.DisplayRole).split()[0]) < \
+                float(self.sourceModel().data(right, QtCore.Qt.DisplayRole).split()[0])
         if left.column() == self.BxOffsetColumn:
-            return int(self.sourceModel().data(left, Qt.DisplayRole)) < int(self.sourceModel().data(right, Qt.DisplayRole))
-        return super(ObjectsModelProxy, self).lessThan(left, right)
+            return int(self.sourceModel().data(left, QtCore.Qt.DisplayRole)) < int(self.sourceModel().data(right, QtCore.Qt.DisplayRole))
+        return super(QtGui.ObjectsModelProxy, self).lessThan(left, right)
 
     def __toObject(self, index):
-        return toObject(self.sourceModel().data(index, Qt.DisplayRole))
+        return toObject(self.sourceModel().data(index, QtCore.Qt.DisplayRole))
 
 #
 # Cuts model proxy
 #
 
-class CutsModelProxy(QSortFilterProxyModel):
+class CutsModelProxy(QtGui.QSortFilterProxyModel):
     """Custom cuts sort/filter proxy."""
 
     MinimumColumn = 3
@@ -68,13 +68,13 @@ class CutsModelProxy(QSortFilterProxyModel):
         return super(CutsModelProxy, self).lessThan(left, right)
 
     def __toFloat(self, index):
-        return float(self.sourceModel().data(index, Qt.DisplayRole))
+        return float(self.sourceModel().data(index, QtCore.Qt.DisplayRole))
 
 #
 # Objects model proxy
 #
 
-class ExternalsModelProxy(QSortFilterProxyModel):
+class ExternalsModelProxy(QtGui.QSortFilterProxyModel):
     """Custom externals sort/filter proxy."""
 
     NameColumn = 0
@@ -93,13 +93,13 @@ class ExternalsModelProxy(QSortFilterProxyModel):
         return super(ExternalsModelProxy, self).lessThan(left, right)
 
     def __toExternal(self, index):
-        return toExternal(self.sourceModel().data(index, Qt.DisplayRole))
+        return toExternal(self.sourceModel().data(index, QtCore.Qt.DisplayRole))
 
 #
 # Scales model proxy
 #
 
-class ScalesModelProxy(QSortFilterProxyModel):
+class ScalesModelProxy(QtGui.QSortFilterProxyModel):
     """Custom cuts sort/filter proxy."""
 
     MinimumColumn = 2
@@ -120,4 +120,4 @@ class ScalesModelProxy(QSortFilterProxyModel):
         return super(ScalesModelProxy, self).lessThan(left, right)
 
     def __toFloat(self, index):
-        return float(self.sourceModel().data(index, Qt.DisplayRole))
+        return float(self.sourceModel().data(index, QtCore.Qt.DisplayRole))

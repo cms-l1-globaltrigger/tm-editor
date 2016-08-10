@@ -1,8 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 import tmGrammar
 from tmEditor import Toolbox
@@ -22,7 +22,7 @@ import re
 
 __all__ = ['FunctionEditorDialog', ]
 
-class FunctionEditorDialog(QDialog):
+class FunctionEditorDialog(QtGui.QDialog):
     ObjectReqs = 4
 
     def __init__(self, menu, parent=None):
@@ -36,29 +36,29 @@ class FunctionEditorDialog(QDialog):
 
     def setupUi(self):
         self.setWindowTitle(self.tr("Function Editor"))
-        self.functionComboBox = QComboBox(self)
+        self.functionComboBox = QtGui.QComboBox(self)
         self.functionComboBox.addItem(self.tr("%1 (combination)").arg(tmGrammar.comb), tmGrammar.comb)
         self.functionComboBox.addItem(self.tr("%1 (correlation)").arg(tmGrammar.dist), tmGrammar.dist)
         self.functionComboBox.addItem(self.tr("%1 (invariant mass)").arg(tmGrammar.mass), tmGrammar.mass)
         self.functionComboBox.currentIndexChanged.connect(self.onUpdateObjectHelpers)
         self.objectHelpers = [FunctionReqHelper(i, self) for i in range(self.ObjectReqs)]
-        self.cutListView = QListView(self)
+        self.cutListView = QtGui.QListView(self)
         self.cutListView.activated.connect(self.updateInfoText)
         self.cutListView.clicked.connect(self.updateInfoText)
-        self.infoTextEdit = QTextEdit(self)
+        self.infoTextEdit = QtGui.QTextEdit(self)
         self.infoTextEdit.setReadOnly(True)
-        self.infoTextEdit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
-        self.buttonBox = QDialogButtonBox(self)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
-        layout = QGridLayout()
-        layout.addWidget(QLabel(self.tr("Function"), self), 0, 0)
+        self.infoTextEdit.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Expanding)
+        self.buttonBox = QtGui.QDialogButtonBox(self)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        layout = QtGui.QGridLayout()
+        layout.addWidget(QtGui.QLabel(self.tr("Function"), self), 0, 0)
         layout.addWidget(self.functionComboBox, 0, 1, 1, 2)
         for helper in self.objectHelpers:
             layout.addWidget(helper.label, 1+helper.index, 0)
             layout.addWidget(helper.lineEdit, 1+helper.index, 1)
             layout.addWidget(helper.editButton, 1+helper.index, 2)
             helper.lineEdit.textChanged.connect(self.updateInfoText)
-        layout.addWidget(QLabel(self.tr("Cuts"), self), 5, 0)
+        layout.addWidget(QtGui.QLabel(self.tr("Cuts"), self), 5, 0)
         layout.addWidget(self.cutListView, 5, 1, 1, 2)
         layout.addWidget(self.infoTextEdit, 0, 3, 6, 1)
         layout.addWidget(self.buttonBox, 6, 0, 1, 4)
@@ -79,16 +79,16 @@ class FunctionEditorDialog(QDialog):
 
     def initCuts(self):
         """Initialize list of checkable cuts."""
-        self.cutModel = QStandardItemModel(self)
+        self.cutModel = QtGui.QStandardItemModel(self)
         self.cutModel._items = []
         for cut in sorted(self.menu.cuts, key=lambda cut: cut.name):
             if cut.object == self.functionType():
                 item = cutItem(cut.name)
                 self.cutModel.appendRow(item)
                 self.cutModel._items.append(item)
-        self.cutProxy = QSortFilterProxyModel(self)
+        self.cutProxy = QtGui.QSortFilterProxyModel(self)
         self.cutProxy.setFilterKeyColumn(-1) # Filter all collumns
-        self.cutProxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.cutProxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.cutProxy.setSourceModel(self.cutModel)
         ###self.cutModel.itemChanged.connect(self.updateInfoText)
         self.cutListView.setModel(self.cutProxy)
@@ -115,7 +115,7 @@ class FunctionEditorDialog(QDialog):
         expression.append('}')
         cuts = []
         for cut in self.cutModel._items:
-            if cut.checkState() == Qt.Checked:
+            if cut.checkState() == QtCore.Qt.Checked:
                 cuts.append(str(cut.text()))
         if cuts:
             expression.append('[')
@@ -142,16 +142,16 @@ class FunctionEditorDialog(QDialog):
                 helper.lineEdit.clear()
         for cut in self.cutModel._items:
             if cut.text() in tmGrammar.Function_getCuts(f):
-                cut.setCheckState(Qt.Checked)
+                cut.setCheckState(QtCore.Qt.Checked)
 
 class FunctionReqHelper(object):
 
     def __init__(self, index, parent):
         self.index = index
         self.parent = parent
-        self.label = QLabel(parent.tr("Req. %1").arg(index+1))
-        self.lineEdit = QLineEdit(parent)
-        self.editButton = QToolButton(parent)
+        self.label = QtGui.QLabel(parent.tr("Req. %1").arg(index+1))
+        self.lineEdit = QtGui.QLineEdit(parent)
+        self.editButton = QtGui.QToolButton(parent)
         self.editButton.setText(parent.tr("..."))
         self.editButton.clicked.connect(self.edit)
 
@@ -166,13 +166,13 @@ class FunctionReqHelper(object):
         if token: # else start with empty editor
             dialog.loadObject(token)
         dialog.exec_()
-        if dialog.result() == QDialog.Accepted:
+        if dialog.result() == QtGui.QDialog.Accepted:
             self.lineEdit.setText(dialog.toExpression())
 
 if __name__ == '__main__':
     import sys
     from tmEditor import Menu
-    app = QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
     menu = Menu(sys.argv[1])
     window = FunctionEditor(menu)
     window.show()

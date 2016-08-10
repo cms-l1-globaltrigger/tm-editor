@@ -11,10 +11,11 @@
 
 import tmTable
 import tmGrammar
-from AlgorithmFormatter import AlgorithmFormatter
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from tmEditor.AlgorithmFormatter import AlgorithmFormatter
+
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 import uuid
 import shutil
@@ -102,25 +103,25 @@ def fBxOffset(value):
 
 def createIcon(name):
     """Factory function, creates a multi resolution gnome theme icon."""
-    if hasattr(QIcon, "fromTheme"):
-        icon = QIcon.fromTheme(name)
+    if hasattr(QtGui.QIcon, "fromTheme"):
+        icon = QtGui.QIcon.fromTheme(name)
         if not icon.isNull():
             return icon
-    icon = QIcon()
+    icon = QtGui.QIcon()
     for root, dirs, files in os.walk("/usr/share/icons/gnome"):
         for file in files:
             if name == os.path.splitext(os.path.basename(file))[0]:
                 icon.addFile(os.path.join(root, file))
     if not len(icon.availableSizes()):
         filename = ":/icons/{name}.svg".format(**locals())
-        if QFile.exists(filename):
+        if QtCore.QFile.exists(filename):
             icon.addFile(filename)
         filename = ":/icons/16/{name}.svg".format(**locals())
-        if QFile.exists(filename):
-            icon.addPixmap(QPixmap(filename))
+        if QtCore.QFile.exists(filename):
+            icon.addPixmap(QtGui.QPixmap(filename))
         filename = ":/icons/24/{name}.svg".format(**locals())
-        if QFile.exists(filename):
-            icon.addPixmap(QPixmap(filename))
+        if QtCore.QFile.exists(filename):
+            icon.addPixmap(QtGui.QPixmap(filename))
     return icon
 
 # -----------------------------------------------------------------------------
@@ -142,7 +143,7 @@ class StockColors:
 #  A framed color icon box.
 # -----------------------------------------------------------------------------
 
-class ColorIcon(QFrame):
+class ColorIcon(QtGui.QFrame):
     """Provides an fixed sized framed color icon for building color labeled legends.
 
     The default square size is 12 pixel.
@@ -161,31 +162,31 @@ class ColorIcon(QFrame):
 
     def setColor(self, color):
         # Store the icon's color.
-        self.color = QColor(color)
+        self.color = QtGui.QColor(color)
         # Setup the active color background brush.
         palette = self.palette()
-        brush = QBrush(self.color)
-        brush.setStyle(Qt.SolidPattern)
-        palette.setBrush(QPalette.Active, QPalette.Window, brush)
-        palette.setBrush(QPalette.Active, QPalette.Light, brush) # Bugfix for parent widgets with background role: Light.
-        palette.setBrush(QPalette.Inactive, QPalette.Window, brush)
-        palette.setBrush(QPalette.Inactive, QPalette.Light, brush)
+        brush = QtGui.QBrush(self.color)
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Light, brush) # Bugfix for parent widgets with background role: Light.
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Light, brush)
         self.setPalette(palette)
 
 # -----------------------------------------------------------------------------
 #  Legend label with color icon on the right.
 # -----------------------------------------------------------------------------
 
-class ColorLabel(QWidget):
+class ColorLabel(QtGui.QWidget):
     """Color legend with icon and text label on the left."""
 
     def __init__(self, color, text, parent = None):
         super(ColorLabel, self).__init__(parent)
         # Create the icon and the text label.
         self.icon = ColorIcon(color, self)
-        self.label = QLabel(text, self)
+        self.label = QtGui.QLabel(text, self)
         # Setup the layout.
-        layout = QHBoxLayout()
+        layout = QtGui.QHBoxLayout()
         layout.addWidget(self.icon)
         layout.addWidget(self.label)
         self.setLayout(layout)
@@ -200,20 +201,20 @@ class ColorLabel(QWidget):
 #  Legend label with icon on the right.
 # -----------------------------------------------------------------------------
 
-class IconLabel(QWidget):
+class IconLabel(QtGui.QWidget):
     """label with 16x16 pixel icon and text label on the left."""
 
     def __init__(self, icon, text, parent = None):
         """Set icon of type QIcon and a text message."""
         super(IconLabel, self).__init__(parent)
         # Create the icon and the text label.
-        self.icon = QLabel(self)
-        self.icon.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.icon = QtGui.QLabel(self)
+        self.icon.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         self.setIcon(icon)
-        self.label = QLabel(text, self)
-        self.icon.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.label = QtGui.QLabel(text, self)
+        self.icon.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         # Setup the layout.
-        layout = QHBoxLayout()
+        layout = QtGui.QHBoxLayout()
         layout.addWidget(self.icon)
         layout.addWidget(self.label)
         self.setLayout(layout)
@@ -230,7 +231,7 @@ class IconLabel(QWidget):
 #  Read only line edit widget.
 # -----------------------------------------------------------------------------
 
-class ReadOnlyLineEdit(QLineEdit):
+class ReadOnlyLineEdit(QtGui.QLineEdit):
     """Customized rad only line edit."""
 
     def __init__(self, text, parent = None):
@@ -249,7 +250,7 @@ class ReadOnlyLineEdit(QLineEdit):
 #  Restricted line edit widget.
 # -----------------------------------------------------------------------------
 
-class RestrictedLineEdit(QLineEdit):
+class RestrictedLineEdit(QtGui.QLineEdit):
     """Restricted line edit widget.
 
     An optional prefix can be defined, it is part of the input but can not be
@@ -282,7 +283,7 @@ class RestrictedLineEdit(QLineEdit):
 
     def setRegexPattern(self, pattern):
         """Set regular expression pattern to guard user input."""
-        self.setValidator(QRegExpValidator(QRegExp(str(pattern)), self))
+        self.setValidator(QtGui.QRegExpValidator(QtCore.QRegExp(str(pattern)), self))
 
     def validate(self):
         """Validate user input."""
@@ -296,7 +297,7 @@ class RestrictedLineEdit(QLineEdit):
 #  Restricted plain text edit.
 # -----------------------------------------------------------------------------
 
-class RestrictedPlainTextEdit(QPlainTextEdit):
+class RestrictedPlainTextEdit(QtGui.QPlainTextEdit):
     """Restricted plain text edit widget. Maximum length can be specified.
     """
     def __init__(self, parent = None):
@@ -319,7 +320,7 @@ class RestrictedPlainTextEdit(QPlainTextEdit):
             if self.toPlainText().length() > self._maxLength:
                 self.textCursor().deletePreviousChar()
 
-class ListSpinBox(QSpinBox):
+class ListSpinBox(QtGui.QSpinBox):
     """Custom spin box for a list of integers."""
 
     def __init__(self, values, parent = None):

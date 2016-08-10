@@ -1,8 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 import tmGrammar
 from tmEditor import Toolbox
@@ -57,14 +57,14 @@ ObjectCuts = [
 
 def cutItem(text, checked = False):
     """Retruns a checkable cut standard item, to be inserted to a list model."""
-    item = QStandardItem(text)
+    item = QtGui.QStandardItem(text)
     item.setEditable(False)
     item.setCheckable(True)
     if checked:
-        item.setCheckState(Qt.Checked)
+        item.setCheckState(QtCore.Qt.Checked)
     return item
 
-class ObjectEditorDialog(QDialog):
+class ObjectEditorDialog(QtGui.QDialog):
     """Object editor dialog class."""
 
     def __init__(self, menu, parent=None):
@@ -87,14 +87,14 @@ class ObjectEditorDialog(QDialog):
     def setupUi(self):
         self.setWindowTitle(self.tr("Object Editor"))
         self.resize(640, 380)
-        self.objectLabel = QLabel(self.tr("Object"), self)
-        self.objectLabel.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.objectLabel = QtGui.QLabel(self.tr("Object"), self)
+        self.objectLabel.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
         self.typeComboBox = ComboBoxPlus(self)
-        self.typeComboBox.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
-        self.compareComboBox = QComboBox(self)
+        self.typeComboBox.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
+        self.compareComboBox = QtGui.QComboBox(self)
         self.compareComboBox.addItem('=>', tmGrammar.GE)
         self.compareComboBox.addItem('==', tmGrammar.EQ)
-        self.thresholdSpinBox = QDoubleSpinBox(self)
+        self.thresholdSpinBox = QtGui.QDoubleSpinBox(self)
         self.thresholdSpinBox.setDecimals(1)
         self.thresholdSpinBox.setSingleStep(.5)
         self.thresholdSpinBox.setSuffix(self.tr(" GeV"))
@@ -102,22 +102,22 @@ class ObjectEditorDialog(QDialog):
         self.offsetSpinBox.setRange(-2, 2)
         self.offsetSpinBox.setValue(0)
         self.offsetSpinBox.setSuffix(self.tr(" BX"))
-        self.cutLabel = QLabel(self.tr("Cuts"), self)
-        self.cutLabel.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
-        self.cutListView = QListView(self)
-        self.cutListView.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.cutListView.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.filterLabel = QLabel(self.tr("Filter"), self)
-        self.filterLabel.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.cutLabel = QtGui.QLabel(self.tr("Cuts"), self)
+        self.cutLabel.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
+        self.cutListView = QtGui.QListView(self)
+        self.cutListView.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.cutListView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.filterLabel = QtGui.QLabel(self.tr("Filter"), self)
+        self.filterLabel.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
         self.filterLineEdit = FilterLineEdit(self)
-        self.infoTextEdit = QTextEdit(self)
+        self.infoTextEdit = QtGui.QTextEdit(self)
         self.infoTextEdit.setReadOnly(True)
-        self.infoTextEdit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
-        self.buttonBox = QDialogButtonBox(self)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
-        layout = QGridLayout()
+        self.infoTextEdit.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Expanding)
+        self.buttonBox = QtGui.QDialogButtonBox(self)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        layout = QtGui.QGridLayout()
         layout.addWidget(self.objectLabel, 0, 0)
-        hbox = QHBoxLayout()
+        hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.typeComboBox)
         hbox.addWidget(self.compareComboBox)
         hbox.addWidget(self.thresholdSpinBox)
@@ -125,7 +125,7 @@ class ObjectEditorDialog(QDialog):
         layout.addLayout(hbox, 0, 1)
         layout.addWidget(self.cutLabel, 1, 0)
         layout.addWidget(self.cutListView, 1, 1)
-        hbox = QHBoxLayout()
+        hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.filterLabel)
         hbox.addWidget(self.filterLineEdit)
         layout.addLayout(hbox, 2, 1)
@@ -163,16 +163,16 @@ class ObjectEditorDialog(QDialog):
 
     def initCuts(self):
         """Initialize list of checkable cuts."""
-        self.cutModel = QStandardItemModel(self)
+        self.cutModel = QtGui.QStandardItemModel(self)
         self.cutModel._items = []
         for cut in sorted(self.menu.cuts, key=lambda cut: cut.name):
             if cut.object == self.objectType():
                 item = cutItem(cut.name)
                 self.cutModel.appendRow(item)
                 self.cutModel._items.append(item)
-        self.cutProxy = QSortFilterProxyModel(self)
+        self.cutProxy = QtGui.QSortFilterProxyModel(self)
         self.cutProxy.setFilterKeyColumn(-1) # Filter all collumns
-        self.cutProxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.cutProxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.cutProxy.setSourceModel(self.cutModel)
         self.cutModel.itemChanged.connect(self.updateInfoText)
         self.cutListView.setModel(self.cutProxy)
@@ -203,7 +203,7 @@ class ObjectEditorDialog(QDialog):
 
     def selectedCuts(self):
         """Retruns list of checked cuts."""
-        return [str(item.text()) for item in filter(lambda item: item.checkState() == Qt.Checked, self.cutModel._items)]
+        return [str(item.text()) for item in filter(lambda item: item.checkState() == QtCore.Qt.Checked, self.cutModel._items)]
 
     def toExpression(self):
         """Returns object expression selected by the inputs."""
@@ -256,12 +256,12 @@ class ObjectEditorDialog(QDialog):
         self.offsetSpinBox.setValue(int(o.bx_offset))
         for cut in self.cutModel._items:
             if cut.text() in list(o.cuts):
-                cut.setCheckState(Qt.Checked)
+                cut.setCheckState(QtCore.Qt.Checked)
 
 if __name__ == '__main__':
     import sys
     from tmEditor import Menu
-    app = QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
     menu = Menu(sys.argv[1])
     window = ObjectEditor(menu)
     window.show()

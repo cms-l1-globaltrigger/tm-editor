@@ -8,8 +8,12 @@
 
 """Algorithm editor main window and dialog.
 
-    This module requires intense cleanup!
-
+class ExpressionCodeEditor
+class AlgorithmEditor
+class AlgorithmEditorDialog
+class MessageBarWidget
+class LibraryWidget
+class AlgorithmSelectionDialog
 """
 
 import tmGrammar
@@ -27,8 +31,8 @@ from tmEditor.CommonWidgets import (
     RestrictedLineEdit,
 )
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 import webbrowser
 import sys, os
@@ -39,7 +43,7 @@ MaxAlgorithms = 512
 
 def miniIcon(name):
     """Returns mini icon to be used for items in list and tree views."""
-    return QIcon(":/icons/{name}.svg".format(name=name)).pixmap(13, 13)
+    return QtGui.QIcon(":/icons/{name}.svg".format(name=name)).pixmap(13, 13)
 
 RegExObject = re.compile(r'[\w\.]+\d+(?:[\+\-]\d+)?(?:\[[^\]]+\])?')
 """Precompiled regular expression for matching object requirements."""
@@ -60,13 +64,21 @@ def findFunction(text, pos):
             return result.group(0), result.start(), result.end()
 
 class ExpressionCodeEditor(CodeEditor):
-    editObject = pyqtSignal(tuple)
-    editFunction = pyqtSignal(tuple)
+    """Algorithm expression code editor widget with custom context menu."""
+
+    editObject = QtCore.pyqtSignal(tuple)
+    """Signal raised on edit object token request (custom context menu)."""
+
+    editFunction = QtCore.pyqtSignal(tuple)
+    """Signal raised on edit function expression request (custom context menu)."""
 
     def __init__(self, parent=None):
         super(ExpressionCodeEditor, self).__init__(parent)
 
     def contextMenuEvent(self, event):
+        """Custom ciontext menu providing actions to edit object and function
+        expressions.
+        """
         # Get context menu
         menu = self.createStandardContextMenu()
         menu.addSeparator()
@@ -101,7 +113,7 @@ class ExpressionCodeEditor(CodeEditor):
 #  Algorithm editor window
 # -----------------------------------------------------------------------------
 
-class AlgorithmEditor(QMainWindow):
+class AlgorithmEditor(QtGui.QMainWindow):
     """Algorithm editor class."""
 
     def __init__(self, menu, parent = None):
@@ -121,6 +133,7 @@ class AlgorithmEditor(QMainWindow):
         self.nameLineEdit.setRegexPattern('L1_[a-zA-Z0-9_]+')
         self.nameLineEdit.setMinimumWidth(300)
         self.validator = AlgorithmSyntaxValidator(self.menu)
+        self.loadedIndex = None
         # Create actions and toolbars.
         self.createActions()
         self.createMenus()
@@ -128,12 +141,12 @@ class AlgorithmEditor(QMainWindow):
         self.createDocks()
         # Setup main widgets
         self.textEdit = ExpressionCodeEditor(self)
-        self.textEdit.setFrameShape(QFrame.NoFrame)
+        self.textEdit.setFrameShape(QtGui.QFrame.NoFrame)
         self.textEdit.editObject.connect(self.onEditObject)
         self.textEdit.editFunction.connect(self.onEditFunction)
         self.messageBar = MessageBarWidget(self)
-        centralWidget = QWidget(self)
-        layout = QGridLayout()
+        centralWidget = QtGui.QWidget(self)
+        layout = QtGui.QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.textEdit, 0, 0)
@@ -151,37 +164,37 @@ class AlgorithmEditor(QMainWindow):
         self.textEdit.textChanged.connect(self.onTextChanged)
         self.indexSpinBox.valueChanged.connect(self.onIndexChanged)
         # Call slots
-        self.parseTimer = QTimer(self)
+        self.parseTimer = QtCore.QTimer(self)
         self.parseTimer.setSingleShot(True)
         self.parseTimer.timeout.connect(self.onTextChangedDelayed)
         self.onTextChanged()
 
     def createActions(self):
         """Create actions."""
-        self.parseAct = QAction(self.tr("&Check expression"), self)
+        self.parseAct = QtGui.QAction(self.tr("&Check expression"), self)
         self.parseAct.setIcon(Toolbox.createIcon("view-refresh"))
         self.parseAct.triggered.connect(self.onParse)
-        self.undoAct = QAction(self.tr("&Undo"), self)
-        self.undoAct.setShortcut(QKeySequence.Undo)
+        self.undoAct = QtGui.QAction(self.tr("&Undo"), self)
+        self.undoAct.setShortcut(QtGui.QKeySequence.Undo)
         self.undoAct.setIcon(Toolbox.createIcon("edit-undo"))
         self.undoAct.triggered.connect(self.onUndo)
-        self.redoAct = QAction(self.tr("&Redo"), self)
-        self.redoAct.setShortcut(QKeySequence.Redo)
+        self.redoAct = QtGui.QAction(self.tr("&Redo"), self)
+        self.redoAct.setShortcut(QtGui.QKeySequence.Redo)
         self.redoAct.setIcon(Toolbox.createIcon("edit-redo"))
         self.redoAct.triggered.connect(self.onRedo)
-        self.selectIndexAct = QAction(self.tr("Select &Index"), self)
+        self.selectIndexAct = QtGui.QAction(self.tr("Select &Index"), self)
         self.selectIndexAct.setIcon(Toolbox.createIcon("search"))
         self.selectIndexAct.triggered.connect(self.onSelectIndex)
-        self.insertObjectAct = QAction(self.tr("Insert &Object..."), self)
+        self.insertObjectAct = QtGui.QAction(self.tr("Insert &Object..."), self)
         self.insertObjectAct.setIcon(Toolbox.createIcon("wizard"))
         self.insertObjectAct.triggered.connect(self.onInsertObject)
-        self.insertFunctionAct = QAction(self.tr("Insert &Function..."), self)
+        self.insertFunctionAct = QtGui.QAction(self.tr("Insert &Function..."), self)
         self.insertFunctionAct.setIcon(Toolbox.createIcon("wizard-function"))
         self.insertFunctionAct.triggered.connect(self.onInsertFunction)
-        self.formatCollapseAct = QAction(self.tr("&Collapse"), self)
+        self.formatCollapseAct = QtGui.QAction(self.tr("&Collapse"), self)
         self.formatCollapseAct.setIcon(Toolbox.createIcon("format-compact"))
         self.formatCollapseAct.triggered.connect(self.onFormatCollapse)
-        self.formatExpandAct = QAction(self.tr("&Expand"), self)
+        self.formatExpandAct = QtGui.QAction(self.tr("&Expand"), self)
         self.formatExpandAct.setIcon(Toolbox.createIcon("format-cascade"))
         self.formatExpandAct.triggered.connect(self.onFormatExpand)
 
@@ -220,30 +233,30 @@ class AlgorithmEditor(QMainWindow):
         self.toolbar.addAction(self.formatCollapseAct)
         self.toolbar.addAction(self.formatExpandAct)
         self.toolbar.addSeparator()
-        self.toolbar.addWidget(QLabel(self.tr("  Name "), self))
+        self.toolbar.addWidget(QtGui.QLabel(self.tr("  Name "), self))
         self.toolbar.addWidget(self.nameLineEdit)
-        self.toolbar.addWidget(QLabel(self.tr("  Index "), self))
+        self.toolbar.addWidget(QtGui.QLabel(self.tr("  Index "), self))
         self.toolbar.addWidget(self.indexSpinBox)
         self.toolbar.addAction(self.selectIndexAct)
 
     def createDocks(self):
         """Create dock widgets."""
         # Setup library
-        dock = QDockWidget(self.tr("Library"), self)
-        dock.setFeatures(QDockWidget.NoDockWidgetFeatures)
-        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        dock = QtGui.QDockWidget(self.tr("Library"), self)
+        dock.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
+        dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         dock.setMinimumWidth(280)
         self.libraryWidget = LibraryWidget(self.menu, dock)
         self.libraryWidget.selected.connect(self.onInsertItem)
         dock.setWidget(self.libraryWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, dock)
-        dock = QDockWidget(self.tr("Comment"), self)
-        dock.setFeatures(QDockWidget.NoDockWidgetFeatures)
-        # dock.setAllowedAreas(Qt.BottomDockWidgetArea)
-        self.commentEdit = QPlainTextEdit(self)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
+        dock = QtGui.QDockWidget(self.tr("Comment"), self)
+        dock.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
+        # dock.setAllowedAreas(QtCore.Qt.BottomDockWidgetArea)
+        self.commentEdit = QtGui.QPlainTextEdit(self)
         self.commentEdit.setMaximumHeight(42)
         dock.setWidget(self.commentEdit)
-        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
 
     def index(self):
         return int(self.indexSpinBox.value())
@@ -280,8 +293,8 @@ class AlgorithmEditor(QMainWindow):
     def replacePlainText(self, expression):
         cursor = self.textEdit.textCursor()
         cursor.clearSelection()
-        cursor.movePosition(QTextCursor.Start);
-        cursor.movePosition(QTextCursor.End, QTextCursor.KeepAnchor)
+        cursor.movePosition(QtGui.QTextCursor.Start);
+        cursor.movePosition(QtGui.QTextCursor.End, QtGui.QTextCursor.KeepAnchor)
         cursor.insertText(expression)
 
     def onEditObject(self, token):
@@ -289,7 +302,7 @@ class AlgorithmEditor(QMainWindow):
         dialog = ObjectEditorDialog(self.menu, self)
         dialog.loadObject(token[0])
         dialog.exec_()
-        if dialog.result() == QDialog.Accepted:
+        if dialog.result() == QtGui.QDialog.Accepted:
             self.textEdit.setPlainText(''.join((
                 text[:token[1]],
                 dialog.toExpression(),
@@ -301,7 +314,7 @@ class AlgorithmEditor(QMainWindow):
         dialog = FunctionEditorDialog(self.menu, self)
         dialog.loadFunction(token[0])
         dialog.exec_()
-        if dialog.result() == QDialog.Accepted:
+        if dialog.result() == QtGui.QDialog.Accepted:
             self.textEdit.setPlainText(''.join((
                 text[:token[1]],
                 dialog.toExpression(),
@@ -341,22 +354,24 @@ class AlgorithmEditor(QMainWindow):
         reserved = [i for i in range(MaxAlgorithms) if self.menu.algorithmByIndex(i) is not None]
         if index in reserved:
             reserved.remove(index)
+        if self.loadedIndex in reserved:
+            reserved.remove(self.loadedIndex)
         dialog = AlgorithmSelectionDialog(index, reserved, self)
         dialog.setModal(True)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec_() == QtGui.QDialog.Accepted:
             logging.debug("Selected new algorithm index %d", dialog.index)
             self.setIndex(dialog.index)
 
     def onInsertObject(self):
         dialog =ObjectEditorDialog(self.menu, self)
         dialog.exec_()
-        if dialog.result() == QDialog.Accepted:
+        if dialog.result() == QtGui.QDialog.Accepted:
             self.onInsertItem(dialog.toExpression())
 
     def onInsertFunction(self):
         dialog = FunctionEditorDialog(self.menu, self)
         dialog.exec_()
-        if dialog.result() == QDialog.Accepted:
+        if dialog.result() == QtGui.QDialog.Accepted:
             self.onInsertItem(dialog.toExpression())
 
     def onFormatCollapse(self):
@@ -401,7 +416,7 @@ class AlgorithmEditor(QMainWindow):
                 # Ignore if some other text is selected
                 pass
         dialog.exec_()
-        if dialog.result() == QDialog.Accepted:
+        if dialog.result() == QtGui.QDialog.Accepted:
             self.onInsertItem(dialog.toExpression())
 
     def onParse(self):
@@ -409,11 +424,11 @@ class AlgorithmEditor(QMainWindow):
             self.validator.validate(self.expression())
         except AlgorithmSyntaxError, e:
             if e.token:
-                QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("%1 near %2").arg(str(e)).arg(e.token))
+                QtGui.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("%1 near %2").arg(str(e)).arg(e.token))
             else:
-                QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("%1").arg(str(e)))
+                QtGui.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("%1").arg(str(e)))
 
-    def updateFreeIndices(self, ignore = None):
+    def updateFreeIndices(self, ignore=None):
         # Get list of free indices.
         #
         # Buggy.....
@@ -431,7 +446,7 @@ class AlgorithmEditor(QMainWindow):
 #  Algorithm editor dialog (modal)
 # -----------------------------------------------------------------------------
 
-class AlgorithmEditorDialog(QDialog):
+class AlgorithmEditorDialog(QtGui.QDialog):
     """Algorithm editor dialog class."""
 
     def __init__(self, menu, parent = None):
@@ -441,14 +456,14 @@ class AlgorithmEditorDialog(QDialog):
         self.setWindowTitle(self.editor.windowTitle())
         self.resize(800, 500)
         self.setSizeGripEnabled(True)
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Help | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help | QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         buttonBox.helpRequested.connect(self.showHelp)
-        layout = QVBoxLayout()
+        layout = QtGui.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.editor)
-        bottomLayout = QVBoxLayout()
+        bottomLayout = QtGui.QVBoxLayout()
         bottomLayout.addWidget(buttonBox)
         bottomLayout.setContentsMargins(10, 0, 10, 10)
         layout.addLayout(bottomLayout)
@@ -493,6 +508,7 @@ class AlgorithmEditorDialog(QDialog):
         self.setExpression(algorithm.expression)
         self.setComment(algorithm.comment)
         self.editor.updateFreeIndices(int(algorithm.index)) # brrr
+        self.editor.loadedIndex = int(algorithm.index)
 
     def updateAlgorithm(self, algorithm):
         algorithm['index'] = str(self.index())
@@ -509,10 +525,10 @@ class AlgorithmEditorDialog(QDialog):
                 if algorithm is self.loadedAlgorithm:
                     continue
                 if int(algorithm.index) == int(self.index()):
-                    QMessageBox.warning(self, "Index used", "Algorithm index {0} already used. Please select a different index.".format(algorithm.index))
+                    QtGui.QMessageBox.warning(self, "Index used", "Algorithm index {0} already used. Please select a different index.".format(algorithm.index))
                     return
                 if algorithm.name == self.name():
-                    QMessageBox.warning(self, "Name used", "Algorithm name {0} already used (by index {1})".format(algorithm.name, algorithm.index))
+                    QtGui.QMessageBox.warning(self, "Name used", "Algorithm name {0} already used (by index {1})".format(algorithm.name, algorithm.index))
                     return
                 # Check existance of cuts and external signals.
                 #
@@ -528,9 +544,9 @@ class AlgorithmEditorDialog(QDialog):
             if e.token:
                 # Make sure to highlight the errornous part in the text editor.
                 self.editor.setExpression(self.editor.expression()) # normalize expression
-                self.editor.textEdit.moveCursor(QTextCursor.Start)
+                self.editor.textEdit.moveCursor(QtGui.QTextCursor.Start)
                 self.editor.textEdit.find(AlgorithmFormatter.normalize(e.token))
-            QMessageBox.warning(self, self.tr("Invalid expression"), str(e))
+            QtGui.QMessageBox.warning(self, self.tr("Invalid expression"), str(e))
             return False
         except ValueError, e:
             # TODO the tmGrammar parser errors are not user friendly.
@@ -544,9 +560,9 @@ class AlgorithmEditorDialog(QDialog):
                 token = AlgorithmFormatter.normalize(token)
             # Make sure to highlight the errornous part in the text editor.
             self.editor.setExpression(self.editor.expression()) # normalize expression
-            self.editor.textEdit.moveCursor(QTextCursor.Start)
+            self.editor.textEdit.moveCursor(QtGui.QTextCursor.Start)
             self.editor.textEdit.find(token)
-            QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("Found invalid expression near:<br/>%1").arg(token))
+            QtGui.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("Found invalid expression near:<br/>%1").arg(token))
             return False
         return True
 
@@ -564,23 +580,23 @@ class AlgorithmEditorDialog(QDialog):
     def closeEvent(self, event):
         """On window close event."""
         if self.editor.isModified():
-            mbox = QMessageBox(self)
-            mbox.setIcon(QMessageBox.Question)
+            mbox = QtGui.QMessageBox(self)
+            mbox.setIcon(QtGui.QMessageBox.Question)
             mbox.setWindowTitle(self.tr("Close algorithm editor"))
             mbox.setText(self.tr(
                 "The algorithm \"%1\" has been modified.\n" \
                 "Do you want to apply your changes or discard them?").arg(self.name()))
-            mbox.addButton(QMessageBox.Cancel)
-            mbox.addButton(QMessageBox.Apply)
-            mbox.addButton(QPushButton(self.tr("Discard changes")), QMessageBox.DestructiveRole)
-            mbox.setDefaultButton(QMessageBox.Cancel)
+            mbox.addButton(QtGui.QMessageBox.Cancel)
+            mbox.addButton(QtGui.QMessageBox.Apply)
+            mbox.addButton(QtGui.QPushButton(self.tr("Discard changes")), QtGui.QMessageBox.DestructiveRole)
+            mbox.setDefaultButton(QtGui.QMessageBox.Cancel)
             mbox.exec_()
-            if mbox.result() == QMessageBox.Cancel:
+            if mbox.result() == QtGui.QMessageBox.Cancel:
                 event.ignore()
                 return
-            if mbox.result() == QMessageBox.Apply:
+            if mbox.result() == QtGui.QMessageBox.Apply:
                 self.accept()
-                if self.result() != QDialog.Accepted:
+                if self.result() != QtGui.QDialog.Accepted:
                     event.ignore()
                     return
                 event.accept()
@@ -592,20 +608,20 @@ class AlgorithmEditorDialog(QDialog):
 #  Message bar widget
 # -----------------------------------------------------------------------------
 
-class MessageBarWidget(QWidget):
+class MessageBarWidget(QtGui.QWidget):
     """Message bar widget to show expression problems."""
 
     def __init__(self, parent = None):
         super(MessageBarWidget, self).__init__(parent)
         self.setMaximumHeight(31)
-        self.icon = QLabel(self)
+        self.icon = QtGui.QLabel(self)
         self.icon.setPixmap(Toolbox.createIcon("dialog-warning").pixmap(16, 16))
         self.icon.setFixedSize(16, 16)
-        self.message = QTextEdit(self)
+        self.message = QtGui.QTextEdit(self)
         self.message.setReadOnly(True)
         self.message.setMinimumHeight(31)
         self.message.setStyleSheet("QTextEdit {border: 0; background: transparent;}")
-        layout = QHBoxLayout()
+        layout = QtGui.QHBoxLayout()
         layout.setContentsMargins(10, 10, 0, 0)
         layout.addWidget(self.icon)
         layout.addWidget(self.message)
@@ -613,21 +629,21 @@ class MessageBarWidget(QWidget):
 
     def setMessage(self, text):
         self.icon.hide()
-        self.message.setText(QString("<span style=\"color:green;\">%1</span>").arg(text))
+        self.message.setText(QtCore.QString("<span style=\"color:green;\">%1</span>").arg(text))
         self.message.setToolTip(text)
 
     def setErrorMessage(self, text):
         self.icon.show()
-        self.message.setText(QString("<span style=\"color:red;\">%1</span>").arg(text))
+        self.message.setText(QtCore.QString("<span style=\"color:red;\">%1</span>").arg(text))
         self.message.setToolTip(text)
 
 # -----------------------------------------------------------------------------
 #  Library widget
 # -----------------------------------------------------------------------------
 
-class LibraryWidget(QWidget):
+class LibraryWidget(QtGui.QWidget):
 
-    selected = pyqtSignal(str)
+    selected = QtCore.pyqtSignal(str)
 
     Functions = (
         ("comb{obj, obj}", "<strong>Double combination function</strong><br/>Returns true if both object requirements are fulfilled.",),
@@ -668,12 +684,12 @@ class LibraryWidget(QWidget):
         super(LibraryWidget, self).__init__(parent)
         self.menu = menu
         # Filter
-        self.filterBar = QWidget(self)
+        self.filterBar = QtGui.QWidget(self)
         self.filterBar.setAutoFillBackground(True)
-        self.filterBar.filterLabel = QLabel(self.tr("Filter"), self.filterBar)
+        self.filterBar.filterLabel = QtGui.QLabel(self.tr("Filter"), self.filterBar)
         self.filterBar.filterLineEdit = FilterLineEdit(self.filterBar)
         # self.filterBar.filterLineEdit.textChanged.connect()
-        hbox = QHBoxLayout()
+        hbox = QtGui.QHBoxLayout()
         hbox.setContentsMargins(0, 0, 0, 0)
         hbox.addWidget(self.filterBar.filterLabel)
         hbox.addWidget(self.filterBar.filterLineEdit)
@@ -682,39 +698,39 @@ class LibraryWidget(QWidget):
         self.filterBar.setVisible(False)
 
         # Tabs
-        self.tabWidget = QTabWidget(self)
+        self.tabWidget = QtGui.QTabWidget(self)
         # Build list of objects.
-        self.objectsTree = QTreeWidget(self)
+        self.objectsTree = QtGui.QTreeWidget(self)
         self.objectsTree.headerItem().setHidden(True)
         self.tabWidget.addTab(self.objectsTree, self.tr("&Objects"))
         # Build list of cuts.
-        self.cutsTree = QTreeWidget(self)
+        self.cutsTree = QtGui.QTreeWidget(self)
         self.cutsTree.headerItem().setHidden(True)
         self.tabWidget.addTab(self.cutsTree, self.tr("&Cuts"))
         # Build list of externals.
-        self.externalsList = QListWidget(self)
+        self.externalsList = QtGui.QListWidget(self)
         self.tabWidget.addTab(self.externalsList, self.tr("&Exts"))
         # Build list of function templates.
-        self.functionsList = QListWidget(self)
+        self.functionsList = QtGui.QListWidget(self)
         self.functionsList.addItems([name for name, _ in self.Functions])
         self.tabWidget.addTab(self.functionsList, self.tr("&Funcs"))
         # Build list of operators.
-        self.operatorsList = QListWidget(self)
+        self.operatorsList = QtGui.QListWidget(self)
         self.operatorsList.addItems([name for name, _ in self.Operators])
         self.tabWidget.addTab(self.operatorsList, self.tr("O&ps"))
         # Insert button.
-        self.insertButton = QPushButton(Toolbox.createIcon("insert-text"), self.tr("&Insert"), self)
+        self.insertButton = QtGui.QPushButton(Toolbox.createIcon("insert-text"), self.tr("&Insert"), self)
         self.insertButton.clicked.connect(self.onInsert)
         self.insertButton.setDefault(False)
         # Wizard option.
-        self.wizardCheckBox = QCheckBox(self.tr("Use &wizard"), self)
+        self.wizardCheckBox = QtGui.QCheckBox(self.tr("Use &wizard"), self)
         # Preview widget.
-        self.previewLabel = QTextEdit(self)
+        self.previewLabel = QtGui.QTextEdit(self)
         self.previewLabel.setReadOnly(True)
         # Create list contents.
         self.initContents()
         # Layout
-        gridLayout = QGridLayout()
+        gridLayout = QtGui.QGridLayout()
         gridLayout.setContentsMargins(1, 1, 1, 1)
         gridLayout.addWidget(self.filterBar, 0, 0, 1, 3)
         gridLayout.addWidget(self.tabWidget, 1, 0, 1, 3)
@@ -741,7 +757,7 @@ class LibraryWidget(QWidget):
         self.objectsTree.clear()
         topLevelItems = {}
         for object in sorted(self.menu.objects): # Applies custom sort of class
-            icon = QIcon()
+            icon = QtGui.QIcon()
             if object.type in (tmGrammar.MU, ):
                 icon.addPixmap(miniIcon("mu"))
             if object.type in (tmGrammar.EG, ):
@@ -753,10 +769,10 @@ class LibraryWidget(QWidget):
             if object.type in (tmGrammar.ETT, tmGrammar.HTT, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETTEM, tmGrammar.ETMHF):
                 icon.addPixmap(miniIcon("esums"))
             if not object.type in topLevelItems.keys():
-                item = QTreeWidgetItem(self.objectsTree, [object.type])
+                item = QtGui.QTreeWidgetItem(self.objectsTree, [object.type])
                 item.setIcon(0, icon)
                 topLevelItems[object.type] = item
-            item = QTreeWidgetItem(topLevelItems[object.type], [object.name])
+            item = QtGui.QTreeWidgetItem(topLevelItems[object.type], [object.name])
             item.setIcon(0, icon)
         # Build list of cuts.
         self.cutsTree.clear()
@@ -764,13 +780,13 @@ class LibraryWidget(QWidget):
         for cut in sorted(self.menu.cuts): # Applies custom sort of class
             if not cut.object in topLevelItems.keys():
                 if cut.object not in (tmGrammar.comb, tmGrammar.mass):
-                    topLevelItems[cut.object] = QTreeWidgetItem(self.cutsTree, [cut.object])
+                    topLevelItems[cut.object] = QtGui.QTreeWidgetItem(self.cutsTree, [cut.object])
             if not (cut.object, cut.type) in topLevelItems.keys():
                 if cut.object in (tmGrammar.comb, tmGrammar.mass):
-                    topLevelItems[(cut.object, cut.type)] = QTreeWidgetItem(self.cutsTree, [cut.type])
+                    topLevelItems[(cut.object, cut.type)] = QtGui.QTreeWidgetItem(self.cutsTree, [cut.type])
                 else:
-                    topLevelItems[(cut.object, cut.type)] = QTreeWidgetItem(topLevelItems[cut.object], [cut.type])
-            item = QTreeWidgetItem(topLevelItems[(cut.object, cut.type)], [cut.name])
+                    topLevelItems[(cut.object, cut.type)] = QtGui.QTreeWidgetItem(topLevelItems[cut.object], [cut.type])
+            item = QtGui.QTreeWidgetItem(topLevelItems[(cut.object, cut.type)], [cut.name])
         # Build list of externals.
         self.externalsList.clear()
         names = [external.name for external in self.menu.externals]
@@ -851,10 +867,10 @@ class LibraryWidget(QWidget):
                         dialog.exec_()
                         self.selected.emit(dialog.toExpression())
                         return
-            if isinstance(widget, QTreeWidget):
+            if isinstance(widget, QtGui.QTreeWidget):
                 self.selected.emit(item.text(0))
                 return
-            if isinstance(widget, QListWidget):
+            if isinstance(widget, QtGui.QListWidget):
                 self.selected.emit(item.text())
                 return
 
@@ -869,7 +885,7 @@ def currentData(widget):
 #  Index selection dialog.
 # -----------------------------------------------------------------------------
 
-class AlgorithmSelectionDialog(QDialog):
+class AlgorithmSelectionDialog(QtGui.QDialog):
     """Dialog for graphical selection of algorithm index.
     Displays a colored button grid representing all available index slots.
     Already used indexes are colored red, free are colored green. User can assign
@@ -885,16 +901,16 @@ class AlgorithmSelectionDialog(QDialog):
         self.resize(590, 300)
         self.index = index
         # Button box with cancel button
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel, Qt.Horizontal, self)
-        self.buttonBox.button(QDialogButtonBox.Cancel).setAutoDefault(False)
-        self.buttonBox.button(QDialogButtonBox.Cancel).clicked.connect(self.reject)
+        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Cancel).setAutoDefault(False)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Cancel).clicked.connect(self.reject)
         # Layout to add Buttons
-        gridLayout = QGridLayout()
+        gridLayout = QtGui.QGridLayout()
         gridLayout.setHorizontalSpacing(2)
         gridLayout.setVerticalSpacing(2)
-        self.gridWidget = QWidget(self)
+        self.gridWidget = QtGui.QWidget(self)
         # Create a scroll area for the preview
-        self.scrollArea = QScrollArea(self)
+        self.scrollArea = QtGui.QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
         # Variable to iterate over all indices.
         index = 0
@@ -903,7 +919,7 @@ class AlgorithmSelectionDialog(QDialog):
             for column in range(self.ColumnCount):
                 if index >= MaxAlgorithms:
                     break
-                button = QPushButton(str(index), self)
+                button = QtGui.QPushButton(str(index), self)
                 button.setCheckable(True)
                 button.setFixedSize(30, 30)
                 button.clicked[bool].connect(self._updateIndex)
@@ -921,9 +937,9 @@ class AlgorithmSelectionDialog(QDialog):
         # Layout for Dailog Window
         self.gridWidget.setLayout(gridLayout)
         self.scrollArea.setWidget(self.gridWidget)
-        layout = QVBoxLayout()
+        layout = QtGui.QVBoxLayout()
         layout.addWidget(self.scrollArea)
-        bottomLayout = QHBoxLayout()
+        bottomLayout = QtGui.QHBoxLayout()
         bottomLayout.addWidget(Toolbox.IconLabel(Toolbox.createIcon("info"), self.tr("Select a free algorithm index."), self))
         bottomLayout.addWidget(self.buttonBox)
         layout.addLayout(bottomLayout)
@@ -938,7 +954,7 @@ class AlgorithmSelectionDialog(QDialog):
 if __name__ == '__main__':
     import sys
     from tmEditor import Menu
-    app = QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
     menu = Menu(sys.argv[1])
     window = AlgorithmEditorDialog(menu)
     window.show()

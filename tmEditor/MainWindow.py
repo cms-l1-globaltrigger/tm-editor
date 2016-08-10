@@ -19,8 +19,8 @@ from tmEditor import (
     Toolbox,
 )
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 import random
 import urllib2
@@ -32,19 +32,19 @@ import sys, os, re
 L1ContentsURL = "http://globaltrigger.hephy.at/upgrade/tme/userguide"
 
 # NOTE: Bugfix for PyQt4.6
-if not hasattr(QKeySequence, 'Quit'):
-    QKeySequence.Quit = QKeySequence(Qt.CTRL + Qt.Key_Q)
+if not hasattr(QtGui.QKeySequence, 'Quit'):
+    QtGui.QKeySequence.Quit = QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_Q)
 
 # -----------------------------------------------------------------------------
 #  Main window class
 # -----------------------------------------------------------------------------
 
-class MainWindow(QMainWindow):
+class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent = None):
         super(MainWindow, self).__init__(parent)
         # Setup window.
-        self.setWindowIcon(QIcon(":icons/tm-editor.svg"))
+        self.setWindowIcon(QtGui.QIcon(":icons/tm-editor.svg"))
         self.setWindowTitle(self.tr("L1-Trigger Menu Editor"))
         self.resize(800, 600)
         # Create actions and toolbars.
@@ -65,58 +65,58 @@ class MainWindow(QMainWindow):
 
     def createActions(self):
         # Action for opening an existing file.
-        self.openAct = QAction(self.tr("&Open..."), self)
-        self.openAct.setShortcut(QKeySequence.Open)
+        self.openAct = QtGui.QAction(self.tr("&Open..."), self)
+        self.openAct.setShortcut(QtGui.QKeySequence.Open)
         self.openAct.setStatusTip(self.tr("Open an existing file"))
         self.openAct.setIcon(Toolbox.createIcon("document-open"))
         self.openAct.triggered.connect(self.onOpen)
         # Action for opening a file from URL.
-        self.openUrlAct = QAction(self.tr("Open &URL..."), self)
+        self.openUrlAct = QtGui.QAction(self.tr("Open &URL..."), self)
         self.openUrlAct.setStatusTip(self.tr("Open a file from a remote location"))
         self.openUrlAct.setIcon(Toolbox.createIcon("emblem-downloads"))
         self.openUrlAct.triggered.connect(self.onOpenUrl)
         # Action for importing from another file.
-        self.importAct = QAction(self.tr("Import..."), self)
+        self.importAct = QtGui.QAction(self.tr("Import..."), self)
         self.importAct.setStatusTip(self.tr("Import from existing file"))
         self.importAct.setIcon(Toolbox.createIcon("document-import"))
         self.importAct.triggered.connect(self.onImport)
         # Action for saving the current file.
-        self.saveAct = QAction(self.tr("&Save"), self)
-        self.saveAct.setShortcut(QKeySequence.Save)
+        self.saveAct = QtGui.QAction(self.tr("&Save"), self)
+        self.saveAct.setShortcut(QtGui.QKeySequence.Save)
         self.saveAct.setStatusTip(self.tr("Save the current file"))
         self.saveAct.setIcon(Toolbox.createIcon("document-save"))
         self.saveAct.triggered.connect(self.onSave)
         # Action for saving the current file with a different name.
-        self.saveAsAct = QAction(self.tr("Save &As..."), self)
-        self.saveAsAct.setShortcut(QKeySequence.SaveAs)
+        self.saveAsAct = QtGui.QAction(self.tr("Save &As..."), self)
+        self.saveAsAct.setShortcut(QtGui.QKeySequence.SaveAs)
         self.saveAsAct.setStatusTip(self.tr("Save the current file with a different name"))
         self.saveAsAct.setIcon(Toolbox.createIcon("document-save-as"))
         self.saveAsAct.triggered.connect(self.onSaveAs)
         # Action for closing the current file.
-        self.closeAct = QAction(self.tr("&Close"), self)
-        self.closeAct.setShortcut(QKeySequence.Close)
+        self.closeAct = QtGui.QAction(self.tr("&Close"), self)
+        self.closeAct.setShortcut(QtGui.QKeySequence.Close)
         self.closeAct.setStatusTip(self.tr("Close the current file"))
         self.closeAct.setIcon(Toolbox.createIcon("window-close"))
         self.closeAct.triggered.connect(self.onClose)
         # Action for quitting the program.
-        self.quitAct = QAction(self.tr("&Quit"), self)
-        self.quitAct.setShortcut(QKeySequence.Quit)
+        self.quitAct = QtGui.QAction(self.tr("&Quit"), self)
+        self.quitAct.setShortcut(QtGui.QKeySequence.Quit)
         self.quitAct.setStatusTip(self.tr("Quit the programm"))
         self.quitAct.setIcon(Toolbox.createIcon("application-exit"))
         self.quitAct.triggered.connect(self.close)
         # Preferences.
-        self.preferencesAct = QAction(self.tr("&Preferences"), self)
+        self.preferencesAct = QtGui.QAction(self.tr("&Preferences"), self)
         self.preferencesAct.setStatusTip(self.tr("Configure the application"))
         self.preferencesAct.setIcon(Toolbox.createIcon("gtk-preferences"))
         self.preferencesAct.triggered.connect(self.onPreferences)
         # Open contents help URL.
-        self.contentsAct = QAction(self.tr("&Contents"), self)
-        self.contentsAct.setShortcut(QKeySequence(Qt.Key_F1))
+        self.contentsAct = QtGui.QAction(self.tr("&Contents"), self)
+        self.contentsAct.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_F1))
         self.contentsAct.setStatusTip(self.tr("Open L1 Trigger Menu online manual"))
         self.contentsAct.setIcon(Toolbox.createIcon("help-about"))
         self.contentsAct.triggered.connect(self.onShowContents)
         # Action to raise about dialog.
-        self.aboutAct = QAction(self.tr("&About"), self)
+        self.aboutAct = QtGui.QAction(self.tr("&About"), self)
         self.aboutAct.setStatusTip(self.tr("About this application"))
         self.aboutAct.triggered.connect(self.onShowAbout)
 
@@ -158,21 +158,21 @@ class MainWindow(QMainWindow):
     def createStatusBar(self):
         """Create status bar and populate with status labels."""
         self.statusBar()
-        self.statusAlgorithms = QLabel(self)
-        self.statusCuts = QLabel(self)
-        self.statusObjects = QLabel(self)
-        self.statusExternals = QLabel(self)
+        self.statusAlgorithms = QtGui.QLabel(self)
+        self.statusCuts = QtGui.QLabel(self)
+        self.statusObjects = QtGui.QLabel(self)
+        self.statusExternals = QtGui.QLabel(self)
         self.statusBar().addPermanentWidget(self.statusAlgorithms)
         self.statusBar().addPermanentWidget(self.statusCuts)
         self.statusBar().addPermanentWidget(self.statusObjects)
         self.statusBar().addPermanentWidget(self.statusExternals)
 
-    @pyqtSlot(str)
+    @QtCore.pyqtSlot(str)
     def updateStatusBarMessage(self, message):
         """Updates status bar message."""
         self.statusBar().showMessage(message)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def updateStatusBarCounters(self):
         """Update status bar with data of current MDI document."""
         document = self.mdiArea.currentDocument()
@@ -180,10 +180,10 @@ class MainWindow(QMainWindow):
         cuts = len(document.menu().cuts) if document else '--'
         objects = len(document.menu().objects) if document else '--'
         externals = len(document.menu().externals) if document else '--'
-        self.statusAlgorithms.setText(QString(" %1: %2 ").arg(self.tr("Algorithms")).arg(algorithms))
-        self.statusCuts.setText(QString(" %1: %2 ").arg(self.tr("Cuts")).arg(cuts))
-        self.statusObjects.setText(QString(" %1: %2 ").arg(self.tr("Objects")).arg(objects))
-        self.statusExternals.setText(QString(" %1: %2 ").arg(self.tr("Externals")).arg(externals))
+        self.statusAlgorithms.setText(QtCore.QString(" %1: %2 ").arg(self.tr("Algorithms")).arg(algorithms))
+        self.statusCuts.setText(QtCore.QString(" %1: %2 ").arg(self.tr("Cuts")).arg(cuts))
+        self.statusObjects.setText(QtCore.QString(" %1: %2 ").arg(self.tr("Objects")).arg(objects))
+        self.statusExternals.setText(QtCore.QString(" %1: %2 ").arg(self.tr("Externals")).arg(externals))
 
     def syncActions(self):
         """Disable some actions if no document is opened."""
@@ -214,10 +214,10 @@ class MainWindow(QMainWindow):
                 #dialog.setMaximum(fileSize)
                 logging.info("fetching %s bytes from %s", fileSize or '<unknown>', filename)
                 try:
-                    dialog = QProgressDialog("Downloading...", "Abort", 0, fileSize, self)
-                    dialog.setWindowModality(Qt.WindowModal)
+                    dialog = QtGui.QProgressDialog("Downloading...", "Abort", 0, fileSize, self)
+                    dialog.setWindowModality(QtCore.Qt.WindowModal)
                     dialog.show()
-                    QApplication.processEvents()
+                    QtGui.QApplication.processEvents()
                     # Create a temorary file buffer.
                     with tempfile.NamedTemporaryFile(bufsize = fileSize or 2**21) as f:
                         receivedSize = 0
@@ -228,7 +228,7 @@ class MainWindow(QMainWindow):
                                 break
                             receivedSize += len(buffer)
                             f.write(buffer)
-                            QApplication.processEvents()
+                            QtGui.QApplication.processEvents()
                             if dialog.wasCanceled():
                                 return
                             dialog.setValue(receivedSize);
@@ -247,21 +247,21 @@ class MainWindow(QMainWindow):
                 document = Document(filename, self)
         except (RuntimeError, OSError), e:
             logging.error("Failed to open XML menu: %s", str(e))
-            QMessageBox.critical(self,
+            QtGui.QMessageBox.critical(self,
                 self.tr("Failed to open XML menu"),
                 str(e),
             )
         except urllib2.HTTPError, e:
             logging.error("Failed to download remote XML menu %s", filename)
-            QMessageBox.critical(self,
+            QtGui.QMessageBox.critical(self,
                 self.tr("Failed to download remote XML menu"),
                 self.tr("HTTP error, failed to download from %1").arg(filename),
             )
         except urllib2.URLError, e:
             logging.error("Failed to download remote XML menu %s", filename)
-            QMessageBox.critical(self,
+            QtGui.QMessageBox.critical(self,
                 self.tr("Failed to download remote XML menu"),
-                QString("URL error, failed to download from %1").arg(filename),
+                QtCore.QString("URL error, failed to download from %1").arg(filename),
             )
         else:
             index = self.mdiArea.addDocument(document)
@@ -272,7 +272,7 @@ class MainWindow(QMainWindow):
         path = os.getcwd() # Default is user home dir on desktop environments.
         if self.mdiArea.currentDocument():
             path = os.path.dirname(self.mdiArea.currentDocument().filename())
-        filenames = QFileDialog.getOpenFileNames(self, self.tr("Open files..."),
+        filenames = QtGui.QFileDialog.getOpenFileNames(self, self.tr("Open files..."),
             path, self.tr("L1-Trigger Menus (*.xml)"))
         for filename in filenames:
             self.loadDocument(str(filename))
@@ -283,7 +283,7 @@ class MainWindow(QMainWindow):
         dialog.setModal(True)
         dialog.loadRecentUrls()
         dialog.exec_()
-        if dialog.result() != QDialog.Accepted:
+        if dialog.result() != QtGui.QDialog.Accepted:
             return
         self.loadDocument(dialog.url())
         dialog.storeRecentUrls()
@@ -293,13 +293,13 @@ class MainWindow(QMainWindow):
         path = os.getcwd() # Default is user home dir on desktop environments.
         if self.mdiArea.currentDocument():
             path = os.path.dirname(self.mdiArea.currentDocument().filename())
-            filename = str(QFileDialog.getOpenFileName(self, self.tr("Import file..."),
+            filename = str(QtGui.QFileDialog.getOpenFileName(self, self.tr("Import file..."),
                 path, self.tr("L1-Trigger Menus (*.xml)")))
             if filename:
                 dialog = ImportDialog(filename, self.mdiArea.currentDocument().menu(), self)
                 dialog.setModal(True)
                 dialog.exec_()
-                if dialog.result() != QDialog.Accepted:
+                if dialog.result() != QtGui.QDialog.Accepted:
                     return
                 # Import cuts and algorithms.
                 try:
@@ -307,7 +307,7 @@ class MainWindow(QMainWindow):
                     document.importCuts(dialog.cuts)
                     document.importAlgorithms(dialog.algorithms)
                 except (RuntimeError, ValueError), e:
-                    QMessageBox.critical(self,
+                    QtGui.QMessageBox.critical(self,
                         self.tr("Import error"),
                         str(e),
                     )
@@ -317,7 +317,7 @@ class MainWindow(QMainWindow):
         try:
             document.saveMenu()
         except (RuntimeError, ValueError), e:
-            QMessageBox.critical(self,
+            QtGui.QMessageBox.critical(self,
                 self.tr("Failed to write XML menu"),
                 str(e),
             )
@@ -325,8 +325,8 @@ class MainWindow(QMainWindow):
     def onSaveAs(self):
         path = str(self.mdiArea.currentDocument().filename())
         if not path.endswith('.xml'):
-            path = os.path.join(str(QDir.homePath()), ''.join((os.path.basename(path), '.xml')))
-        filename = str(QFileDialog.getSaveFileName(self, self.tr("Save as..."),
+            path = os.path.join(str(QtCore.QDir.homePath()), ''.join((os.path.basename(path), '.xml')))
+        filename = str(QtGui.QFileDialog.getSaveFileName(self, self.tr("Save as..."),
             path, self.tr("L1-Trigger Menus (*.xml)")))
         if filename:
             if not filename.endswith('.xml'):
@@ -337,7 +337,7 @@ class MainWindow(QMainWindow):
                 # TODO
                 self.mdiArea.setTabText(self.mdiArea.currentIndex(), os.path.basename(filename))
             except RuntimeError, e:
-                QMessageBox.critical(self,
+                QtGui.QMessageBox.critical(self,
                     self.tr("Failed to write XML menu"),
                     str(e),
                 )
@@ -375,7 +375,7 @@ class MainWindow(QMainWindow):
 # ------------------------------------------------------------------------------
 
 def main():
-    app = QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
     app.setOrganizationName("HEPHY");
     app.setApplicationName("Trigger Menu Editor");
     window = MainWindow()

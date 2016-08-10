@@ -11,8 +11,8 @@
 
 import tmGrammar
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 from collections import namedtuple
 
@@ -21,7 +21,7 @@ __all__ = ['AlgorithmSyntaxHighlighter', ]
 def makeKeyword(key):
     return "\\b{key}\\b".format(key = key)
 
-class AlgorithmSyntaxHighlighter(QSyntaxHighlighter):
+class AlgorithmSyntaxHighlighter(QtGui.QSyntaxHighlighter):
     """Syntax highighter class for algorithm expressions."""
     HighlightingRule = namedtuple('HighlightingRule', 'format, pattern')
 
@@ -32,9 +32,9 @@ class AlgorithmSyntaxHighlighter(QSyntaxHighlighter):
         super(AlgorithmSyntaxHighlighter, self).__init__(document)
         self.highlightingRules = []
         # Keywords: AND, OR, XOR, NOT
-        keywordFormat = QTextCharFormat()
-        keywordFormat.setForeground(Qt.darkBlue)
-        keywordFormat.setFontWeight(QFont.Bold)
+        keywordFormat = QtGui.QTextCharFormat()
+        keywordFormat.setForeground(QtCore.Qt.darkBlue)
+        keywordFormat.setFontWeight(QtGui.QFont.Bold)
         keywordPatterns = [
             makeKeyword(tmGrammar.AND),
             makeKeyword(tmGrammar.OR),
@@ -43,17 +43,17 @@ class AlgorithmSyntaxHighlighter(QSyntaxHighlighter):
         ]
         for pattern in keywordPatterns:
             self.highlightingRules.append(
-                self.HighlightingRule(keywordFormat, QRegExp(pattern)))
-        functionFormat = QTextCharFormat()
-        functionFormat.setForeground(Qt.blue)
-        functionFormat.setFontWeight(QFont.Bold)
+                self.HighlightingRule(keywordFormat, QtCore.QRegExp(pattern)))
+        functionFormat = QtGui.QTextCharFormat()
+        functionFormat.setForeground(QtCore.Qt.blue)
+        functionFormat.setFontWeight(QtGui.QFont.Bold)
         rule = self.HighlightingRule(functionFormat,
-            QRegExp("\\b{tmGrammar.comb}|{tmGrammar.dist}|{tmGrammar.mass}+(?=\\{{)".format(tmGrammar = tmGrammar)))
+            QtCore.QRegExp("\\b{tmGrammar.comb}|{tmGrammar.dist}|{tmGrammar.mass}+(?=\\{{)".format(tmGrammar = tmGrammar)))
         self.highlightingRules.append(rule)
 
     def highlightBlock(self, text):
         for rule in self.highlightingRules:
-            expression = QRegExp(rule.pattern)
+            expression = QtCore.QRegExp(rule.pattern)
             index = expression.indexIn(text)
             while index >= 0:
                 length = expression.matchedLength()

@@ -24,8 +24,8 @@ from collections import namedtuple
 import webbrowser
 import re, math, logging
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 __all__ = ['CutEditorDialog', ]
 
@@ -33,7 +33,7 @@ __all__ = ['CutEditorDialog', ]
 #  Custom widgets
 # -----------------------------------------------------------------------------
 
-class ScaleSpinBox(QDoubleSpinBox):
+class ScaleSpinBox(QtGui.QDoubleSpinBox):
     """Custom spin box for scales lookup table."""
 
     MinimumMode = 'minimum'
@@ -94,7 +94,7 @@ class ScaleSpinBox(QDoubleSpinBox):
         self.index = result
         return float(self.value(self.index))
 
-class DataField(QScrollArea):
+class DataField(QtGui.QScrollArea):
     """Custom data field for cuts.
     >>> d = DataField(['foo', 'bar', 'baz'])
     >>> d.setData("0,2")
@@ -111,10 +111,10 @@ class DataField(QScrollArea):
         the overall size of data entries assigned. If set exclusive the default
         chekc boxes are replaced by radio buttons."""
         self.clear()
-        widget = QWidget(self)
-        layout = QVBoxLayout(self)
+        widget = QtGui.QWidget(self)
+        layout = QtGui.QVBoxLayout(self)
         for label in labels:
-            entry = QRadioButton(label, self) if exclusive else QCheckBox(label, self)
+            entry = QtGui.QRadioButton(label, self) if exclusive else QtGui.QCheckBox(label, self)
             self.entries.append(entry)
             layout.addWidget(entry)
         widget.setLayout(layout)
@@ -122,7 +122,7 @@ class DataField(QScrollArea):
 
     def clear(self):
         """Clears all data entries."""
-        widget = QWidget(self)
+        widget = QtGui.QWidget(self)
         self.setWidget(widget)
         self.entries = []
 
@@ -142,7 +142,7 @@ class DataField(QScrollArea):
             if index < len(self.entries):
                 self.entries[index].setChecked(True)
 
-class CutEditorDialog(QDialog):
+class CutEditorDialog(QtGui.QDialog):
     """Dialog providing cut creation/editing interface."""
 
     CutSettings = Settings.cutSettings()
@@ -150,74 +150,82 @@ class CutEditorDialog(QDialog):
     def __init__(self, menu, parent = None):
         """Param title is the applciation name."""
         super(CutEditorDialog, self).__init__(parent)
-        # Dialog appeareance
-        self.setWindowTitle(self.tr("Cut Editor"))
-        self.resize(600, 400)
         # Attributes
         self.menu = menu
         self.loadedCut = None
+        self.setupUi()
+        self.reset()
+
+    def setupUi(self):
+        # Dialog appeareance
+        self.setWindowTitle(self.tr("Cut Editor"))
+        self.resize(600, 400)
         # Cut type
-        self.typeLabel = QLabel(self.tr("Type"), self)
-        self.typeComboBox = QComboBox(self)
+        self.typeLabel = QtGui.QLabel(self.tr("Type"), self)
+        self.typeComboBox = QtGui.QComboBox(self)
         # Cut suffix
-        self.suffixLineEdit = QLineEdit(self)
-        self.suffixLabel = QLabel(self.tr("Suffix"), self)
+        self.suffixLineEdit = QtGui.QLineEdit(self)
+        self.suffixLabel = QtGui.QLabel(self.tr("Suffix"), self)
         # Populate cut types.
         for spec in self.CutSettings:
             # Check if item is disabled: { enabled: false } [optional]
             if spec.enabled:
                 self.typeComboBox.addItem(spec.name, spec)
         # Sizes
-        unitLabelSizePolicy = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        unitLabelSizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Maximum)
         # Minimum
-        self.minimumLabel = QLabel(self.tr("Minimum"), self)
+        self.minimumLabel = QtGui.QLabel(self.tr("Minimum"), self)
         self.minimumSpinBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
         self.minimumSpinBox.valueChanged.connect(self.updateGraphs)
-        self.minimumRangeSpinBox = QDoubleSpinBox(self)
-        self.minimumUnitLabel = QLabel(self)
+        self.minimumRangeSpinBox = QtGui.QDoubleSpinBox(self)
+        self.minimumUnitLabel = QtGui.QLabel(self)
         self.minimumUnitLabel.setSizePolicy(unitLabelSizePolicy)
         # Maximum
-        self.maximumLabel = QLabel(self.tr("Maximum"), self)
+        self.maximumLabel = QtGui.QLabel(self.tr("Maximum"), self)
         self.maximumSpinBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
         self.maximumSpinBox.valueChanged.connect(self.updateGraphs)
-        self.maximumRangeSpinBox = QDoubleSpinBox(self)
-        self.maximumUnitLabel = QLabel(self)
+        self.maximumRangeSpinBox = QtGui.QDoubleSpinBox(self)
+        self.maximumUnitLabel = QtGui.QLabel(self)
         self.maximumUnitLabel.setSizePolicy(unitLabelSizePolicy)
         # Data
-        self.dataLabel = QLabel(self.tr("Data"), self)
+        self.dataLabel = QtGui.QLabel(self.tr("Data"), self)
         self.dataField = DataField(self)
         # Eta preview
-        self.etaLabel = QLabel(self.tr("Preview"), self)
+        self.etaLabel = QtGui.QLabel(self.tr("Preview"), self)
         self.etaChart = EtaCutChart(self)
         # Phi preview
-        self.phiLabel = QLabel(self.tr("Preview"), self)
+        self.phiLabel = QtGui.QLabel(self.tr("Preview"), self)
         self.phiChart = PhiCutChart(self)
         # Comment
-        self.commentLabel = QLabel(self.tr("Comment"), self)
-        self.commentTextEdit = QPlainTextEdit(self)
+        self.commentLabel = QtGui.QLabel(self.tr("Comment"), self)
+        self.commentTextEdit = QtGui.QPlainTextEdit(self)
         self.commentTextEdit.setMaximumHeight(50)
         # Info box
-        self.infoTextEdit = QTextEdit(self)
+        self.infoTextEdit = QtGui.QTextEdit(self)
         self.infoTextEdit.setReadOnly(True)
         # Button box
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Help | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttonBox = QtGui.QDialogButtonBox(
+            QtGui.QDialogButtonBox.Help |
+            QtGui.QDialogButtonBox.Ok |
+            QtGui.QDialogButtonBox.Cancel
+        )
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         buttonBox.helpRequested.connect(self.showHelp)
         # Create layout.
-        gridLayout = QGridLayout()
+        gridLayout = QtGui.QGridLayout()
         gridLayout.addWidget(self.typeLabel, 0, 0)
         gridLayout.addWidget(self.typeComboBox, 0, 1)
         gridLayout.addWidget(self.suffixLabel, 1, 0)
         gridLayout.addWidget(self.suffixLineEdit, 1, 1)
         gridLayout.addWidget(self.minimumLabel, 2, 0)
-        hbox = QHBoxLayout()
+        hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.minimumSpinBox)
         hbox.addWidget(self.minimumRangeSpinBox)
         hbox.addWidget(self.minimumUnitLabel)
         gridLayout.addLayout(hbox, 2, 1)
         gridLayout.addWidget(self.maximumLabel, 3, 0)
-        hbox = QHBoxLayout()
+        hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.maximumSpinBox)
         hbox.addWidget(self.maximumRangeSpinBox)
         hbox.addWidget(self.maximumUnitLabel)
@@ -235,8 +243,6 @@ class CutEditorDialog(QDialog):
         self.setLayout(gridLayout)
         # Setup connections.
         self.typeComboBox.currentIndexChanged.connect(self.updateEntries)
-        # Setup contents.
-        self.reset()
 
     def reset(self):
         self.typeComboBox.setCurrentIndex(0)
@@ -517,7 +523,7 @@ class CutEditorDialog(QDialog):
     def accept(self):
         """Perform consistency checks befor accepting changes."""
         if self.spec.data and not self.data:
-            QMessageBox.warning(
+            QtGui.QMessageBox.warning(
                 self,
                 self.tr("No data"),
                 self.tr("It is not possible to create a cut without assigning a data selection.")
@@ -526,7 +532,7 @@ class CutEditorDialog(QDialog):
         # For all ranges (excepting PHI) minimum <= maximum
         if self.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.ETA):
             if float(self.minimum) > float(self.maximum):
-                QMessageBox.warning(
+                QtGui.QMessageBox.warning(
                     self,
                     self.tr("Invalid range"),
                     self.tr("For non-phi cuts a range must follow: minimum <= maximum.")
@@ -536,7 +542,7 @@ class CutEditorDialog(QDialog):
         if self.name in [cut.name for cut in self.menu.cuts]:
             duplicates = filter(lambda cut: cut.name == self.name, self.menu.cuts)
             if not (self.loadedCut and self.loadedCut in duplicates): # ugly...
-                QMessageBox.warning(
+                QtGui.QMessageBox.warning(
                     self,
                     self.tr("Name already used"),
                     self.tr("Suffix \"%1\" is already used with a cut of type \"%2\".").arg(self.suffix).arg(self.type)
@@ -551,7 +557,7 @@ class CutEditorDialog(QDialog):
 if __name__ == '__main__':
     import sys
     from tmEditor import Menu
-    app = QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
     menu = Menu(sys.argv[1])
     window = CutEditorDialog(menu)
     window.show()

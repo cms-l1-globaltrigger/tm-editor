@@ -6,32 +6,32 @@
 # Last changed date : $Date: $
 #
 
-"""Models
+"""Data models for various tables.
 """
 
 from tmEditor.Toolbox import *
 from tmEditor import AlgorithmFormatter
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 from collections import namedtuple
 
 __all__ = ['AlgorithmsModel', 'CutsModel', 'ObjectsModel', 'ExternalsModel',
     'ScalesModel', 'BinsModel', 'ExtSignalsModel', ]
 
-AlignLeft = Qt.AlignLeft | Qt.AlignVCenter
-AlignRight = Qt.AlignRight | Qt.AlignVCenter
-AlignCenter = Qt.AlignCenter | Qt.AlignVCenter
+AlignLeft = QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
+AlignRight = QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
+AlignCenter = QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
 
 def miniIcon(name):
-    return QIcon(":/icons/{name}.svg".format(name=name)).pixmap(13, 13)
+    return QtGui.QIcon(":/icons/{name}.svg".format(name=name)).pixmap(13, 13)
 
 # ------------------------------------------------------------------------------
 #  Base models
 # ------------------------------------------------------------------------------
 
-class AbstractTableModel(QAbstractTableModel):
+class AbstractTableModel(QtCore.QAbstractTableModel):
     """Abstract table model class to be inherited to display table data."""
 
     ColumnSpec = namedtuple('ColumnSpec', 'title, key, format, textAlignment, ' \
@@ -44,8 +44,8 @@ class AbstractTableModel(QAbstractTableModel):
         self.columnSpecs = []
 
     def addColumnSpec(self, title, key, format=str, textAlignment=AlignLeft,
-                      decoration=QVariant(), headerToolTip=QVariant(), headerDecoration=QVariant(),
-                      headerSizeHint=QVariant(), headerTextAlignment=AlignCenter):
+                      decoration=QtCore.QVariant(), headerToolTip=QtCore.QVariant(), headerDecoration=QtCore.QVariant(),
+                      headerSizeHint=QtCore.QVariant(), headerTextAlignment=AlignCenter):
         """Add a column to be displayed, assign data using a key."""
         spec = self.ColumnSpec(title, key, format, textAlignment, decoration, headerToolTip, headerDecoration, headerSizeHint, headerTextAlignment)
         self.columnSpecs.append(spec)
@@ -58,7 +58,7 @@ class AbstractTableModel(QAbstractTableModel):
 
     def toolTip(self, row, column):
         """Reimplement this to provide data specific tool tip informations."""
-        return QVariant()
+        return QtCore.QVariant()
 
     def rowCount(self, parent):
         """Number of rows to be displayed."""
@@ -71,39 +71,39 @@ class AbstractTableModel(QAbstractTableModel):
     def data(self, index, role):
         """Returns cell specific data."""
         if not index.isValid():
-            return QVariant()
+            return QtCore.QVariant()
         row, column = index.row(), index.column()
         spec = self.columnSpecs[column]
         if not spec:
-            return QVariant()
-        if role == Qt.DisplayRole:
+            return QtCore.QVariant()
+        if role == QtCore.Qt.DisplayRole:
             if spec.key in self.values[row].keys():
                 return spec.format(self.values[row][spec.key])
-        if role == Qt.TextAlignmentRole:
+        if role == QtCore.Qt.TextAlignmentRole:
             return spec.textAlignment
-        if role == Qt.DecorationRole:
+        if role == QtCore.Qt.DecorationRole:
             return spec.decoration
-        if role == Qt.ToolTipRole:
+        if role == QtCore.Qt.ToolTipRole:
             return self.toolTip(row, column)
-        return QVariant()
+        return QtCore.QVariant()
 
     def headerData(self, section, orientation, role):
         """Returns header specific data."""
         spec = self.columnSpecs[section]
         if not spec:
-            return QVariant()
-        if orientation == Qt.Horizontal:
-            if role == Qt.DisplayRole:
+            return QtCore.QVariant()
+        if orientation == QtCore.Qt.Horizontal:
+            if role == QtCore.Qt.DisplayRole:
                 return spec.title
-            if role == Qt.TextAlignmentRole:
+            if role == QtCore.Qt.TextAlignmentRole:
                 return spec.headerTextAlignment
-            if role == Qt.DecorationRole:
+            if role == QtCore.Qt.DecorationRole:
                 return spec.headerDecoration
-            if role == Qt.ToolTipRole:
+            if role == QtCore.Qt.ToolTipRole:
                 return spec.headerToolTip
-            if role == Qt.SizeHintRole:
+            if role == QtCore.Qt.SizeHintRole:
                 return spec.headerSizeHint
-        return QVariant()
+        return QtCore.QVariant()
 
 # ------------------------------------------------------------------------------
 #  Custom models
@@ -127,14 +127,14 @@ class AlgorithmsModel(AbstractTableModel):
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Expression", 'expression', fAlgorithm)
 
-    def insertRows(self, position, rows, parent = QModelIndex()):
+    def insertRows(self, position, rows, parent = QtCore.QModelIndex()):
         self.beginInsertRows(parent, position, position + rows - 1)
         for i in range(rows):
             self.values.append(None)
         self.endInsertRows()
         return True
 
-    def removeRows(self, position, rows, parent = QModelIndex()):
+    def removeRows(self, position, rows, parent = QtCore.QModelIndex()):
         self.beginRemoveRows(parent, position, position + rows - 1)
         for i in range(rows):
             algorithm = self.values[position + i]
@@ -159,19 +159,19 @@ class CutsModel(AbstractTableModel):
     #     """Overloaded for experimental icon decoration."""
     #     if index.isValid():
     #         if index.column() == 0:
-    #             if role == Qt.DecorationRole:
+    #             if role == QtCore.Qt.DecorationRole:
     #                 cut = self.values[index.row()]
     #                 return miniIcon(cut.type.lower())
     #     return super(CutsModel, self).data(index, role)
 
-    def insertRows(self, position, rows, parent = QModelIndex()):
+    def insertRows(self, position, rows, parent = QtCore.QModelIndex()):
         self.beginInsertRows(parent, position, position + rows - 1)
         for i in range(rows):
             self.values.append(None)
         self.endInsertRows()
         return True
 
-    def removeRows(self, position, rows, parent = QModelIndex()):
+    def removeRows(self, position, rows, parent = QtCore.QModelIndex()):
         self.beginRemoveRows(parent, position, position + rows - 1)
         for i in range(rows):
             value = self.values[position + i]
@@ -186,7 +186,7 @@ class ObjectsModel(AbstractTableModel):
         super(ObjectsModel, self).__init__(menu.objects, parent)
         self.addColumnSpec("Name", 'name')
         self.addColumnSpec("Type", 'type')
-        self.addColumnSpec("", 'comparison_operator', fComparison, headerToolTip="Comparison", headerDecoration=QIcon(":/icons/compare.svg"), headerSizeHint=QSize(26, -1))
+        self.addColumnSpec("", 'comparison_operator', fComparison, headerToolTip="Comparison", headerDecoration=QtGui.QIcon(":/icons/compare.svg"), headerSizeHint=QtCore.QSize(26, -1))
         self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
         self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
         self.addEmptyColumn()
@@ -195,7 +195,7 @@ class ObjectsModel(AbstractTableModel):
         """Overloaded for experimental icon decoration."""
         if index.isValid():
             if index.column() == 0:
-                if role == Qt.DecorationRole:
+                if role == QtCore.Qt.DecorationRole:
                     name = self.values[index.row()].name
                     if name.startswith("MU"):
                         return miniIcon("mu")

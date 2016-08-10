@@ -17,8 +17,8 @@ Example usage:
 >>> print dialog.url()
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 import urllib2
 
@@ -28,7 +28,7 @@ __all__ = ['OpenUrlDialog', ]
 # Open URL dialog
 #
 
-class OpenUrlDialog(QDialog):
+class OpenUrlDialog(QtGui.QDialog):
     """Dialog providing an URL input field."""
 
     def __init__(self, parent = None):
@@ -37,24 +37,24 @@ class OpenUrlDialog(QDialog):
         self.setWindowTitle(self.tr("Open URL"))
         self.setFixedWidth(500)
         # URL input
-        self.urlLabel = QLabel(self.tr("Please enter a network URL:"), self)
-        self.urlComboBox = QComboBox(self)
+        self.urlLabel = QtGui.QLabel(self.tr("Please enter a network URL:"), self)
+        self.urlComboBox = QtGui.QComboBox(self)
         self.urlComboBox.addItem("")
         self.urlComboBox.setEditable(True)
         self.urlComboBox.editTextChanged.connect(self.onUrlEdit)
-        self.hintLabel = QLabel(self.tr("""
+        self.hintLabel = QtGui.QLabel(self.tr("""
             <p style="color: #888; margin-left:5px;">
             http://www.example.com/sample.xml<br/>
             ftp://example.org/sample.xml
             </p>"""), self)
         # Button box
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Open | QDialogButtonBox.Cancel)
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Open | QtGui.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
-        self.openButton = buttonBox.button(QDialogButtonBox.Open)
+        self.openButton = buttonBox.button(QtGui.QDialogButtonBox.Open)
         self.openButton.setEnabled(False)
         # Create layout.
-        gridLayout = QVBoxLayout()
+        gridLayout = QtGui.QVBoxLayout()
         gridLayout.addWidget(self.urlLabel)
         gridLayout.addWidget(self.urlComboBox)
         gridLayout.addWidget(self.hintLabel)
@@ -70,15 +70,15 @@ class OpenUrlDialog(QDialog):
 
     def loadRecentUrls(self):
         """Load recent URLs from application settings."""
-        urls = QSettings().value("recent/urls").toStringList()
+        urls = QtCore.QSettings().value("recent/urls").toStringList()
         self.urlComboBox.addItems(urls)
 
     def storeRecentUrls(self):
         """Store recent URLs including new entries in application settings."""
-        urls = QStringList()
+        urls = QtCore.QStringList()
         urls.append(self.urlComboBox.currentText())
         for i in range(self.urlComboBox.count()):
             url = self.urlComboBox.itemText(i)
             if url and url not in urls:
                 urls.append(url)
-        QSettings().setValue("recent/urls", urls)
+        QtCore.QSettings().setValue("recent/urls", urls)

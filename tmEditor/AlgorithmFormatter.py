@@ -23,9 +23,6 @@ Cascade an algorithm expression to increase human readability:
 
 import tmGrammar
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
 __all__ = ['AlgorithmFormatter', ]
 
 class AlgorithmFormatter(object):

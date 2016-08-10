@@ -6,8 +6,8 @@
 # Last changed date : $Date: $
 #
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 """Code editor widget derived from:
 http://doc.qt.io/qt-4.8/qt-widgets-codeeditor-example.html
@@ -17,35 +17,35 @@ http://stackoverflow.com/questions/6571035/qplaintextedit-change-shiftreturn-beh
 http://www.jjoe64.com/2011/08/qplaintextedit-change-shiftreturn.html
 """
 
-class CodeEditor(QPlainTextEdit):
+class CodeEditor(QtGui.QPlainTextEdit):
     """Source code editor widget."""
 
     def __init__(self, parent = None):
         super(CodeEditor, self).__init__(parent)
         self.lineNumberArea = LineNumberArea(self)
         self.blockCountChanged[int].connect(self.updateLineNumberAreaWidth)
-        self.updateRequest[QRect, int].connect(self.updateLineNumberArea)
+        self.updateRequest[QtCore.QRect, int].connect(self.updateLineNumberArea)
         self.cursorPositionChanged.connect(self.highlightCurrentLine)
         self.updateLineNumberAreaWidth()
         self.highlightCurrentLine()
         # self.document().setDocumentMargin(0)
 
     def lineNumberAreaPaintEvent(self, event):
-        painter = QPainter(self.lineNumberArea)
-        painter.fillRect(event.rect(), Qt.lightGray)
+        painter = QtGui.QPainter(self.lineNumberArea)
+        painter.fillRect(event.rect(), QtCore.Qt.lightGray)
         block = self.firstVisibleBlock()
         blockNumber = block.blockNumber()
         top = int(self.blockBoundingGeometry(block).translated(self.contentOffset()).top())
         bottom = top + int(self.blockBoundingRect(block).height())
         while block.isValid() and top <= event.rect().bottom():
             if block.isVisible() and bottom >= event.rect().top():
-                number = QString.number(blockNumber + 1)
-                painter.setPen(Qt.darkGray)
+                number = QtCore.QString.number(blockNumber + 1)
+                painter.setPen(QtCore.Qt.darkGray)
                 font = painter.font()
-                font.setWeight(QFont.Bold)
+                font.setWeight(QtGui.QFont.Bold)
                 painter.setFont(font)
                 painter.drawText(0, top, self.lineNumberArea.width()-3, self.fontMetrics().height(),
-                                 Qt.AlignRight, number)
+                                 QtCore.Qt.AlignRight, number)
             block = block.next()
             top = bottom
             bottom = top + int(self.blockBoundingRect(block).height())
@@ -57,13 +57,13 @@ class CodeEditor(QPlainTextEdit):
         while maximum >= 10:
             maximum /= 10
             digits += 1
-        space = 8 + self.fontMetrics().width(QChar('9')) * digits
+        space = 8 + self.fontMetrics().width(QtCore.QChar('9')) * digits
         return space;
 
     def resizeEvent(self, event):
         super(CodeEditor, self).resizeEvent(event)
         cr = self.contentsRect()
-        self.lineNumberArea.setGeometry(QRect(cr.left(), cr.top(), self.lineNumberAreaWidth(), cr.height()))
+        self.lineNumberArea.setGeometry(QtCore.QRect(cr.left(), cr.top(), self.lineNumberAreaWidth(), cr.height()))
 
     def updateLineNumberAreaWidth(self):
         self.setViewportMargins(self.lineNumberAreaWidth(), 0, 0, 0)
@@ -71,10 +71,10 @@ class CodeEditor(QPlainTextEdit):
     def highlightCurrentLine(self):
         extraSelections = []
         if not self.isReadOnly():
-            selection = QTextEdit.ExtraSelection()
-            lineColor = QColor(Qt.yellow).lighter(170)
+            selection = QtGui.QTextEdit.ExtraSelection()
+            lineColor = QtGui.QColor(QtCore.Qt.yellow).lighter(170)
             selection.format.setBackground(lineColor)
-            selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+            selection.format.setProperty(QtGui.QTextFormat.FullWidthSelection, True)
             selection.cursor = self.textCursor()
             selection.cursor.clearSelection()
             extraSelections.append(selection)
@@ -90,17 +90,17 @@ class CodeEditor(QPlainTextEdit):
 
     def keyPressEvent(self, event):
         """Bugfix, disables SHIFT+RETURN misbehaviour."""
-        if (event.key() == Qt.Key_Enter or event.key() == 16777220) and \
-           ((event.modifiers() & Qt.ShiftModifier) == Qt.ShiftModifier):
+        if (event.key() == QtCore.Qt.Key_Enter or event.key() == 16777220) and \
+           ((event.modifiers() & QtCore.Qt.ShiftModifier) == QtCore.Qt.ShiftModifier):
             # clone object but without shift
             # current modifiers & all possible modifiers, but SHIFT,ALT,CTRL
-            event = QKeyEvent(
+            event = QtGui.QKeyEvent(
                 event.type(), event.key(),
-                event.modifiers() & Qt.MetaModifier & Qt.KeypadModifier,
+                event.modifiers() & QtCore.Qt.MetaModifier & QtCore.Qt.KeypadModifier,
                 event.text(), event.isAutoRepeat(), event.count())
         super(CodeEditor, self).keyPressEvent(event)
 
-class LineNumberArea(QWidget):
+class LineNumberArea(QtGui.QWidget):
     """Line number widget for code editor."""
 
     def __init__(self, editor):
@@ -108,14 +108,14 @@ class LineNumberArea(QWidget):
         self.codeEditor = editor
 
     def sizeHint(self):
-        return QSize(self.codeEditor.lineNumberAreaWidth(), 0)
+        return QtCore.QSize(self.codeEditor.lineNumberAreaWidth(), 0)
 
     def paintEvent(self, event):
         self.codeEditor.lineNumberAreaPaintEvent(event)
 
 if __name__ == '__main__':
     import sys, os
-    app = QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
     editor = CodeEditor()
     editor.show();
     sys.exit(app.exec_())

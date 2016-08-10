@@ -41,8 +41,8 @@ from tmEditor.Toolbox import (
     fBxOffset,
 )
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 import math
 import sys, os
@@ -53,7 +53,7 @@ from tmEditor.AlgorithmEditor import MaxAlgorithms
 #  Document widget
 # ------------------------------------------------------------------------------
 
-class Document(QWidget):
+class Document(QtGui.QWidget):
     """Document container widget used by MDI area.
 
     Document consists of pages listed in a tree view on the left. Adding pages
@@ -63,7 +63,7 @@ class Document(QWidget):
     actions for the above selected data set.
     """
 
-    modified = pyqtSignal()
+    modified = QtCore.pyqtSignal()
     """This signal is emitted whenever the content of the document changes."""
 
     def __init__(self, filename, parent = None):
@@ -100,7 +100,7 @@ class Document(QWidget):
         self.bottomWidget.copyTriggered.connect(self.copyItem)
         self.bottomWidget.removeTriggered.connect(self.removeItem)
         # Navigation tree
-        self.navigationTreeWidget = QTreeWidget(self)
+        self.navigationTreeWidget = QtGui.QTreeWidget(self)
         self.navigationTreeWidget.headerItem().setHidden(True)
         self.navigationTreeWidget.setObjectName("navigationTreeWidget")
         self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee;}")
@@ -108,8 +108,8 @@ class Document(QWidget):
         self.filterWidget = TextFilterWidget(self)
         self.filterWidget.textChanged.connect(self.setFilterText)
         # Stacks
-        self.topStack = QStackedWidget(self)
-        self.bottomStack = QStackedWidget(self)
+        self.topStack = QtGui.QStackedWidget(self)
+        self.bottomStack = QtGui.QStackedWidget(self)
         # Add navigation items.
         self.menuPage = self.addPage("Menu", menuView, self.bottomWidget)
         self.algorithmsPage = self.addPage("Algorithms", algorithmsTableView, self.bottomWidget, self.menuPage)
@@ -126,12 +126,12 @@ class Document(QWidget):
         self.navigationTreeWidget.itemSelectionChanged.connect(self.updateTop)
         self.navigationTreeWidget.setCurrentItem(self.menuPage)
         # Splitters
-        self.vsplitter = SlimSplitter(Qt.Horizontal, self)
+        self.vsplitter = SlimSplitter(QtCore.Qt.Horizontal, self)
         self.vsplitter.setObjectName("vsplitter")
         self.vsplitter.setStyleSheet("#vsplitter { border: 0; background: #888; }")
         self.vsplitter.addWidget(self.navigationTreeWidget)
         self.vsplitter.setOpaqueResize(False)
-        self.hsplitter = SlimSplitter(Qt.Vertical, self)
+        self.hsplitter = SlimSplitter(QtCore.Qt.Vertical, self)
         self.hsplitter.addWidget(self.filterWidget)
         self.hsplitter.addWidget(self.topStack)
         self.hsplitter.addWidget(self.bottomStack)
@@ -140,7 +140,7 @@ class Document(QWidget):
         self.vsplitter.setStretchFactor(1, 1)
         self.vsplitter.setSizes([200, 600])
         # Layout
-        layout = QVBoxLayout()
+        layout = QtGui.QVBoxLayout()
         layout.addWidget(self.vsplitter)
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -150,11 +150,11 @@ class Document(QWidget):
         self.menuPage.top.commentTextEdit.setPlainText(self.menu().menu['comment'] if 'comment' in self.menu().menu else '')
         #self.bottomWidget.setText("<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
 
-    def createProxyTableView(self, name, model, proxyclass=QSortFilterProxyModel):
+    def createProxyTableView(self, name, model, proxyclass=QtGui.QSortFilterProxyModel):
         """Factory to create new QTableView view using a QSortFilterProxyModel."""
         proxyModel = proxyclass(self)
         proxyModel.setFilterKeyColumn(-1)
-        proxyModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        proxyModel.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         proxyModel.setSourceModel(model)
         tableView = TableView(self)
         tableView.setObjectName(name)
@@ -214,14 +214,14 @@ class Document(QWidget):
         # Warn before loosing cuts
         orphans = self._menu.orphanedCuts()
         if len(orphans) > 1:
-            QMessageBox.information(self,
+            QtGui.QMessageBox.information(self,
                 self.tr("Found orphaned cuts"),
-                QString("There are %1 orphaned cuts (<em>%2</em>, ...) that will be lost as they can't be saved to the XML file!").arg(len(orphans)).arg(orphans[0])
+                QtCore.QString("There are %1 orphaned cuts (<em>%2</em>, ...) that will be lost as they can't be saved to the XML file!").arg(len(orphans)).arg(orphans[0])
             )
         elif len(orphans):
-            QMessageBox.information(self,
+            QtGui.QMessageBox.information(self,
                 self.tr("Found orphaned cut"),
-                QString("There is one orphaned cut (<em>%1</em>) that will be lost as it can't be saved to the XML file!").arg(orphans[0])
+                QtCore.QString("There is one orphaned cut (<em>%1</em>) that will be lost as it can't be saved to the XML file!").arg(orphans[0])
             )
         filename = filename or self.filename()
         self._menu.menu['name'] = str(self.menuPage.top.nameLineEdit.text())
@@ -238,7 +238,7 @@ class Document(QWidget):
         if not len(items):
             return None, None
         item = items[0]
-        if isinstance(item.top, QTableView):
+        if isinstance(item.top, QtGui.QTableView):
             index = item.top.currentMappedIndex()
             return index, item
         return None, item
@@ -267,7 +267,7 @@ class Document(QWidget):
     def updateTop(self):
         index, item = self.getSelection()
         if item and hasattr(item.top, 'sortByColumn'):
-            item.top.sortByColumn(0, Qt.AscendingOrder)
+            item.top.sortByColumn(0, QtCore.Qt.AscendingOrder)
         self.topStack.setCurrentWidget(item.top)
         excludedPages = [self.menuPage, ]
         self.filterWidget.setEnabled(item not in excludedPages)
@@ -400,15 +400,15 @@ class Document(QWidget):
                 algorithm['name'] = name
                 import_index += 1
             if import_index:
-                QMessageBox.information(self,
+                QtGui.QMessageBox.information(self,
                     self.tr("Renamed algorithm"),
-                    QString("Renamed algorithm <em>%1</em> to <em>%2</em> as the name is already used.").arg(original_name).arg(algorithm.name)
+                    QtCore.QString("Renamed algorithm <em>%1</em> to <em>%2</em> as the name is already used.").arg(original_name).arg(algorithm.name)
                 )
             if self.menu().algorithmByIndex(algorithm.index):
                 index = self.getUnusedAlgorithmIndices()[0]
-                QMessageBox.information(self,
+                QtGui.QMessageBox.information(self,
                     self.tr("Relocating algorithm"),
-                    QString("Moving algorithm <em>%1</em> from already used index %2 to free index %3.").arg(algorithm.name).arg(algorithm.index).arg(index),
+                    QtCore.QString("Moving algorithm <em>%1</em> from already used index %2 to free index %3.").arg(algorithm.name).arg(algorithm.index).arg(index),
                 )
                 algorithm['index'] = index
             self.menu().addAlgorithm(**algorithm)
@@ -426,7 +426,7 @@ class Document(QWidget):
             elif item is self.cutsPage:
                 self.addCut(index, item)
         except RuntimeError, e:
-            QMessageBox.warning(self, "Error", str(e))
+            QtGui.QMessageBox.warning(self, "Error", str(e))
 
     def addAlgorithm(self, index, item):
         dialog = AlgorithmEditorDialog(self.menu(), self)
@@ -435,7 +435,7 @@ class Document(QWidget):
         dialog.setName(self.getUniquAlgorithmName(str(self.tr("L1_Unnamed"))))
         dialog.editor.setModified(False)
         dialog.exec_()
-        if dialog.result() != QDialog.Accepted:
+        if dialog.result() != QtGui.QDialog.Accepted:
             return
         self.setModified(True)
         algorithm = Algorithm()
@@ -467,7 +467,7 @@ class Document(QWidget):
         dialog.setModal(True)
         dialog.updateEntries()
         dialog.exec_()
-        if dialog.result() != QDialog.Accepted:
+        if dialog.result() != QtGui.QDialog.Accepted:
             return
         self.setModified(True)
         cut = dialog.newCut()
@@ -490,7 +490,7 @@ class Document(QWidget):
                 self.editCut(index, item)
             self.updateBottom()
         except RuntimeError, e:
-            QMessageBox.warning(self, "Error", str(e))
+            QtGui.QMessageBox.warning(self, "Error", str(e))
 
     def editAlgorithm(self, index, item):
         algorithm = self.menu().algorithms[index.row()]
@@ -499,7 +499,7 @@ class Document(QWidget):
         dialog.loadAlgorithm(algorithm)
         dialog.editor.setModified(False)
         dialog.exec_()
-        if dialog.result() != QDialog.Accepted:
+        if dialog.result() != QtGui.QDialog.Accepted:
             return
         self.setModified(True)
         dialog.updateAlgorithm(algorithm)
@@ -522,7 +522,7 @@ class Document(QWidget):
         dialog.typeComboBox.setEnabled(False)
         dialog.loadCut(cut)
         dialog.exec_()
-        if dialog.result() != QDialog.Accepted:
+        if dialog.result() != QtGui.QDialog.Accepted:
             return
         self.setModified(True)
         dialog.updateCut(cut)
@@ -544,7 +544,7 @@ class Document(QWidget):
         dialog.setExpression(algorithm.expression)
         dialog.editor.setModified(False)
         dialog.exec_()
-        if dialog.result() != QDialog.Accepted:
+        if dialog.result() != QtGui.QDialog.Accepted:
             return
         self.setModified(True)
         algorithm['expression'] = dialog.expression()
@@ -584,7 +584,7 @@ class Document(QWidget):
         dialog.setSuffix('_'.join([dialog.suffix, 'copy']))
         dialog.suffixLineEdit.setEnabled(True) # todo
         dialog.exec_()
-        if dialog.result() != QDialog.Accepted:
+        if dialog.result() != QtGui.QDialog.Accepted:
             return
         self.setModified(True)
         cut = dialog.newCut()
@@ -608,16 +608,16 @@ class Document(QWidget):
                 row = rows[0]
                 algorithm = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
                 if confirm:
-                    result = QMessageBox.question(self, "Remove algorithm",
-                        QString("Do you want to remove algorithm <strong>%2, %1</strong> from the menu?").arg(algorithm.name).arg(algorithm.index),
-                        QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.Abort if len(rows) > 1 else QMessageBox.Yes | QMessageBox.Abort)
-                    if result == QMessageBox.Abort:
+                    result = QtGui.QMessageBox.question(self, "Remove algorithm",
+                        QtCore.QString("Do you want to remove algorithm <strong>%2, %1</strong> from the menu?").arg(algorithm.name).arg(algorithm.index),
+                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.Abort if len(rows) > 1 else QtGui.QMessageBox.Yes | QtGui.QMessageBox.Abort)
+                    if result == QtGui.QMessageBox.Abort:
                         break
-                    elif result == QMessageBox.YesToAll:
+                    elif result == QtGui.QMessageBox.YesToAll:
                         confirm = False
                 item.top.model().removeRows(row.row(), 1)
             selection = item.top.selectionModel()
-            selection.setCurrentIndex(selection.currentIndex(), QItemSelectionModel.Select | QItemSelectionModel.Rows)
+            selection.setCurrentIndex(selection.currentIndex(), QtGui.QItemSelectionModel.Select | QtGui.QItemSelectionModel.Rows)
             # Removing orphaned objects.
             for name in self.menu().orphanedObjects():
                 object = self.menu().objectByName(name)
@@ -640,22 +640,22 @@ class Document(QWidget):
                 cut = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
                 for algorithm in self.menu().algorithms:
                     if cut.name in algorithm.cuts():
-                        QMessageBox.warning(self,
+                        QtGui.QMessageBox.warning(self,
                             self.tr("Cut is used"),
                             self.tr("Cut %1 is used by algorithm %2 an can not be removed. Remove the corresponding algorithm first.").arg(cut.name).arg(algorithm.name),
                         )
                         return
                 if confirm:
-                    result = QMessageBox.question(self, "Remove cut",
-                        QString("Do you want to remove cut <strong>%1</strong> from the menu?").arg(cut.name),
-                        QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.Abort if len(rows) > 1 else QMessageBox.Yes | QMessageBox.Abort)
-                    if result == QMessageBox.Abort:
+                    result = QtGui.QMessageBox.question(self, "Remove cut",
+                        QtCore.QString("Do you want to remove cut <strong>%1</strong> from the menu?").arg(cut.name),
+                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.Abort if len(rows) > 1 else QtGui.QMessageBox.Yes | QtGui.QMessageBox.Abort)
+                    if result == QtGui.QMessageBox.Abort:
                         break
-                    elif result == QMessageBox.YesToAll:
+                    elif result == QtGui.QMessageBox.YesToAll:
                         confirm = False
                 item.top.model().removeRows(row.row(), 1)
             selection = item.top.selectionModel()
-            selection.setCurrentIndex(selection.currentIndex(), QItemSelectionModel.Select | QItemSelectionModel.Rows)
+            selection.setCurrentIndex(selection.currentIndex(), QtGui.QItemSelectionModel.Select | QtGui.QItemSelectionModel.Rows)
             # REBUILD INDEX
             self.updateBottom()
             self.modified.emit()
@@ -665,7 +665,7 @@ class Document(QWidget):
 #  Menu information widget
 # ------------------------------------------------------------------------------
 
-class MenuWidget(QWidget):
+class MenuWidget(QtGui.QWidget):
     """Menu information widget providing inputs for name and comment, shows
     assigned scale set."""
 
@@ -674,20 +674,20 @@ class MenuWidget(QWidget):
         self.nameLineEdit = RestrictedLineEdit(self)
         self.nameLineEdit.setPrefix("L1Menu_")
         self.nameLineEdit.setRegexPattern("L1Menu_[a-zA-Z0-9_]+")
-        self.commentTextEdit = QPlainTextEdit(self)
+        self.commentTextEdit = QtGui.QPlainTextEdit(self)
         self.commentTextEdit.setMaximumHeight(80)
         self.scaleSetLineEdit = ReadOnlyLineEdit(self)
         self.extSignalSetLineEdit = ReadOnlyLineEdit(self)
-        vbox = QVBoxLayout()
-        vbox.addWidget(QLabel(self.tr("Name:"), self))
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(QtGui.QLabel(self.tr("Name:"), self))
         vbox.addWidget(self.nameLineEdit)
-        vbox.addWidget(QLabel(self.tr("Comment:"), self))
+        vbox.addWidget(QtGui.QLabel(self.tr("Comment:"), self))
         vbox.addWidget(self.commentTextEdit)
-        vbox.addWidget(QLabel(self.tr("Scale Set:"), self))
+        vbox.addWidget(QtGui.QLabel(self.tr("Scale Set:"), self))
         vbox.addWidget(self.scaleSetLineEdit)
-        vbox.addWidget(QLabel(self.tr("External Signal Set:"), self))
+        vbox.addWidget(QtGui.QLabel(self.tr("External Signal Set:"), self))
         vbox.addWidget(self.extSignalSetLineEdit)
-        vbox.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding))
+        vbox.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
         self.setLayout(vbox)
         self.setAutoFillBackground(True)
 
@@ -707,7 +707,7 @@ class MenuWidget(QWidget):
 #  Splitter and custom handle
 # ------------------------------------------------------------------------------
 
-class SlimSplitter(QSplitter):
+class SlimSplitter(QtGui.QSplitter):
     """Slim splitter with a decent narrow splitter handle."""
 
     def __init__(self, orientation, parent = None):
@@ -718,7 +718,7 @@ class SlimSplitter(QSplitter):
     def createHandle(self):
         return SlimSplitterHandle(self.orientation(), self)
 
-class SlimSplitterHandle(QSplitterHandle):
+class SlimSplitterHandle(QtGui.QSplitterHandle):
     """Custom splitter handle for the slim splitter."""
 
     def __init__(self, orientation, parent = None):
@@ -731,7 +731,7 @@ class SlimSplitterHandle(QSplitterHandle):
 #  Navigation tree item
 # ------------------------------------------------------------------------------
 
-class Page(QTreeWidgetItem):
+class Page(QtGui.QTreeWidgetItem):
 
     def __init__(self, name, top, bottom, parent = None):
         super(Page, self).__init__(parent, [name])
@@ -748,17 +748,18 @@ class Page(QTreeWidgetItem):
 #  Filter bar
 # ------------------------------------------------------------------------------
 
-class TextFilterWidget(QWidget):
-    textChanged = pyqtSignal(QString)
+class TextFilterWidget(QtGui.QWidget):
+    textChanged = QtCore.pyqtSignal(QtCore.QString)
+
     def __init__(self, parent = None):
         super(TextFilterWidget, self).__init__(parent)
         self.setAutoFillBackground(True)
-        self.filterLabel = QLabel(self.tr("Filter"), self)
+        self.filterLabel = QtGui.QLabel(self.tr("Filter"), self)
         self.filterLineEdit = FilterLineEdit(self)
         self.filterLineEdit.textChanged.connect(lambda text: self.textChanged.emit(text))
-        hbox = QHBoxLayout()
+        hbox = QtGui.QHBoxLayout()
         hbox.setContentsMargins(10, 1, 1, 1)
-        hbox.addItem(QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        hbox.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Minimum))
         hbox.addWidget(self.filterLabel)
         hbox.addWidget(self.filterLineEdit)
         self.setLayout(hbox)
@@ -767,7 +768,7 @@ class TextFilterWidget(QWidget):
 #  Common table view widget
 # ------------------------------------------------------------------------------
 
-class TableView(QTableView):
+class TableView(QtGui.QTableView):
     """Common sortable table view wiget."""
 
     def __init__(self, parent = None):
@@ -776,18 +777,18 @@ class TableView(QTableView):
         super(TableView, self).__init__(parent)
         # Setup table view.
         self.setShowGrid(False)
-        self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.setAlternatingRowColors(True)
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Preferred)
         # Setup horizontal column appearance.
         horizontalHeader = self.horizontalHeader()
         horizontalHeader.setHighlightSections(False)
-        horizontalHeader.setResizeMode(QHeaderView.Interactive)
+        horizontalHeader.setResizeMode(QtGui.QHeaderView.Interactive)
         horizontalHeader.setStretchLastSection(True)
         # Setup vertical row appearance.
         verticalHeader = self.verticalHeader()
-        verticalHeader.setResizeMode(QHeaderView.Fixed)
+        verticalHeader.setResizeMode(QtGui.QHeaderView.Fixed)
         verticalHeader.setDefaultSectionSize(20)
         verticalHeader.hide()
         self.setSortingEnabled(True)
@@ -804,36 +805,36 @@ class TableView(QTableView):
 #
 # ------------------------------------------------------------------------------
 
-class BottomWidget(QWidget):
+class BottomWidget(QtGui.QWidget):
 
-    addTriggered = pyqtSignal()
-    editTriggered = pyqtSignal()
-    copyTriggered = pyqtSignal()
-    removeTriggered = pyqtSignal()
+    addTriggered = QtCore.pyqtSignal()
+    editTriggered = QtCore.pyqtSignal()
+    copyTriggered = QtCore.pyqtSignal()
+    removeTriggered = QtCore.pyqtSignal()
 
     def __init__(self, parent = None):
         super(BottomWidget, self).__init__(parent)
-        self.toolbar = QWidget(self)
+        self.toolbar = QtGui.QWidget(self)
         self.toolbar.setAutoFillBackground(True)
-        layout = QHBoxLayout()
+        layout = QtGui.QHBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
-        self.addButton = QPushButton(Toolbox.createIcon("list-add"), "Add...", self)
+        self.addButton = QtGui.QPushButton(Toolbox.createIcon("list-add"), "Add...", self)
         self.addButton.clicked.connect(self.onAdd)
         layout.addWidget(self.addButton)
         layout.addStretch(10)
-        self.editButton = QPushButton(Toolbox.createIcon("text-editor"), "Edit...", self)
+        self.editButton = QtGui.QPushButton(Toolbox.createIcon("text-editor"), "Edit...", self)
         self.editButton.clicked.connect(self.onEdit)
         layout.addWidget(self.editButton)
-        self.copyButton = QPushButton(Toolbox.createIcon("edit-copy"), "Copy...", self)
+        self.copyButton = QtGui.QPushButton(Toolbox.createIcon("edit-copy"), "Copy...", self)
         self.copyButton.clicked.connect(self.onCopy)
         layout.addWidget(self.copyButton)
-        self.removeButton = QPushButton(Toolbox.createIcon("list-remove"), "Remove", self)
+        self.removeButton = QtGui.QPushButton(Toolbox.createIcon("list-remove"), "Remove", self)
         self.removeButton.clicked.connect(self.onRemove)
         layout.addWidget(self.removeButton)
         self.toolbar.setLayout(layout)
-        self.notice = Toolbox.IconLabel(QIcon(), QString(), self)
+        self.notice = Toolbox.IconLabel(QtGui.QIcon(), QtCore.QString(), self)
         self.notice.setAutoFillBackground(True)
-        self.textEdit = QTextEdit(self)
+        self.textEdit = QtGui.QTextEdit(self)
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("BottomWidgetTextEdit")
         self.textEdit.setStyleSheet("""
@@ -842,11 +843,11 @@ class BottomWidget(QWidget):
             background-color: #eee;
         }""")
         self.EtaCutChart = EtaCutChart(self)
-        self.EtaCutChartBox = QGroupBox(self.tr("Eta preview"), self)
-        box = QVBoxLayout()
+        self.EtaCutChartBox = QtGui.QGroupBox(self.tr("Eta preview"), self)
+        box = QtGui.QVBoxLayout()
         box.addWidget(self.EtaCutChart)
         self.EtaCutChartBox.setLayout(box)
-        self.EtaCutChartBox.setAlignment(Qt.AlignTop)
+        self.EtaCutChartBox.setAlignment(QtCore.Qt.AlignTop)
         self.EtaCutChartBox.setObjectName("EtaCutChartBox")
         self.EtaCutChartBox.setStyleSheet("""
         #EtaCutChartBox {
@@ -854,18 +855,18 @@ class BottomWidget(QWidget):
         }""")
 
         self.PhiCutChart = PhiCutChart(self)
-        self.PhiCutChartBox = QGroupBox(self.tr("Phi preview"), self)
-        box = QVBoxLayout()
+        self.PhiCutChartBox = QtGui.QGroupBox(self.tr("Phi preview"), self)
+        box = QtGui.QVBoxLayout()
         box.addWidget(self.PhiCutChart)
         self.PhiCutChartBox.setLayout(box)
-        self.PhiCutChartBox.setAlignment(Qt.AlignTop)
+        self.PhiCutChartBox.setAlignment(QtCore.Qt.AlignTop)
         self.PhiCutChartBox.setObjectName("PhiCutChartBox")
         self.PhiCutChartBox.setStyleSheet("""
         #PhiCutChartBox {
             background-color: #eee;
         }""")
 
-        layout = QGridLayout()
+        layout = QtGui.QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.toolbar, 0, 0, 1, 3)

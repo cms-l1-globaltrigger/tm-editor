@@ -9,15 +9,13 @@
 """Multi Document Interface (MDI) area.
 """
 
-from tmEditor import (
-    Document,
-    Toolbox,
-)
+from tmEditor import Document
+from tmEditor import Toolbox
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
-class MdiArea(QTabWidget):
+class MdiArea(QtGui.QTabWidget):
     """A tab widget based MDI area widget."""
 
     def __init__(self, parent = None):
@@ -33,7 +31,7 @@ class MdiArea(QTabWidget):
         """Returns list containing all documents. Provided for convenience."""
         return [self.widget(index) for index in range(self.count())]
 
-    @pyqtSlot(str)
+    @QtCore.pyqtSlot(str)
     def addDocument(self, document):
         """Adds document to MDI area. Prevents adding the same document twice.
         Returns index of tab of added document.
@@ -46,34 +44,35 @@ class MdiArea(QTabWidget):
         document.modified.connect(self.documentChanged)
         return self.addTab(document, Toolbox.createIcon("document"), document.name())
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def currentDocument(self):
         """Returns current document. Provided for convenience."""
         return self.currentWidget()
 
-    @pyqtSlot(int)
+    @QtCore.pyqtSlot(int)
     def closeDocument(self, index):
         """Close document and ask to save changes. Returns False if aborted."""
         if not self.count():
             return False
         document = self.widget(index)
         if document.isModified():
-            reply = QMessageBox.warning(self, "Close document",
-                QString("The document \"%1\" has been modified.\n" \
+            reply = QtGui.QMessageBox.warning(self, "Close document",
+                QtCore.QString("The document \"%1\" has been modified.\n" \
                         "Do you want to save your changes or discard them?").arg(document.name()),
-                QMessageBox.Cancel | QMessageBox.Discard | QMessageBox.Save, QMessageBox.Cancel)
-            if reply == QMessageBox.Cancel:
+                QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Discard | QtGui.QMessageBox.Save,
+                QtGui.QMessageBox.Cancel)
+            if reply == QtGui.QMessageBox.Cancel:
                 return False
-            if reply == QMessageBox.Save:
+            if reply == QtGui.QMessageBox.Save:
                 document.saveMenu()
         self.removeTab(index)
         return True
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def closeCurrentDocument(self):
         """Close current document and ask to save changes. Provided for convenience."""
         return self.closeDocument(self.currentIndex())
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def documentChanged(self):
         self.currentChanged.emit(self.currentIndex())
