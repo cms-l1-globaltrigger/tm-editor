@@ -264,21 +264,30 @@ tarbuild: all
 	mkdir -p $(tarballdir)
 	mkdir -p $(tarballdir)/lib/tmeditor-$(version)
 	@echo "//     writing README..."
-	echo "tm-editor ${version}-${release} for ${distro} ${arch}\n" > $(tarballdir)/README
-	echo 'Dependecies:\n' >> $(tarballdir)/README
-	echo '$$ sudo yum install python python-argparse PyQt4 xerces-c gnome-icon-theme\n' >> $(tarballdir)/README
-	echo 'Run:\n' >> $(tarballdir)/README
+	echo "tm-editor ${version}-${release} for ${distro} ${arch}" > $(tarballdir)/README
+	echo >> $(tarballdir)/README
+	echo 'Dependecies:' >> $(tarballdir)/README
+	echo >> $(tarballdir)/README
+	echo '$$ sudo yum install python python-argparse PyQt4 xerces-c gnome-icon-theme' >> $(tarballdir)/README
+	echo >> $(tarballdir)/README
+	echo 'Run:' >> $(tarballdir)/README
+	echo >> $(tarballdir)/README
 	echo '$$ ./tm-editor [file|url ...]' >> $(tarballdir)/README
 	@echo "//     writing tm-editor wrapper..."
-	echo '#!/bin/bash\n' > $(tarballdir)/$(package)
+	echo '#!/bin/bash' > $(tarballdir)/$(package)
+	echo >> $(tarballdir)/$(package)
 	echo 'DIR="$$( cd "$$( dirname "$${BASH_SOURCE[0]}" )" && pwd )"' >> $(tarballdir)/$(package)
-	echo 'UTM_DIR=$$DIR/lib/tmeditor-'$(version)"\n" >> $(tarballdir)/$(package)
+	echo 'UTM_DIR=$$DIR/lib/tmeditor-'$(version) >> $(tarballdir)/$(package)
+	echo >> $(tarballdir)/$(package)
 	echo '# Setup environment' >> $(tarballdir)/$(package)
-	echo 'source $$UTM_DIR/setup.sh\n' >> $(tarballdir)/$(package)
+	echo 'source $$UTM_DIR/setup.sh' >> $(tarballdir)/$(package)
+	echo >> $(tarballdir)/$(package)
 	echo '# Source the external lib dir (not provided on lxplus)' >> $(tarballdir)/$(package)
-	echo 'export LD_LIBRARY_PATH=$$UTM_DIR/extern:$$LD_LIBRARY_PATH\n' >> $(tarballdir)/$(package)
+	echo 'export LD_LIBRARY_PATH=$$UTM_DIR/extern:$$LD_LIBRARY_PATH' >> $(tarballdir)/$(package)
+	echo >> $(tarballdir)/$(package)
 	echo '# Run editor' >> $(tarballdir)/$(package)
-	echo 'tm-editor $$@\n' >> $(tarballdir)/$(package)
+	echo 'tm-editor $$@' >> $(tarballdir)/$(package)
+	echo >> $(tarballdir)/$(package)
 	echo 'exit $$?' >> $(tarballdir)/$(package)
 	chmod +x $(tarballdir)/$(package)
 	cp ../setup.sh $(tarballdir)/lib/tmeditor-$(version)
