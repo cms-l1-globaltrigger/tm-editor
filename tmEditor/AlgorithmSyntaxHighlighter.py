@@ -6,7 +6,17 @@
 # Last changed date : $Date: $
 #
 
-"""Algorithm syntax highlighter class.
+"""Algorithm syntax highlighter derived from QtGui.QSyntaxHighlighter class,
+ to be attached to an QtGui.QDocument instance.
+
+Usage example
+-------------
+
+Attaching a syntax hilighter to an text document is quite simple:
+
+>>> editor = QtGui.QPlainTextEdit()
+>>> AlgorithmSyntaxHighlighter(editor.document())
+
 """
 
 import tmGrammar
@@ -23,7 +33,9 @@ def makeKeyword(key):
 
 class AlgorithmSyntaxHighlighter(QtGui.QSyntaxHighlighter):
     """Syntax highighter class for algorithm expressions."""
+
     HighlightingRule = namedtuple('HighlightingRule', 'format, pattern')
+    """Container for highlighting rules."""
 
     def __init__(self, document):
         """Attribute *document* requires a text document instance or a text

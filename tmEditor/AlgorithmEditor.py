@@ -226,7 +226,6 @@ class AlgorithmEditor(QtGui.QMainWindow):
         self.toolbar.addAction(self.undoAct)
         self.toolbar.addAction(self.redoAct)
         self.toolbar.addSeparator()
-        self.toolbar.addSeparator()
         self.toolbar.addAction(self.insertObjectAct)
         self.toolbar.addAction(self.insertFunctionAct)
         self.toolbar.addSeparator()
@@ -300,7 +299,11 @@ class AlgorithmEditor(QtGui.QMainWindow):
     def onEditObject(self, token):
         text = str(self.textEdit.toPlainText())
         dialog = ObjectEditorDialog(self.menu, self)
-        dialog.loadObject(token[0])
+        try:
+            dialog.loadObject(token[0])
+        except ValueError:
+            QtGui.QMessageBox.warning(self, self.tr("Invalid expression"), token[0])
+            return
         dialog.exec_()
         if dialog.result() == QtGui.QDialog.Accepted:
             self.textEdit.setPlainText(''.join((
@@ -312,7 +315,11 @@ class AlgorithmEditor(QtGui.QMainWindow):
     def onEditFunction(self, token):
         text = str(self.textEdit.toPlainText())
         dialog = FunctionEditorDialog(self.menu, self)
-        dialog.loadFunction(token[0])
+        try:
+            dialog.loadFunction(token[0])
+        except ValueError:
+            QtGui.QMessageBox.warning(self, self.tr("Invalid expression"), token[0])
+            return
         dialog.exec_()
         if dialog.result() == QtGui.QDialog.Accepted:
             self.textEdit.setPlainText(''.join((
@@ -404,20 +411,6 @@ class AlgorithmEditor(QtGui.QMainWindow):
                 text = text + " "
         cursor.insertText(text)
         self.textEdit.ensureCursorVisible()
-
-    def onWizard(self):
-        dialog = ObjectEditorDialog(self.menu, self)
-        selection = self.textEdit.textCursor().selection().toPlainText()
-        if selection:
-            try:
-                # Will raise ValueError if selection is not a valid object
-                dialog.loadObject(str(selection))
-            except ValueError:
-                # Ignore if some other text is selected
-                pass
-        dialog.exec_()
-        if dialog.result() == QtGui.QDialog.Accepted:
-            self.onInsertItem(dialog.toExpression())
 
     def onParse(self):
         try:

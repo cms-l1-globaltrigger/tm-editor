@@ -99,8 +99,8 @@ class Menu(object):
         if filename:
             self.readXml(filename)
 
-    def addObject(self, name, type, threshold, requirement_id = 0, comparison_operator = '.ge.', bx_offset = 0, comment = ""):
-        """Provided for convenience."""
+    def addObject(self, name, type, threshold, requirement_id=0, comparison_operator=tmGrammar.GE, bx_offset=0, comment=""):
+        """Creates a new object by specifing its paramters and adds it to the menu. Provided for convenience."""
         self.objects.append(Object(
             requirement_id = requirement_id,
             name = name,
@@ -111,8 +111,8 @@ class Menu(object):
             comment = comment,
         ))
 
-    def addCut(self, name, object, type, minimum, maximum, cut_id = 0, data = "", comment = ""):
-        """Provided for convenience."""
+    def addCut(self, name, object, type, minimum, maximum, cut_id=0, data="", comment=""):
+        """Creates a new cut by specifing its paramters and adds it to the menu. Provided for convenience."""
         self.cuts.append(Cut(
             cut_id = cut_id,
             name = name,
@@ -124,8 +124,8 @@ class Menu(object):
             comment = comment,
         ))
 
-    def addExternal(self, name, requirement_id = 0, ext_signal_id = 0, bx_offset = 0, comment = ""):
-        """Provided for convenience."""
+    def addExternal(self, name, requirement_id=0, ext_signal_id=0, bx_offset=0, comment=""):
+        """Creates a new external signal by specifing its paramters and adds it to the menu. Provided for convenience."""
         self.externals.append(External(
             requirement_id = requirement_id,
             ext_signal_id = ext_signal_id,
@@ -134,8 +134,11 @@ class Menu(object):
             comment = comment,
         ))
 
-    def addAlgorithm(self, index, name, expression, algorithm_id = 0, module_id = 0, module_index = 0, comment = ""):
-        """Provided for convenience. Note: related objects must be added separately."""
+    def addAlgorithm(self, index, name, expression, algorithm_id=0, module_id=0, module_index=0, comment=""):
+        """Creates a new algorithm by specifing its paramters and adds it to the menu. Provided for convenience.
+
+        **Note:** related objects must be added separately to the menu.
+        """
         algorithm = Algorithm(
             algorithm_id = algorithm_id,
             index = index,
@@ -147,7 +150,10 @@ class Menu(object):
         )
         self.algorithms.append(algorithm)
 
-    def updateAlgorithm(self, algorithm):
+    def extendReferenced(self, algorithm):
+        """Adds missing objects and external signals referenced by the
+        *algorithm* to the menu.
+        """
         # Add new objects to list.
         for item in algorithm.objects():
             if not self.objectByName(item):
@@ -158,32 +164,32 @@ class Menu(object):
                 self.externals.append(toExternal(item))
 
     def algorithmByName(self, name):
-        """Returns algorithm item by its name or None if no such algorithm exists."""
+        """Returns algorithm item by its *name* or None if no such algorithm exists."""
         return (filter(lambda item: item.name == name, self.algorithms) or [None])[0]
 
     def algorithmByIndex(self, index):
-        """Returns algorithm item by its index or None if no such algorithm exists."""
+        """Returns algorithm item by its *index* or None if no such algorithm exists."""
         return (filter(lambda item: int(item.index) == int(index), self.algorithms) or [None])[0]
 
     def objectByName(self, name):
-        """Returns object requirement item by its name or None if no such object requirement exists."""
+        """Returns object requirement item by its *name* or None if no such object requirement exists."""
         return (filter(lambda item: item.name == name, self.objects) or [None])[0]
 
     def cutByName(self, name):
-        """Returns cut item by its name or None if no such cut exists."""
+        """Returns cut item by its *name* or None if no such cut exists."""
         return (filter(lambda item: item.name == name, self.cuts) or [None])[0]
 
     def externalByName(self, name):
-        """Returns external signal item by its name or None if no such external signal exists."""
+        """Returns external signal item by its *name* or None if no such external signal exists."""
         return (filter(lambda item: item.name == name, self.externals) or [None])[0]
 
     def scaleMeta(self, object, scaleType):
-        """Returns scale information for object by scale."""
+        """Returns scale information for *object* by *scaleType*."""
         objectType = getObjectType(object.name)
         return (filter(lambda item: item['object']==objectType and item['type']==scaleType, self.scales.scales) or [None])[0]
 
     def scaleBins(self, object, scaleType):
-        """Returns bins for object by scale."""
+        """Returns bins for *object* by *scaleType*."""
         objectType = getObjectType(object.name)
         key = '{objectType}-{scaleType}'.format(**locals())
         return self.scales.bins[key] if key in self.scales.bins else None
@@ -216,7 +222,7 @@ class Menu(object):
         return tags
 
     def readXml(self, filename):
-        """Read XML menu from file. Provided for convenience."""
+        """Read XML menu from *filename*. Provided for convenience."""
         filename = os.path.abspath(filename)
 
         # Check file accessible
@@ -275,18 +281,21 @@ class Menu(object):
         self.extSignals = ext_signal
 
     def writeXml(self, filename):
-        """Provided for convenience."""
+        """Writes menu to *filename*."""
         filename = os.path.abspath(filename)
 
         pwd = os.getcwd()
         os.chdir(Toolbox.getXsdDir())
 
         try:
-            logging.debug("regenerating menu UUID")
+            logging.debug("regenerating menu UUID:")
             self.menu['uuid_menu'] = str(uuid.uuid4())
+            logging.debug("%s", self.menu['uuid_menu'])
 
-            logging.debug("reset firmware UUID")
+            logging.debug("resetting firmware UUID:")
             self.menu['uuid_firmware'] = DEFAULT_UUID
+            logging.debug("%s", self.menu['uuid_firmware'])
+
             # Create a new menu instance.
             menu = tmTable.Menu()
 
@@ -350,34 +359,6 @@ class Menu(object):
         except:
             os.chdir(pwd)
             raise
-
-    # def validate(self):
-    #     for algorithm in self.algorithms:
-    #         for token in tokens(algorithm.expression):
-    #             if not isFunction(token):
-    #                 continue
-    #             if not token.startswith(tmGrammar.dist):
-    #                 continue
-    #             for name in functionCuts(token):
-    #                 cut = self.cutByName(name)
-    #                 if cut.type == tmGrammar.DETA:
-    #                     for object in functionObjects(token):
-    #                         scale = filter(lambda scale: scale['object']==object.type and scale['type']=='ETA', self.scales.scales)[0]
-    #                         minimum = 0
-    #                         maximum = abs(float(scale['minimum'])) + float(scale['maximum'])
-    #                         if not (minimum <= float(cut.minimum) <= maximum):
-    #                             raise RuntimeError("Cut \"{name}\" minimum limit of {cut.minimum} exceed valid object DETA range of {minimum}".format(**locals()))
-    #                         if not (minimum <= float(cut.maximum) <= maximum):
-    #                             raise RuntimeError("Cut \"{name}\" maximum limit of {cut.maximum} exceed valid object DETA range of {maximum}".format(**locals()))
-    #                 if cut.type == tmGrammar.DPHI:
-    #                     for object in functionObjects(token):
-    #                         scale = filter(lambda scale: scale['object']==object.type and scale['type']=='PHI', self.scales.scales)[0]
-    #                         minimum = 0
-    #                         maximum = float(scale['maximum']) / 2.
-    #                         if not (minimum <= float(cut.minimum) <= maximum):
-    #                             raise RuntimeError("Cut \"{name}\" minimum limit of {cut.minimum} exceed valid object DPHI range of {minimum}".format(**locals()))
-    #                         if not (minimum <= float(cut.maximum) <= maximum):
-    #                             raise RuntimeError("Cut \"{name}\" maximum limit of {cut.maximum} exceed valid object DPHI range of {maximum}".format(**locals()))
 
 # ------------------------------------------------------------------------------
 #  Abstract base container class.

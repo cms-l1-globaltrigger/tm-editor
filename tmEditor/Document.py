@@ -412,7 +412,7 @@ class Document(QtGui.QWidget):
                 )
                 algorithm['index'] = index
             self.menu().addAlgorithm(**algorithm)
-            self.menu().updateAlgorithm(algorithm)
+            self.menu().extendReferenced(algorithm)
         self.algorithmsPage.top.model().setSourceModel(self.algorithmsPage.top.model().sourceModel())
         self.algorithmsPage.top.resizeColumnsToContents()
         self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
@@ -441,7 +441,7 @@ class Document(QtGui.QWidget):
         algorithm = Algorithm()
         dialog.updateAlgorithm(algorithm)
         self.menu().addAlgorithm(**algorithm)
-        self.menu().updateAlgorithm(self.menu().algorithmByName(algorithm.name)) # IMPORTANT: add/update new objects!
+        self.menu().extendReferenced(self.menu().algorithmByName(algorithm.name)) # IMPORTANT: add/update new objects!
         item.top.model().setSourceModel(item.top.model().sourceModel())
         self.algorithmsPage.top.resizeColumnsToContents()
         # REBUILD INDEX
@@ -506,7 +506,7 @@ class Document(QtGui.QWidget):
         # REBUILD INDEX
         self.updateBottom()
         self.modified.emit()
-        self.menu().updateAlgorithm(algorithm)
+        self.menu().extendReferenced(algorithm)
         self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
         self.objectsPage.top.resizeColumnsToContents()
         self.externalsPage.top.model().setSourceModel(self.externalsPage.top.model().sourceModel())
