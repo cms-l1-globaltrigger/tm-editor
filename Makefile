@@ -12,6 +12,9 @@ timestamp := $(shell date)
 arch := $(shell uname -p)
 distro ?= linux
 
+# for tarball target
+tarballdir = tarball/$(pkgdir)-$(distro)-$(arch)
+
 # Only execute on debian systems
 debian_arch = $(shell dpkg --print-architecture)
 
@@ -257,42 +260,49 @@ debbuild: all
 tar: tarbuild
 
 tarbuild: all
-	rm -rf tarball/$(pkgdir)-$(distro)-$(arch)
-	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)
-	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)
+	rm -rf $(tarballdir)
+	mkdir -p $(tarballdir)
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)
 	@echo "//     writing README..."
-	echo -e "tm-editor ${version}-${release} for ${distro} ${arch}\n" > tarball/$(pkgdir)-$(distro)-$(arch)/README
-	echo -e 'Dependecies:\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/README
-	echo -e '$$ sudo yum install python python-argparse PyQt4 xerces-c gnome-icon-theme\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/README
-	echo -e 'Run:\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/README
-	echo -e '$$ ./tm-editor [file|url ...]' >> tarball/$(pkgdir)-$(distro)-$(arch)/README
+	echo "tm-editor ${version}-${release} for ${distro} ${arch}\n" > $(tarballdir)/README
+	echo 'Dependecies:\n' >> $(tarballdir)/README
+	echo '$$ sudo yum install python python-argparse PyQt4 xerces-c gnome-icon-theme\n' >> $(tarballdir)/README
+	echo 'Run:\n' >> $(tarballdir)/README
+	echo '$$ ./tm-editor [file|url ...]' >> $(tarballdir)/README
 	@echo "//     writing tm-editor wrapper..."
-	echo -e '#!/bin/bash\n' > tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
-	echo -e 'DIR="$$( cd "$$( dirname "$${BASH_SOURCE[0]}" )" && pwd )"' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
-	echo -e 'UTM_DIR=$$DIR/lib/tmeditor-'$(version)"\n" >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
-	echo -e '# Setup environment' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
-	echo -e 'source $$UTM_DIR/setup.sh\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
-	echo -e '# Source the external lib dir (not provided on lxplus)' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
-	echo -e 'export LD_LIBRARY_PATH=$$UTM_DIR/extern:$$LD_LIBRARY_PATH\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
-	echo -e '# Run editor' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
-	echo -e 'tm-editor $$@\n' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
-	echo -e 'exit $$?' >> tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
-	chmod +x tarball/$(pkgdir)-$(distro)-$(arch)/$(package)
-	cp ../setup.sh tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)
-	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/extern
-	cp $(shell find /usr -name 'libxerces-c-*.so') tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/extern
-	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmUtil
-	cp -r ../tmUtil/libtmutil.so tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmUtil/
-	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmXsd
-	cp -r ../tmXsd/libtmxsd.so tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmXsd/
-	cp -r ../tmXsd/*.xsd tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmXsd/
-	cp -r ../tmXsd/xsd-type tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmXsd/
-	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmTable
-	cp -r ../tmTable/{libtmtable.so,_tmTable.so,tmTable.py} tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmTable/
-	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmGrammar
-	cp -r ../tmGrammar/{libtmgrammar.so,_tmGrammar.so,tmGrammar.py} tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmGrammar/
-	mkdir -p tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmEventSetup
-	cp -r ../tmEventSetup/{libtmeventsetup.so,_tmEventSetup.so,tmEventSetup.py} tarball/$(pkgdir)-$(distro)-$(arch)/lib/tmeditor-$(version)/tmEventSetup/
+	echo '#!/bin/bash\n' > $(tarballdir)/$(package)
+	echo 'DIR="$$( cd "$$( dirname "$${BASH_SOURCE[0]}" )" && pwd )"' >> $(tarballdir)/$(package)
+	echo 'UTM_DIR=$$DIR/lib/tmeditor-'$(version)"\n" >> $(tarballdir)/$(package)
+	echo '# Setup environment' >> $(tarballdir)/$(package)
+	echo 'source $$UTM_DIR/setup.sh\n' >> $(tarballdir)/$(package)
+	echo '# Source the external lib dir (not provided on lxplus)' >> $(tarballdir)/$(package)
+	echo 'export LD_LIBRARY_PATH=$$UTM_DIR/extern:$$LD_LIBRARY_PATH\n' >> $(tarballdir)/$(package)
+	echo '# Run editor' >> $(tarballdir)/$(package)
+	echo 'tm-editor $$@\n' >> $(tarballdir)/$(package)
+	echo 'exit $$?' >> $(tarballdir)/$(package)
+	chmod +x $(tarballdir)/$(package)
+	cp ../setup.sh $(tarballdir)/lib/tmeditor-$(version)
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/extern
+	cp $(shell find /usr -name 'libxerces-c-*.so') $(tarballdir)/lib/tmeditor-$(version)/extern
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmUtil
+	cp -r ../tmUtil/libtmutil.so $(tarballdir)/lib/tmeditor-$(version)/tmUtil/
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmXsd
+	cp -r ../tmXsd/libtmxsd.so $(tarballdir)/lib/tmeditor-$(version)/tmXsd/
+	cp -r ../tmXsd/*.xsd $(tarballdir)/lib/tmeditor-$(version)/tmXsd/
+	cp -r ../tmXsd/xsd-type $(tarballdir)/lib/tmeditor-$(version)/tmXsd/
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmTable
+	cp -r ../tmTable/libtmtable.so ../tmTable/_tmTable.so ../tmTable/tmTable.py $(tarballdir)/lib/tmeditor-$(version)/tmTable/
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmGrammar
+	cp -r ../tmGrammar/libtmgrammar.so ../tmGrammar/_tmGrammar.so ../tmGrammar/tmGrammar.py $(tarballdir)/lib/tmeditor-$(version)/tmGrammar/
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEventSetup
+	cp -r ../tmEventSetup/libtmeventsetup.so ../tmEventSetup/_tmEventSetup.so ../tmEventSetup/tmEventSetup.py $(tarballdir)/lib/tmeditor-$(version)/tmEventSetup/
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor/scripts
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor
+	cp -r ../tmEditor/scripts/tm-editor $(tarballdir)/lib/tmeditor-$(version)/tmEditor/scripts
+	cp -r ../tmEditor/tmEditor/*.py $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor
+	cp -r ../tmEditor/tmEditor/*.json $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor
+	cp -r ../tmEditor/changelog ../tmEditor/copyright ../tmEditor/README* $(tarballdir)/lib/tmeditor-$(version)/tmEditor
 	@echo "//     packing tarball..."
 	cd tarball && tar czf $(pkgdir)-$(distro)-$(arch).tar.gz $(pkgdir)-$(distro)-$(arch)
 	@echo "done."
