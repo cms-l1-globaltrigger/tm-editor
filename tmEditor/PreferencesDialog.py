@@ -24,12 +24,13 @@ class PreferencesDialog(QtGui.QDialog):
     def setupUi(self):
         self.setWindowTitle(self.tr("Preferences"))
         self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
-        self.resize(240, 180)
-        vbox = QtGui.QVBoxLayout()
-        self.clearHistoryButton = QtGui.QPushButton(self.tr("&Clear download history"), self)
-        vbox.addWidget(self.clearHistoryButton)
-        self.historyGroupBox = QtGui.QGroupBox(self.tr("History"), self)
-        self.historyGroupBox.setLayout(vbox)
+        self.resize(240, 100)
+        hbox = QtGui.QHBoxLayout()
+        self.clearHistoryButton = QtGui.QPushButton(self.tr("&Clear"), self)
+        hbox.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum))
+        hbox.addWidget(self.clearHistoryButton)
+        self.historyGroupBox = QtGui.QGroupBox(self.tr("Download history"), self)
+        self.historyGroupBox.setLayout(hbox)
         self.verticalSpacer = QtGui.QSpacerItem(0, 0,
             QtGui.QSizePolicy.Minimum,
             QtGui.QSizePolicy.Expanding

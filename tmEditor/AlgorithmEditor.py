@@ -55,7 +55,8 @@ def findObject(text, pos):
     """Returns object requirement at position *pos* or None if nothing found."""
     for result in RegExObject.finditer(text):
         if result.start() <= pos < result.end():
-            return result.group(0), result.start(), result.end()
+            if not result.group(0).startswith(tmGrammar.EXT): # Exclude EXT signals
+                return result.group(0), result.start(), result.end()
 
 def findFunction(text, pos):
     """Returns function expression at position *pos* or None if nothing found."""

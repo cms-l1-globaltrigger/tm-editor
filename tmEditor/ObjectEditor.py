@@ -144,9 +144,9 @@ class ObjectEditorDialog(QtGui.QDialog):
         scale = self.getScale(objectType)
         # Just to make sure...
         if scale is None:
-            QMessageBox.critical(self,
+            QtGui.QMessageBox.critical(self,
                 self.tr("Failed to load scales"),
-                QString("Missing scales for object of type %1").arg(objectType),
+                QtCore.QString("Missing scales for object of type %1").arg(objectType),
             )
             return
         self.thresholdSpinBox.setRange(float(scale['minimum']), float(scale['maximum']))

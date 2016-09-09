@@ -244,6 +244,7 @@ class Menu(object):
             raise RuntimeError(messange)
 
         # Populate the containers.
+        menu.menu['n_modules'] = '0' # Reset module distribution
         self.menu = dict(menu.menu.items())
 
         # Show information about the menu.
@@ -252,6 +253,9 @@ class Menu(object):
 
         # Add algorithms
         for algorithm in menu.algorithms:
+            # Reset algorithm distribution
+            algorithm['module_id'] = '0'
+            algorithm['module_index'] = algorithm['index']
             algorithm = Algorithm(algorithm.items())
             logging.debug("adding algorithm `%s'", algorithm)
             self.addAlgorithm(**algorithm)
@@ -302,12 +306,19 @@ class Menu(object):
             # Algorithms
             for key, value in self.menu.items():
                 menu.menu[key] = str(value)
+
+            # Reset module distribution
+            menu.menu['n_modules'] = '0'
+
             for algorithm in self.algorithms:
 
                 if not algorithm.isValid():
                     os.chdir(pwd)
                     raise RuntimeError("Invalid algorithm ({algorithm.index}): {algorithm.name}".format(**locals()))
 
+                # Reset algorithm distribution
+                algorithm['module_id'] = '0'
+                algorithm['module_index'] = algorithm['index']
                 row = algorithm.toRow()
                 logging.debug("appending algorithm `%s'", algorithm.name)
                 menu.algorithms.append(row)

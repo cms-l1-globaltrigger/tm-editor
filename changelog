@@ -1,3 +1,11 @@
+tm-editor (0.1.15-1) extra; urgency=medium
+
+  * Reset n_modules and module_id/module_index of algorithms on load/save.
+  * External signals now ignored by object editor.
+  * Updated preferences dialog.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Fri, 09 Sep 2016 16:14:19 +0200
+
 tm-editor (0.1.14-1) extra; urgency=medium
 
   * Introduced function editor dialog.
@@ -7,14 +15,14 @@ tm-editor (0.1.14-1) extra; urgency=medium
   * Fixed duplicated cuts on import from other menu.
   * Reorganization of code base.
 
- -- Bernhard  Arnold <bernhard.arnold@cern.ch>  Mon, 1 Aug 2016 16:46:11 +0200
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Mon, 1 Aug 2016 16:46:11 +0200
 
 tm-editor (0.1.13-1) extra; urgency=medium
 
   * Bugfixes for cut editor (creating new ETA/PHI cuts, duplicate names).
   * Fixed (again) muon charge and charge correlation cut data sets.
 
- -- Bernhard  Arnold <bernhard.arnold@cern.ch>  Thu, 28 Jul 2016 13:22:09 +0200
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Thu, 28 Jul 2016 13:22:09 +0200
 
 tm-editor (0.1.12-1) extra; urgency=medium
 
@@ -22,7 +30,7 @@ tm-editor (0.1.12-1) extra; urgency=medium
   * Bugfix for algorithm editor, creating functions was prevented by an error.
   * Some minor bugfixes for algorithm/cut/object editor dialogs.
 
- -- Bernhard  Arnold <bernhard.arnold@cern.ch>  Thu, 09 Jun 2016 18:55:01 +0200
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Thu, 09 Jun 2016 18:55:01 +0200
 
 tm-editor (0.1.11-1) extra; urgency=medium
 
@@ -31,7 +39,7 @@ tm-editor (0.1.11-1) extra; urgency=medium
   * Displaying scale set and external signal set in menu overview.
   * Removed restriction preventing duplicated expressions.
 
- -- Bernhard  Arnold <bernhard.arnold@cern.ch>  Thu, 28 Apr 2016 11:38:32 +0200
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Thu, 28 Apr 2016 11:38:32 +0200
 
 tm-editor (0.1.10-1) extra; urgency=medium
 
