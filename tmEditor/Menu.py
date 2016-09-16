@@ -357,7 +357,8 @@ class Menu(object):
                     cut = self.cutByName(name)
                     if not cut:
                         raise RuntimeError("Invalid cut: {name}".format(**locals()))
-                    patchCutOnWrite(Cut(cut)) # copy!
+                    cut = Cut(cut) # copy !
+                    patchCutOnWrite(cut)
                     row = cut.toRow()
                     logging.debug("appending cut `%s'", name)
                     menu.cuts[algorithm.name] = menu.cuts[algorithm.name] + (row, )
