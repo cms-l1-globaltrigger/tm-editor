@@ -66,7 +66,6 @@ def patchCutOnRead(cut):
         logging.debug("patching cut `%s' data (workaround)", cut.name)
         cut['data'] = cut.data.replace("ls", "0")
         cut['data'] = cut.data.replace("os", "1")
-        cut['data'] = cut.data.replace("ss", "1") #
     if cut.type == tmGrammar.CHG and cut.object == tmGrammar.MU:
         logging.debug("patching cut `%s' data (workaround)", cut.name)
         cut['data'] = cut.data.replace("positive", "0")
@@ -74,7 +73,7 @@ def patchCutOnRead(cut):
 
 def patchCutOnWrite(cut):
     """Workaround, patch cut data before writing to XML file."""
-    if cut.type == tmGrammar.CHGCOR and cut.object == tmGrammar.comb:
+    if cut.type == tmGrammar.CHGCOR and cut.object in (tmGrammar.comb, tmGrammar.dist):
         logging.debug("patching cut `%s' data (workaround)", cut.name)
         cut['data'] = cut.data.replace("0", "ls")
         cut['data'] = cut.data.replace("1", "os")
@@ -357,7 +356,7 @@ class Menu(object):
                     cut = self.cutByName(name)
                     if not cut:
                         raise RuntimeError("Invalid cut: {name}".format(**locals()))
-                    cut = Cut(cut) # copy !
+                    cut = Cut(cut) # copy, do not patch loaded cut
                     patchCutOnWrite(cut)
                     row = cut.toRow()
                     logging.debug("appending cut `%s'", name)

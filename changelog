@@ -1,3 +1,9 @@
+tm-editor (0.1.16-1) extra; urgency=high
+
+  * Fixed writing invalid CHGCOR cut values.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Fri, 16 Sep 2016 13:13:37 +0200
+
 tm-editor (0.1.15-1) extra; urgency=medium
 
   * Reset n_modules and module_id/module_index of algorithms on load/save.
