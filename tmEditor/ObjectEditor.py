@@ -40,6 +40,7 @@ CountObjects = [
     tmGrammar.MBT1HFP,
     tmGrammar.MBT0HFM,
     tmGrammar.MBT1HFM,
+    tmGrammar.TOWERCOUNT,
 ]
 """Ordered list of COUNT type object names."""
 

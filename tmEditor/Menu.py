@@ -50,6 +50,8 @@ ObjectTypes = (
     tmGrammar.MBT1HFP, # Minimum Bias Threshold 1 HF+
     tmGrammar.MBT0HFM, # Minimum Bias Threshold 0 HF-
     tmGrammar.MBT1HFM, # Minimum Bias Threshold 1 HF-
+    # Tower count
+    tmGrammar.TOWERCOUNT,
 )
 
 def getObjectType(name):

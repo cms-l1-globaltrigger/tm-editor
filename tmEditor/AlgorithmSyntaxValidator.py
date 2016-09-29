@@ -171,6 +171,7 @@ class ObjectThresholds(SyntaxRule):
                 tmGrammar.MBT1HFP: 'COUNT',
                 tmGrammar.MBT0HFM: 'COUNT',
                 tmGrammar.MBT1HFM: 'COUNT',
+                tmGrammar.TOWERCOUNT: 'COUNT',
             }
             scale = menu.scaleMeta(object, scaleTypes[object.type])
             threshold = thresholdFloat(object.threshold)

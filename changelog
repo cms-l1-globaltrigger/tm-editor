@@ -1,3 +1,9 @@
+tm-editor (0.1.17-1) extra; urgency=medium
+
+  * Added support for TOWDERCOUNT triggers.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Thu, 29 Sep 2016 17:28:13 +0200
+
 tm-editor (0.1.16-1) extra; urgency=high
 
   * Fixed writing invalid CHGCOR cut values.
