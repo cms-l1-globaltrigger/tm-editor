@@ -70,7 +70,6 @@ class SyntaxRule(object):
             raise AlgorithmSyntaxError("Empty expression")
         if not tmGrammar.Algorithm_parser(expression):
             raise AlgorithmSyntaxError("Invalid expression `{expression}'".format(**locals()))
-        logging.debug("validated expression: %s", tmGrammar.Algorithm_Logic.getTokens())
         return tmGrammar.Algorithm_Logic.getTokens()
 
     def toObjectItem(self, token):

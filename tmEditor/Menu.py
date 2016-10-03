@@ -293,13 +293,11 @@ class Menu(object):
         os.chdir(Toolbox.getXsdDir())
 
         try:
-            logging.debug("regenerating menu UUID:")
             self.menu['uuid_menu'] = str(uuid.uuid4())
-            logging.debug("%s", self.menu['uuid_menu'])
+            logging.debug("new menu UUID: %s", self.menu['uuid_menu'])
 
-            logging.debug("resetting firmware UUID:")
             self.menu['uuid_firmware'] = DEFAULT_UUID
-            logging.debug("%s", self.menu['uuid_firmware'])
+            logging.debug("new firmware UUID: %s", self.menu['uuid_firmware'])
 
             # Create a new menu instance.
             menu = tmTable.Menu()
@@ -321,7 +319,7 @@ class Menu(object):
                 algorithm['module_id'] = '0'
                 algorithm['module_index'] = algorithm['index']
                 row = algorithm.toRow()
-                logging.debug("appending algorithm `%s'", algorithm.name)
+                logging.debug("appending algorithm %s", dict(row))
                 menu.algorithms.append(row)
 
                 # Objects
@@ -334,7 +332,7 @@ class Menu(object):
                         raise RuntimeError("Invalid object requirement: {name}".format(**locals()))
 
                     row = object_.toRow()
-                    logging.debug("appending object requirement `%s'", name)
+                    logging.debug("appending object requirement %s", dict(row))
                     menu.objects[algorithm.name] = menu.objects[algorithm.name] + (row, )
 
                 # Externals
@@ -347,7 +345,7 @@ class Menu(object):
                         raise RuntimeError("Invalid external signal: {name}".format(**locals()))
 
                     row = external.toRow()
-                    logging.debug("appending external signal `%s'", name)
+                    logging.debug("appending external signal %s", dict(row))
                     menu.externals[algorithm.name] = menu.externals[algorithm.name] + (row, )
 
                 # Cuts
@@ -361,7 +359,7 @@ class Menu(object):
                     cut = Cut(cut) # copy, do not patch loaded cut
                     patchCutOnWrite(cut)
                     row = cut.toRow()
-                    logging.debug("appending cut `%s'", name)
+                    logging.debug("appending cut %s", dict(row))
                     menu.cuts[algorithm.name] = menu.cuts[algorithm.name] + (row, )
 
             # Write to XML file.

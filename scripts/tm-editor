@@ -10,7 +10,7 @@
 import tmEditor
 from tmEditor.version import VERSION, PKG_RELEASE
 
-from PyQt4.QtCore import QSettings
+from PyQt4.QtCore import QSettings, QT_VERSION_STR
 from PyQt4.QtGui import QApplication
 
 import argparse
@@ -43,19 +43,25 @@ def main():
     """Main application routine."""
     # Parse arguments.
     args = parse()
+
     # Setup console logging and debug level.
     loggingLevel = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(format = '%(levelname)s: %(message)s', level = loggingLevel)
+
     # As things are getting serious let's start logging to file.
     if args.verbose:
         handler = logging.FileHandler('tm-editor.log', mode = 'a')
         handler.setFormatter(logging.Formatter(fmt = '%(asctime)s %(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
         handler.setLevel(loggingLevel)
         logging.getLogger().addHandler(handler)
+
     # Create application window.
     try:
         app = QApplication(sys.argv)
-        logging.debug("launching L1-Trigger Menu Editor, version %s-%s", VERSION, PKG_RELEASE)
+        logging.debug("launching L1-Trigger Menu Editor")
+        logging.debug(" version %s-%s", VERSION, PKG_RELEASE)
+        logging.debug(" exec %s", __file__)
+        logging.debug(" PyQt4 version %s", QT_VERSION_STR)
 
         # Create/Load application settings.
         app.setOrganizationName("HEPHY")
