@@ -1,3 +1,16 @@
+tm-editor (0.2.0-1) extra; urgency=medium
+
+  * Code re-organisation.
+  * Fixed valid range for DETA cuts.
+  * Fixed auto correction for MASS cut range inputs.
+  * Improved algorithm preview.
+  * Improved algorithm function editor.
+  * Performing consistency checks on load.
+  * Updated icon sets.
+  * Application can be terminated by SIG_INT (Ctrl+C) from the terminal.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Fri, 07 Oct 2016 12:20:19 +0200
+
 tm-editor (0.1.17-1) extra; urgency=medium
 
   * Added support for TOWDERCOUNT triggers.

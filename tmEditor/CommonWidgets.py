@@ -28,30 +28,145 @@ import math
 # Simple overloaded widgets.
 #
 
+# -----------------------------------------------------------------------------
+#  A framed color icon box.
+# -----------------------------------------------------------------------------
+
+class ColorIcon(QtGui.QFrame):
+    """Provides an fixed sized framed color icon for building color labeled legends.
+
+    The default square size is 12 pixel.
+    """
+    def __init__(self, color, parent=None, size=12):
+        super(ColorIcon, self).__init__(parent)
+        # Fix the icon size.
+        self.setFixedSize(size, size)
+        # Draw a border around the icon.
+        self.setFrameShape(self.Box)
+        self.setFrameShadow(self.Plain)
+        # Make sure background color is displayed.
+        self.setAutoFillBackground(True)
+        # Store the icon's color.
+        self.setColor(color)
+
+    def setColor(self, color):
+        # Store the icon's color.
+        self.color = QtGui.QColor(color)
+        # Setup the active color background brush.
+        palette = self.palette()
+        brush = QtGui.QBrush(self.color)
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Light, brush) # Bugfix for parent widgets with background role: Light.
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Light, brush)
+        self.setPalette(palette)
+
+# -----------------------------------------------------------------------------
+#  Legend label with color icon on the right.
+# -----------------------------------------------------------------------------
+
+class ColorLabel(QtGui.QWidget):
+    """Color legend with icon and text label on the left."""
+
+    def __init__(self, color, text, parent=None):
+        super(ColorLabel, self).__init__(parent)
+        # Create the icon and the text label.
+        self.icon = ColorIcon(color, self)
+        self.label = QtGui.QLabel(text, self)
+        # Setup the layout.
+        layout = QtGui.QHBoxLayout()
+        layout.addWidget(self.icon)
+        layout.addWidget(self.label)
+        self.setLayout(layout)
+
+    def setColor(self, color):
+        self.icon.setColor(color)
+
+    def setText(self, text):
+        self.label.setText(text)
+
+# -----------------------------------------------------------------------------
+#  Legend label with icon on the right.
+# -----------------------------------------------------------------------------
+
+class IconLabel(QtGui.QWidget):
+    """label with 16x16 pixel icon and text label on the left."""
+
+    def __init__(self, icon, text, parent=None):
+        """Set icon of type QIcon and a text message."""
+        super(IconLabel, self).__init__(parent)
+        # Create the icon and the text label.
+        self.icon = QtGui.QLabel(self)
+        self.icon.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setIcon(icon)
+        self.label = QtGui.QLabel(text, self)
+        self.icon.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        # Setup the layout.
+        layout = QtGui.QHBoxLayout()
+        layout.addWidget(self.icon)
+        layout.addWidget(self.label)
+        self.setLayout(layout)
+
+    def setIcon(self, icon):
+        """Set displayed icon."""
+        self.icon.setPixmap(icon.pixmap(16, 16))
+
+    def setText(self, text):
+        """Set displayed text."""
+        self.label.setText(str(text))
+
+# -----------------------------------------------------------------------------
+#  Selectable label.
+# -----------------------------------------------------------------------------
+
+class SelectableLabel(QtGui.QLabel):
+    def __init__(self, parent=None):
+        super(SelectableLabel, self).__init__(parent)
+        self.setWordWrap(True)
+        self.setTextInteractionFlags(
+            QtCore.Qt.LinksAccessibleByMouse |
+            QtCore.Qt.TextSelectableByKeyboard |
+            QtCore.Qt.TextSelectableByMouse
+        )
+
+# -----------------------------------------------------------------------------
+#  Prefixed spin box
+# -----------------------------------------------------------------------------
+
 class PrefixedSpinBox(QtGui.QSpinBox):
     """A decimal spin box with plus and minus sign prefix.
     Used for assigning bunch crossing offsets.
     """
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         """Constructur, takes optional reference to parent widget."""
         super(PrefixedSpinBox, self).__init__(parent)
 
     def textFromValue(self, value):
         return format(value, '+d') # prefix integers also with plus sign
 
+# -----------------------------------------------------------------------------
+#  Read only line edit widget.
+# -----------------------------------------------------------------------------
+
 class ReadOnlyLineEdit(QtGui.QLineEdit):
     """Customized rad only line edit."""
-    def __init__(self, text = None, parent = None):
+
+    def __init__(self, text, parent=None):
         """
         @param text the initial text to display.
         @param parent optional parent widget.
         """
-        super(ReadOnlyLineEdit, self).__init__(str(text) if text else "", parent)
+        super(ReadOnlyLineEdit, self).__init__(str(text), parent)
         self.setReadOnly(True)
         # Set background to parent widget background.
         palette = self.palette()
         palette.setColor(QtGui.QPalette.Base, palette.color(QtGui.QPalette.Window))
         self.setPalette(palette)
+
+# -----------------------------------------------------------------------------
+#  Filter line edit widget.
+# -----------------------------------------------------------------------------
 
 class FilterLineEdit(QtGui.QLineEdit):
     """Line edit with a clear button on the right side.
@@ -82,17 +197,50 @@ class FilterLineEdit(QtGui.QLineEdit):
         """Hide clear button when line edit contains no text."""
         self._clearButton.setVisible(not text.isEmpty())
 
+# -----------------------------------------------------------------------------
+#  Extended combo box widget.
+# -----------------------------------------------------------------------------
+
+class ComboBoxPlus(QtGui.QComboBox):
+    """Enhanced combo box, permits to enable/disable items.
+    >>> widget = ComboBoxPlus()
+    >>> widget.insertItem(0, "sample")
+    >>> widget.setItemEnabled(0, False)
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(ComboBoxPlus, self).__init__(*args, **kwargs)
+
+    def setItemEnabled(self, index, enabled):
+        """Enables or disables item at *index*."""
+        # HACK:
+        # see http://theworldwideinternet.blogspot.co.at/2011/01/disabling-qcombobox-items.html
+        # and also https://forum.qt.io/topic/27419/qcombobox-item-disable
+        modelIndex = self.model().index(index, 0)
+        self.model().setData(modelIndex, QtCore.QVariant(33 if enabled else 0), QtCore.Qt.UserRole -1)
+
+# -----------------------------------------------------------------------------
+#  Restricted line edit widget.
+# -----------------------------------------------------------------------------
+
 class RestrictedLineEdit(QtGui.QLineEdit):
     """Restricted line edit widget.
+
     An optional prefix can be defined, it is part of the input but can not be
     edited or removed by the user. An optional regular expression prevents
     invalid user input (characters) also a maximum length of the full input
     can be defined.
     """
-    def __init__(self, parent = None):
-        """Constructur, takes optional reference to parent widget."""
+
+    def __init__(self, parent=None):
+        """Widget's constructor.
+
+        @param parent optional parent widget.
+        """
         super(RestrictedLineEdit, self).__init__(parent)
+        # Optional prefix.
         self._prefix = None
+        # Optional regular expression pattern.
         self._pattern = None
         # Guard all user input changes.
         self.textChanged.connect(self.validate)
@@ -113,28 +261,86 @@ class RestrictedLineEdit(QtGui.QLineEdit):
     def validate(self):
         """Validate user input."""
         if self._prefix and self.text().length() < len(self._prefix):
-            # Make it impossible to remove the prefix.
+            # Make it impossible to remove the L1Menu_ prefix.
             self.textChanged.disconnect()
             self.setText(self._prefix)
             self.textChanged.connect(self.validate)
 
-class ComboBoxPlus(QtGui.QComboBox):
-    """Enhanced combo box, permits to enable/disable items.
-    >>> widget = ComboBoxPlus()
-    >>> widget.insertItem(0, "sample")
-    >>> widget.setItemEnabled(0, False)
+# -----------------------------------------------------------------------------
+#  Restricted plain text edit.
+# -----------------------------------------------------------------------------
+
+class RestrictedPlainTextEdit(QtGui.QPlainTextEdit):
+    """Restricted plain text edit widget. Maximum length can be specified.
     """
+    def __init__(self, parent=None):
+        super(RestrictedPlainTextEdit, self).__init__(parent)
+        self._maxLength = None
+        self.textChanged.connect(self.validate)
+        self.setTabChangesFocus(True)
 
-    def __init__(self, *args, **kwargs):
-        super(ComboBoxPlus, self).__init__(*args, **kwargs)
+    def setMaxLength(self, length):
+        """Set maximal input length."""
+        self._maxLength = int(length)
 
-    def setItemEnabled(self, index, enabled):
-        """Enables or disables item at *index*."""
-        # HACK:
-        # see http://theworldwideinternet.blogspot.co.at/2011/01/disabling-qcombobox-items.html
-        # and also https://forum.qt.io/topic/27419/qcombobox-item-disable
-        modelIndex = self.model().index(index, 0)
-        self.model().setData(modelIndex, QtCore.QVariant(33 if enabled else 0), QtCore.Qt.UserRole -1)
+    def maxLength(self):
+        """@returns maximal input length."""
+        return int(self._maxLength)
+
+    def validate(self):
+        """Validate user input."""
+        if self._maxLength:
+            if self.toPlainText().length() > self._maxLength:
+                self.textCursor().deletePreviousChar()
+
+# -----------------------------------------------------------------------------
+#  Custom integer list spin box
+# -----------------------------------------------------------------------------
+
+class ListSpinBox(QtGui.QSpinBox):
+    """Custom spin box for a list of integers."""
+
+    def __init__(self, values, parent=None):
+        super(ListSpinBox, self).__init__(parent)
+        self.setValues(values)
+
+    def setValues(self, values):
+        self.values = [int(value) for value in values]
+        self.index = 0
+        minimum = min(self.values)
+        maximum = max(self.values)
+        self.setRange(minimum, maximum)
+
+    def stepBy(self, steps):
+        self.index += steps
+        self.setValue(int(self.values[self.index]))
+
+    def value(self, index=None):
+        """Returns bins floating point value by LUT index (upper or lower depending on mode)."""
+        if index == None: index = self.index
+        return self.values[index]
+
+    def minimum(self):
+        return self.value(0)
+
+    def maximum(self):
+        return self.value(-1)
+
+    def setValue(self, value):
+        value = self.nearest(value)
+        super(ListSpinBox, self).setValue(value)
+
+    def valueFromText(self, text):
+        """Re-implementation of valueFromText(), it returns only the nearest."""
+        return self.nearest(int(str(text).strip(" =<>!")))
+
+    def nearest(self, value):
+        """Returns nearest neighbor of value in range."""
+        # See also "finding index of an item closest to the value in a list that's not entirely sorted"
+        # http://stackoverflow.com/questions/9706041/finding-index-of-an-item-closest-to-the-value-in-a-list-thats-not-entirely-sort
+        result = min(range(len(self.values)), key=lambda i: abs(self.values[i] - value))
+        self.index = result
+        return self.value(self.index)
 
 #
 # More complex widgets.

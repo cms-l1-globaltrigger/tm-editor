@@ -22,13 +22,15 @@ from tmEditor import AlgorithmSyntaxHighlighter
 from tmEditor import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 from tmEditor import Toolbox
 from tmEditor import Menu
-from tmEditor.Menu import Algorithm
+from tmEditor.Menu import Algorithm, External
 from tmEditor.CodeEditor import CodeEditor
-from tmEditor.ObjectEditor import ObjectEditorDialog
+from tmEditor.ObjectEditor import ObjectEditorDialog, CountObjects
 from tmEditor.FunctionEditor import FunctionEditorDialog
 from tmEditor.CommonWidgets import (
     FilterLineEdit,
     RestrictedLineEdit,
+    ListSpinBox,
+    IconLabel,
 )
 
 from PyQt4 import QtCore
@@ -40,6 +42,23 @@ import logging
 import re
 
 MaxAlgorithms = 512
+
+# ------------------------------------------------------------------------------
+#  Keys
+# ------------------------------------------------------------------------------
+
+kBxOffset = 'bx_offset'
+kComment = 'comment'
+kComparisonOperator = 'comparison_operator'
+kData = 'data'
+kExpression = 'expression'
+kIndex = 'index'
+kMaximum = 'maximum'
+kMinimum = 'minimum'
+kName = 'name'
+kObject = 'object'
+kThreshold = 'threshold'
+kType = 'type'
 
 def miniIcon(name):
     """Returns mini icon to be used for items in list and tree views."""
@@ -125,7 +144,7 @@ class AlgorithmEditor(QtGui.QMainWindow):
         self.menu = menu
         self.setModified(False)
         #
-        self.indexSpinBox = Toolbox.ListSpinBox([0], self)
+        self.indexSpinBox = ListSpinBox([0], self)
         self.updateFreeIndices()
         self.indexSpinBox.setMaximum(MaxAlgorithms)
         self.indexSpinBox.setMinimumWidth(60)
@@ -505,10 +524,10 @@ class AlgorithmEditorDialog(QtGui.QDialog):
         self.editor.loadedIndex = int(algorithm.index)
 
     def updateAlgorithm(self, algorithm):
-        algorithm['index'] = str(self.index())
-        algorithm['name'] = self.name()
-        algorithm['expression'] = self.expression()
-        algorithm['comment'] = self.comment()
+        algorithm.index = int(self.index())
+        algorithm.name = str(self.name())
+        algorithm.expression = str(self.expression())
+        algorithm.comment = str(self.comment())
 
     def parse(self):
         try:
@@ -526,14 +545,22 @@ class AlgorithmEditorDialog(QtGui.QDialog):
                     return
                 # Check existance of cuts and external signals.
                 #
+            # TODO
             # Temporary limited conistency check.
-            algorithm = Algorithm(expression = self.expression())
+            algorithm = Algorithm(self.index(), self.name(), self.expression(), self.comment())
             algorithm.objects()
+            for name in algorithm.objects():
+                pass
             algorithm.cuts()
             for name in algorithm.cuts():
                 if not filter(lambda item: item.name == name, self.editor.menu.cuts):
-                    raise AlgorithmSyntaxError("Undefined cut `{name}`".format(**locals()), name)
-            algorithm.externals()
+                    raise AlgorithmSyntaxError("Undefined cut `{name}`.".format(**locals()), name)
+            for name in algorithm.externals():
+                def signal_name(name): return External(name, 0).signal_name
+                if not filter(lambda item: item[kName] == signal_name(name), self.editor.menu.extSignals.extSignals):
+                    name = signal_name(name)
+                    signalSet = self.editor.menu.extSignals.extSignalSet[kName]
+                    raise AlgorithmSyntaxError("Undefined external signal `{name}` in current signal set `{signalSet}`.".format(**locals()), name)
         except AlgorithmSyntaxError, e:
             if e.token:
                 # Make sure to highlight the errornous part in the text editor.
@@ -639,14 +666,6 @@ class LibraryWidget(QtGui.QWidget):
 
     selected = QtCore.pyqtSignal(str)
 
-    Functions = (
-        ("comb{obj, obj}", "<strong>Double combination function</strong><br/>Returns true if both object requirements are fulfilled.",),
-        ("comb{obj, obj, obj}", "<strong>Triple combination function</strong><br/>Returns true if all three object requirements are fulfilled.",),
-        ("comb{obj, obj, obj, obj}", "<strong>Quad combination function</strong><br/>Returns true if all four object requirements are fulfilled.",),
-        ("dist{obj, obj}[cut]", "<strong>Correlation function</strong><br/>Retruns true if correlation of both object requirements is within the given cut.",),
-        ("dist{obj, obj}[cut, cut]", "<strong>Correlation function</strong><br/>Retruns true if correlation of both object requirements is within the given cuts.",),
-        ("mass{obj, obj}[cut]", "<strong>Invariant mass function</strong><br/>Returns true if the invariant mass of two object requirements is between the given cut.",),
-    )
     Operators = (
         (tmGrammar.AND, "Logical <strong>AND</strong> operator.",),
         (tmGrammar.OR, "Logical <strong>OR</strong> operator.",),
@@ -656,8 +675,7 @@ class LibraryWidget(QtGui.QWidget):
     ObjectPreview = "<br/>".join((
         "<strong>Name:</strong> {name}",
         "<strong>Type:</strong> {type}",
-        "<strong>Comp. operator:</strong> {comparison_operator}",
-        "<strong>Threshold:</strong> {threshold}",
+        "<strong>Threshold:</strong> {comparison_operator} {threshold}",
         "<strong>BX offset:</strong> {bx_offset}",
     ))
     CutPreview = "<br/>".join((
@@ -667,11 +685,11 @@ class LibraryWidget(QtGui.QWidget):
         "<strong>Minimum:</strong> {minimum}",
         "<strong>Maximum:</strong> {maximum}",
         "<strong>Data:</strong> {data}",
+        "<strong>Comment:</strong> {comment}",
     ))
-    ExternalPreview = "<br/>".format((
+    ExternalPreview = "<br/>".join((
         "<strong>Name:</strong> {name}",
         "<strong>BX offset:</strong> {bx_offset}",
-        "<strong>Comment:</strong> {bx_offset}",
     ))
 
     def __init__(self, menu, parent = None):
@@ -704,10 +722,6 @@ class LibraryWidget(QtGui.QWidget):
         # Build list of externals.
         self.externalsList = QtGui.QListWidget(self)
         self.tabWidget.addTab(self.externalsList, self.tr("&Exts"))
-        # Build list of function templates.
-        self.functionsList = QtGui.QListWidget(self)
-        self.functionsList.addItems([name for name, _ in self.Functions])
-        self.tabWidget.addTab(self.functionsList, self.tr("&Funcs"))
         # Build list of operators.
         self.operatorsList = QtGui.QListWidget(self)
         self.operatorsList.addItems([name for name, _ in self.Operators])
@@ -739,8 +753,6 @@ class LibraryWidget(QtGui.QWidget):
         self.cutsTree.itemDoubleClicked.connect(self.onInsert)
         self.externalsList.currentRowChanged.connect(self.onPreview)
         self.externalsList.itemDoubleClicked.connect(self.onInsert)
-        self.functionsList.currentRowChanged.connect(self.onPreview)
-        self.functionsList.itemDoubleClicked.connect(self.onInsert)
         self.operatorsList.selectionModel().currentRowChanged.connect(self.onPreview)
         self.operatorsList.doubleClicked.connect(self.onInsert)
         self.tabWidget.currentChanged.connect(self.onPreview)
@@ -752,16 +764,7 @@ class LibraryWidget(QtGui.QWidget):
         topLevelItems = {}
         for object in sorted(self.menu.objects): # Applies custom sort of class
             icon = QtGui.QIcon()
-            if object.type in (tmGrammar.MU, ):
-                icon.addPixmap(miniIcon("mu"))
-            if object.type in (tmGrammar.EG, ):
-                icon.addPixmap(miniIcon("eg"))
-            if object.type in (tmGrammar.TAU, ):
-                icon.addPixmap(miniIcon("tau"))
-            if object.type in (tmGrammar.JET, ):
-                icon.addPixmap(miniIcon("jet"))
-            if object.type in (tmGrammar.ETT, tmGrammar.HTT, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETTEM, tmGrammar.ETMHF):
-                icon.addPixmap(miniIcon("esums"))
+            icon.addPixmap(miniIcon(object.type.lower()))
             if not object.type in topLevelItems.keys():
                 item = QtGui.QTreeWidgetItem(self.objectsTree, [object.type])
                 item.setIcon(0, icon)
@@ -784,8 +787,8 @@ class LibraryWidget(QtGui.QWidget):
         # Build list of externals.
         self.externalsList.clear()
         names = [external.name for external in self.menu.externals]
-        names += ['EXT_' + external['name'] for external in self.menu.extSignals.extSignals]
-        names = sorted(set(names))
+        names += ['_'.join((tmGrammar.EXT, external[kName])) for external in self.menu.extSignals.extSignals]
+        names = sorted(set(names), key=Toolbox.natural_sort_key)
         self.externalsList.addItems(names)
         # Refresh UI.
         self.onPreview()
@@ -809,10 +812,14 @@ class LibraryWidget(QtGui.QWidget):
             item = self.menu.objectByName(self.objectsTree.currentItem().text(0))
             # self.wizardCheckBox.setEnabled(True)
             if not item: return
-            item = dict(**item) # Copy
-            item['threshold'] = Toolbox.fThreshold(item['threshold'])
-            item['bx_offset'] = Toolbox.fBxOffset(item['bx_offset'])
-            self.previewLabel.setText(self.ObjectPreview.format(**item))
+            data = {
+                kName: item.name,
+                kType: item.type,
+                kComparisonOperator: Toolbox.fComparison(item.comparison_operator),
+                kThreshold: Toolbox.fCounts(item.threshold) if item.type in CountObjects else Toolbox.fThreshold(item.threshold),
+                kBxOffset: Toolbox.fBxOffset(item.bx_offset),
+            }
+            self.previewLabel.setText(self.ObjectPreview.format(**data))
             self.insertButton.setEnabled(True)
             self.wizardCheckBox.setEnabled(True)
         # Cuts
@@ -820,26 +827,29 @@ class LibraryWidget(QtGui.QWidget):
             if not self.cutsTree.currentItem(): return # empty list
             item = self.menu.cutByName(self.cutsTree.currentItem().text(0))
             if not item: return
-            item = dict(**item) # Copy
-            item['minimum'] = Toolbox.fCut(item['minimum'])
-            item['maximum'] = Toolbox.fCut(item['maximum'])
-            item['data'] = item['data'] or '-'
-            self.previewLabel.setText(self.CutPreview.format(**item))
+            data = {
+                kName: item.name,
+                kType: item.type,
+                kObject: item.object,
+                kMinimum: Toolbox.fCut(item.minimum),
+                kMaximum: Toolbox.fCut(item.maximum),
+                kData: item.data or "-",
+                kComment: item.comment or "-",
+            }
+            self.previewLabel.setText(self.CutPreview.format(**data))
             self.insertButton.setEnabled(True)
         # Externals
         elif tab == self.externalsList:
             if not self.externalsList.currentItem(): return # empty list
             self.insertButton.setEnabled(True)
             item = self.menu.externalByName(self.externalsList.currentItem().text())
-            if not item: return
-            self.previewLabel.setText(self.ExternalPreview.format(**item))
-            self.insertButton.setEnabled(True)
-        # Functions
-        elif tab == self.functionsList:
-            row = self.functionsList.currentRow()
-            self.wizardCheckBox.setEnabled(True)
-            if row < 0: return
-            self.previewLabel.setText(self.Functions[row][1])
+            if not item: # Create on the fly if not in list
+                item = External(self.externalsList.currentItem().text(), 0)
+            data = {
+                kName: item.name,
+                kBxOffset: Toolbox.fBxOffset(item.bx_offset)
+            }
+            self.previewLabel.setText(self.ExternalPreview.format(**data))
             self.insertButton.setEnabled(True)
         # Operators
         elif tab == self.operatorsList:
@@ -934,7 +944,7 @@ class AlgorithmSelectionDialog(QtGui.QDialog):
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.scrollArea)
         bottomLayout = QtGui.QHBoxLayout()
-        bottomLayout.addWidget(Toolbox.IconLabel(Toolbox.createIcon("info"), self.tr("Select a free algorithm index."), self))
+        bottomLayout.addWidget(IconLabel(Toolbox.createIcon("info"), self.tr("Select a free algorithm index."), self))
         bottomLayout.addWidget(self.buttonBox)
         layout.addLayout(bottomLayout)
         self.setLayout(layout)

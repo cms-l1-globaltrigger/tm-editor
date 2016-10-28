@@ -21,6 +21,16 @@ import re
 
 __all__ = ['ObjectEditorDialog', ]
 
+# -----------------------------------------------------------------------------
+#  Keys
+# -----------------------------------------------------------------------------
+
+kMinimum = 'minimum'
+kMaximum = 'maximum'
+kObject = 'object'
+kStep = 'step'
+kType = 'type'
+
 ThresholdObjects = [
     tmGrammar.MU,
     tmGrammar.EG,
@@ -56,6 +66,9 @@ ObjectCuts = [
 ]
 """Orderd list of cut type names."""
 
+def miniIcon(name):
+    return QtGui.QIcon(QtGui.QIcon(":/icons/{name}.svg".format(name=name)).pixmap(13, 13))
+
 def cutItem(text, checked = False):
     """Retruns a checkable cut standard item, to be inserted to a list model."""
     item = QtGui.QStandardItem(text)
@@ -86,7 +99,8 @@ class ObjectEditorDialog(QtGui.QDialog):
         self.updateInfoText()
 
     def setupUi(self):
-        self.setWindowTitle(self.tr("Object Editor"))
+        self.setWindowIcon(Toolbox.createIcon("wizard"))
+        self.setWindowTitle(self.tr("Object Requirement Editor"))
         self.resize(640, 380)
         self.objectLabel = QtGui.QLabel(self.tr("Object"), self)
         self.objectLabel.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
@@ -150,15 +164,15 @@ class ObjectEditorDialog(QtGui.QDialog):
                 QtCore.QString("Missing scales for object of type %1").arg(objectType),
             )
             return
-        self.thresholdSpinBox.setRange(float(scale['minimum']), float(scale['maximum']))
-        self.thresholdSpinBox.setSingleStep(float(scale['step']))
+        self.thresholdSpinBox.setRange(float(scale[kMinimum]), float(scale[kMaximum]))
+        self.thresholdSpinBox.setSingleStep(float(scale[kStep]))
         self.updateInfoText()
         self.initCuts()
 
     def initObjectList(self, menu):
         """Initialize list of available objects. Ignores objects with no scales."""
         for index, name in enumerate(Objects):
-            self.typeComboBox.addItem(name)
+            self.typeComboBox.addItem(miniIcon(name.lower()), name)
             if not self.getScale(name): # on missing scale (editng outdated XML?)
                 self.typeComboBox.setItemEnabled(index, False)
 
@@ -182,9 +196,9 @@ class ObjectEditorDialog(QtGui.QDialog):
     def getScale(self, objectType):
         """Returns scale for object or None if not found."""
         # Get only scales of object type
-        scales = filter(lambda item: item['object'] == objectType, self.menu.scales.scales)
+        scales = filter(lambda item: item[kObject] == objectType, self.menu.scales.scales)
         # Get only threshold/count scales
-        return (filter(lambda item: item['type'] in ('ET', 'COUNT', ), scales) or [None])[0]
+        return (filter(lambda item: item[kType] in ('ET', 'COUNT', ), scales) or [None])[0]
 
     def updateFilter(self, text):
         """Update cut filter."""
@@ -230,9 +244,9 @@ class ObjectEditorDialog(QtGui.QDialog):
         """Update info box text."""
         objectType = self.objectType()
         scale = self.getScale(objectType)
-        minThreshold = float(scale['minimum'])
-        maxThreshold = float(scale['maximum'])
-        step = float(scale['step'])
+        minThreshold = float(scale[kMinimum])
+        maxThreshold = float(scale[kMaximum])
+        step = float(scale[kStep])
         expression = self.toExpression()
         text = []
         text.append('<h3>{objectType} Object Requirement</h3>')

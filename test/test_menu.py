@@ -114,7 +114,7 @@ class MenuTests(unittest.TestCase):
         menu.addObject("MU10", "MU", 10)
         menu.addObject("MU20", "MU", 20)
         menu.addCut("MU-ETA_2p1", "MU", "ETA", -2.1, +2.1)
-        menu.addAlgorithm(42, "L1_DoubleMu_er2p1", "comb{MU20, MU10}[MU-ETA_2p1]")
+        menu.addAlgorithm(42, "L1_DoubleMu_er2p1", "comb{MU20[MU-ETA_2p1],MU10[MU-ETA_2p1]}")
         file, filename = tempfile.mkstemp()
         open(filename).close()
         menu.writeXml(filename)

@@ -14,7 +14,7 @@ from tmEditor import (
     PreferencesDialog,
     OpenUrlDialog,
     ImportDialog,
-    Document,
+    MenuDocument,
     MdiArea,
     Toolbox,
 )
@@ -30,6 +30,7 @@ import logging
 import sys, os, re
 
 L1ContentsURL = "http://globaltrigger.hephy.at/upgrade/tme/userguide"
+XmlFileExtension = '.xml'
 
 # NOTE: Bugfix for PyQt4.6
 if not hasattr(QtGui.QKeySequence, 'Quit'):
@@ -176,18 +177,19 @@ class MainWindow(QtGui.QMainWindow):
     def updateStatusBarCounters(self):
         """Update status bar with data of current MDI document."""
         document = self.mdiArea.currentDocument()
-        algorithms = len(document.menu().algorithms) if document else '--'
-        cuts = len(document.menu().cuts) if document else '--'
-        objects = len(document.menu().objects) if document else '--'
-        externals = len(document.menu().externals) if document else '--'
-        self.statusAlgorithms.setText(QtCore.QString(" %1: %2 ").arg(self.tr("Algorithms")).arg(algorithms))
-        self.statusCuts.setText(QtCore.QString(" %1: %2 ").arg(self.tr("Cuts")).arg(cuts))
-        self.statusObjects.setText(QtCore.QString(" %1: %2 ").arg(self.tr("Objects")).arg(objects))
-        self.statusExternals.setText(QtCore.QString(" %1: %2 ").arg(self.tr("Externals")).arg(externals))
+        algorithms = len(document.menu().algorithms) if document else self.tr("--")
+        cuts = len(document.menu().cuts) if document else self.tr("--")
+        objects = len(document.menu().objects) if document else self.tr("--")
+        externals = len(document.menu().externals) if document else self.tr("--")
+        self.statusAlgorithms.setText(self.tr("Algorithms: %1").arg(algorithms))
+        self.statusCuts.setText(self.tr("Cuts: %1").arg(cuts))
+        self.statusObjects.setText(self.tr("Objects: %1").arg(objects))
+        self.statusExternals.setText(self.tr("Externals: %1").arg(externals))
 
+    @QtCore.pyqtSlot()
     def syncActions(self):
         """Disable some actions if no document is opened."""
-        enabled = bool(self.mdiArea.count())
+        enabled = self.mdiArea.count()
         self.importAct.setEnabled(enabled)
         self.saveAct.setEnabled(enabled)
         self.saveAsAct.setEnabled(enabled)
@@ -237,14 +239,14 @@ class MainWindow(QtGui.QMainWindow):
                         # will vanish (see python tempfile.NamedTemporaryFile).
                         f.seek(0)
                         # Create document by reading temporary file.
-                        document = Document(f.name, self)
+                        document = MenuDocument(f.name, self)
                         dialog.close()
                 except:
                     dialog.close()
                     raise
             # Else it is a local filesystem path.
             else:
-                document = Document(filename, self)
+                document = MenuDocument(filename, self)
         except (RuntimeError, OSError), e:
             logging.error("Failed to open XML menu: %s", str(e))
             QtGui.QMessageBox.critical(self,
@@ -273,7 +275,7 @@ class MainWindow(QtGui.QMainWindow):
         if self.mdiArea.currentDocument():
             path = os.path.dirname(self.mdiArea.currentDocument().filename())
         filenames = QtGui.QFileDialog.getOpenFileNames(self, self.tr("Open files..."),
-            path, self.tr("L1-Trigger Menus (*.xml)"))
+            path, self.tr("L1-Trigger Menus (*%1)").arg(XmlFileExtension))
         for filename in filenames:
             self.loadDocument(str(filename))
 
@@ -294,7 +296,7 @@ class MainWindow(QtGui.QMainWindow):
         if self.mdiArea.currentDocument():
             path = os.path.dirname(self.mdiArea.currentDocument().filename())
             filename = str(QtGui.QFileDialog.getOpenFileName(self, self.tr("Import file..."),
-                path, self.tr("L1-Trigger Menus (*.xml)")))
+                path, self.tr("L1-Trigger Menus (*%1)").arg(XmlFileExtension)))
             if filename:
                 dialog = ImportDialog(filename, self.mdiArea.currentDocument().menu(), self)
                 dialog.setModal(True)
@@ -316,31 +318,29 @@ class MainWindow(QtGui.QMainWindow):
         document = self.mdiArea.currentDocument()
         try:
             document.saveMenu()
-        except (RuntimeError, ValueError), e:
+            self.mdiArea.setTabText(self.mdiArea.currentIndex(), document.name())
+        except (RuntimeError, ValueError, IOError), e:
             QtGui.QMessageBox.critical(self,
-                self.tr("Failed to write XML menu"),
-                str(e),
-            )
+                self.tr("Failed to write XML menu"), str(e))
 
     def onSaveAs(self):
         path = str(self.mdiArea.currentDocument().filename())
-        if not path.endswith('.xml'):
-            path = os.path.join(str(QtCore.QDir.homePath()), ''.join((os.path.basename(path), '.xml')))
-        filename = str(QtGui.QFileDialog.getSaveFileName(self, self.tr("Save as..."),
-            path, self.tr("L1-Trigger Menus (*.xml)")))
+        if not path.endswith(XmlFileExtension):
+            path = os.path.join(str(QtCore.QDir.homePath()), ''.join((os.path.basename(path), XmlFileExtension)))
+        filename = str(QtGui.QFileDialog.getSaveFileName(self,
+            self.tr("Save as..."), path,
+            self.tr("L1-Trigger Menus (*%1)").arg(XmlFileExtension)))
         if filename:
-            if not filename.endswith('.xml'):
-                filename = ''.join((filename, '.xml'))
+            if not filename.endswith(XmlFileExtension):
+                filename = ''.join((filename, XmlFileExtension))
             document = self.mdiArea.currentDocument()
             try:
                 document.saveMenu(filename)
                 # TODO
-                self.mdiArea.setTabText(self.mdiArea.currentIndex(), os.path.basename(filename))
+                self.mdiArea.setTabText(self.mdiArea.currentIndex(), document.name())
             except RuntimeError, e:
                 QtGui.QMessageBox.critical(self,
-                    self.tr("Failed to write XML menu"),
-                    str(e),
-                )
+                    self.tr("Failed to write XML menu"), str(e))
         self.syncActions()
 
     def onClose(self):

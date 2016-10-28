@@ -7,6 +7,7 @@ from PyQt4 import QtGui
 import tmGrammar
 from tmEditor import Toolbox
 from tmEditor.AlgorithmFormatter import AlgorithmFormatter
+from tmEditor import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 from tmEditor.Menu import (
     thresholdFloat,
 )
@@ -28,6 +29,7 @@ class FunctionEditorDialog(QtGui.QDialog):
     def __init__(self, menu, parent=None):
         super(FunctionEditorDialog, self).__init__(parent)
         self.menu = menu
+        self.validator = AlgorithmSyntaxValidator(menu)
         self.setupUi()
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
@@ -35,6 +37,7 @@ class FunctionEditorDialog(QtGui.QDialog):
         self.updateInfoText()
 
     def setupUi(self):
+        self.setWindowIcon(Toolbox.createIcon("wizard-function"))
         self.setWindowTitle(self.tr("Function Editor"))
         self.functionComboBox = QtGui.QComboBox(self)
         self.functionComboBox.addItem(self.tr("%1 (combination)").arg(tmGrammar.comb), tmGrammar.comb)
@@ -143,6 +146,17 @@ class FunctionEditorDialog(QtGui.QDialog):
         for cut in self.cutModel._items:
             if cut.text() in tmGrammar.Function_getCuts(f):
                 cut.setCheckState(QtCore.Qt.Checked)
+
+    def accept(self):
+        """Very preliminary validation."""
+        try:
+            self.validator.validate(AlgorithmFormatter.compress(self.toExpression()))
+        except AlgorithmSyntaxError, e:
+            QtGui.QMessageBox.warning(self, self.tr("Invalid expression"),
+                self.tr("Invalid expression `%1'. %2").arg(e.token, e.message),
+            )
+            return
+        super(FunctionEditorDialog, self).accept()
 
 class FunctionReqHelper(object):
 

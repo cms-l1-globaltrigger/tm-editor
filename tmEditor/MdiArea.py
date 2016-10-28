@@ -9,11 +9,13 @@
 """Multi Document Interface (MDI) area.
 """
 
-from tmEditor import Document
+from tmEditor import MenuDocument
 from tmEditor import Toolbox
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
+
+import sys, os
 
 class MdiArea(QtGui.QTabWidget):
     """A tab widget based MDI area widget."""
@@ -37,11 +39,11 @@ class MdiArea(QtGui.QTabWidget):
         Returns index of tab of added document.
         """
         # Do no re-open a document, just raise its tab.
-        result = filter(lambda doc: document.filename() == doc.filename(), self.documents())
+        result = filter(lambda item: document.filename() == item.filename(), self.documents())
         if result:
             self.setCurrentWidget(result[0])
             return self.currentIndex()
-        document.modified.connect(self.documentChanged)
+        document.modified.connect(self.documentModified)
         return self.addTab(document, Toolbox.createIcon("document"), document.name())
 
     @QtCore.pyqtSlot()
@@ -74,5 +76,7 @@ class MdiArea(QtGui.QTabWidget):
         return self.closeDocument(self.currentIndex())
 
     @QtCore.pyqtSlot()
-    def documentChanged(self):
+    def documentModified(self):
+        title = QtCore.QString("*%1").arg(self.currentDocument().name()) # Mark modified tabs with leading asterisk
+        self.setTabText(self.currentIndex(), title)
         self.currentChanged.emit(self.currentIndex())

@@ -14,20 +14,21 @@
 import tmGrammar
 
 from tmEditor import Toolbox
-from tmEditor import Settings
-
 from tmEditor import CutEditorDialog
 from tmEditor import AlgorithmEditorDialog
 from tmEditor import AlgorithmSyntaxHighlighter
 
 from tmEditor import Menu
 from tmEditor.Menu import Algorithm, Cut, Object, External, toObject
+from tmEditor.BottomWidget import BottomWidget
 from tmEditor.CommonWidgets import (
     FilterLineEdit,
     ReadOnlyLineEdit,
     RestrictedLineEdit,
     EtaCutChart,
     PhiCutChart,
+    IconLabel,
+    SelectableLabel,
 )
 
 from tmEditor.Models import *
@@ -45,85 +46,117 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 
 import math
+import copy
 import sys, os
 
 from tmEditor.AlgorithmEditor import MaxAlgorithms
+
+# ------------------------------------------------------------------------------
+#  Keys
+# ------------------------------------------------------------------------------
+
+kCable = 'cable'
+kChannel = 'channel'
+kComment = 'comment'
+kData = 'data'
+kDescription = 'description'
+kExpression = 'expression'
+kGrammarVersion = 'grammar_version'
+kIndex = 'index'
+kLabel = 'label'
+kMaximum = 'maximum'
+kMinimum = 'minimum'
+kNBits = 'n_bits'
+kName = 'name'
+kNumber = 'number'
+kObject = 'object'
+kStep = 'step'
+kSystem = 'system'
+kType = 'type'
+kUUIDMenu = 'uuid_menu'
 
 # ------------------------------------------------------------------------------
 #  Document widget
 # ------------------------------------------------------------------------------
 
 class Document(QtGui.QWidget):
-    """Document container widget used by MDI area.
+    """Document container widget used by MDI area."""
+
+    modified = QtCore.pyqtSignal()
+    """This signal is emitted whenever the content of the document changes."""
+
+    def __init__(self, filename, parent=None):
+        super(Document, self).__init__(parent)
+        self.setFilename(filename)
+        self.setModified(False)
+
+    def name(self):
+        return self.__name
+
+    def setName(self, name):
+        self.__name = name
+
+    def filename(self):
+        return self.__filename
+
+    def setFilename(self, filename):
+        self.__filename = os.path.abspath(filename)
+
+    def isModified(self):
+        return self.__modified
+
+    def setModified(self, modified):
+        self.__modified = bool(modified)
+
+class MenuDocument(Document):
+    """Menu document container widget used by MDI area.
 
     Document consists of pages listed in a tree view on the left. Adding pages
     requires assigning a top and a bottom widget to each page. Normally the top
     widget is either a generic table view or a more specific form widget whereas
     the bottom widget holds a versatile preview widget displaying details and
     actions for the above selected data set.
+
+        +-----+-SlimSplitter-------+
+        |     | +--SlimSplitter--+ |
+        |     | | filterWidget   | |
+        |     | +----------------+ |
+        | [1] | | topStack       | |
+        |     | +----------------+ |
+        |     | | bottomWidget   | |
+        |     | +----------------+ |
+        +-----+--------------------+
+
+        [1] navigationTreeWidget
+
     """
 
-    modified = QtCore.pyqtSignal()
-    """This signal is emitted whenever the content of the document changes."""
-
-    def __init__(self, filename, parent = None):
-        super(Document, self).__init__(parent)
+    def __init__(self, filename, parent=None):
+        super(MenuDocument, self).__init__(filename, parent)
         # Attributes
         self.loadMenu(filename)
         # Layout
         self.setContentsMargins(0, 0, 0, 0)
         #
         self._pages = []
-        # Create table views.
-        algorithmsTableView = self.createProxyTableView("algorithmsTableView", AlgorithmsModel(self.menu(), self))
-        algorithmsTableView.resizeColumnsToContents()
-        cutsTableView = self.createProxyTableView("cutsTableView", CutsModel(self.menu(), self), proxyclass=CutsModelProxy)
-        cutsTableView.resizeColumnsToContents()
-        objectsTableView = self.createProxyTableView("objectsTableView", ObjectsModel(self.menu(), self), proxyclass=ObjectsModelProxy)
-        objectsTableView.resizeColumnsToContents()
-        externalsTableView = self.createProxyTableView("externalsTableView", ExternalsModel(self.menu(), self), proxyclass=ExternalsModelProxy)
-        externalsTableView.resizeColumnsToContents()
-        scalesTableView = self.createProxyTableView("scalesTableView", ScalesModel(self.menu(), self), proxyclass=ScalesModelProxy)
-        scalesTableView.resizeColumnsToContents()
-        binsTableViews = {}
-        for scale in self.menu().scales.bins.keys():
-            binsTableViews[scale] = self.createProxyTableView("{scale}TableView".format(**locals()), BinsModel(self.menu(), scale, self))
-        extSignalsTableView = self.createProxyTableView("externalsTableView", ExtSignalsModel(self.menu(), self))
-        #
-        menuView = MenuWidget(self)
-        menuView.loadMenu(self.menu())
-        #
-        # Bottom widget
-        self.bottomWidget = BottomWidget(self)
-        self.bottomWidget.addTriggered.connect(self.addItem)
-        self.bottomWidget.editTriggered.connect(self.editItem)
-        self.bottomWidget.copyTriggered.connect(self.copyItem)
-        self.bottomWidget.removeTriggered.connect(self.removeItem)
-        # Navigation tree
-        self.navigationTreeWidget = QtGui.QTreeWidget(self)
-        self.navigationTreeWidget.headerItem().setHidden(True)
-        self.navigationTreeWidget.setObjectName("navigationTreeWidget")
-        self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee;}")
         # Filter bar
         self.filterWidget = TextFilterWidget(self)
         self.filterWidget.textChanged.connect(self.setFilterText)
         # Stacks
         self.topStack = QtGui.QStackedWidget(self)
-        self.bottomStack = QtGui.QStackedWidget(self)
-        # Add navigation items.
-        self.menuPage = self.addPage("Menu", menuView, self.bottomWidget)
-        self.algorithmsPage = self.addPage("Algorithms", algorithmsTableView, self.bottomWidget, self.menuPage)
-        self.cutsPage = self.addPage("Cuts", cutsTableView, self.bottomWidget, self.menuPage)
-        self.objectsPage = self.addPage("Object Requirements", objectsTableView, self.bottomWidget, self.menuPage)
-        self.externalsPage = self.addPage("External Requirements", externalsTableView, self.bottomWidget, self.menuPage)
-        self.scalesPage = self.addPage("Scales", scalesTableView, self.bottomWidget)
-        self.scalesTypePages = {}
-        for scale in self.menu().scales.bins.keys():
-            self.scalesTypePages[scale] = self.addPage(scale, binsTableViews[scale], self.bottomWidget, self.scalesPage)
-        self.extSignalsPage = self.addPage("External Signals", extSignalsTableView, self.bottomWidget)
+        # Create table views.
+        self.createNavigationTree()
+        self.createBottomWidget()
+        self.createMenuPage()
+        self.createAlgorithmsPage()
+        self.createCutsPage()
+        self.createObjectsPage()
+        self.createExternalsPage()
+        self.createScalesPage()
+        self.createScaleBinsPages()
+        self.createExtSignalsPage()
         # Finsish navigation setup.
         self.navigationTreeWidget.expandItem(self.menuPage)
-        self.navigationTreeWidget.itemSelectionChanged.connect(self.updateTop)
         self.navigationTreeWidget.setCurrentItem(self.menuPage)
         # Splitters
         self.vsplitter = SlimSplitter(QtCore.Qt.Horizontal, self)
@@ -134,7 +167,7 @@ class Document(QtGui.QWidget):
         self.hsplitter = SlimSplitter(QtCore.Qt.Vertical, self)
         self.hsplitter.addWidget(self.filterWidget)
         self.hsplitter.addWidget(self.topStack)
-        self.hsplitter.addWidget(self.bottomStack)
+        self.hsplitter.addWidget(self.bottomWidget)
         self.vsplitter.addWidget(self.hsplitter)
         self.vsplitter.setStretchFactor(0, 0)
         self.vsplitter.setStretchFactor(1, 1)
@@ -145,12 +178,75 @@ class Document(QtGui.QWidget):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
-        #
-        self.menuPage.top.nameLineEdit.setText(self.menu().menu['name'])
-        self.menuPage.top.commentTextEdit.setPlainText(self.menu().menu['comment'] if 'comment' in self.menu().menu else '')
-        #self.bottomWidget.setText("<img style=\"float:left;\" src=\":icons/tm-editor.svg\"/><h1 style=\"margin-left:120px;\">Trigger Menu Editor</h1><p style=\"margin-left:120px;\"><em>Editing Level-1 Global Trigger Menus with ease</em></p>")
 
-    def createProxyTableView(self, name, model, proxyclass=QtGui.QSortFilterProxyModel):
+    def createNavigationTree(self):
+        # Navigation tree
+        self.navigationTreeWidget = QtGui.QTreeWidget(self)
+        self.navigationTreeWidget.headerItem().setHidden(True)
+        self.navigationTreeWidget.setObjectName("navigationTreeWidget")
+        self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee; }")
+        self.navigationTreeWidget.itemSelectionChanged.connect(self.updateTop)
+
+    def createBottomWidget(self):
+        # Bottom widget
+        self.bottomWidget = BottomWidget(self)
+        self.bottomWidget.toolbar.addTriggered.connect(self.addItem)
+        self.bottomWidget.toolbar.editTriggered.connect(self.editItem)
+        self.bottomWidget.toolbar.copyTriggered.connect(self.copyItem)
+        self.bottomWidget.toolbar.removeTriggered.connect(self.removeItem)
+
+    def createMenuPage(self):
+        menuView = MenuWidget(self)
+        menuView.loadMenu(self.menu())
+        menuView.nameLineEdit.setText(self.menu().menu[kName])
+        menuView.commentTextEdit.setPlainText(self.menu().menu[kComment] if kComment in self.menu().menu else '')
+        menuView.modified.connect(self.onModified)
+        self.menuPage = self.addPage(self.tr("Menu"), menuView)
+
+    def createAlgorithmsPage(self):
+        model = AlgorithmsModel(self.menu(), self)
+        tableView = self.newProxyTableView("algorithmsTableView", model)
+        tableView.resizeColumnsToContents()
+        self.algorithmsPage = self.addPage(self.tr("Algorithms"), tableView, self.menuPage)
+
+    def createCutsPage(self):
+        model = CutsModel(self.menu(), self)
+        tableView = self.newProxyTableView("cutsTableView", model, proxyclass=CutsModelProxy)
+        tableView.resizeColumnsToContents()
+        self.cutsPage = self.addPage(self.tr("Cuts"), tableView, self.menuPage)
+
+    def createObjectsPage(self):
+        model = ObjectsModel(self.menu(), self)
+        tableView = self.newProxyTableView("objectsTableView", model, proxyclass=ObjectsModelProxy)
+        tableView.resizeColumnsToContents()
+        self.objectsPage = self.addPage(self.tr("Object Requirements"), tableView, self.menuPage)
+
+    def createExternalsPage(self):
+        model = ExternalsModel(self.menu(), self)
+        tableView = self.newProxyTableView("externalsTableView", model, proxyclass=ExternalsModelProxy)
+        tableView.resizeColumnsToContents()
+        self.externalsPage = self.addPage(self.tr("External Requirements"), tableView, self.menuPage)
+
+    def createScalesPage(self):
+        model = ScalesModel(self.menu(), self)
+        tableView = self.newProxyTableView("scalesTableView", model, proxyclass=ScalesModelProxy)
+        tableView.resizeColumnsToContents()
+        self.scalesPage = self.addPage(self.tr("Scales"), tableView)
+
+    def createExtSignalsPage(self):
+        model = ExtSignalsModel(self.menu(), self)
+        tableView = self.newProxyTableView("externalsTableView", model)
+        tableView.resizeColumnsToContents()
+        self.extSignalsPage = self.addPage(self.tr("External Signals"), tableView)
+
+    def createScaleBinsPages(self):
+        self.scalesTypePages = {}
+        for scale in self.menu().scales.bins.keys():
+            model = BinsModel(self.menu(), scale, self)
+            tableView = self.newProxyTableView("{scale}TableView".format(**locals()), model)
+            self.scalesTypePages[scale] = self.addPage(scale, tableView, self.scalesPage)
+
+    def newProxyTableView(self, name, model, proxyclass=QtGui.QSortFilterProxyModel):
         """Factory to create new QTableView view using a QSortFilterProxyModel."""
         proxyModel = proxyclass(self)
         proxyModel.setFilterKeyColumn(-1)
@@ -158,19 +254,17 @@ class Document(QtGui.QWidget):
         proxyModel.setSourceModel(model)
         tableView = TableView(self)
         tableView.setObjectName(name)
-        tableView.setStyleSheet("#{name} {{ border: 0; }}".format(**locals()))
+        tableView.setStyleSheet(QtCore.QString("#%1 { border: 0; }").arg(name))
         tableView.setModel(proxyModel)
         tableView.doubleClicked.connect(self.editItem)
         tableView.selectionModel().selectionChanged.connect(self.updateBottom)
         return tableView
 
-    def addPage(self, name, top, bottom, parent = None):
+    def addPage(self, name, top=None, parent=None):
         """Add page consisting of navigation tree entry, top and bottom widget."""
-        page = Page(name, top, bottom, parent or self.navigationTreeWidget)
+        page = PageItem(name, top, self.bottomWidget, parent or self.navigationTreeWidget)
         if 0 > self.topStack.indexOf(top):
             self.topStack.addWidget(top)
-        if 0 > self.bottomStack.indexOf(bottom):
-            self.bottomStack.addWidget(bottom)
         self._pages.append(page)
         return page
 
@@ -180,36 +274,28 @@ class Document(QtGui.QWidget):
         if item not in excludedPages:
             item.top.model().setFilterFixedString(text)
 
-    def filename(self):
-        return self._filename
-
-    def setFilename(self, filename):
-        self._filename = os.path.abspath(filename)
-
-    def name(self):
-        return self._name
-
-    def setName(self, name):
-        self._name = str(name)
-
-    def isModified(self):
-        return self._isModified
-
-    def setModified(self, modified):
-        self._isModified = bool(modified)
+    def onModified(self):
+        self.setModified(True)
+        self.modified.emit()
 
     def menu(self):
         return self._menu
 
     def loadMenu(self, filename):
         """Load menu from filename, setup new document."""
-        self.setModified(False)
         self.setFilename(filename)
         self.setName(os.path.basename(filename))
-        self._menu = Menu()
-        self._menu.readXml(filename)
+        self._menu = Menu(filename)
+        def normalize(s):
+            def valid(c):
+                return c.isalnum() or c in '_'
+            return ''.join(c if valid(c) else '_' for c in s)
+        self._menu.menu[kName] = normalize(self._menu.menu[kName])
+        if not self._menu.menu[kName].startswith('L1Menu_'):
+            self._menu.menu[kName] = ''.join(('L1Menu_', self._menu.menu[kName]))
+        self.setModified(False)
 
-    def saveMenu(self, filename = None):
+    def saveMenu(self, filename=None):
         """Save menu to filename."""
         # Warn before loosing cuts
         orphans = self._menu.orphanedCuts()
@@ -224,14 +310,16 @@ class Document(QtGui.QWidget):
                 QtCore.QString("There is one orphaned cut (<em>%1</em>) that will be lost as it can't be saved to the XML file!").arg(orphans[0])
             )
         filename = filename or self.filename()
-        self._menu.menu['name'] = str(self.menuPage.top.nameLineEdit.text())
-        self._menu.menu['comment'] = str(self.menuPage.top.commentTextEdit.toPlainText())
+        self._menu.menu[kName] = str(self.menuPage.top.nameLineEdit.text())
+        self._menu.menu[kComment] = str(self.menuPage.top.commentTextEdit.toPlainText())
         self._menu.writeXml(filename)
         self.setFilename(filename)
         self.setName(os.path.basename(filename))
+        self.menuPage.top.loadMenu(self.menu())
         self.setModified(False)
         index, item = self.getSelection()
         item.top.update()
+        self.updateBottom()
 
     def getSelection(self):
         items = self.navigationTreeWidget.selectedItems()
@@ -250,7 +338,7 @@ class Document(QtGui.QWidget):
                 free.remove(int(algorithm.index))
         return free
 
-    def getUniquAlgorithmName(self, basename="L1_Unnamed"):
+    def getUniqueAlgorithmName(self, basename="L1_Unnamed"):
         """Returns eiter *basename* if not already used in menu, else tries to
         find an unused basename with number suffix. Worst case returns just the
         basename.
@@ -259,7 +347,7 @@ class Document(QtGui.QWidget):
         if self.menu().algorithmByName(name):
             # Default name is already used, try to find a derivate
             for i in range(2, MaxAlgorithms):
-                name = "{basename}_{i}".format(**locals())
+                name = '{0}_{1}'.format(basename, i)
                 if not self.menu().algorithmByName(name):
                     return name # got unused name!
         return basename # no clue...
@@ -281,81 +369,59 @@ class Document(QtGui.QWidget):
         # Generic preview...
         if hasattr(item.bottom, 'reset'):
             item.bottom.reset()
-        self.bottomStack.show()
+        self.bottomWidget.show()
         if item is self.menuPage:
-            self.bottomStack.hide()
-            text = []
-            for key, value in self.menu().menu.items():
-                if value == '\x00': value = "" # Overwrite NULL characters
-                text.append("<strong>{key}:</strong> {value}<br/>".format(**locals()))
-            item.bottom.setText(''.join(text))
-            item.bottom.setButtonsEnabled(True)
-        elif index and item and isinstance(item.top, TableView):
-            data = dict([(key, value) for key, value in item.top.model().sourceModel().values[index.row()].items()]) # Local copy
-            rows = item.top.selectionModel().selectedRows()
+            lines = QtCore.QStringList()
+            lines.append(self.tr("<p><strong>Scale Set:</strong> %1</p>").arg(self.menu().scales.scaleSet[kName]))
+            lines.append(self.tr("<p><strong>External Signal Set:</strong> %1</p>").arg(self.menu().extSignals.extSignalSet[kName]))
+            lines.append(self.tr("<p><strong>Menu UUID:</strong> %1</p>").arg(self.menu().menu[kUUIDMenu]))
+            lines.append(self.tr("<p><strong>Grammar Version:</strong> %1</p>").arg(self.menu().menu[kGrammarVersion]))
+            item.bottom.setText(lines.join(""))
+            item.bottom.toolbar.setButtonsEnabled(False)
+        elif index and item and isinstance(item.top, TableView): # ignores menu view
+            data = item.top.model().sourceModel().values[index.row()]
+            rows = len(item.top.selectionModel().selectedRows())
+
             if item is self.algorithmsPage:
-                if 1 < len(rows):
-                    item.bottom.setText("Selected {0} algorithms.".format(len(rows)))
+                if 1 < rows:
+                    item.bottom.setText(self.tr("Selected %1 algorithms.").arg(rows))
                 else:
-                    item.bottom.loadAlgorithm(Algorithm(**data))
+                    item.bottom.loadAlgorithm(data, self.menu())
             elif item is self.cutsPage:
-                if 1 < len(rows):
-                    item.bottom.setText("Selected {0} cuts.".format(len(rows)))
+                if 1 < rows:
+                    item.bottom.setText(self.tr("Selected %1 cuts.").arg(rows))
                 else:
-                    item.bottom.loadCut(Cut(**data))
+                    item.bottom.loadCut(data)
             elif item is self.objectsPage:
-                if 1 < len(rows):
-                    item.bottom.setText("Selected {0} object requiremetns.".format(len(rows)))
+                if 1 < rows:
+                    item.bottom.setText(self.tr("Selected %1 object requirements.").arg(rows))
                 else:
-                    item.bottom.loadObject(Object(**data))
+                    item.bottom.loadObject(data)
             elif item is self.externalsPage:
-                if 1 < len(rows):
-                    item.bottom.setText("Selected {0} external signals.".format(len(rows)))
+                if 1 < rows:
+                    item.bottom.setText(self.tr("Selected %1 external signals.").arg(rows))
                 else:
-                    item.bottom.loadExternal(External(**data))
+                    item.bottom.loadExternal(self.menu(), data)
             elif item is self.scalesPage:
-                if 1 < len(rows):
-                    item.bottom.setText("Selected {0} scale sets.".format(len(rows)))
+                if 1 < rows:
+                    item.bottom.setText(self.tr("Selected %1 scale sets.").arg(rows))
                 else:
-                    text = []
-                    text.append("<p><strong>Object:</strong> {object}</p>")
-                    text.append("<p><strong>Type:</strong> {type}</p>")
-                    data['maximum'], data['minimum'] = fCut(data['maximum']), fCut(data['minimum'])
-                    text.append("<p><strong>Minimum:</strong> {minimum}</p>")
-                    text.append("<p><strong>Maximum:</strong> {maximum}</p>")
-                    data['step'] = fCut(data['step'])
-                    text.append("<p><strong>Step:</strong> {step}</p>")
-                    text.append("<p><strong>Bitwidth:</strong> {n_bits}</p>")
-                    item.bottom.setText(''.join(text).format(**data))
+                    item.bottom.loadScale(data)
             elif item in self.scalesTypePages.values():
-                text = []
-                data['name'] = item.name
-                text.append("<h2>Scale {name}</h2>")
-                text.append("<p><strong>Number:</strong> {number}</p>")
-                data['maximum'], data['minimum'] = fCut(data['maximum']), fCut(data['minimum'])
-                text.append("<p><strong>Minimum:</strong> {minimum}</p>")
-                text.append("<p><strong>Maximum:</strong> {maximum}</p>")
-                item.bottom.setText(''.join(text).format(**data))
-            elif item is self.extSignalsPage:
-                if 1 < len(rows):
-                    item.bottom.setText("Selected {0} external signals.".format(len(rows)))
+                if 1 < rows:
+                    item.bottom.setText(self.tr("Selected %1 scale bins.").arg(rows))
                 else:
-                    text = []
-                    text.append("<h2>{name}</h2>")
-                    text.append("<p><strong>System:</strong> {system}</p>")
-                    text.append("<p><strong>Name:</strong> {name}</p>")
-                    if 'label' in data.keys():
-                        text.append("<p><strong>Label:</strong> {label}</p>")
-                    text.append("<p><strong>Cable:</strong> {cable}</p>")
-                    text.append("<p><strong>Channel:</strong> {channel}</p>")
-                    if 'description' in data.keys():
-                        text.append("<p><strong>Description:</strong> {description}</p>")
-                    item.bottom.setText(''.join(text).format(**data))
-            item.bottom.setButtonsEnabled(True)
+                    item.bottom.loadScaleType(item.name, data)
+            elif item is self.extSignalsPage:
+                if 1 < rows:
+                    item.bottom.setText(self.tr("Selected %1 external signals.").arg(rows))
+                else:
+                    item.bottom.loadSignal(data)
+            item.bottom.toolbar.setButtonsEnabled(True)
         else:
             item.bottom.reset()
-            item.bottom.setText("Nothing selected...")
-            item.bottom.setButtonsEnabled(False)
+            item.bottom.setText(self.tr("Nothing selected..."))
+            item.bottom.toolbar.setButtonsEnabled(False)
         item.bottom.clearNotice()
         item.bottom.toolbar.hide()
         #item.bottom.setText("")
@@ -364,13 +430,13 @@ class Document(QtGui.QWidget):
         elif item is self.cutsPage:
             # Experimental - enable only possible controls
             item.bottom.toolbar.show()
-            item.bottom.removeButton.setEnabled(False)
+            item.bottom.toolbar.removeButton.setEnabled(False)
             if index:
-                item.bottom.removeButton.setEnabled(True)
+                item.bottom.toolbar.removeButton.setEnabled(True)
                 cut = self.menu().cuts[index.row()]
                 for algorithm in self.menu().algorithms:
                     if cut.name in algorithm.cuts():
-                        item.bottom.removeButton.setEnabled(False)
+                        item.bottom.toolbar.removeButton.setEnabled(False)
         elif item is self.objectsPage:
             item.bottom.toolbar.hide()
             item.bottom.setNotice(self.tr("New objects requirements are created directly in the algorithm editor."), Toolbox.createIcon("info"))
@@ -384,7 +450,7 @@ class Document(QtGui.QWidget):
         """Import cuts from another menu, ignores if cut already present."""
         for cut in cuts:
             if not self.menu().cutByName(cut.name):
-                self.menu().addCut(**cut)
+                self.menu().addCut(cut)
         self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
 
     def importAlgorithms(self, algorithms):
@@ -392,12 +458,12 @@ class Document(QtGui.QWidget):
         for algorithm in algorithms:
             for cut in algorithm.cuts():
                 if not self.menu().cutByName(cut):
-                    raise RuntimeError("Missing cut {cut}, unable to to import algorithm {algorithm.name}".format(**locals()))
+                    raise RuntimeError(str(self.tr("Missing cut %1, unable to to import algorithm %2").arg(cut).arg(algorithm.name)))
             import_index = 0
             original_name = algorithm.name
             while self.menu().algorithmByName(algorithm.name):
                 name = "{original_name}_import{import_index}".format(**locals())
-                algorithm['name'] = name
+                algorithm.name = name
                 import_index += 1
             if import_index:
                 QtGui.QMessageBox.information(self,
@@ -410,8 +476,8 @@ class Document(QtGui.QWidget):
                     self.tr("Relocating algorithm"),
                     QtCore.QString("Moving algorithm <em>%1</em> from already used index %2 to free index %3.").arg(algorithm.name).arg(algorithm.index).arg(index),
                 )
-                algorithm['index'] = index
-            self.menu().addAlgorithm(**algorithm)
+                algorithm.index = int(index)
+            self.menu().addAlgorithm(algorithm)
             self.menu().extendReferenced(algorithm)
         self.algorithmsPage.top.model().setSourceModel(self.algorithmsPage.top.model().sourceModel())
         self.algorithmsPage.top.resizeColumnsToContents()
@@ -426,21 +492,28 @@ class Document(QtGui.QWidget):
             elif item is self.cutsPage:
                 self.addCut(index, item)
         except RuntimeError, e:
-            QtGui.QMessageBox.warning(self, "Error", str(e))
+            QtGui.QMessageBox.warning(self, self.tr("Error"), str(e))
 
     def addAlgorithm(self, index, item):
         dialog = AlgorithmEditorDialog(self.menu(), self)
         dialog.setModal(True)
         dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
-        dialog.setName(self.getUniquAlgorithmName(str(self.tr("L1_Unnamed"))))
+        dialog.setName(self.getUniqueAlgorithmName(str(self.tr("L1_Unnamed"))))
         dialog.editor.setModified(False)
         dialog.exec_()
         if dialog.result() != QtGui.QDialog.Accepted:
             return
         self.setModified(True)
-        algorithm = Algorithm()
-        dialog.updateAlgorithm(algorithm)
-        self.menu().addAlgorithm(**algorithm)
+        algorithm = Algorithm(
+            int(dialog.index()),
+            str(dialog.name()),
+            str(dialog.expression()),
+            str(dialog.comment())
+        )
+        for name in algorithm.cuts():
+            if not filter(lambda item: item.name == name, self.menu().cuts):
+                raise RuntimeError("NO SUCH CUT AVAILABLE")
+        self.menu().addAlgorithm(algorithm)
         self.menu().extendReferenced(self.menu().algorithmByName(algorithm.name)) # IMPORTANT: add/update new objects!
         item.top.model().setSourceModel(item.top.model().sourceModel())
         self.algorithmsPage.top.resizeColumnsToContents()
@@ -451,9 +524,6 @@ class Document(QtGui.QWidget):
         self.objectsPage.top.resizeColumnsToContents()
         self.externalsPage.top.model().setSourceModel(self.externalsPage.top.model().sourceModel())
         self.externalsPage.top.resizeColumnsToContents()
-        for name in algorithm.cuts():
-            if not filter(lambda item: item.name == name, self.menu().cuts):
-                raise RuntimeError("NO SUCH CUT AVAILABLE")
         # Select new entry TODO: better to implement insertRow in model!
         proxy = item.top.model()
         for row in range(proxy.rowCount()):
@@ -469,10 +539,12 @@ class Document(QtGui.QWidget):
         dialog.exec_()
         if dialog.result() != QtGui.QDialog.Accepted:
             return
-        self.setModified(True)
         cut = dialog.newCut()
-        self.menu().addCut(**cut)
+        self.menu().addCut(cut)
         self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        self.updateBottom()
+        self.setModified(True)
+        self.modified.emit()
         # Select new entry TODO: better to implement insertRow in model!
         proxy = item.top.model()
         for row in range(proxy.rowCount()):
@@ -503,6 +575,9 @@ class Document(QtGui.QWidget):
             return
         self.setModified(True)
         dialog.updateAlgorithm(algorithm)
+        for name in algorithm.cuts():
+            if not filter(lambda item: item.name == name, self.menu().cuts):
+                raise RuntimeError("NO SUCH CUT AVAILABLE") # TODO
         # REBUILD INDEX
         self.updateBottom()
         self.modified.emit()
@@ -511,9 +586,6 @@ class Document(QtGui.QWidget):
         self.objectsPage.top.resizeColumnsToContents()
         self.externalsPage.top.model().setSourceModel(self.externalsPage.top.model().sourceModel())
         self.externalsPage.top.resizeColumnsToContents()
-        for name in algorithm.cuts():
-            if not filter(lambda item: item.name == name, self.menu().cuts):
-                raise RuntimeError("NO SUCH CUT AVAILABLE")
 
     def editCut(self, index, item):
         cut = self.menu().cuts[index.row()]
@@ -526,7 +598,8 @@ class Document(QtGui.QWidget):
             return
         self.setModified(True)
         dialog.updateCut(cut)
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        self.updateBottom()
+        self.modified.emit()
 
     def copyItem(self):
         index, item = self.getSelection()
@@ -536,7 +609,7 @@ class Document(QtGui.QWidget):
             self.copyCut(index, item)
 
     def copyAlgorithm(self, index, item):
-        algorithm = Algorithm(**self.menu().algorithms[index.row()])
+        algorithm = copy.deepcopy(self.menu().algorithms[index.row()])
         dialog = AlgorithmEditorDialog(self.menu(), self)
         dialog.setModal(True)
         dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
@@ -546,10 +619,15 @@ class Document(QtGui.QWidget):
         dialog.exec_()
         if dialog.result() != QtGui.QDialog.Accepted:
             return
-        self.setModified(True)
-        algorithm['expression'] = dialog.expression()
-        algorithm['index'] = str(dialog.index())
-        algorithm['name'] = str(dialog.name())
+        algorithm.expression = str(dialog.expression())
+        algorithm.index = int(dialog.index())
+        algorithm.name = str(dialog.name())
+        for name in algorithm.cuts():
+            if not filter(lambda item: item.name == name, self.menu().cuts):
+                raise RuntimeError("NO SUCH CUT AVAILABLE") # TODO
+        for name in algorithm.externals():
+            if not filter(lambda item: item.name == name, self.menu().externals):
+                raise RuntimeError("NO SUCH EXTERNAL AVAILABLE") # TODO
         self.menu().algorithms.append(algorithm)
         item.top.model().setSourceModel(item.top.model().sourceModel())
         self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
@@ -559,16 +637,11 @@ class Document(QtGui.QWidget):
         # REBUILD INDEX
         self.updateBottom()
         self.modified.emit()
+        self.setModified(True)
         for name in algorithm.objects():
             if not filter(lambda item: item.name == name, self.menu().objects):
-                self.menu().addObject(**toObject(name))
+                self.menu().addObject(toObject(name))
         self.objectsPage.top.model().setSourceModel(self.objectsPage.top.model().sourceModel())
-        for name in algorithm.cuts():
-            if not filter(lambda item: item.name == name, self.menu().cuts):
-                raise RuntimeError("NO SUCH CUT AVAILABLE")
-        for name in algorithm.externals():
-            if not filter(lambda item: item.name == name, self.menu().externals):
-                raise RuntimeError("NO SUCH CUT AVAILABLE")
         # Select new entry TODO: better to implement insertRow in model!
         proxy = item.top.model()
         for row in range(proxy.rowCount()):
@@ -586,10 +659,12 @@ class Document(QtGui.QWidget):
         dialog.exec_()
         if dialog.result() != QtGui.QDialog.Accepted:
             return
-        self.setModified(True)
         cut = dialog.newCut()
-        self.menu().addCut(**cut)
+        self.menu().addCut(cut)
         self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        self.updateBottom()
+        self.setModified(True)
+        self.modified.emit()
         # Select new entry TODO: better to implement insertRow in model!
         proxy = item.top.model()
         for row in range(proxy.rowCount()):
@@ -608,8 +683,8 @@ class Document(QtGui.QWidget):
                 row = rows[0]
                 algorithm = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
                 if confirm:
-                    result = QtGui.QMessageBox.question(self, "Remove algorithm",
-                        QtCore.QString("Do you want to remove algorithm <strong>%2, %1</strong> from the menu?").arg(algorithm.name).arg(algorithm.index),
+                    result = QtGui.QMessageBox.question(self, self.tr("Remove algorithm"),
+                        self.tr("Do you want to remove algorithm <strong>%2, %1</strong> from the menu?").arg(algorithm.name).arg(algorithm.index),
                         QtGui.QMessageBox.Yes | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.Abort if len(rows) > 1 else QtGui.QMessageBox.Yes | QtGui.QMessageBox.Abort)
                     if result == QtGui.QMessageBox.Abort:
                         break
@@ -640,14 +715,13 @@ class Document(QtGui.QWidget):
                 cut = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
                 for algorithm in self.menu().algorithms:
                     if cut.name in algorithm.cuts():
-                        QtGui.QMessageBox.warning(self,
-                            self.tr("Cut is used"),
+                        QtGui.QMessageBox.warning(self, self.tr("Cut is used"),
                             self.tr("Cut %1 is used by algorithm %2 an can not be removed. Remove the corresponding algorithm first.").arg(cut.name).arg(algorithm.name),
                         )
                         return
                 if confirm:
-                    result = QtGui.QMessageBox.question(self, "Remove cut",
-                        QtCore.QString("Do you want to remove cut <strong>%1</strong> from the menu?").arg(cut.name),
+                    result = QtGui.QMessageBox.question(self, self.tr("Remove cut"),
+                        self.tr("Do you want to remove cut <strong>%1</strong> from the menu?").arg(cut.name),
                         QtGui.QMessageBox.Yes | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.Abort if len(rows) > 1 else QtGui.QMessageBox.Yes | QtGui.QMessageBox.Abort)
                     if result == QtGui.QMessageBox.Abort:
                         break
@@ -662,55 +736,13 @@ class Document(QtGui.QWidget):
             self.setModified(True)
 
 # ------------------------------------------------------------------------------
-#  Menu information widget
-# ------------------------------------------------------------------------------
-
-class MenuWidget(QtGui.QWidget):
-    """Menu information widget providing inputs for name and comment, shows
-    assigned scale set."""
-
-    def __init__(self, parent = None):
-        super(MenuWidget, self).__init__(parent)
-        self.nameLineEdit = RestrictedLineEdit(self)
-        self.nameLineEdit.setPrefix("L1Menu_")
-        self.nameLineEdit.setRegexPattern("L1Menu_[a-zA-Z0-9_]+")
-        self.commentTextEdit = QtGui.QPlainTextEdit(self)
-        self.commentTextEdit.setMaximumHeight(80)
-        self.scaleSetLineEdit = ReadOnlyLineEdit(self)
-        self.extSignalSetLineEdit = ReadOnlyLineEdit(self)
-        vbox = QtGui.QVBoxLayout()
-        vbox.addWidget(QtGui.QLabel(self.tr("Name:"), self))
-        vbox.addWidget(self.nameLineEdit)
-        vbox.addWidget(QtGui.QLabel(self.tr("Comment:"), self))
-        vbox.addWidget(self.commentTextEdit)
-        vbox.addWidget(QtGui.QLabel(self.tr("Scale Set:"), self))
-        vbox.addWidget(self.scaleSetLineEdit)
-        vbox.addWidget(QtGui.QLabel(self.tr("External Signal Set:"), self))
-        vbox.addWidget(self.extSignalSetLineEdit)
-        vbox.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
-        self.setLayout(vbox)
-        self.setAutoFillBackground(True)
-
-    def loadMenu(self, menu):
-        """Load input values from menu."""
-        self.nameLineEdit.setText(menu.menu['name'])
-        self.commentTextEdit.setPlainText(menu.menu['comment'] if 'comment' in menu.menu.keys() else "")
-        self.scaleSetLineEdit.setText(menu.scales.scaleSet['name'])
-        self.extSignalSetLineEdit.setText(menu.extSignals.extSignalSet['name'])
-
-    def updateMenu(self, menu):
-        """Update menu with values from inputs."""
-        menu.menu['name'] = str(self.nameLineEdit.text())
-        menu.menu['comment'] = str(self.commentTextEdit.toPlainText())
-
-# ------------------------------------------------------------------------------
 #  Splitter and custom handle
 # ------------------------------------------------------------------------------
 
 class SlimSplitter(QtGui.QSplitter):
     """Slim splitter with a decent narrow splitter handle."""
 
-    def __init__(self, orientation, parent = None):
+    def __init__(self, orientation, parent=None):
         super(SlimSplitter, self).__init__(orientation, parent)
         self.setHandleWidth(1)
         self.setContentsMargins(0, 0, 0, 0)
@@ -721,7 +753,7 @@ class SlimSplitter(QtGui.QSplitter):
 class SlimSplitterHandle(QtGui.QSplitterHandle):
     """Custom splitter handle for the slim splitter."""
 
-    def __init__(self, orientation, parent = None):
+    def __init__(self, orientation, parent=None):
         super(SlimSplitterHandle, self).__init__(orientation, parent)
 
     def paintEvent(self, event):
@@ -731,18 +763,30 @@ class SlimSplitterHandle(QtGui.QSplitterHandle):
 #  Navigation tree item
 # ------------------------------------------------------------------------------
 
-class Page(QtGui.QTreeWidgetItem):
+class PageItem(QtGui.QTreeWidgetItem):
+    """Custom QTreeWidgetItem holding references to top and bottom widgets."""
 
-    def __init__(self, name, top, bottom, parent = None):
-        super(Page, self).__init__(parent, [name])
+    def __init__(self, name, top=None, bottom=None, parent=None):
+        super(PageItem, self).__init__(parent, [name])
         self.name = name
         self.top = top
         self.bottom = bottom
-        if not isinstance(parent, Page):
+        if not isinstance(parent, PageItem):
             # Hilight root items in bold text.
             font = self.font(0)
             font.setBold(True)
             self.setFont(0, font)
+
+class AlgorithmsPage(object):
+    def __init__(self, parent=None):
+        self.item = QtGui.QTreeWidgetItem(parent, [self.tr("Algorithms")])
+        self.tableView = 0
+    def addAlgorithm(self, algorithm):
+        pass
+    def editAlgorithm(self, algorithm):
+        pass
+    def removeAlgorithm(self, algorithm):
+        pass
 
 # ------------------------------------------------------------------------------
 #  Filter bar
@@ -751,7 +795,7 @@ class Page(QtGui.QTreeWidgetItem):
 class TextFilterWidget(QtGui.QWidget):
     textChanged = QtCore.pyqtSignal(QtCore.QString)
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(TextFilterWidget, self).__init__(parent)
         self.setAutoFillBackground(True)
         self.filterLabel = QtGui.QLabel(self.tr("Filter"), self)
@@ -765,13 +809,58 @@ class TextFilterWidget(QtGui.QWidget):
         self.setLayout(hbox)
 
 # ------------------------------------------------------------------------------
+#  Menu information widget
+# ------------------------------------------------------------------------------
+
+class MenuWidget(QtGui.QScrollArea):
+    """Menu information widget providing inputs for name and comment, shows
+    assigned scale set."""
+
+    modified = QtCore.pyqtSignal()
+
+    def __init__(self, parent=None):
+        super(MenuWidget, self).__init__(parent)
+        self.nameLineEdit = RestrictedLineEdit(self)
+        self.nameLineEdit.setPrefix("L1Menu_")
+        self.nameLineEdit.setRegexPattern("L1Menu_[a-zA-Z0-9_]+")
+        self.nameLineEdit.textEdited.connect(self.onModified)
+        self.commentTextEdit = QtGui.QPlainTextEdit(self)
+        self.commentTextEdit.setMaximumHeight(80)
+        self.commentTextEdit.textChanged.connect(self.onModified)
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(QtGui.QLabel(self.tr("Name"), self))
+        vbox.addWidget(self.nameLineEdit)
+        vbox.addWidget(QtGui.QLabel(self.tr("Comment"), self))
+        vbox.addWidget(self.commentTextEdit)
+        vbox.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        view = QtGui.QWidget(self)
+        view.setLayout(vbox)
+        self.setAutoFillBackground(True)
+        self.setWidgetResizable(True)
+        self.setFrameShape(QtGui.QFrame.NoFrame)
+        self.setWidget(view)
+
+    def loadMenu(self, menu):
+        """Load input values from menu."""
+        self.nameLineEdit.setText(menu.menu[kName])
+        self.commentTextEdit.setPlainText(menu.menu[kComment] if kComment in menu.menu.keys() else "")
+
+    def updateMenu(self, menu):
+        """Update menu with values from inputs."""
+        menu.menu[kName] = str(self.nameLineEdit.text())
+        menu.menu[kComment] = str(self.commentTextEdit.toPlainText())
+
+    def onModified(self):
+        self.modified.emit()
+
+# ------------------------------------------------------------------------------
 #  Common table view widget
 # ------------------------------------------------------------------------------
 
 class TableView(QtGui.QTableView):
     """Common sortable table view wiget."""
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         """@param parent optional parent widget.
         """
         super(TableView, self).__init__(parent)
@@ -800,230 +889,3 @@ class TableView(QtGui.QTableView):
         if index:
             # Use the assigned proxy model to map the index.
             return self.model().mapToSource(index[0])
-
-# ------------------------------------------------------------------------------
-#
-# ------------------------------------------------------------------------------
-
-class BottomWidget(QtGui.QWidget):
-
-    addTriggered = QtCore.pyqtSignal()
-    editTriggered = QtCore.pyqtSignal()
-    copyTriggered = QtCore.pyqtSignal()
-    removeTriggered = QtCore.pyqtSignal()
-
-    def __init__(self, parent = None):
-        super(BottomWidget, self).__init__(parent)
-        self.toolbar = QtGui.QWidget(self)
-        self.toolbar.setAutoFillBackground(True)
-        layout = QtGui.QHBoxLayout()
-        layout.setContentsMargins(5, 5, 5, 5)
-        self.addButton = QtGui.QPushButton(Toolbox.createIcon("list-add"), "Add...", self)
-        self.addButton.clicked.connect(self.onAdd)
-        layout.addWidget(self.addButton)
-        layout.addStretch(10)
-        self.editButton = QtGui.QPushButton(Toolbox.createIcon("text-editor"), "Edit...", self)
-        self.editButton.clicked.connect(self.onEdit)
-        layout.addWidget(self.editButton)
-        self.copyButton = QtGui.QPushButton(Toolbox.createIcon("edit-copy"), "Copy...", self)
-        self.copyButton.clicked.connect(self.onCopy)
-        layout.addWidget(self.copyButton)
-        self.removeButton = QtGui.QPushButton(Toolbox.createIcon("list-remove"), "Remove", self)
-        self.removeButton.clicked.connect(self.onRemove)
-        layout.addWidget(self.removeButton)
-        self.toolbar.setLayout(layout)
-        self.notice = Toolbox.IconLabel(QtGui.QIcon(), QtCore.QString(), self)
-        self.notice.setAutoFillBackground(True)
-        self.textEdit = QtGui.QTextEdit(self)
-        self.textEdit.setReadOnly(True)
-        self.textEdit.setObjectName("BottomWidgetTextEdit")
-        self.textEdit.setStyleSheet("""
-        #BottomWidgetTextEdit {
-            border: 0;
-            background-color: #eee;
-        }""")
-        self.EtaCutChart = EtaCutChart(self)
-        self.EtaCutChartBox = QtGui.QGroupBox(self.tr("Eta preview"), self)
-        box = QtGui.QVBoxLayout()
-        box.addWidget(self.EtaCutChart)
-        self.EtaCutChartBox.setLayout(box)
-        self.EtaCutChartBox.setAlignment(QtCore.Qt.AlignTop)
-        self.EtaCutChartBox.setObjectName("EtaCutChartBox")
-        self.EtaCutChartBox.setStyleSheet("""
-        #EtaCutChartBox {
-            background-color: #eee;
-        }""")
-
-        self.PhiCutChart = PhiCutChart(self)
-        self.PhiCutChartBox = QtGui.QGroupBox(self.tr("Phi preview"), self)
-        box = QtGui.QVBoxLayout()
-        box.addWidget(self.PhiCutChart)
-        self.PhiCutChartBox.setLayout(box)
-        self.PhiCutChartBox.setAlignment(QtCore.Qt.AlignTop)
-        self.PhiCutChartBox.setObjectName("PhiCutChartBox")
-        self.PhiCutChartBox.setStyleSheet("""
-        #PhiCutChartBox {
-            background-color: #eee;
-        }""")
-
-        layout = QtGui.QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(self.toolbar, 0, 0, 1, 3)
-        layout.addWidget(self.notice, 1, 0, 1, 3)
-        layout.addWidget(self.textEdit, 2, 0)
-        layout.addWidget(self.EtaCutChartBox, 2, 1)
-        layout.addWidget(self.PhiCutChartBox, 2, 2)
-        self.setLayout(layout)
-        self.clearEtaCutChart()
-        self.clearPhiCutChart()
-
-    def reset(self):
-        self.clearNotice()
-        self.clearEtaCutChart()
-        self.clearPhiCutChart()
-        self.setText("")
-
-    def setNotice(self, text, icon = None):
-        self.notice.show()
-        self.notice.icon.hide()
-        self.notice.icon.clear()
-        self.notice.setText(text)
-        if icon:
-            self.notice.icon.show()
-            self.notice.setIcon(icon)
-
-    def clearNotice(self):
-        self.notice.hide()
-        self.notice.icon.clear()
-        self.notice.label.clear()
-
-    def setButtonsEnabled(self, enabled):
-        self.editButton.setEnabled(enabled)
-        self.copyButton.setEnabled(enabled)
-        self.removeButton.setEnabled(enabled)
-
-    def clearEtaCutChart(self):
-        #self.EtaCutChart.reset()
-        self.EtaCutChartBox.hide()
-
-    def clearPhiCutChart(self):
-        #self.PhiCutChart.reset()
-        self.PhiCutChartBox.hide()
-
-    def setEtaCutChart(self, lower, upper):
-        self.EtaCutChart.setRange(lower, upper)
-        self.EtaCutChartBox.show()
-
-    def setPhiCutChart(self, lower, upper):
-        self.PhiCutChart.setRange(lower, upper)
-        self.PhiCutChartBox.show()
-
-    def setText(self, message):
-        self.textEdit.setText(message)
-
-    def onAdd(self):
-        self.addTriggered.emit()
-
-    def onEdit(self):
-        self.editTriggered.emit()
-
-    def onCopy(self):
-        self.copyTriggered.emit()
-
-    def onRemove(self):
-        self.removeTriggered.emit()
-
-    # Load params from item
-
-    def loadAlgorithm(self, algorithm):
-        self.reset()
-        # Format expression
-        expression = fAlgorithm(algorithm.expression)
-        text = []
-        text.append("<h2>{algorithm.name} ({algorithm.index})</h2>")
-        text.append("<p><strong>Expression:</strong></p>")
-        text.append("<p><code>{expression}</code></p>")
-        if algorithm.comment:
-            text.append("<p><strong>Comment:</strong></p>")
-            text.append("<p><code>{algorithm.comment}</code></p>")
-        # List used objects.
-        objects = algorithm.objects()
-        if objects:
-            text.append("<p><strong>Used objects:</strong></p>")
-            text.append("<p><ul>")
-            for object in objects:
-                text.append("<li>{object}</li>".format(**locals()))
-            text.append("</ul></p>")
-        # List used objects.
-        cuts = algorithm.cuts()
-        if cuts:
-            text.append("<p><strong>Used cuts:</strong></p>")
-            text.append("<p><ul>")
-            for cut in cuts:
-                text.append("<li>{cut}</li>".format(**locals()))
-            text.append("</ul></p>")
-        # List used external signals.
-        externals = algorithm.externals()
-        if externals:
-            text.append("<p><strong>Used externals:</strong></p>")
-            text.append("<p><ul>")
-            for external in externals:
-                text.append("<li>{external}</li>".format(**locals()))
-            text.append("</ul></p>")
-        self.setText("".join(text).format(**locals()))
-
-    def loadCut(self, cut):
-        self.reset()
-        # Format expression
-        minimum = fCut(cut.minimum)
-        maximum = fCut(cut.maximum)
-        text = []
-        text.append("<h2>{cut.name}</h2>")
-        text.append("<p><strong>Type:</strong> {cut.object}</p>")
-        if cut.data:
-            fdata = []
-            if cut.object == tmGrammar.comb:
-                typename = cut.type
-            else:
-                typename = "{0}-{1}".format(cut.object, cut.type)
-            data_ = filter(lambda entry: entry.name == typename, Settings.cutSettings())[0].data
-            for n in cut.data.split(','):
-                fdata.append("<li>[{1}] {0}</li>".format(data_[int(n)], int(n)))
-            fdata = ''.join(fdata)
-            text.append("<p><strong>Data:</strong></p><p><ul>{translation}</ul></p>".format(translation = fdata))
-        else:
-            text.append("<p><strong>Minimum:</strong> {minimum}</p>")
-            text.append("<p><strong>Maximum:</strong> {maximum}</p>")
-        if cut.comment:
-            text.append("<p><strong>Comment:</strong></p>")
-            text.append("<p><code>{cut.comment}</code></p>")
-        self.setText("".join(text).format(**locals()))
-        if cut.type == tmGrammar.ETA:
-            self.setEtaCutChart(float(cut.minimum), float(cut.maximum))
-        elif cut.type == tmGrammar.PHI:
-            self.setPhiCutChart(float(cut.minimum), float(cut.maximum))
-
-    def loadObject(self, object):
-        self.reset()
-        threshold = fThreshold(str(object.threshold))
-        bx_offset = fBxOffset(object.bx_offset)
-        text = []
-        text.append("<h2>{object.name}</h2>")
-        text.append("<p><strong>Type:</strong> {object.type}</p>")
-        text.append("<p><strong>Threshold:</strong> {threshold}</p>")
-        text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
-        if object.comment:
-            text.append("<p><strong>Comment:</strong></p>")
-            text.append("<p><code>{object.comment}</code></p>")
-        self.setText("".join(text).format(**locals()))
-
-    def loadExternal(self, external):
-        self.reset()
-        bx_offset = fBxOffset(external.bx_offset)
-        text = []
-        text.append("<h2>{external.name}</h2>")
-        text.append("<p><strong>BX offset:</strong> {bx_offset}</p>")
-        if external.comment:
-            text.append("<p><strong>Comment:</strong></p><p><code>{external.comment}</code></p>")
-        self.setText("".join(text).format(**locals()))

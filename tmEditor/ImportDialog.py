@@ -22,11 +22,14 @@ from tmEditor.AlgorithmEditor import MaxAlgorithms
 from tmEditor.Document import TableView
 from tmEditor.Menu import Menu
 from tmEditor import Toolbox
+from tmEditor.CommonWidgets import IconLabel
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
 __all__ = ['ImportDialog', ]
+
+kName = 'name'
 
 class ImportDialog(QtGui.QDialog):
     """Dialog providing importing of algorithms from another XML file."""
@@ -38,7 +41,7 @@ class ImportDialog(QtGui.QDialog):
         self.cuts = []
         self.baseMenu = menu
         self.menu = Menu(filename)
-        if self.menu.scales.scaleSet['name'] != self.baseMenu.scales.scaleSet['name']:
+        if self.menu.scales.scaleSet[kName] != self.baseMenu.scales.scaleSet[kName]:
             QtGui.QMessageBox.warning(self,
                 self.tr("Different scale sets"),
                 QtCore.QString("Unable to import from <em>%1</em> as scale sets do not match.").arg(filename),
@@ -71,7 +74,7 @@ class ImportDialog(QtGui.QDialog):
         # Create layout.
         layout = QtGui.QGridLayout()
         layout.addWidget(self.tableView)
-        layout.addWidget(Toolbox.IconLabel(Toolbox.createIcon("info"), self.tr("Select available algorithms to import."), self))
+        layout.addWidget(IconLabel(Toolbox.createIcon("info"), self.tr("Select available algorithms to import."), self))
         layout.addWidget(buttonBox)
         self.setLayout(layout)
 

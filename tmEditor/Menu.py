@@ -6,6 +6,12 @@
 # Last changed date : $Date: $
 #
 
+# TODO
+# separate encoding/decoding
+# add scales container
+# add externals container
+# get rid of dictionary objects
+
 """Menu container, wrapping tmTable and XML bindings.
 
 """
@@ -15,13 +21,49 @@ import tmGrammar
 
 from tmEditor import Toolbox
 
+from distutils.version import StrictVersion
+
 import uuid
 import shutil
+import json
 import logging
 import re
 import sys, os
 
 __all__ = ['Menu', ]
+
+GrammarVersion = StrictVersion('0.4')
+"""Supported grammar version."""
+
+# ------------------------------------------------------------------------------
+#  Keys
+# ------------------------------------------------------------------------------
+
+kBxOffset = 'bx_offset'
+kCable = 'cable'
+kChannel = 'channel'
+kComment = 'comment'
+kComparisonOperator = 'comparison_operator'
+kData = 'data'
+kDescription = 'description'
+kExpression = 'expression'
+kGrammarVersion = 'grammar_version'
+kIndex = 'index'
+kLabel = 'label'
+kMaximum = 'maximum'
+kMinimum = 'minimum'
+kModuleId = 'module_id'
+kModuleIndex = 'module_index'
+kNBits = 'n_bits'
+kNModules = 'n_modules'
+kName = 'name'
+kObject = 'object'
+kStep = 'step'
+kSystem = 'system'
+kThreshold = 'threshold'
+kType = 'type'
+kUUIDFirmware = 'uuid_firmware'
+kUUIDMenu = 'uuid_menu'
 
 DEFAULT_UUID = '00000000-0000-0000-0000-000000000000'
 """Empty UUID"""
@@ -37,12 +79,12 @@ ObjectTypes = (
     tmGrammar.JET,
     tmGrammar.TAU,
     # Energy sums
-    tmGrammar.ETT,
+    tmGrammar.ETT,   # ETT
+    tmGrammar.ETTEM, # ETT EM
     tmGrammar.HTT,
-    tmGrammar.ETM,
+    tmGrammar.ETM,   # ETM
+    tmGrammar.ETMHF, # ETM HF
     tmGrammar.HTM,
-    tmGrammar.ETTEM,
-    tmGrammar.ETMHF,
     # Externals
     tmGrammar.EXT,
     # MinBias
@@ -53,36 +95,34 @@ ObjectTypes = (
     # Tower count
     tmGrammar.TOWERCOUNT,
 )
+"""List of supported object types (ordered)."""
+
+CutTypes = (
+    tmGrammar.ETA,
+    tmGrammar.PHI,
+    tmGrammar.QLTY,
+    tmGrammar.ISO,
+    tmGrammar.CHG,
+    tmGrammar.CHGCOR,
+    tmGrammar.DETA,
+    tmGrammar.DPHI,
+    tmGrammar.DR,
+    tmGrammar.MASS,
+)
+"""List of supported cut types (ordered)."""
+
+def clean(s):
+    """Strip XML string entries (can contain NULL characters)."""
+    return s.replace('\x00', '').strip()
 
 def getObjectType(name):
     """Mapping object type enumeration to actual object names."""
-    # WORKAROUND
-    for type in ObjectTypes:
-        if name.startswith(type):
-            return type
-    raise RuntimeError("invalid object type")
-
-def patchCutOnRead(cut):
-    """Workaround, patch cut data after reading from XML file."""
-    if cut.type == tmGrammar.CHGCOR and cut.object in (tmGrammar.comb, tmGrammar.dist):
-        logging.debug("patching cut `%s' data (workaround)", cut.name)
-        cut['data'] = cut.data.replace("ls", "0")
-        cut['data'] = cut.data.replace("os", "1")
-    if cut.type == tmGrammar.CHG and cut.object == tmGrammar.MU:
-        logging.debug("patching cut `%s' data (workaround)", cut.name)
-        cut['data'] = cut.data.replace("positive", "0")
-        cut['data'] = cut.data.replace("negative", "1")
-
-def patchCutOnWrite(cut):
-    """Workaround, patch cut data before writing to XML file."""
-    if cut.type == tmGrammar.CHGCOR and cut.object in (tmGrammar.comb, tmGrammar.dist):
-        logging.debug("patching cut `%s' data (workaround)", cut.name)
-        cut['data'] = cut.data.replace("0", "ls")
-        cut['data'] = cut.data.replace("1", "os")
-    if cut.type == tmGrammar.CHG and cut.object == tmGrammar.MU:
-        logging.debug("patching cut `%s' data (workaround)", cut.name)
-        cut['data'] = cut.data.replace("0", "positive")
-        cut['data'] = cut.data.replace("1", "negative")
+    # WORKAROUND TODO
+    for type_ in ObjectTypes:
+        if name.startswith(type_):
+            return type_
+    message = "invalid object type `{0}`".format(type_)
+    raise RuntimeError(message)
 
 class Menu(object):
     """L1-Trigger Menu container class. Provides methods to read and write XML
@@ -100,55 +140,22 @@ class Menu(object):
         if filename:
             self.readXml(filename)
 
-    def addObject(self, name, type, threshold, requirement_id=0, comparison_operator=tmGrammar.GE, bx_offset=0, comment=""):
+    def addObject(self, object):
         """Creates a new object by specifing its paramters and adds it to the menu. Provided for convenience."""
-        self.objects.append(Object(
-            requirement_id = requirement_id,
-            name = name,
-            type = type,
-            threshold = threshold,
-            comparison_operator = comparison_operator,
-            bx_offset = bx_offset,
-            comment = comment,
-        ))
+        self.objects.append(object)
 
-    def addCut(self, name, object, type, minimum, maximum, cut_id=0, data="", comment=""):
+    def addCut(self, cut):
         """Creates a new cut by specifing its paramters and adds it to the menu. Provided for convenience."""
-        self.cuts.append(Cut(
-            cut_id = cut_id,
-            name = name,
-            object = object,
-            type = type,
-            minimum = minimum if not data else '',
-            maximum = maximum if not data else '',
-            data = data if data else '',
-            comment = comment,
-        ))
+        self.cuts.append(cut)
 
-    def addExternal(self, name, requirement_id=0, ext_signal_id=0, bx_offset=0, comment=""):
+    def addExternal(self, external):
         """Creates a new external signal by specifing its paramters and adds it to the menu. Provided for convenience."""
-        self.externals.append(External(
-            requirement_id = requirement_id,
-            ext_signal_id = ext_signal_id,
-            name = name,
-            bx_offset = bx_offset,
-            comment = comment,
-        ))
+        self.externals.append(external)
 
-    def addAlgorithm(self, index, name, expression, algorithm_id=0, module_id=0, module_index=0, comment=""):
+    def addAlgorithm(self, algorithm):
         """Creates a new algorithm by specifing its paramters and adds it to the menu. Provided for convenience.
-
         **Note:** related objects must be added separately to the menu.
         """
-        algorithm = Algorithm(
-            algorithm_id = algorithm_id,
-            index = index,
-            name = name,
-            expression = expression,
-            module_id = module_id,
-            module_index = module_index,
-            comment = comment,
-        )
         self.algorithms.append(algorithm)
 
     def extendReferenced(self, algorithm):
@@ -172,6 +179,14 @@ class Menu(object):
         """Returns algorithm item by its *index* or None if no such algorithm exists."""
         return (filter(lambda item: int(item.index) == int(index), self.algorithms) or [None])[0]
 
+    def algorithmsByObject(self, object):
+        """Returns list of algorithms containing *object*."""
+        return filter(lambda algorithm: object.name in algorithm.objects(), self.algorithms)
+
+    def algorithmsByExternal(self, external):
+        """Returns list of algorithms containing *external* signal."""
+        return filter(lambda algorithm: external.basename in algorithm.externals(), self.algorithms)
+
     def objectByName(self, name):
         """Returns object requirement item by its *name* or None if no such object requirement exists."""
         return (filter(lambda item: item.name == name, self.objects) or [None])[0]
@@ -187,7 +202,7 @@ class Menu(object):
     def scaleMeta(self, object, scaleType):
         """Returns scale information for *object* by *scaleType*."""
         objectType = getObjectType(object.name)
-        return (filter(lambda item: item['object']==objectType and item['type']==scaleType, self.scales.scales) or [None])[0]
+        return (filter(lambda item: item[kObject]==objectType and item[kType]==scaleType, self.scales.scales) or [None])[0]
 
     def scaleBins(self, object, scaleType):
         """Returns bins for *object* by *scaleType*."""
@@ -228,7 +243,9 @@ class Menu(object):
 
         # Check file accessible
         if not os.path.isfile(filename):
-            raise RuntimeError("No such file `{filename}'".format(**locals()))
+            message = "No such file `{0}'".format(filename)
+            logging.error(message)
+            raise RuntimeError(message)
 
         # Load tables from XML file.
         menu = tmTable.Menu()
@@ -240,48 +257,112 @@ class Menu(object):
         warnings = tmTable.xml2menu(filename, menu, scale, ext_signal)
 
         if warnings:
-            messange = "Failed to read XML menu {filename}\n{warnings}".format(**locals())
-            logging.error(messange)
-            raise RuntimeError(messange)
+            message = "Failed to read XML menu {0}\n{1}".format(filename, warnings)
+            logging.error(message)
+            raise RuntimeError(message)
+
+        # Verify grammar version.
+        if kGrammarVersion not in menu.menu.keys():
+            message = "Missing grammar version, corrupted file"
+            logging.error(message)
+            raise RuntimeError(message)
+        grammarVersion = clean(menu.menu[kGrammarVersion])
+        if not grammarVersion:
+            message = "Missing grammar version, corrupted file"
+            logging.error(message)
+            raise RuntimeError(message)
+        try:
+            grammarVersion = StrictVersion(grammarVersion)
+        except ValueError:
+            message = "Invalid grammar version `{0}`, corrupted file".format(grammarVersion)
+            logging.error(message)
+            raise RuntimeError(message)
+        if grammarVersion > GrammarVersion:
+            message = "Unsupported grammar version {0} (requires <= {1})".format(grammarVersion, GrammarVersion)
+            logging.error(message)
+            raise RuntimeError(message)
 
         # Populate the containers.
-        menu.menu['n_modules'] = '0' # Reset module distribution
-        self.menu = dict(menu.menu.items())
+        self.menu = dict([(k, clean(v)) for k, v in menu.menu.items()])
+        self.menu[kNModules] = '0' # Reset module distribution
 
         # Show information about the menu.
         for k, v in self.menu.iteritems():
             logging.debug("%s: %s", k, v)
 
         # Add algorithms
-        for algorithm in menu.algorithms:
-            # Reset algorithm distribution
-            algorithm['module_id'] = '0'
-            algorithm['module_index'] = algorithm['index']
-            algorithm = Algorithm(algorithm.items())
+        for table in menu.algorithms:
+            index = int(table[kIndex])
+            name = table[kName]
+            expression = table[kExpression]
+            comment = table[kComment] if kComment in table else ""
+            algorithm = Algorithm(index, name, expression, comment)
             logging.debug("adding algorithm `%s'", algorithm)
-            self.addAlgorithm(**algorithm)
+            self.addAlgorithm(algorithm)
         # Add cuts
         for cuts in menu.cuts.values():
-            for cut in cuts:
-                cut = Cut(cut.items())
+            for table in cuts:
+                name = table[kName]
+                object = table[kObject]
+                type = table[kType]
+                minimum = float(table[kMinimum])
+                maximum = float(table[kMaximum])
+                data = table[kData]
+                comment = table[kComment] if kComment in table else ""
+                # TODO
+                if object == tmGrammar.comb and type == tmGrammar.CHGCOR:
+                    if data.strip() == "0":
+                        data = "ls"
+                    if data.strip() == "1":
+                        data = "os"
+                cut = Cut(name, object, type, minimum, maximum, data, comment)
+                if cut.type not in CutTypes:
+                    message = "Unsupported cut type {0} (grammar version <= {1})".format(cut.type, GrammarVersion)
+                    logging.error(message)
+                    raise RuntimeError(message)
                 if not self.cutByName(cut.name):
                     logging.debug("adding cut `%s'", cut)
-                    patchCutOnRead(cut)
-                    self.addCut(**cut)
+                    self.addCut(cut)
         # Add objects
         for objs in menu.objects.values():
-            for obj in objs:
-                obj = Object(obj.items())
+            for table in objs:
+                name = table[kName]
+                type = table[kType]
+                threshold = table[kThreshold]
+                comparison_operator = table[kComparisonOperator]
+                bx_offset = table[kBxOffset]
+                comment = table[kComment] if kComment in table else ""
+                obj = Object(name, type, threshold, comparison_operator, bx_offset, comment)
+                if obj.type not in ObjectTypes:
+                    message = "Unsupported object type {0} (grammar version <= {1})".format(obj.type, GrammarVersion)
+                    logging.error(message)
+                    raise RuntimeError(message)
+                if obj.type not in [scaleSet[kObject] for scaleSet in scale.scales]:
+                    algorithm = self.algorithmsByObject(obj)[0]
+                    message = "Object type `{0}' assigned to algorithm `{1} {2}' is missing in scales set `{3}'".format(obj.type, algorithm.index, algorithm.name, scale.scaleSet[kName])
+                    logging.error(message)
+                    raise RuntimeError(message)
                 if not obj in self.objects:
                     logging.debug("adding object requirements `%s'", obj)
-                    self.addObject(**obj)
-        # Add externals
+                    self.addObject(obj)
+        # Add external signals
+        ext_signal_names = [item['name'] for item in ext_signal.extSignals]
+        ext_signal_set_name = ext_signal.extSignalSet['name']
         for externals in menu.externals.values():
-            for external in externals:
-                external = External(external.items())
-                if not external in self.externals:
+            for table in externals:
+                name = table[kName]
+                bx_offset = table[kBxOffset]
+                comment = table[kComment] if kComment in table else ""
+                external = External(name, bx_offset, comment)
+                # Verify that all external signals are part of the external signal set.
+                if external.signal_name not in ext_signal_names:
+                    algorithm = self.algorithmsByExternal(external)[0]
+                    message = "External signal `{0}' assigned to algorithm `{1} {2}' is missing in external signal set `{3}'".format(external.basename, algorithm.index, algorithm.name, ext_signal_set_name)
+                    logging.error(message)
+                    raise RuntimeError(message)
+                if external not in self.externals:
                     logging.debug("adding external signal `%s'", external)
-                    self.addExternal(**external)
+                    self.addExternal(external)
         self.scales = scale
         self.extSignals = ext_signal
 
@@ -289,15 +370,31 @@ class Menu(object):
         """Writes menu to *filename*."""
         filename = os.path.abspath(filename)
 
+        logging.debug("preparing menu to write to `%s`", filename)
+
+        # WORKAROUND (menu2xml() will not fail on write error...)
+        if os.path.isfile(filename):
+            if not os.access(filename, os.W_OK):
+                message = "permission denied `{0}`".format(filename)
+                logging.error(message)
+                raise RuntimeError(message)
+        else:
+            if not os.access(os.path.dirname(filename), os.W_OK):
+                message = "permission denied `{0}`".format(filename)
+                logging.error(message)
+                raise RuntimeError(message)
+
         pwd = os.getcwd()
         os.chdir(Toolbox.getXsdDir())
 
         try:
-            self.menu['uuid_menu'] = str(uuid.uuid4())
-            logging.debug("new menu UUID: %s", self.menu['uuid_menu'])
+            self.menu[kUUIDMenu] = str(uuid.uuid4())
+            logging.debug("regenerate %s=%s", kUUIDMenu, self.menu[kUUIDMenu])
 
-            self.menu['uuid_firmware'] = DEFAULT_UUID
-            logging.debug("new firmware UUID: %s", self.menu['uuid_firmware'])
+            self.menu[kUUIDFirmware] = DEFAULT_UUID
+            logging.debug("reset %s=%s", kUUIDFirmware, self.menu[kUUIDFirmware])
+
+            self.menu[kGrammarVersion] = str(GrammarVersion) # updated grammar version
 
             # Create a new menu instance.
             menu = tmTable.Menu()
@@ -305,19 +402,20 @@ class Menu(object):
             # Algorithms
             for key, value in self.menu.items():
                 menu.menu[key] = str(value)
+            logging.debug("menu information : %s", dict(menu.menu))
 
             # Reset module distribution
-            menu.menu['n_modules'] = '0'
+            menu.menu[kNModules] = '0'
+            logging.debug("reset %s=%s", kNModules, menu.menu[kNModules])
 
             for algorithm in self.algorithms:
 
                 if not algorithm.isValid():
                     os.chdir(pwd)
-                    raise RuntimeError("Invalid algorithm ({algorithm.index}): {algorithm.name}".format(**locals()))
+                    message = "invalid algorithm ({algorithm.index}): {algorithm.name}".format(algorithm=algorithm)
+                    logging.error(message)
+                    raise RuntimeError(message)
 
-                # Reset algorithm distribution
-                algorithm['module_id'] = '0'
-                algorithm['module_index'] = algorithm['index']
                 row = algorithm.toRow()
                 logging.debug("appending algorithm %s", dict(row))
                 menu.algorithms.append(row)
@@ -328,8 +426,10 @@ class Menu(object):
                 for name in algorithm.objects():
 
                     object_ = self.objectByName(name)
-                    if not object_:
-                        raise RuntimeError("Invalid object requirement: {name}".format(**locals()))
+                    if not object_ or not object_.isValid():
+                        message = "invalid object requirement: {0}".format(name)
+                        logging.error(message)
+                        raise RuntimeError(message)
 
                     row = object_.toRow()
                     logging.debug("appending object requirement %s", dict(row))
@@ -341,8 +441,10 @@ class Menu(object):
                 for name in algorithm.externals():
 
                     external = self.externalByName(name)
-                    if not external:
-                        raise RuntimeError("Invalid external signal: {name}".format(**locals()))
+                    if not external or not external.isValid():
+                        message = "invalid external signal: {0}".format(name)
+                        logging.error(message)
+                        raise RuntimeError(message)
 
                     row = external.toRow()
                     logging.debug("appending external signal %s", dict(row))
@@ -354,10 +456,10 @@ class Menu(object):
                 for name in algorithm.cuts():
 
                     cut = self.cutByName(name)
-                    if not cut:
-                        raise RuntimeError("Invalid cut: {name}".format(**locals()))
-                    cut = Cut(cut) # copy, do not patch loaded cut
-                    patchCutOnWrite(cut)
+                    if not cut or not cut.isValid():
+                        message = "Invalid cut: {0}".format(name)
+                        logging.error(message)
+                        raise RuntimeError(message)
                     row = cut.toRow()
                     logging.debug("appending cut %s", dict(row))
                     menu.cuts[algorithm.name] = menu.cuts[algorithm.name] + (row, )
@@ -365,7 +467,11 @@ class Menu(object):
             # Write to XML file.
             logging.debug("writing XML file to `%s'", filename)
             tmTable.menu2xml(menu, self.scales, self.extSignals, filename)
-
+            # WORKAROUND (check if file was written)
+            if not os.path.isfile(filename):
+                message = "failed to write to file `{0}'".format(filename)
+                logging.error(message)
+                raise RuntimeError(message)
 
         except:
             os.chdir(pwd)
@@ -375,48 +481,27 @@ class Menu(object):
 #  Abstract base container class.
 # ------------------------------------------------------------------------------
 
-class AbstractDict(dict):
+class AbstractTable(object):
 
     def isValid(self):
         """To be implemented in derived class."""
         raise NotImplementedError()
 
     def toRow(self):
-        """Returns a table row object."""
-        row = tmTable.Row()
-        for key, value in self.items():
-            row[key] = str(value)
-        return row
+        """To be implemented in derived class."""
+        raise NotImplementedError()
 
 # ------------------------------------------------------------------------------
 #  Algorithm's container class.
 # ------------------------------------------------------------------------------
 
-class Algorithm(AbstractDict):
+class Algorithm(AbstractTable):
 
-    @property
-    def index(self):
-        return self['index']
-
-    @property
-    def name(self):
-        return self['name']
-
-    @property
-    def expression(self):
-        return self['expression']
-
-    @property
-    def module_index(self):
-        return self['module_index']
-
-    @property
-    def module_id(self):
-        return self['module_id']
-
-    @property
-    def comment(self):
-        return self['comment'] if 'comment' in self.keys() else ""
+    def __init__(self, index, name, expression, comment=None):
+        self.index = index
+        self.name = name
+        self.expression = expression
+        self.comment = comment or ""
 
     def __eq__(self, item):
         """Distinquish algorithms."""
@@ -429,8 +514,19 @@ class Algorithm(AbstractDict):
     def isValid(self):
         return tmTable.isAlgorithm(self.toRow())
 
+    def toRow(self):
+        """Returns a table row object."""
+        row = tmTable.Row()
+        row[kIndex] = str(self.index)
+        row[kModuleId] = "0"
+        row[kModuleIndex] = row[kIndex]
+        row[kName] = self.name
+        row[kExpression] = self.expression
+        row[kComment] = self.comment
+        return row
+
     def tokens(self):
-        """Returns list of tokens of algorithm expression. Paranthesis is not included."""
+        """Returns list of RPN tokens of algorithm expression. Note that paranthesis is not included in RPN."""
         tmGrammar.Algorithm_Logic.clear()
         if not tmGrammar.Algorithm_parser(self.expression):
             raise ValueError("Failed to parse algorithm expression")
@@ -481,47 +577,24 @@ class Algorithm(AbstractDict):
 #  Cut's container class.
 # ------------------------------------------------------------------------------
 
-class Cut(AbstractDict):
+class Cut(AbstractTable):
 
-    @property
-    def name(self):
-        return self['name']
-
-    @name.setter
-    def name(self, name):
-        self['name'] = str(name)
-
-    @property
-    def object(self):
-        return self['object']
-
-    @property
-    def type(self):
-        return self['type']
+    def __init__(self, name, object, type, minimum=None, maximum=None, data=None, comment=None):
+        self.name = name
+        self.object = object
+        self.type = type
+        self.minimum = minimum or 0. if not data else ""
+        self.maximum = maximum or 0. if not data else ""
+        self.data = data or ""
+        self.comment = comment or ""
 
     @property
     def typename(self):
-        return "{self.object}-{self.type}".format(**locals())
+        return '-'.join([self.object, self.type])
 
     @property
     def suffix(self):
-        return self.name[len(self.typename) + 1:]
-
-    @property
-    def minimum(self):
-        return self['minimum']
-
-    @property
-    def maximum(self):
-        return self['maximum']
-
-    @property
-    def data(self):
-        return self['data']
-
-    @property
-    def comment(self):
-        return self['comment'] if 'comment' in self.keys() else ''
+        return self.name[len(self.typename) + 1:] # TODO
 
     def __eq__(self, item):
         """Distinquish cuts by it's uinque name."""
@@ -540,102 +613,110 @@ class Cut(AbstractDict):
             return scale.bins[self.typename]
 
     def toRow(self):
-        row = super(Cut, self).toRow()
-        # Workaround 1023 and 1099 ... >_<'
-        row['minimum'] = format(float(row['minimum'] if not self.data else 0.), FORMAT_FLOAT)
-        row['maximum'] = format(float(row['maximum'] if not self.data else 0.), FORMAT_FLOAT)
+        row = tmTable.Row()
+        row[kName] = self.name
+        row[kObject] = self.object
+        row[kType] = self.type
+        if self.data:
+            row[kMinimum] = format(0., FORMAT_FLOAT)
+            row[kMaximum] = format(0., FORMAT_FLOAT)
+            row[kData] = self.data
+        else:
+            row[kMinimum] = format(float(self.minimum), FORMAT_FLOAT)
+            row[kMaximum] = format(float(self.maximum), FORMAT_FLOAT)
+            row[kData] = ""
+        row[kComment] = self.comment
         return row
 
 # ------------------------------------------------------------------------------
 #  Object's container class.
 # ------------------------------------------------------------------------------
 
-class Object(AbstractDict):
+class Object(AbstractTable):
 
-    @property
-    def name(self):
-        return self['name']
-
-    @property
-    def type(self):
-        return self['type']
-
-    @property
-    def comparison_operator(self):
-        return self['comparison_operator']
-
-    @property
-    def threshold(self):
-        return self['threshold']
-
-    @property
-    def bx_offset(self):
-        return self['bx_offset']
-
-    @property
-    def comment(self):
-        return self['comment'] if 'comment' in self.keys() else ''
+    def __init__(self, name, type, threshold, comparison_operator=tmGrammar.GE, bx_offset=None, comment=None):
+        self.name = name
+        self.type = type
+        self.threshold = threshold
+        self.comparison_operator = comparison_operator
+        self.bx_offset = bx_offset or 0
+        self.comment = comment or ""
 
     def signature(self):
-        return "{name}{threshold}{bx_offset}".format(**self)
+        return "{self.name}{self.threshold}{self.bx_offset}".format(**locals())
 
     def __eq__(self, item):
         """Distinquish objects."""
         return \
-            self.type == item.type and \
-            self.comparison_operator == item.comparison_operator and \
-            self.threshold == item.threshold and \
-            self.bx_offset == item.bx_offset
+            (self.type, self.comparison_operator, thresholdFloat(self.threshold), self.bx_offset) == \
+            (item.type, item.comparison_operator, thresholdFloat(item.threshold), item.bx_offset)
 
     def __lt__(self, item):
         """Custom sorting by type, threshold and offset."""
         return \
-            (self.type, thresholdFloat(self.threshold), int(self.bx_offset)) < \
-            (item.type, thresholdFloat(item.threshold), int(item.bx_offset))
+            (self.type, thresholdFloat(self.threshold), self.bx_offset) < \
+            (item.type, thresholdFloat(item.threshold), item.bx_offset)
 
     def isValid(self):
         return tmTable.isObjectRequirement(self.toRow())
 
     def toRow(self):
-        row = super(Object, self).toRow()
-        row['threshold'] = format(thresholdFloat(row['threshold']), FORMAT_FLOAT)
+        row = tmTable.Row()
+        row[kName] = self.name
+        row[kType] = self.type
+        row[kThreshold] = self.threshold
+        row[kComparisonOperator] = self.comparison_operator
+        row[kBxOffset] = str(self.bx_offset)
+        row[kThreshold] = format(thresholdFloat(self.threshold), FORMAT_FLOAT)
         return row
 
 # ------------------------------------------------------------------------------
 #  External's contianer class.
 # ------------------------------------------------------------------------------
 
-class External(AbstractDict):
+class External(AbstractTable):
 
-    @property
-    def name(self):
-        return self['name']
+    RegexSignalName = re.compile(r"(EXT_)([\w\d\._]+)([+-]\d+)?")
+
+    def __init__(self, name, bx_offset=None, comment=None):
+        self.name = name
+        self.bx_offset = bx_offset or 0
+        self.comment = comment or ""
 
     @property
     def basename(self):
-        result = re.match("([\w\d\._]+)([+-]\d+)?", self.name)
+        """Returns signal name with leading EXT_ prefix but without BX offset."""
+        result = self.RegexSignalName.match(self.name)
         if result:
-            return result.group(1)
+            return ''.join((result.group(1), result.group(2)))
         return self.name
 
     @property
-    def bx_offset(self):
-        return self['bx_offset']
+    def signal_name(self):
+        """Returns signal name without leading EXT_ prefix."""
+        result = self.RegexSignalName.match(self.name)
+        if result:
+            return result.group(2)
+        return self.name
 
-    @property
-    def comment(self):
-        return self['comment'] if 'comment' in self.keys() else ''
-
-    def __eq__(self, object):
+    def __eq__(self, item):
         """Distinquish objects."""
-        return self.basename == object.basename and int(self.bx_offset) == int(object.bx_offset)
+        return self.basename == item.basename and self.bx_offset == item.bx_offset
 
     def __lt__(self, item):
         """Custom sorting by basename and offset."""
-        return (self.basename, int(self.bx_offset)) < (item.basename, int(item.bx_offset))
+        return (self.basename, self.bx_offset) < (item.basename, item.bx_offset)
 
     def isValid(self):
         return tmTable.isExternalRequirement(self.toRow())
+
+    def toRow(self):
+        """Returns a table row object."""
+        row = tmTable.Row()
+        row[kName] = self.name
+        row[kBxOffset] = str(self.bx_offset)
+        row[kComment] = self.comment
+        return row
 
 # ------------------------------------------------------------------------------
 #  Helper functions (wrapping/avoiding weird tmGrammar API).
@@ -643,16 +724,15 @@ class External(AbstractDict):
 
 def isOperator(token):
     """Retruns True if token is an logical operator."""
-    return token in tmGrammar.gateName
+    return tmGrammar.isGate(token)
 
 def isObject(token):
     """Retruns True if token is an object."""
-    if token.startswith(tmGrammar.EXT): return False
-    return filter(lambda item: token.startswith(item), tmGrammar.objectName) != []
+    return tmGrammar.isObject(token) and not token.startswith(tmGrammar.EXT)
 
 def isExternal(token):
     """Retruns True if token is an external signal."""
-    return token.startswith(tmGrammar.EXT)
+    return tmGrammar.isObject(token) and token.startswith(tmGrammar.EXT)
 
 def isCut(token):
     """Retruns True if token is a cut."""
@@ -660,7 +740,7 @@ def isCut(token):
 
 def isFunction(token):
     """Retruns True if token is a function."""
-    return filter(lambda item: token.startswith(item), tmGrammar.functionName) != []
+    return tmGrammar.isFunction(token)
 
 def thresholdFloat(string):
     """Converts threshold string representation (eg. 2p1) to flaoting point value."""
@@ -672,12 +752,11 @@ def toObject(token):
     if not tmGrammar.Object_parser(token, o):
         raise ValueError(token)
     return Object(
-        name = o.getObjectName(),
-        threshold = o.threshold,
-        type = getObjectType(o.getObjectName()),
-        comparison_operator = o.comparison,
-        bx_offset = o.bx_offset,
-        comment = "",
+        name=o.getObjectName(),
+        threshold=o.threshold,
+        type=getObjectType(o.getObjectName()),
+        comparison_operator=o.comparison,
+        bx_offset=int(o.bx_offset)
     )
 
 def toExternal(token):
@@ -686,9 +765,8 @@ def toExternal(token):
     result = re.match('.*(\+\d+|\-\d+)$', token)
     bx_offset = result.group(1) if result else '+0'
     return External(
-        name = token,
-        bx_offset = bx_offset,
-        comment = "",
+        name=token,
+        bx_offset=int(bx_offset)
     )
 
 def functionObjects(token):
@@ -737,5 +815,6 @@ def tokens(self, expression):
     """Parses algorithm expression and returns list of tokens."""
     tmGrammar.Algorithm_Logic.clear()
     if not tmGrammar.Algorithm_parser(expression):
-        raise AlgorithmSyntaxError("Failed to parse algorithm expression `{expression}'".format(**locals()))
+        message = "Failed to parse algorithm expression `{0}'".format(expression)
+        raise AlgorithmSyntaxError(message)
     return tmGrammar.Algorithm_Logic.getTokens()

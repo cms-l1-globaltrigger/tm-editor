@@ -133,7 +133,6 @@ install: all
 
 	echo "//     adding tmEditor package..."
 	cp tmEditor/*.py $(prefix)/lib/$(package)/tmEditor
-	cp tmEditor/*.json $(prefix)/lib/$(package)/tmEditor
 
 	echo "//     adding core libraries..."
 	cp $(corelibs) $(prefix)/lib/$(package)
@@ -310,8 +309,7 @@ tarbuild: all
 	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor
 	cp -r ../tmEditor/scripts/tm-editor $(tarballdir)/lib/tmeditor-$(version)/tmEditor/scripts
 	cp -r ../tmEditor/tmEditor/*.py $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor
-	cp -r ../tmEditor/tmEditor/*.json $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor
-	cp -r ../tmEditor/changelog ../tmEditor/copyright ../tmEditor/README* $(tarballdir)/lib/tmeditor-$(version)/tmEditor
+	cp -r ../tmEditor/changelog ../tmEditor/copyright ../tmEditor/README.md $(tarballdir)/lib/tmeditor-$(version)/tmEditor
 	@echo "//     packing tarball..."
 	cd tarball && tar czf $(pkgdir)-$(distro)-$(arch).tar.gz $(pkgdir)-$(distro)-$(arch)
 	@echo "done."

@@ -10,11 +10,12 @@
 import tmEditor
 from tmEditor.version import VERSION, PKG_RELEASE
 
-from PyQt4.QtCore import QSettings, QT_VERSION_STR
+from PyQt4.QtCore import QSettings, QTimer, QT_VERSION_STR
 from PyQt4.QtGui import QApplication
 
 import argparse
 import logging
+import signal
 import sys, os
 
 EXIT_OK = 0
@@ -46,22 +47,33 @@ def main():
 
     # Setup console logging and debug level.
     loggingLevel = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(format = '%(levelname)s: %(message)s', level = loggingLevel)
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=loggingLevel)
 
     # As things are getting serious let's start logging to file.
     if args.verbose:
-        handler = logging.FileHandler('tm-editor.log', mode = 'a')
-        handler.setFormatter(logging.Formatter(fmt = '%(asctime)s %(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
-        handler.setLevel(loggingLevel)
-        logging.getLogger().addHandler(handler)
+        filename = os.path.expanduser('~/tm-editor.log')
+        if os.access(filename, os.W_OK): # is writable?
+            handler = logging.FileHandler(filename, mode='a')
+            handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+            handler.setLevel(loggingLevel)
+            logging.getLogger().addHandler(handler)
 
     # Create application window.
     try:
         app = QApplication(sys.argv)
+
+        # Diagnostic output.
         logging.debug("launching L1-Trigger Menu Editor")
-        logging.debug(" version %s-%s", VERSION, PKG_RELEASE)
-        logging.debug(" exec %s", __file__)
-        logging.debug(" PyQt4 version %s", QT_VERSION_STR)
+        logging.debug("version %s-%s", VERSION, PKG_RELEASE)
+        logging.debug("__file__=%s", __file__)
+        logging.debug("sys.argv=%s", sys.argv)
+        logging.debug("LD_LIBRARY_PATH=%s", os.getenv('LD_LIBRARY_PATH'))
+        logging.debug("PATH=%s", os.getenv('HOME'))
+        logging.debug("UTM_ROOT=%s", os.getenv('UTM_ROOT'))
+        logging.debug("UTM_XSD_DIR=%s", os.getenv('UTM_XSD_DIR'))
+        logging.debug("LC_ALL=%s", os.getenv('LC_ALL'))
+        logging.debug("python version %s.%s.%s", *sys.version_info[:3])
+        logging.debug("PyQt4 version %s", QT_VERSION_STR)
 
         # Create/Load application settings.
         app.setOrganizationName("HEPHY")
@@ -80,6 +92,14 @@ def main():
             logging.debug("loading file %s", filename)
             window.loadDocument(filename)
             app.processEvents()
+
+        # Terminate application on SIG_INT signal.
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+        # Run timer to catch SIG_INT signals.
+        timer = QTimer()
+        timer.start(500)
+        timer.timeout.connect(lambda: None)
 
         return app.exec_()
     except RuntimeError, message:

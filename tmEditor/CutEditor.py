@@ -29,6 +29,17 @@ from PyQt4 import QtGui
 
 __all__ = ['CutEditorDialog', ]
 
+# ------------------------------------------------------------------------------
+#  Keys
+# ------------------------------------------------------------------------------
+
+kComment = 'comment'
+kData = 'data'
+kMaximum = 'maximum'
+kMinimum = 'minimum'
+kName = 'name'
+kNumber = 'number'
+
 # -----------------------------------------------------------------------------
 #  Custom widgets
 # -----------------------------------------------------------------------------
@@ -36,11 +47,11 @@ __all__ = ['CutEditorDialog', ]
 class ScaleSpinBox(QtGui.QDoubleSpinBox):
     """Custom spin box for scales lookup table."""
 
-    MinimumMode = 'minimum'
-    MaximumMode = 'maximum'
-    EmptyScale = [{'number': 0, 'minimum': .0, 'maximum': .0}]
+    MinimumMode = kMinimum
+    MaximumMode = kMaximum
+    EmptyScale = [{kNumber: 0, kMinimum: .0, kMaximum: .0}]
 
-    def __init__(self, mode = MinimumMode, parent = None):
+    def __init__(self, mode=MinimumMode, parent=None):
         super(ScaleSpinBox, self).__init__(parent)
         self.setMode(mode)
         self.setScale(self.EmptyScale)
@@ -51,7 +62,7 @@ class ScaleSpinBox(QtGui.QDoubleSpinBox):
     def setMode(self, mode):
         self.mode = mode
 
-    def setScale(self, scale, prec = 3):
+    def setScale(self, scale, prec=3):
         """Scale requires a list of dictionaries with at least a *number*,
         *minimum* and *maximum* keys. *mode* specifies if the upper or lower bin
          limit is used."""
@@ -67,7 +78,7 @@ class ScaleSpinBox(QtGui.QDoubleSpinBox):
         self.index += steps
         self.setValue(float(self.scale[self.index][self.mode]))
 
-    def value(self, index = None):
+    def value(self, index=None):
         """Returns bins floating point value by LUT index (upper or lower depending on mode)."""
         if index == None: index = self.index
         return self.scale[index][self.mode]
@@ -94,9 +105,36 @@ class ScaleSpinBox(QtGui.QDoubleSpinBox):
         self.index = result
         return float(self.value(self.index))
 
+class RangeSpinBox(QtGui.QDoubleSpinBox):
+    """Custom spin box for fixed stepped ranges."""
+
+    def __init__(self, parent=None):
+        super(RangeSpinBox, self).__init__(parent)
+
+    def stepBy(self, steps):
+        self.setValue(self.value() + (steps * self.singleStep()))
+
+    def setValue(self, value):
+        value = self.nearest(value)
+        super(RangeSpinBox, self).setValue(value)
+
+    def valueFromText(self, text):
+        """Re-implementation of valueFromText(), it returns only the nearest."""
+        return self.nearest(float(str(text).strip(" =<>!")))
+
+    def nearest(self, value):
+        """Returns nearest neighbor of value in range."""
+        # Calculate modulo of value by multiplying by 10^decimals
+        multiplier = int(10**self.decimals())
+        value = int(round(value * multiplier))
+        step = int(round(self.singleStep() * multiplier))
+        value = (value / step) * step # mangle
+        return float(value) / multiplier
+
 class DataField(QtGui.QScrollArea):
     """Custom data field for cuts.
-    >>> d = DataField(['foo', 'bar', 'baz'])
+    >>> d = DataField()
+    >>> d.setEntries({"0": "foo", "1": "bar", "2": "baz"})
     >>> d.setData("0,2")
     >>> d.data()
     "0,2"
@@ -106,15 +144,15 @@ class DataField(QtGui.QScrollArea):
         super(DataField, self).__init__(parent)
         self.clear()
 
-    def setEntries(self, labels, exclusive = False):
-        """Labels require a sorted list data entry labels. The size determines
-        the overall size of data entries assigned. If set exclusive the default
-        chekc boxes are replaced by radio buttons."""
+    def setEntries(self, d, exclusive=False):
+        """Provide a dictionary for data entries. If set exclusive the default
+        check boxes are replaced by radio buttons."""
         self.clear()
         widget = QtGui.QWidget(self)
         layout = QtGui.QVBoxLayout(self)
-        for label in labels:
+        for key, label in sorted(d.iteritems(), key=Toolbox.natural_sort_key):
             entry = QtGui.QRadioButton(label, self) if exclusive else QtGui.QCheckBox(label, self)
+            entry.key = key
             self.entries.append(entry)
             layout.addWidget(entry)
         widget.setLayout(layout)
@@ -129,23 +167,24 @@ class DataField(QtGui.QScrollArea):
     def data(self):
         """Returns comma separated list of enabled data entries."""
         indexes = []
-        for index, entry in enumerate(self.entries):
+        for entry in self.entries:
             if entry.isChecked():
-                indexes.append(str(index))
+                indexes.append(entry.key)
         return ','.join(indexes)
 
     def setData(self, data):
         """Sets data entries to supplied data. Data is a comma separated list."""
         # Convert from comma separated string list to list of integers.
-        data = [int(index) for index in data.split(',')] if data else []
-        for index in data:
-            if index < len(self.entries):
-                self.entries[index].setChecked(True)
+        data = [index.strip() for index in data.split(',')] if data else []
+        for key in data:
+            for entry in self.entries:
+                if key == entry.key:
+                    entry.setChecked(True)
 
 class CutEditorDialog(QtGui.QDialog):
     """Dialog providing cut creation/editing interface."""
 
-    CutSettings = Settings.cutSettings()
+    CutSettings = Settings.cutSettings
 
     def __init__(self, menu, parent = None):
         """Param title is the applciation name."""
@@ -177,14 +216,14 @@ class CutEditorDialog(QtGui.QDialog):
         self.minimumLabel = QtGui.QLabel(self.tr("Minimum"), self)
         self.minimumSpinBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
         self.minimumSpinBox.valueChanged.connect(self.updateGraphs)
-        self.minimumRangeSpinBox = QtGui.QDoubleSpinBox(self)
+        self.minimumRangeSpinBox = RangeSpinBox(self)
         self.minimumUnitLabel = QtGui.QLabel(self)
         self.minimumUnitLabel.setSizePolicy(unitLabelSizePolicy)
         # Maximum
         self.maximumLabel = QtGui.QLabel(self.tr("Maximum"), self)
         self.maximumSpinBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
         self.maximumSpinBox.valueChanged.connect(self.updateGraphs)
-        self.maximumRangeSpinBox = QtGui.QDoubleSpinBox(self)
+        self.maximumRangeSpinBox = RangeSpinBox(self)
         self.maximumUnitLabel = QtGui.QLabel(self)
         self.maximumUnitLabel.setSizePolicy(unitLabelSizePolicy)
         # Data
@@ -336,7 +375,7 @@ class CutEditorDialog(QtGui.QDialog):
         self.updateEntries()
         if cut.type in (tmGrammar.ISO, tmGrammar.QLTY, tmGrammar.CHG, tmGrammar.CHGCOR):
             self.setDataEnabled(True)
-            self.dataField.setEntries(self.spec.data_sorted, self.spec.data_exclusive)
+            self.dataField.setEntries(self.spec.data, self.spec.data_exclusive)
             self.setData(cut.data)
         else:
             self.setRangeEnabled(True)
@@ -349,24 +388,23 @@ class CutEditorDialog(QtGui.QDialog):
                 self.minimumSpinBox.setValue(float(self.minimumSpinBox.nearest(cut.minimum)))
                 self.maximumSpinBox.setScale(scale)
                 self.maximumSpinBox.setValue(float(self.maximumSpinBox.nearest(cut.maximum)))
-        if 'comment' in cut.keys():
-            self.setComment(cut['comment'])
+        self.setComment(cut.comment)
 
     def updateCut(self, cut):
         """Update existing cut object with values from editor."""
         # TODO not effective, re-write.
         assert cut.type == self.type
         assert cut.object == self.object
-        cut['name'] = self.name
-        if cut['data']:
-            cut['minimum'] = ''
-            cut['maximum'] = ''
-            cut['data'] = self.data
+        cut.name = self.name
+        if cut.data:
+            cut.minimum = ''
+            cut.maximum = ''
+            cut.data = self.data
         else:
-            cut['minimum'] = self.minimum
-            cut['maximum'] = self.maximum
-            cut['data'] = ''
-        cut['comment'] = self.comment
+            cut.minimum = self.minimum
+            cut.maximum = self.maximum
+            cut.data = ''
+        cut.comment = self.comment
 
     def newCut(self):
         cut = Cut(
@@ -376,13 +414,13 @@ class CutEditorDialog(QtGui.QDialog):
             comment=self.comment,
         )
         if self.data:
-            cut['minimum'] = ''
-            cut['maximum'] = ''
-            cut['data'] = self.data
+            cut.minimum = ''
+            cut.maximum = ''
+            cut.data = self.data
         else:
-            cut['minimum'] = self.minimum
-            cut['maximum'] = self.maximum
-            cut['data'] = ''
+            cut.minimum = self.minimum
+            cut.maximum = self.maximum
+            cut.data = ''
         return cut
 
     def setRangeEnabled(self, enabled):
@@ -424,32 +462,40 @@ class CutEditorDialog(QtGui.QDialog):
         self.etaChart.hide()
         self.phiLabel.hide()
         self.phiChart.hide()
-        info = []
+        info = QtCore.QStringList()
         if self.spec.title:
             self.spec._filename = ""
-            info.append("<h3>{self.spec.title}</h3>".format(**locals()))
+            info.append(self.tr("<h3>%1</h3>").arg(self.spec.title))
         if self.spec.description:
-            info.append("<p>{self.spec.description}</p>".format(**locals()))
+            info.append(self.tr("<p>%1</p>").arg(self.spec.description))
         if self.spec.data:
             self.setDataEnabled(True)
-            self.dataField.setEntries(self.spec.data_sorted, self.spec.data_exclusive)
+            self.dataField.setEntries(self.spec.data, self.spec.data_exclusive)
         # Delta ranges
         elif self.type == tmGrammar.DR:
             self.setRangeEnabled(True)
-            self.minimumRangeSpinBox.setRange(0, 10E10)
+            minimum, maximum = 0., 10E10 # TODO TODO
             self.minimumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.minimumRangeSpinBox.setSingleStep(self.spec.range_step)
-            self.minimumRangeSpinBox.setValue(0)
-            self.maximumRangeSpinBox.setRange(0, 10E10)
+            self.minimumRangeSpinBox.setRange(minimum, maximum)
+            self.minimumRangeSpinBox.setValue(minimum)
             self.maximumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.maximumRangeSpinBox.setSingleStep(self.spec.range_step)
+            self.maximumRangeSpinBox.setRange(minimum, maximum)
             self.maximumRangeSpinBox.setValue(1.)
+            info.append(self.tr("<p><strong>Valid range:</strong> [0, +&infin;)</p>"))
+            info.append(self.tr("<p><strong>Step:</strong> %1</p>").arg(self.spec.range_step, 0, 'f', self.spec.range_precision))
         elif self.type == tmGrammar.DETA:
             self.setRangeEnabled(True)
-            scaleMu = filter(lambda scale: scale['object']==tmGrammar.MU and scale['type']==tmGrammar.ETA, self.menu.scales.scales)[0]
-            scaleCalo = filter(lambda scale: scale['object']==tmGrammar.JET and scale['type']==tmGrammar.ETA, self.menu.scales.scales)[0]
-            scale = scaleMu if scaleMu['maximum'] > scaleCalo['maximum'] else scaleCalo
-            minimum, maximum = float(scale['minimum']), float(scale['maximum'])
+            def isMuEta(scale): # filter
+                return scale['object']==tmGrammar.MU and scale['type']==tmGrammar.ETA
+            def isJetEta(scale): # filter
+                return scale['object']==tmGrammar.JET and scale['type']==tmGrammar.ETA
+            scaleMu = filter(isMuEta, self.menu.scales.scales)[0]
+            scaleCalo = filter(isJetEta, self.menu.scales.scales)[0]
+            scale = scaleMu if scaleMu[kMaximum] > scaleCalo[kMaximum] else scaleCalo
+            minimum = 0.
+            maximum = float(scale[kMaximum]) * 2.
             self.minimumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.minimumRangeSpinBox.setSingleStep(self.spec.range_step)
             self.minimumRangeSpinBox.setRange(minimum, maximum)
@@ -458,12 +504,15 @@ class CutEditorDialog(QtGui.QDialog):
             self.maximumRangeSpinBox.setSingleStep(self.spec.range_step)
             self.maximumRangeSpinBox.setRange(minimum, maximum)
             self.maximumRangeSpinBox.setValue(maximum)
-            minimum, maximum = self.minimumRangeSpinBox.minimum(), self.maximumRangeSpinBox.maximum()
-            info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
+            info.append(self.tr("<p><strong>Valid range:</strong> [%1, %2]</p>").arg(minimum, 0, 'f', 3).arg(maximum, 0, 'f', 3))
+            info.append(self.tr("<p><strong>Step:</strong> %1</p>").arg(self.spec.range_step, 0, 'f', self.spec.range_precision))
         elif self.type == tmGrammar.DPHI:
             self.setRangeEnabled(True)
-            scale = filter(lambda scale: scale['object']==tmGrammar.MU and scale['type']==tmGrammar.PHI, self.menu.scales.scales)[0]
-            minimum, maximum = float(scale['minimum']), float(scale['maximum']) / 2.
+            def isMuPhi(scale): # filter
+                return scale['object']==tmGrammar.MU and scale['type']==tmGrammar.PHI
+            scale = filter(isMuPhi, self.menu.scales.scales)[0]
+            minimum = 0.
+            maximum = float(scale[kMaximum]) / 2. # TODO confirm max DPHI range!
             self.minimumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.minimumRangeSpinBox.setSingleStep(self.spec.range_step)
             self.minimumRangeSpinBox.setRange(minimum, maximum)
@@ -472,19 +521,23 @@ class CutEditorDialog(QtGui.QDialog):
             self.maximumRangeSpinBox.setSingleStep(self.spec.range_step)
             self.maximumRangeSpinBox.setRange(minimum, maximum)
             self.maximumRangeSpinBox.setValue(maximum)
-            minimum, maximum = self.minimumRangeSpinBox.minimum(), self.maximumRangeSpinBox.maximum()
-            info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
+            info.append(self.tr("<p><strong>Valid range:</strong> [%1, %2]</p>").arg(minimum, 0, 'f', 3).arg(maximum, 0, 'f', 3))
+            info.append(self.tr("<p><strong>Step:</strong> %1</p>").arg(self.spec.range_step, 0, 'f', self.spec.range_precision))
         # Invariant mass
         elif self.type == tmGrammar.MASS:
             self.setRangeEnabled(True)
-            self.minimumRangeSpinBox.setRange(0, 10E10)
-            self.minimumRangeSpinBox.setValue(0)
+            minimum = 0.
+            maximum = 10E10 # TODO TODO
             self.minimumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.minimumRangeSpinBox.setSingleStep(self.spec.range_step)
-            self.maximumRangeSpinBox.setRange(0, 10E10)
-            self.maximumRangeSpinBox.setValue(0)
+            self.minimumRangeSpinBox.setRange(minimum, maximum)
+            self.minimumRangeSpinBox.setValue(minimum)
             self.maximumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.maximumRangeSpinBox.setSingleStep(self.spec.range_step)
+            self.maximumRangeSpinBox.setRange(minimum, maximum)
+            self.maximumRangeSpinBox.setValue(maximum)
+            info.append(self.tr("<p><strong>Valid range:</strong> [0, +&infin;)</p>"))
+            info.append(self.tr("<p><strong>Step:</strong> %1</p>").arg(self.spec.range_step, 0, 'f', self.spec.range_precision))
         # Ranges
         else:
             self.setRangeEnabled(True)
@@ -507,10 +560,10 @@ class CutEditorDialog(QtGui.QDialog):
                 self.phiChart.show()
             self.updateGraphs()
 
-            info.append("<p><strong>Valid range:</strong> [{minimum:.3f}, {maximum:.3f}]</p>".format(**locals()))
+            info.append(self.tr("<p><strong>Valid range:</strong> [%1, %2]</p>").arg(minimum, 0, 'f', 3).arg(maximum, 0, 'f', 3))
         if not self.typeComboBox.isEnabled():
-            info.append("<p><strong>Note:</strong> Changing an existing cut's type is not allowed.</p>")
-        self.infoTextEdit.setText("\n".join(info))
+            info.append(self.tr("<p><strong>Note:</strong> Changing an existing cut's type is not allowed.</p>"))
+        self.infoTextEdit.setText(info.join(""))
 
     def updateGraphs(self, value = None):
         if self.type == tmGrammar.ETA:
@@ -523,18 +576,14 @@ class CutEditorDialog(QtGui.QDialog):
     def accept(self):
         """Perform consistency checks befor accepting changes."""
         if self.spec.data and not self.data:
-            QtGui.QMessageBox.warning(
-                self,
-                self.tr("No data"),
+            QtGui.QMessageBox.warning(self, self.tr("No data"),
                 self.tr("It is not possible to create a cut without assigning a data selection.")
             )
             return
         # For all ranges (excepting PHI) minimum <= maximum
         if self.type in (tmGrammar.MASS, tmGrammar.DR, tmGrammar.DETA, tmGrammar.ETA):
             if float(self.minimum) > float(self.maximum):
-                QtGui.QMessageBox.warning(
-                    self,
-                    self.tr("Invalid range"),
+                QtGui.QMessageBox.warning(self, self.tr("Invalid range"),
                     self.tr("For non-phi cuts a range must follow: minimum <= maximum.")
                 )
                 return
@@ -542,9 +591,7 @@ class CutEditorDialog(QtGui.QDialog):
         if self.name in [cut.name for cut in self.menu.cuts]:
             duplicates = filter(lambda cut: cut.name == self.name, self.menu.cuts)
             if not (self.loadedCut and self.loadedCut in duplicates): # ugly...
-                QtGui.QMessageBox.warning(
-                    self,
-                    self.tr("Name already used"),
+                QtGui.QMessageBox.warning(self, self.tr("Name already used"),
                     self.tr("Suffix \"%1\" is already used with a cut of type \"%2\".").arg(self.suffix).arg(self.type)
                 )
                 return

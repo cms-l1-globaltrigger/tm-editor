@@ -34,7 +34,7 @@ def miniIcon(name):
 class AbstractTableModel(QtCore.QAbstractTableModel):
     """Abstract table model class to be inherited to display table data."""
 
-    ColumnSpec = namedtuple('ColumnSpec', 'title, key, format, textAlignment, ' \
+    ColumnSpec = namedtuple('ColumnSpec', 'title, callback, format, textAlignment, ' \
                                           'decoration, headerToolTip, headerDecoration, ' \
                                           'headerSizeHint, headerTextAlignment')
 
@@ -43,13 +43,12 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         self.values = values
         self.columnSpecs = []
 
-    def addColumnSpec(self, title, key, format=str, textAlignment=AlignLeft,
+    def addColumnSpec(self, title, callback, format=str, textAlignment=AlignLeft,
                       decoration=QtCore.QVariant(), headerToolTip=QtCore.QVariant(), headerDecoration=QtCore.QVariant(),
                       headerSizeHint=QtCore.QVariant(), headerTextAlignment=AlignCenter):
-        """Add a column to be displayed, assign data using a key."""
-        spec = self.ColumnSpec(title, key, format, textAlignment, decoration, headerToolTip, headerDecoration, headerSizeHint, headerTextAlignment)
+        """Add a column to be displayed, assign data using a callback (usually a lamda function accessing an attribute)."""
+        spec = self.ColumnSpec(title, callback, format, textAlignment, decoration, headerToolTip, headerDecoration, headerSizeHint, headerTextAlignment)
         self.columnSpecs.append(spec)
-        return spec
 
     def addEmptyColumn(self):
         """Add an empty column. Can be used for appending empty space to small
@@ -77,8 +76,7 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         if not spec:
             return QtCore.QVariant()
         if role == QtCore.Qt.DisplayRole:
-            if spec.key in self.values[row].keys():
-                return spec.format(self.values[row][spec.key])
+            return spec.format(spec.callback(self.values[row])) # TODO
         if role == QtCore.Qt.TextAlignmentRole:
             return spec.textAlignment
         if role == QtCore.Qt.DecorationRole:
@@ -123,9 +121,9 @@ class AlgorithmsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(AlgorithmsModel, self).__init__(menu.algorithms, parent)
-        self.addColumnSpec("Index", 'index', int, AlignRight)
-        self.addColumnSpec("Name", 'name')
-        self.addColumnSpec("Expression", 'expression', fAlgorithm)
+        self.addColumnSpec("Index", lambda item: item.index, int, AlignRight)
+        self.addColumnSpec("Name", lambda item: item.name)
+        self.addColumnSpec("Expression", lambda item: item.expression, fAlgorithm)
 
     def insertRows(self, position, rows, parent = QtCore.QModelIndex()):
         self.beginInsertRows(parent, position, position + rows - 1)
@@ -148,12 +146,12 @@ class CutsModel(AbstractTableModel):
     def __init__(self, menu, parent = None):
         super(CutsModel, self).__init__(menu.cuts, parent)
         self.menu = menu
-        self.addColumnSpec("Name", 'name')
-        self.addColumnSpec("Type", 'type')
-        self.addColumnSpec("Object", 'object')
-        self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
-        self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
-        self.addColumnSpec("Data", 'data')
+        self.addColumnSpec("Name", lambda item: item.name)
+        self.addColumnSpec("Type", lambda item: item.type)
+        self.addColumnSpec("Object", lambda item: item.object)
+        self.addColumnSpec("Minimum", lambda item: item.minimum, fCut, AlignRight)
+        self.addColumnSpec("Maximum", lambda item: item.maximum, fCut, AlignRight)
+        self.addColumnSpec("Data", lambda item: item.data)
 
     # def data(self, index, role):
     #     """Overloaded for experimental icon decoration."""
@@ -184,29 +182,27 @@ class ObjectsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(ObjectsModel, self).__init__(menu.objects, parent)
-        self.addColumnSpec("Name", 'name')
-        self.addColumnSpec("Type", 'type')
-        self.addColumnSpec("", 'comparison_operator', fComparison, headerToolTip="Comparison", headerDecoration=QtGui.QIcon(":/icons/compare.svg"), headerSizeHint=QtCore.QSize(26, -1))
-        self.addColumnSpec("Threshold", 'threshold', fThreshold, AlignRight)
-        self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
+        self.addColumnSpec("Name", lambda item: item.name)
+        self.addColumnSpec("Type", lambda item: item.type)
+        self.addColumnSpec("", lambda item: item.comparison_operator, fComparison, headerToolTip="Comparison", headerDecoration=QtGui.QIcon(":/icons/compare.svg"), headerSizeHint=QtCore.QSize(26, -1))
+        self.addColumnSpec("Threshold", lambda item: item.threshold, fThreshold, AlignRight)
+        self.addColumnSpec("BX Offset", lambda item: item.bx_offset, fBxOffset, AlignRight)
         self.addEmptyColumn()
 
     def data(self, index, role):
         """Overloaded for experimental icon decoration."""
         if index.isValid():
-            if index.column() == 0:
-                if role == QtCore.Qt.DecorationRole:
-                    name = self.values[index.row()].name
-                    if name.startswith("MU"):
-                        return miniIcon("mu")
-                    if name.startswith("EG"):
-                        return miniIcon("eg")
-                    if name.startswith("TAU"):
-                        return miniIcon("tau")
-                    if name.startswith("JET"):
-                        return miniIcon("jet")
-                    if name.startswith("ET") or name.startswith("HT"):
-                        return miniIcon("esums")
+            columnSpec = self.columnSpecs[index.column()]
+            value = self.values[index.row()]
+            if columnSpec:
+                if columnSpec.title == "Name":
+                    if role == QtCore.Qt.DecorationRole:
+                        return miniIcon(value.type.lower())
+                # Override display for count type objects (no decimals, no GeV suffix)
+                if columnSpec.title == "Threshold":
+                    if role == QtCore.Qt.DisplayRole:
+                        if value.type in (tmGrammar.MBT0HFP, tmGrammar.MBT1HFP, tmGrammar.MBT0HFM, tmGrammar.MBT1HFM, tmGrammar.TOWERCOUNT):
+                            return "{0:.0f} counts".format(float(value.threshold)) # return integer string!
         return super(ObjectsModel, self).data(index, role)
 
 class ExternalsModel(AbstractTableModel):
@@ -214,8 +210,8 @@ class ExternalsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(ExternalsModel, self).__init__(menu.externals, parent)
-        self.addColumnSpec("Name", 'name')
-        self.addColumnSpec("BX Offset", 'bx_offset', fBxOffset, AlignRight)
+        self.addColumnSpec("Name", lambda item: item.name, decoration=miniIcon('default'))
+        self.addColumnSpec("BX Offset", lambda item: item.bx_offset, fBxOffset, AlignRight)
         self.addEmptyColumn()
 
 class ScalesModel(AbstractTableModel):
@@ -223,12 +219,12 @@ class ScalesModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(ScalesModel, self).__init__(menu.scales.scales, parent)
-        self.addColumnSpec("Object", 'object')
-        self.addColumnSpec("Type", 'type')
-        self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
-        self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
-        self.addColumnSpec("Step", 'step', fCut, AlignRight)
-        self.addColumnSpec("Bitwidth", 'n_bits', int, AlignRight)
+        self.addColumnSpec("Object", lambda item: item['object'])
+        self.addColumnSpec("Type", lambda item: item['type'])
+        self.addColumnSpec("Minimum", lambda item: item['minimum'], fCut, AlignRight)
+        self.addColumnSpec("Maximum", lambda item: item['maximum'], fCut, AlignRight)
+        self.addColumnSpec("Step", lambda item: item['step'], fCut, AlignRight)
+        self.addColumnSpec("Bitwidth", lambda item: item['n_bits'], int, AlignRight)
         self.addEmptyColumn()
 
 class BinsModel(AbstractTableModel):
@@ -237,10 +233,10 @@ class BinsModel(AbstractTableModel):
     def __init__(self, menu, name, parent = None):
         super(BinsModel, self).__init__(menu.scales.bins[name], parent)
         self.name = name
-        self.addColumnSpec("Number dec", 'number', int, AlignRight)
-        self.addColumnSpec("Number hex", 'number', fHex, AlignRight)
-        self.addColumnSpec("Minimum", 'minimum', fCut, AlignRight)
-        self.addColumnSpec("Maximum", 'maximum', fCut, AlignRight)
+        self.addColumnSpec("Number dec", lambda item: item['number'], int, AlignRight)
+        self.addColumnSpec("Number hex", lambda item: item['number'], fHex, AlignRight)
+        self.addColumnSpec("Minimum", lambda item: item['minimum'], fCut, AlignRight)
+        self.addColumnSpec("Maximum", lambda item: item['maximum'], fCut, AlignRight)
         self.addEmptyColumn()
 
 class ExtSignalsModel(AbstractTableModel):
@@ -248,9 +244,9 @@ class ExtSignalsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(ExtSignalsModel, self).__init__(menu.extSignals.extSignals, parent)
-        self.addColumnSpec("System", 'system')
-        self.addColumnSpec("Name", 'name')
-        self.addColumnSpec("Label", 'label')
-        self.addColumnSpec("Cable", 'cable')
-        self.addColumnSpec("Channel", 'channel')
+        self.addColumnSpec("System", lambda item: item['system'])
+        self.addColumnSpec("Name", lambda item: item['name'])
+        self.addColumnSpec("Label", lambda item: item['label'] if 'label' in item else "")
+        self.addColumnSpec("Cable", lambda item: item['cable'], int, AlignRight)
+        self.addColumnSpec("Channel", lambda item: item['channel'], int, AlignRight)
         self.addEmptyColumn()

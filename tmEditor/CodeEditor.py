@@ -9,6 +9,8 @@
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
+import string
+
 """Code editor widget derived from:
 http://doc.qt.io/qt-4.8/qt-widgets-codeeditor-example.html
 
@@ -57,7 +59,7 @@ class CodeEditor(QtGui.QPlainTextEdit):
         while maximum >= 10:
             maximum /= 10
             digits += 1
-        space = 8 + self.fontMetrics().width(QtCore.QChar('9')) * digits
+        space = 8 + max([self.fontMetrics().width(QtCore.QChar(c)) for c in string.digits]) * digits
         return space;
 
     def resizeEvent(self, event):

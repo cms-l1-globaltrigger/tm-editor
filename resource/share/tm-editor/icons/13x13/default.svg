@@ -16,18 +16,18 @@
    id="svg4339"
    version="1.1"
    inkscape:version="0.91 r"
-   sodipodi:docname="tau.svg">
+   sodipodi:docname="default.svg">
   <defs
      id="defs4341">
     <linearGradient
        inkscape:collect="always"
        id="linearGradient4923">
       <stop
-         style="stop-color:#5a2ca0;stop-opacity:1"
+         style="stop-color:#808080;stop-opacity:1"
          offset="0"
          id="stop4925" />
       <stop
-         style="stop-color:#7137c8;stop-opacity:1"
+         style="stop-color:#cccccc;stop-opacity:1"
          offset="1"
          id="stop4927" />
     </linearGradient>
@@ -42,11 +42,11 @@
        inkscape:collect="always"
        id="linearGradient4323">
       <stop
-         style="stop-color:#7137c8;stop-opacity:1"
+         style="stop-color:#808080;stop-opacity:1"
          offset="0"
          id="stop4325" />
       <stop
-         style="stop-color:#5a2ca0;stop-opacity:1"
+         style="stop-color:#999999;stop-opacity:1"
          offset="1"
          id="stop4327" />
     </linearGradient>
@@ -59,7 +59,7 @@
        fx="-177.25325"
        fy="475.90024"
        r="5.90909"
-       gradientTransform="matrix(3.1598234e-6,1.0858977,-0.62051337,1.8056144e-6,137.34133,678.10215)"
+       gradientTransform="matrix(0.03942225,1.0851819,-1.5528568,0.05641184,588.03095,651.12972)"
        gradientUnits="userSpaceOnUse" />
     <linearGradient
        inkscape:collect="always"
@@ -78,9 +78,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="22.627417"
-     inkscape:cx="-1.7572757"
-     inkscape:cy="7.0073278"
+     inkscape:zoom="11.313708"
+     inkscape:cx="-0.83628226"
+     inkscape:cy="-4.8096138"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
