@@ -12,6 +12,7 @@ import sys, os
 
 import tmGrammar
 from tmEditor import Menu
+from tmEditor import XmlDecoder, XmlEncoder
 from tmEditor.Menu import toObject
 from tmEditor import Toolbox
 
@@ -69,10 +70,14 @@ class Settings:
         FunctionSpec("Mass", [MASS], [MU, EG, JET, TAU]),
     )
 
-class MenuGenerator(Menu):
+class MenuGenerator(Menu.Menu):
 
     def __init__(self, filename):
-        super(MenuGenerator, self).__init__(filename)
+        super(MenuGenerator, self).__init__()
+        menu = XmlDecoder.load(filename)
+        self.menu = menu.menu
+        self.scales = menu.scales
+        self.extSignals = menu.extSignals
         self.reset() # clear contents
 
     def reset(self):
@@ -112,7 +117,8 @@ class MenuGenerator(Menu):
                     continue # TODO
                 suffix = str(len(self.cuts) + len(cuts)) # simple enumeration
                 name = "{key}_{suffix}".format(**locals())
-                self.addCut(name, type=type, object=objectSpec.name, minimum=minimum, maximum=maximum, data=data)
+                cut = Menu.Cut(name, type=type, object=objectSpec.name, minimum=minimum, maximum=maximum, data=data)
+                self.addCut(cut)
                 cuts.append(name)
         return ','.join(cuts)
 
@@ -162,7 +168,8 @@ class MenuGenerator(Menu):
         threshold = self.randomEtThreshold(type)
         bx_offset = ['-2', '-1', '', '+1', '+2'][2] # TODO
         name = "{type}{threshold}{bx_offset}".format(**locals())
-        self.addObject(name, type, threshold)
+        obj = Menu.Object(name, type, threshold)
+        self.addObject(obj)
         cutList = self.addRandomObjectCut(objectSpec)
         if cutList:
             return "{name}[{cutList}]".format(**locals())
@@ -203,13 +210,11 @@ class MenuGenerator(Menu):
                     massCutList = self.addRandomFunctionCut(data.function)
                     expression.append("mass{{{objectList}}}[{massCutList}]".format(**locals()))
             index = len(self.algorithms)
-            algorithm = dict(
-                index=index,
-                name="L1_Autogen_{index}".format(**locals()),
-                expression=' '.join(expression)
-            )
-            print "adding algorithm", algorithm
-            self.addAlgorithm(**algorithm)
+            name="L1_Autogen_{index}".format(**locals())
+            expression=' '.join(expression)
+            algorithm = Menu.Algorithm(index, name, expression)
+            print "adding algorithm", algorithm.index, algorithm.name, algorithm.expression
+            self.addAlgorithm(algorithm)
 
 class GeneratorWidget(QWidget):
     """Generator tab page widget."""
@@ -407,7 +412,7 @@ class MainWindow(QWidget):
                 widget = self.tabWidget.widget(i)
                 if isinstance(widget, GeneratorWidget):
                     self.generator.generate(widget.data())
-            self.generator.writeXml(str(filename))
+            XmlEncoder.dump(self.generator, str(filename))
             self.generator.reset() # Make sure to reset generated contents, else acculmulates
         except Exception, e:
             message = QErrorMessage(self)

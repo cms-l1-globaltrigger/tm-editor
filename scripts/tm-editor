@@ -7,7 +7,8 @@
 # Last changed date : $Date: $
 #
 
-import tmEditor
+from tmEditor.core import XmlDecoder, XmlEncoder
+from tmEditor.gui.MainWindow import MainWindow
 from tmEditor.version import VERSION, PKG_RELEASE
 
 from PyQt4.QtCore import QSettings, QTimer, QT_VERSION_STR
@@ -29,6 +30,16 @@ def parse():
         nargs = '*',
         help = "trigger menu XML file",
     )
+    parser.add_argument('--export-xml',
+        metavar = '<file>',
+        help = "export normalized document to XML file",
+    )
+    parser.add_argument('--timeout',
+        metavar = '<sec>',
+        type = int,
+        default = 10,
+        help = "timeout for remote connections in seconds (default 10)",
+    )
     parser.add_argument('-v', '--verbose',
         action = 'count',
         help = "increase output verbosity",
@@ -39,6 +50,20 @@ def parse():
         help = "show the application's version",
     )
     return parser.parse_args()
+
+def export_xml(args):
+    """Export normalized document to XML file."""
+    if not args.export_xml:
+        message = "argument `--export-xml' requires a XML file to be loaded"
+        raise RuntimeError(message)
+    if not args.filenames:
+        message = "argument `--export-xml' requires a XML file to be loaded"
+        raise RuntimeError(message)
+    menu = XmlDecoder.load(args.filenames[0])
+    # Check integrity
+    menu.validate()
+    XmlEncoder.dump(menu, args.export_xml)
+    return EXIT_OK
 
 def main():
     """Main application routine."""
@@ -58,22 +83,26 @@ def main():
             handler.setLevel(loggingLevel)
             logging.getLogger().addHandler(handler)
 
+    # Diagnostic output.
+    logging.debug("launching L1-Trigger Menu Editor")
+    logging.debug("version %s-%s", VERSION, PKG_RELEASE)
+    logging.debug("__file__=%s", __file__)
+    logging.debug("sys.argv=%s", sys.argv)
+    logging.debug("LD_LIBRARY_PATH=%s", os.getenv('LD_LIBRARY_PATH'))
+    logging.debug("PATH=%s", os.getenv('HOME'))
+    logging.debug("UTM_ROOT=%s", os.getenv('UTM_ROOT'))
+    logging.debug("UTM_XSD_DIR=%s", os.getenv('UTM_XSD_DIR'))
+    logging.debug("LC_ALL=%s", os.getenv('LC_ALL'))
+    logging.debug("python version %s.%s.%s", *sys.version_info[:3])
+    logging.debug("PyQt4 version %s", QT_VERSION_STR)
+
+    # Export options
+    if args.export_xml:
+        return export_xml(args)
+
     # Create application window.
     try:
         app = QApplication(sys.argv)
-
-        # Diagnostic output.
-        logging.debug("launching L1-Trigger Menu Editor")
-        logging.debug("version %s-%s", VERSION, PKG_RELEASE)
-        logging.debug("__file__=%s", __file__)
-        logging.debug("sys.argv=%s", sys.argv)
-        logging.debug("LD_LIBRARY_PATH=%s", os.getenv('LD_LIBRARY_PATH'))
-        logging.debug("PATH=%s", os.getenv('HOME'))
-        logging.debug("UTM_ROOT=%s", os.getenv('UTM_ROOT'))
-        logging.debug("UTM_XSD_DIR=%s", os.getenv('UTM_XSD_DIR'))
-        logging.debug("LC_ALL=%s", os.getenv('LC_ALL'))
-        logging.debug("python version %s.%s.%s", *sys.version_info[:3])
-        logging.debug("PyQt4 version %s", QT_VERSION_STR)
 
         # Create/Load application settings.
         app.setOrganizationName("HEPHY")
@@ -84,7 +113,8 @@ def main():
         QSettings()
 
         # Create main window.
-        window = tmEditor.MainWindow()
+        window = MainWindow()
+        window.setRemoteTimeout(args.timeout)
         window.show()
 
         # Load documents from command line (optional).

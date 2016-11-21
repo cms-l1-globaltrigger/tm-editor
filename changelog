@@ -1,3 +1,12 @@
+tm-editor (0.3.0-1) extra; urgency=medium
+
+  * Code re-organisation.
+  * Added --export-xml command line arguments.
+  * Additional consistency checks on load.
+  * Improved algorithm function editor.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Wed, 02 Nov 2016 15:35:13 +0100
+
 tm-editor (0.2.0-1) extra; urgency=medium
 
   * Code re-organisation.

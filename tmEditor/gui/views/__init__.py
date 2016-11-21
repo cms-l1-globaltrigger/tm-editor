@@ -5,3 +5,5 @@
 # Last changed by   : $Author:  $
 # Last changed date : $Date: $
 #
+
+from .TableView import TableView

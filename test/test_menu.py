@@ -6,19 +6,17 @@
 import unittest
 
 import tmGrammar
+import tmTable
+
 from tmGrammar import isGate as isOperator
 from tmGrammar import isObject, isFunction
-from tmEditor.Menu import (
-    Menu,
-    Object,
-    External,
-    toObject,
-    toExternal,
-    functionObjects,
-    functionCuts,
-    functionObjectsCuts,
-    objectCuts,
-)
+from tmEditor.core import XmlDecoder, XmlEncoder
+from tmEditor.core.Menu import Menu
+from tmEditor.core.Algorithm import Object, External, Cut, Algorithm
+from tmEditor.core.Algorithm import toObject, toExternal
+from tmEditor.core.Algorithm import functionObjects, functionCuts, functionObjectsCuts
+from tmEditor.core.Algorithm import objectCuts
+
 import tempfile
 
 class MenuTests(unittest.TestCase):
@@ -50,19 +48,19 @@ class MenuTests(unittest.TestCase):
 
     def test_toObject(self):
         cases = {
-            "MU10": dict(name="MU10", threshold="10", type=tmGrammar.MU, comparison_operator=tmGrammar.GE, bx_offset="+0", comment=""),
-            "EG.ge.60p0+1": dict(name="EG60p0+1", threshold="60p0", type=tmGrammar.EG, comparison_operator=tmGrammar.GE, bx_offset="+1", comment=""),
-            "TAU.eq.260p5-2": dict(name="TAU.eq.260p5-2", threshold="260p5", type=tmGrammar.TAU, comparison_operator=tmGrammar.EQ, bx_offset="-2", comment=""),
+            "MU10": dict(name="MU10", threshold="10", type=tmGrammar.MU, comparison_operator=tmGrammar.GE, bx_offset=0),
+            "EG.ge.60+1": dict(name="EG60+1", threshold="60", type=tmGrammar.EG, comparison_operator=tmGrammar.GE, bx_offset=1),
+            "TAU.eq.260p5-2": dict(name="TAU.eq.260p5-2", threshold="260p5", type=tmGrammar.TAU, comparison_operator=tmGrammar.EQ, bx_offset=-2),
         }
         for token, ref in cases.items():
             self.assertEqual(toObject(token), Object(**ref), "missmatch at object requirment conversion")
 
     def test_toExternal(self):
         cases = {
-            "BPTX_plus": dict(name="BPTX_plus", bx_offset="+0", comment=""),
-            "BPTX_minus+1": dict(name="BPTX_minus+1", bx_offset="+1", comment=""),
-            "BPTX_minus-1": dict(name="BPTX_minus-1", bx_offset="-1", comment=""),
-            "BPTX_plus_AND_minus+2": dict(name="BPTX_plus_AND_minus+2", bx_offset="+2", comment=""),
+            "BPTX_plus": dict(name="BPTX_plus", bx_offset=0),
+            "BPTX_minus+1": dict(name="BPTX_minus+1", bx_offset=+1,),
+            "BPTX_minus-1": dict(name="BPTX_minus-1", bx_offset=-1),
+            "BPTX_plus_AND_minus+2": dict(name="BPTX_plus_AND_minus+2", bx_offset=+2),
         }
         for token, ref in cases.items():
             self.assertEqual(toExternal(token), External(**ref))
@@ -111,18 +109,22 @@ class MenuTests(unittest.TestCase):
 
     def test_serdes(self):
         menu = Menu()
-        menu.addObject("MU10", "MU", 10)
-        menu.addObject("MU20", "MU", 20)
-        menu.addCut("MU-ETA_2p1", "MU", "ETA", -2.1, +2.1)
-        menu.addAlgorithm(42, "L1_DoubleMu_er2p1", "comb{MU20[MU-ETA_2p1],MU10[MU-ETA_2p1]}")
-        file, filename = tempfile.mkstemp()
-        open(filename).close()
-        menu.writeXml(filename)
-        menu = Menu()
-        menu.readXml(filename)
-        print menu.algorithms
-        print menu.cuts
-        print menu.objects
+        menu.menu.name = "L1Menu_Unittest"
+    #     menu.scale = tmTable.Scale()
+    #     menu.scale.scales = tmTable.Table()
+    #     menu.extSignals = tmTable.ExtSignal()
+        menu.addObject(Object("MU10", "MU", 10))
+        menu.addObject(Object("MU20", "MU", 20))
+        menu.addCut(Cut("MU-ETA_2p1", "MU", "ETA", -2.1, +2.1))
+        menu.addAlgorithm(Algorithm(42, "L1_DoubleMu_er2p1", "comb{MU20[MU-ETA_2p1],MU10[MU-ETA_2p1]}"))
+    #     file, filename = tempfile.mkstemp()
+    #     open(filename).close()
+    #     XmlEncoder.dump(menu, filename)
+    #     menu = XmlDecoder.load(filename)
+        print
+        print "algorithms:", menu.algorithms
+        print "cuts:", menu.cuts
+        print "objects:", menu.objects
 
 if __name__ == '__main__':
     unittest.main()
