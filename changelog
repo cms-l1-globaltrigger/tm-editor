@@ -1,3 +1,9 @@
+tm-editor (0.3.0-2) extra; urgency=high
+
+  * Fixed broken makefile
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Mon, 21 Nov 2016 18:33:30 +0100
+
 tm-editor (0.3.0-1) extra; urgency=medium
 
   * Code re-organisation.

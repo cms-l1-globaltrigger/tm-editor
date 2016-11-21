@@ -113,6 +113,11 @@ install: all
 	mkdir -p $(prefix)/bin
 	mkdir -p $(prefix)/lib/$(package)
 	mkdir -p $(prefix)/lib/$(package)/tmEditor
+	mkdir -p $(prefix)/lib/$(package)/tmEditor/core
+	mkdir -p $(prefix)/lib/$(package)/tmEditor/gui
+	mkdir -p $(prefix)/lib/$(package)/tmEditor/gui/models
+	mkdir -p $(prefix)/lib/$(package)/tmEditor/gui/proxies
+	mkdir -p $(prefix)/lib/$(package)/tmEditor/gui/views
 	mkdir -p $(prefix)/share/$(package)
 	mkdir -p $(prefix)/share/$(package)/xsd
 	mkdir -p $(prefix)/share/$(package)/xsd/xsd-type
@@ -133,6 +138,11 @@ install: all
 
 	echo "//     adding tmEditor package..."
 	cp tmEditor/*.py $(prefix)/lib/$(package)/tmEditor
+	cp tmEditor/core/*.py $(prefix)/lib/$(package)/tmEditor/core
+	cp tmEditor/gui/*.py $(prefix)/lib/$(package)/tmEditor/gui
+	cp tmEditor/gui/models/*.py $(prefix)/lib/$(package)/tmEditor/gui/models
+	cp tmEditor/gui/proxies/*.py $(prefix)/lib/$(package)/tmEditor/gui/proxies
+	cp tmEditor/gui/views/*.py $(prefix)/lib/$(package)/tmEditor/gui/views
 
 	echo "//     adding core libraries..."
 	cp $(corelibs) $(prefix)/lib/$(package)
@@ -307,8 +317,18 @@ tarbuild: all
 	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor
 	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor/scripts
 	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor/core
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor/gui
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor/gui/models
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor/gui/proxies
+	mkdir -p $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor/gui/views
 	cp -r ../tmEditor/scripts/tm-editor $(tarballdir)/lib/tmeditor-$(version)/tmEditor/scripts
 	cp -r ../tmEditor/tmEditor/*.py $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor
+	cp -r ../tmEditor/tmEditor/core/*.py $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor/core
+	cp -r ../tmEditor/tmEditor/gui/*.py $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor/gui
+	cp -r ../tmEditor/tmEditor/gui/models/*.py $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor/gui/models
+	cp -r ../tmEditor/tmEditor/gui/proxies/*.py $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor/gui/proxies
+	cp -r ../tmEditor/tmEditor/gui/views/*.py $(tarballdir)/lib/tmeditor-$(version)/tmEditor/tmEditor/gui/views
 	cp -r ../tmEditor/changelog ../tmEditor/copyright ../tmEditor/README.md $(tarballdir)/lib/tmeditor-$(version)/tmEditor
 	@echo "//     packing tarball..."
 	cd tarball && tar czf $(pkgdir)-$(distro)-$(arch).tar.gz $(pkgdir)-$(distro)-$(arch)
