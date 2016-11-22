@@ -154,21 +154,32 @@ class Menu(object):
     def validate(self):
         """Consistecy check, raises exception in fail."""
         self.menu.validate()
+
         count = len(self.algorithms)
         if count > MaxAlgorithms:
             maximum = MaxAlgorithms
             message = "exceeding maximum number of supported algorithms: {count} (maximum {maximum})".format(**locals())
             logging.error(message)
             raise ValueError(message)
-        # Temporary consistency checks
+
         validate = AlgorithmSyntaxValidator(self).validate
+        cutByName = self.cutByName
+        objectByName = self.objectByName
+        externalByName = self.externalByName
+
         for algorithm in self.algorithms:
-            try:
-                validate(algorithm.expression)
-            except AlgorithmSyntaxError, e:
-                message = "invalid algorithm expression: `{algorithm.expression}' in {algorithm.index} : {algorithm.name}".format(**locals())
-                logging.error(message)
-                raise
+
+            algorithm.validate() # check params
+            validate(algorithm.expression) # validate expression
+
+            for cut in algorithm.cuts():
+                cutByName(cut).validate()
+
+            for object in algorithm.objects():
+                objectByName(object).validate()
+
+            for external in algorithm.externals():
+                externalByName(external).validate()
 
 # ------------------------------------------------------------------------------
 #  Menu information container class.

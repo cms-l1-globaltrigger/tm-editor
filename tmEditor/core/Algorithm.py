@@ -18,6 +18,7 @@ from tmEditor.core.AlgorithmHelper import decode_threshold, encode_threshold
 
 import re
 import sys, os
+import logging
 
 __all__ = ['Algorithm', ]
 
@@ -190,6 +191,7 @@ class Algorithm(object):
         return list(cuts)
 
     def validate(self):
+        """Optional argument validate is a function to validate the algorithm expression."""
 
         if self.index >= MaxAlgorithms:
             message = "algorithm index out of range: {self.index} : {self.name}".format(**locals())
@@ -206,6 +208,8 @@ class Algorithm(object):
 # ------------------------------------------------------------------------------
 
 class Cut(object):
+
+    RegExCutName = re.compile(r'^([A-Z\-]+_)([a-zA-Z\d_]+)$')
 
     def __init__(self, name, object, type, minimum=None, maximum=None, data=None, comment=None):
         self.name = name
@@ -237,7 +241,11 @@ class Cut(object):
             return scale.bins[self.typename]
 
     def validate(self):
-        pass
+
+        if not self.RegExCutName.match(self.name):
+            message = "invalid cut name: {self.name}".format(**locals())
+            logging.error(message)
+            raise ValueError(message)
 
 # ------------------------------------------------------------------------------
 #  Object's container class.

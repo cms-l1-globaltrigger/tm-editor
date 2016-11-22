@@ -53,13 +53,16 @@ class XmlDecoderError(Exception):
     def __init__(self, message):
         super(XmlDecoderError, self).__init__(message)
 
-def safe_str(s):
+def safe_str(s, attrname):
     """Returns safe version of string. The function strips:
      * whitespaces, tabulators
      * newlines, carriage returns
      * NULL characters
     """
-    return s.strip(" \t\n\r\x00")
+    t = s.strip(" \t\n\r\x00")
+    if s != t:
+        logging.warning("normalized %s: `%s' -> `%s'", attrname, s, t)
+    return t
 
 def patch_cut(cut):
     """Patch old specification."""
@@ -120,7 +123,7 @@ def load(filename):
 
     # Populate the containers.
     menu = Menu.Menu()
-    menu.menu.name = safe_str(menu_table.menu[kName])
+    menu.menu.name = safe_str(menu_table.menu[kName], "menu name")
     menu.menu.comment = menu_table.menu[kComment] if kComment in menu_table.menu else ""
     menu.menu.uuid_menu = menu_table.menu[kUUIDMenu]
     menu.menu.grammar_version = menu_table.menu[kGrammarVersion]
@@ -130,7 +133,7 @@ def load(filename):
     # Add algorithms
     for row in [dict(row) for row in menu_table.algorithms]:
         index = int(row[kIndex])
-        name = safe_str(row[kName])
+        name = safe_str(row[kName], "algorithm name")
         expression = row[kExpression]
         comment = row.get(kComment, "")
         algorithm = Algorithm.Algorithm(index, name, expression, comment)
@@ -139,7 +142,7 @@ def load(filename):
     # Add cuts
     for cuts in menu_table.cuts.values():
         for row in [dict(row) for row in cuts]:
-            name = safe_str(row[kName])
+            name = safe_str(row[kName], "cut name")
             object = row[kObject]
             type = row[kType]
             minimum = float(row[kMinimum])
@@ -159,7 +162,7 @@ def load(filename):
     # Add objects
     for objs in menu_table.objects.values():
         for row in [dict(row) for row in objs]:
-            name = safe_str(row[kName])
+            name = safe_str(row[kName], "object name")
             type = row[kType]
             threshold = row[kThreshold]
             comparison_operator = row[kComparisonOperator]
@@ -183,7 +186,7 @@ def load(filename):
     ext_signal_set_name = ext_signal_table.extSignalSet[kName]
     for externals in menu_table.externals.values():
         for row in [dict(row) for row in externals]:
-            name = safe_str(row[kName])
+            name = safe_str(row[kName], "external signal name")
             bx_offset = int(row[kBxOffset])
             comment = row.get(kComment, "")
             external = Algorithm.External(name, bx_offset, comment)

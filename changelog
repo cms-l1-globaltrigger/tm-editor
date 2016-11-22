@@ -1,3 +1,9 @@
+tm-editor (0.3.2-1) extra; urgency=high
+
+  * Additional file integrity checks
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Tue, 22 Nov 2016 15:53:21 +0100
+
 tm-editor (0.3.1-1) extra; urgency=high
 
   * Adjusted input range for DPHI cuts

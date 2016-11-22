@@ -257,17 +257,19 @@ class MainWindow(QtGui.QMainWindow):
                         dialog.close()
                 except Exception, e: # TODO
                     dialog.close()
+                    logging.error("Failed to load XML menu: %s", str(e))
                     QtGui.QMessageBox.critical(self,
                         self.tr("Failed to load XML menu"), str(e))
-                    raise
+                    return
             # Else it is a local filesystem path.
             else:
                 try:
                     document = Document(filename, self)
                 except Exception, e: # TODO
+                    logging.error("Failed to load XML menu: %s", str(e))
                     QtGui.QMessageBox.critical(self,
                         self.tr("Failed to load XML menu"), str(e))
-                    raise
+                    return
         except (RuntimeError, OSError), e:
             logging.error("Failed to open XML menu: %s", str(e))
             QtGui.QMessageBox.critical(self,
