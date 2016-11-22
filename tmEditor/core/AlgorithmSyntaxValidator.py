@@ -249,7 +249,7 @@ class DistDeltaRange(SyntaxRule):
                     for object in functionObjects(token):
                         scale = filter(lambda scale: scale[kObject]==object.type and scale[kType]==tmGrammar.PHI, menu.scales.scales)[0]
                         minimum = 0
-                        maximum = float(format(float(scale[kMaximum]) / 2., '.3f')) # HACK
+                        maximum = float(format(float(scale[kMaximum]), '.3f'))
                         if not (minimum <= float(cut.minimum) <= maximum):
                             message = "Cut `{name}` minimum limit of {cut.minimum} exceed valid object DPHI range of {minimum}".format(**locals())
                             raise AlgorithmSyntaxError(message)

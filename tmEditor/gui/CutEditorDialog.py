@@ -523,7 +523,7 @@ class CutEditorDialog(QtGui.QDialog):
                 return scale['object']==tmGrammar.MU and scale['type']==tmGrammar.PHI
             scale = filter(isMuPhi, self.menu.scales.scales)[0]
             minimum = 0.
-            maximum = float(scale[kMaximum]) / 2. # TODO confirm max DPHI range!
+            maximum = float(scale[kMaximum]) # TODO
             self.minimumRangeSpinBox.setDecimals(self.spec.range_precision)
             self.minimumRangeSpinBox.setSingleStep(self.spec.range_step)
             self.minimumRangeSpinBox.setRange(minimum, maximum)

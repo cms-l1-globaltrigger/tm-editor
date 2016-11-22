@@ -1,3 +1,9 @@
+tm-editor (0.3.1-1) extra; urgency=high
+
+  * Adjusted input range for DPHI cuts
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Tue, 22 Nov 2016 11:51:42 +0100
+
 tm-editor (0.3.0-2) extra; urgency=high
 
   * Fixed broken makefile
