@@ -66,6 +66,18 @@ class ObjectHelper(AtomicHelper):
         cuts = encode_cuts(self.cuts)
         return "{self.type}{comparison_operator}{threshold}{bx_offset}{cuts}".format(**locals())
 
+class ExtSignalHelper(AtomicHelper):
+
+    def __init__(self, name ,bx_offset=0):
+        self.name = name
+        self.bx_offset = bx_offset
+        if not name.startswith("EXT_"):
+            raise ValueError()
+
+    def serialize(self):
+        bx_offset = encode_bx_offset(self.bx_offset)
+        return "{self.name}{bx_offset}".format(**locals())
+
 class FunctionHelper(AtomicHelper):
 
     def __init__(self, name, objects=None, cuts=None):
@@ -98,6 +110,11 @@ class AlgorithmHelper(AtomicHelper):
 
     def addObject(self, type, threshold, bx_offset=0, comparison_operator=tmGrammar.GE, cuts=None):
         helper = ObjectHelper(type, threshold, bx_offset, comparison_operator, cuts)
+        self.expression.append(helper)
+        return helper
+
+    def addExtSignal(self, name, bx_offset=0):
+        helper = ExtSignalHelper(name, bx_offset)
         self.expression.append(helper)
         return helper
 

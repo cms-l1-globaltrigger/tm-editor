@@ -26,16 +26,75 @@
 """
 
 from tmEditor.core import Toolbox
+from tmEditor.core.Algorithm import toObject, toExternal
+from tmEditor.core.Types import CountObjectTypes
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
 import math
 
-__all__ = ['ColorIcon', 'ColorLabel', 'IconLabel', 'SelectableLabel',
+__all__ = ['richTextObjectsPreview', 'richTextExtSignalsPreview', 'richTextCutsPreview',
+           'ColorIcon', 'ColorLabel', 'IconLabel', 'SelectableLabel',
            'PrefixedSpinBox', 'ReadOnlyLineEdit', 'FilterLineEdit',
            'ComboBoxPlus', 'RestrictedLineEdit', 'RestrictedPlainTextEdit',
            'ListSpinBox', 'EtaCutChart', 'PhiCutChart']
+
+# -----------------------------------------------------------------------------
+#  Functions
+# -----------------------------------------------------------------------------
+
+def richTextObjectsPreview(algorithm, parent):
+    content = QtCore.QStringList()
+    if algorithm.objects():
+        content.append(parent.tr("<p><strong>Used objects:</strong></p>"))
+        content.append(parent.tr("<p>"))
+        content.append(parent.tr("<ul>"))
+        objects = [toObject(obj) for obj in algorithm.objects()]
+        objects.sort()
+        for obj in objects:
+            comparison = Toolbox.fComparison(obj.comparison_operator)
+            if obj.type in CountObjectTypes:
+                threshold = Toolbox.fCounts(obj.threshold) # TODO
+            else:
+                threshold = Toolbox.fThreshold(obj.threshold)
+            bxOffset = Toolbox.fBxOffset(obj.bx_offset)
+            content.append(parent.tr("<li><img src=\":/icons/%1.svg\"> %2 <span style=\"font-size:8pt; color: gray;\">(%3 %4, %5 BX offset)</span></li>").arg(obj.type.lower()).arg(obj.name).arg(comparison).arg(threshold).arg(bxOffset))
+        content.append(parent.tr("</ul>"))
+        content.append(parent.tr("</p>"))
+    return content.join("")
+
+def richTextExtSignalsPreview(algorithm, parent):
+    content = QtCore.QStringList()
+    if algorithm.externals():
+        content.append(parent.tr("<p><strong>Used externals:</strong></p>"))
+        content.append(parent.tr("<p>"))
+        content.append(parent.tr("<ul>"))
+        externals = [toExternal(ext) for ext in algorithm.externals()]
+        externals.sort()
+        for ext in externals:
+            content.append(parent.tr("<li><img src=\":/icons/ext.svg\"> %1</li>").arg(ext.name))
+        content.append(parent.tr("</ul>"))
+        content.append(parent.tr("</p>"))
+    return content.join("")
+
+def richTextCutsPreview(menu, algorithm, parent):
+    # List used cuts.
+    content = QtCore.QStringList()
+    if algorithm.cuts():
+        content.append(parent.tr("<p><strong>Used cuts:</strong></p>"))
+        content.append(parent.tr("<p>"))
+        content.append(parent.tr("<ul>"))
+        cuts = [menu.cutByName(name) for name in algorithm.cuts()]
+        cuts.sort()
+        for cut in cuts:
+            if cut.data:
+                content.append(parent.tr("<li>%1 <span style=\"font-size:8pt; color: gray;\">(%2)</span></li>").arg(cut.name).arg(cut.data))
+            else:
+                content.append(parent.tr("<li>%1 <span style=\"font-size:8pt; color: gray;\">(%2 to %3)</span></li>").arg(cut.name).arg(Toolbox.fCut(cut.minimum)).arg(Toolbox.fCut(cut.maximum)))
+        content.append(parent.tr("</ul>"))
+        content.append(parent.tr("</p>"))
+    return content.join("")
 
 # -----------------------------------------------------------------------------
 #  A framed color icon box.

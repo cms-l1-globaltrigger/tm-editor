@@ -23,6 +23,6 @@ class ExternalsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(ExternalsModel, self).__init__(menu.externals, parent)
-        self.addColumnSpec("Name", lambda item: item.name, decoration=miniIcon('default'))
+        self.addColumnSpec("Name", lambda item: item.name, decoration=miniIcon('ext'))
         self.addColumnSpec("BX Offset", lambda item: item.bx_offset, fBxOffset, self.AlignRight)
         self.addEmptyColumn()

@@ -12,13 +12,12 @@ class ExpressionCodeEditor
 class AlgorithmEditor
 class AlgorithmEditorDialog
 class MessageBarWidget
-class LibraryWidget
 """
 
 import tmGrammar
 
 from tmEditor.core import Toolbox
-from tmEditor.core.Algorithm import Algorithm, External
+from tmEditor.core.Algorithm import Algorithm, External, toObject, toExternal
 from tmEditor.core.Settings import MaxAlgorithms
 from tmEditor.core.Types import ObjectTypes, CountObjectTypes
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
@@ -28,6 +27,7 @@ from tmEditor.gui.AlgorithmSyntaxHighlighter import AlgorithmSyntaxHighlighter
 from tmEditor.gui.CodeEditor import CodeEditor
 
 from tmEditor.gui.ObjectEditorDialog import ObjectEditorDialog
+from tmEditor.gui.ExtSignalEditorDialog import ExtSignalEditorDialog
 from tmEditor.gui.FunctionEditorDialog import FunctionEditorDialog
 from tmEditor.gui.AlgorithmSelectIndexDialog import AlgorithmSelectIndexDialog
 
@@ -37,6 +37,9 @@ from tmEditor.gui.CommonWidgets import TextFilterWidget
 from tmEditor.gui.CommonWidgets import RestrictedLineEdit
 from tmEditor.gui.CommonWidgets import ListSpinBox
 from tmEditor.gui.CommonWidgets import IconLabel
+from tmEditor.gui.CommonWidgets import richTextObjectsPreview
+from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
+from tmEditor.gui.CommonWidgets import richTextCutsPreview
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -72,6 +75,9 @@ kType = 'type'
 RegExObject = re.compile(r'[\w\.]+\d+(?:[\+\-]\d+)?(?:\[[^\]]+\])?')
 """Precompiled regular expression for matching object requirements."""
 
+RegExExtSignal = re.compile(r'EXT_[\w\d_\.]+(?:[\+\-]\d+)?')
+"""Precompiled regular expression for matching external signal requirements."""
+
 RegExFunction = re.compile(r'\w+\s*\{[^\}]+\}(?:\[[^\]]+\])?')
 """Precompiled regular expression for matching function expressions."""
 
@@ -85,6 +91,12 @@ def findObject(text, pos):
         if result.start() <= pos < result.end():
             if not result.group(0).startswith(tmGrammar.EXT): # Exclude EXT signals
                 return result.group(0), result.start(), result.end()
+
+def findExtSignal(text, pos):
+    """Returns external signal at position *pos* or None if nothing found."""
+    for result in RegExExtSignal.finditer(text):
+        if result.start() <= pos < result.end():
+            return result.group(0), result.start(), result.end()
 
 def findFunction(text, pos):
     """Returns function expression at position *pos* or None if nothing found."""
@@ -108,6 +120,9 @@ class ExpressionCodeEditor(CodeEditor):
     editObject = QtCore.pyqtSignal(tuple)
     """Signal raised on edit object token request (custom context menu)."""
 
+    editExtSignal = QtCore.pyqtSignal(tuple)
+    """Signal raised on edit external signal token request (custom context menu)."""
+
     editFunction = QtCore.pyqtSignal(tuple)
     """Signal raised on edit function expression request (custom context menu)."""
 
@@ -124,6 +139,9 @@ class ExpressionCodeEditor(CodeEditor):
         # Add object requirement action
         objAct = menu.addAction(self.tr("Edit &Object..."))
         objAct.setEnabled(False)
+        # Add external signal action
+        extAct = menu.addAction(self.tr("Edit External &Signal..."))
+        extAct.setEnabled(False)
         # Add function action
         funcAct = menu.addAction(self.tr("Edit &Function..."))
         funcAct.setEnabled(False)
@@ -134,12 +152,18 @@ class ExpressionCodeEditor(CodeEditor):
         if pos < len(text):
             # Try to locate requirement and/or function at pointer position
             objToken = findObject(text, pos)
+            extToken = findExtSignal(text, pos)
             funcToken = findFunction(text, pos)
             # Enable requirement menu on success
             if objToken:
                 objAct.setEnabled(True)
                 def call(): self.editObject.emit(objToken)
                 objAct.triggered.connect(call)
+            # Enable external signal menu on success
+            if extToken:
+                extAct.setEnabled(True)
+                def call(): self.editExtSignal.emit(extToken)
+                extAct.triggered.connect(call)
             # Enable function menu on success
             if funcToken:
                 funcAct.setEnabled(True)
@@ -170,7 +194,9 @@ class AlgorithmEditor(QtGui.QMainWindow):
         self.nameLineEdit = RestrictedLineEdit(self)
         self.nameLineEdit.setPrefix('L1_')
         self.nameLineEdit.setRegexPattern('L1_[a-zA-Z0-9_]+')
-        self.nameLineEdit.setMinimumWidth(300)
+        self.nameLineEdit.setMinimumWidth(310)
+        self.previewTextBrowser = QtGui.QTextBrowser(self)
+        self.previewTextBrowser.setLineWrapMode(QtGui.QTextEdit.NoWrap)
         self.validator = AlgorithmSyntaxValidator(self.menu)
         self.loadedIndex = None
         # Create actions and toolbars.
@@ -182,6 +208,7 @@ class AlgorithmEditor(QtGui.QMainWindow):
         self.textEdit = ExpressionCodeEditor(self)
         self.textEdit.setFrameShape(QtGui.QFrame.NoFrame)
         self.textEdit.editObject.connect(self.onEditObject)
+        self.textEdit.editExtSignal.connect(self.onEditExtSignal)
         self.textEdit.editFunction.connect(self.onEditFunction)
         self.messageBar = MessageBarWidget(self)
         centralWidget = QtGui.QWidget(self)
@@ -224,10 +251,16 @@ class AlgorithmEditor(QtGui.QMainWindow):
         self.selectIndexAct = QtGui.QAction(self.tr("Select &Index"), self)
         self.selectIndexAct.setIcon(Toolbox.createIcon("search"))
         self.selectIndexAct.triggered.connect(self.onSelectIndex)
-        self.insertObjectAct = QtGui.QAction(self.tr("Insert &Object..."), self)
-        self.insertObjectAct.setIcon(Toolbox.createIcon("wizard"))
+        self.insertObjectAct = QtGui.QAction(self.tr("&Object..."), self)
+        self.insertObjectAct.setToolTip(self.tr("Insert Object..."))
+        self.insertObjectAct.setIcon(Toolbox.createIcon("wizard-object"))
         self.insertObjectAct.triggered.connect(self.onInsertObject)
-        self.insertFunctionAct = QtGui.QAction(self.tr("Insert &Function..."), self)
+        self.insertExtSignalAct = QtGui.QAction(self.tr("External &Signal..."), self)
+        self.insertExtSignalAct.setToolTip(self.tr("Insert External Signal..."))
+        self.insertExtSignalAct.setIcon(Toolbox.createIcon("wizard-ext-signal"))
+        self.insertExtSignalAct.triggered.connect(self.onInsertExtSignal)
+        self.insertFunctionAct = QtGui.QAction(self.tr("&Function..."), self)
+        self.insertFunctionAct.setToolTip(self.tr("Insert Function..."))
         self.insertFunctionAct.setIcon(Toolbox.createIcon("wizard-function"))
         self.insertFunctionAct.triggered.connect(self.onInsertFunction)
         self.formatCollapseAct = QtGui.QAction(self.tr("&Collapse"), self)
@@ -248,6 +281,7 @@ class AlgorithmEditor(QtGui.QMainWindow):
         self.editMenu.addAction(self.selectIndexAct)
         self.insertMenu = self.menuBar().addMenu(self.tr("&Insert"))
         self.insertMenu.addAction(self.insertObjectAct)
+        self.insertMenu.addAction(self.insertExtSignalAct)
         self.insertMenu.addAction(self.insertFunctionAct)
         self.formatMenu = self.menuBar().addMenu(self.tr("&Format"))
         self.formatMenu.addAction(self.formatCollapseAct)
@@ -266,33 +300,35 @@ class AlgorithmEditor(QtGui.QMainWindow):
         self.toolbar.addAction(self.redoAct)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.insertObjectAct)
+        self.toolbar.addAction(self.insertExtSignalAct)
         self.toolbar.addAction(self.insertFunctionAct)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.formatCollapseAct)
         self.toolbar.addAction(self.formatExpandAct)
         self.toolbar.addSeparator()
-        self.toolbar.addWidget(QtGui.QLabel(self.tr("  Name "), self))
-        self.toolbar.addWidget(self.nameLineEdit)
-        self.toolbar.addWidget(QtGui.QLabel(self.tr("  Index "), self))
-        self.toolbar.addWidget(self.indexSpinBox)
         self.toolbar.addAction(self.selectIndexAct)
 
     def createDocks(self):
         """Create dock widgets."""
-        # Setup library
-        dock = QtGui.QDockWidget(self.tr("Library"), self)
+        # Name
+        dock = QtGui.QDockWidget(self.tr("Name"), self)
         dock.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
-        dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
-        dock.setMinimumWidth(280)
-        self.libraryWidget = LibraryWidget(self.menu, dock)
-        self.libraryWidget.selected.connect(self.onInsertItem)
-        dock.setWidget(self.libraryWidget)
+        dock.setWidget(self.nameLineEdit)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
+        # Index
+        dock = QtGui.QDockWidget(self.tr("Index"), self)
+        dock.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
+        dock.setWidget(self.indexSpinBox)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
+        # Item preview text browser
+        dock = QtGui.QDockWidget(self.tr("Preview"), self)
+        dock.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
+        dock.setWidget(self.previewTextBrowser)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
+        # Comment text edit
         dock = QtGui.QDockWidget(self.tr("Comment"), self)
         dock.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
-        # dock.setAllowedAreas(QtCore.Qt.BottomDockWidgetArea)
         self.commentEdit = QtGui.QPlainTextEdit(self)
-        self.commentEdit.setMaximumHeight(42)
         dock.setWidget(self.commentEdit)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
 
@@ -351,6 +387,22 @@ class AlgorithmEditor(QtGui.QMainWindow):
                 text[token[2]:],
             )))
 
+    def onEditExtSignal(self, token):
+        text = str(self.textEdit.toPlainText())
+        dialog = ExtSignalEditorDialog(self.menu, self)
+        try:
+            dialog.loadExtSignal(token[0])
+        except ValueError:
+            QtGui.QMessageBox.warning(self, self.tr("Invalid expression"), token[0])
+            return
+        dialog.exec_()
+        if dialog.result() == QtGui.QDialog.Accepted:
+            self.textEdit.setPlainText(''.join((
+                text[:token[1]],
+                dialog.expression(),
+                text[token[2]:],
+            )))
+
     def onEditFunction(self, token):
         text = str(self.textEdit.toPlainText())
         dialog = FunctionEditorDialog(self.menu, self)
@@ -378,9 +430,13 @@ class AlgorithmEditor(QtGui.QMainWindow):
         self.undoAct.setEnabled(self.textEdit.document().isUndoAvailable())
         self.redoAct.setEnabled(self.textEdit.document().isRedoAvailable())
         self.parseTimer.start(1000)
+        self.previewTextBrowser.setText(self.tr("calculating..."))
         self.messageBar.setMessage(self.tr("parsing..."))
 
     def onTextChangedDelayed(self):
+        self.previewTextBrowser.clear()
+
+        # Validate expression
         try:
             self.validator.validate(self.expression())
         except AlgorithmSyntaxError, e:
@@ -390,6 +446,14 @@ class AlgorithmEditor(QtGui.QMainWindow):
             self.messageBar.setErrorMessage(str(e))
         else:
             self.messageBar.setMessage(self.tr("Expression OK"))
+
+        # Render preview of alogithms components
+        content = QtCore.QStringList()
+        algorithm = Algorithm(self.index(), self.name(), self.expression())
+        content.append(richTextObjectsPreview(algorithm, self))
+        content.append(richTextExtSignalsPreview(algorithm, self))
+        content.append(richTextCutsPreview(self.menu, algorithm, self))
+        self.previewTextBrowser.setText(content.join(""))
 
     def onIndexChanged(self):
         pass
@@ -411,6 +475,12 @@ class AlgorithmEditor(QtGui.QMainWindow):
 
     def onInsertObject(self):
         dialog = ObjectEditorDialog(self.menu, self)
+        dialog.exec_()
+        if dialog.result() == QtGui.QDialog.Accepted:
+            self.onInsertItem(dialog.expression())
+
+    def onInsertExtSignal(self):
+        dialog = ExtSignalEditorDialog(self.menu, self)
         dialog.exec_()
         if dialog.result() == QtGui.QDialog.Accepted:
             self.onInsertItem(dialog.expression())
@@ -677,213 +747,6 @@ class MessageBarWidget(QtGui.QWidget):
         self.icon.show()
         self.message.setText(QtCore.QString("<span style=\"color:red;\">%1</span>").arg(text))
         self.message.setToolTip(text)
-
-# -----------------------------------------------------------------------------
-#  Library widget
-# -----------------------------------------------------------------------------
-
-class LibraryWidget(QtGui.QWidget):
-
-    selected = QtCore.pyqtSignal(str)
-
-    Operators = (
-        (tmGrammar.AND, "Logical <strong>AND</strong> operator.",),
-        (tmGrammar.OR, "Logical <strong>OR</strong> operator.",),
-        (tmGrammar.XOR, "Logical <strong>XOR</strong> (exclusive or) operator.",),
-        (tmGrammar.NOT, "Logical <strong>NOT</strong> operator.",),
-    )
-    ObjectPreview = "<br/>".join((
-        "<strong>Name:</strong> {name}",
-        "<strong>Type:</strong> {type}",
-        "<strong>Threshold:</strong> {comparison_operator} {threshold}",
-        "<strong>BX offset:</strong> {bx_offset}",
-    ))
-    CutPreview = "<br/>".join((
-        "<strong>Name:</strong> {name}",
-        "<strong>Object:</strong> {object}",
-        "<strong>Type:</strong> {type}",
-        "<strong>Minimum:</strong> {minimum}",
-        "<strong>Maximum:</strong> {maximum}",
-        "<strong>Data:</strong> {data}",
-        "<strong>Comment:</strong> {comment}",
-    ))
-    ExternalPreview = "<br/>".join((
-        "<strong>Name:</strong> {name}",
-        "<strong>BX offset:</strong> {bx_offset}",
-    ))
-
-    def __init__(self, menu, parent = None):
-        super(LibraryWidget, self).__init__(parent)
-        self.menu = menu
-        # Tabs
-        self.tabWidget = QtGui.QTabWidget(self)
-        # Build list of objects.
-        self.objectsTree = QtGui.QTreeWidget(self)
-        self.objectsTree.headerItem().setHidden(True)
-        self.tabWidget.addTab(self.objectsTree, self.tr("&Objects"))
-        # Build list of cuts.
-        self.cutsTree = QtGui.QTreeWidget(self)
-        self.cutsTree.headerItem().setHidden(True)
-        self.tabWidget.addTab(self.cutsTree, self.tr("&Cuts"))
-        # Build list of externals.
-        self.externalsList = QtGui.QListWidget(self)
-        self.tabWidget.addTab(self.externalsList, self.tr("&Exts"))
-        # Build list of operators.
-        self.operatorsList = QtGui.QListWidget(self)
-        self.operatorsList.addItems([name for name, _ in self.Operators])
-        self.tabWidget.addTab(self.operatorsList, self.tr("O&ps"))
-        # Insert button.
-        self.insertButton = QtGui.QPushButton(Toolbox.createIcon("insert-text"), self.tr("&Insert"), self)
-        self.insertButton.clicked.connect(self.onInsert)
-        self.insertButton.setDefault(False)
-        # Wizard option.
-        self.wizardCheckBox = QtGui.QCheckBox(self.tr("Use &wizard"), self)
-        # Preview widget.
-        self.previewLabel = QtGui.QTextEdit(self)
-        self.previewLabel.setReadOnly(True)
-        # Create list contents.
-        self.initContents()
-        # Layout
-        gridLayout = QtGui.QGridLayout()
-        gridLayout.setContentsMargins(1, 1, 1, 1)
-        gridLayout.addWidget(self.tabWidget, 0, 0, 1, 3)
-        gridLayout.addWidget(self.insertButton, 1, 0)
-        gridLayout.addWidget(self.wizardCheckBox, 1, 1)
-        gridLayout.addWidget(self.previewLabel, 2, 0, 1, 3)
-        self.setLayout(gridLayout)
-        # Setup connections.
-        self.objectsTree.currentItemChanged.connect(self.onPreview)
-        self.objectsTree.itemDoubleClicked.connect(self.onInsert)
-        self.cutsTree.currentItemChanged.connect(self.onPreview)
-        self.cutsTree.itemDoubleClicked.connect(self.onInsert)
-        self.externalsList.currentRowChanged.connect(self.onPreview)
-        self.externalsList.itemDoubleClicked.connect(self.onInsert)
-        self.operatorsList.selectionModel().currentRowChanged.connect(self.onPreview)
-        self.operatorsList.doubleClicked.connect(self.onInsert)
-        self.tabWidget.currentChanged.connect(self.onPreview)
-
-    def initContents(self):
-        """Populate library lists with content from menu."""
-        # Build list of objects.
-        self.objectsTree.clear()
-        topLevelItems = {}
-        def sort_keys(object):
-            """Sort by object order, then by object."""
-            return ObjectTypes.index(object.type), object
-        for object in sorted(self.menu.objects, key=sort_keys): # Applies custom sort of class
-            icon = Toolbox.miniIcon(object.type.lower())
-            if not object.type in topLevelItems.keys():
-                item = QtGui.QTreeWidgetItem(self.objectsTree, [object.type])
-                item.setIcon(0, icon)
-                topLevelItems[object.type] = item
-            item = QtGui.QTreeWidgetItem(topLevelItems[object.type], [object.name])
-            item.setIcon(0, icon)
-        # Build list of cuts.
-        self.cutsTree.clear()
-        topLevelItems = {}
-        for cut in sorted(self.menu.cuts): # Applies custom sort of class
-            if not cut.object in topLevelItems.keys():
-                if cut.object not in (tmGrammar.comb, tmGrammar.mass):
-                    topLevelItems[cut.object] = QtGui.QTreeWidgetItem(self.cutsTree, [cut.object])
-            if not (cut.object, cut.type) in topLevelItems.keys():
-                if cut.object in (tmGrammar.comb, tmGrammar.mass):
-                    topLevelItems[(cut.object, cut.type)] = QtGui.QTreeWidgetItem(self.cutsTree, [cut.type])
-                else:
-                    topLevelItems[(cut.object, cut.type)] = QtGui.QTreeWidgetItem(topLevelItems[cut.object], [cut.type])
-            item = QtGui.QTreeWidgetItem(topLevelItems[(cut.object, cut.type)], [cut.name])
-        # Build list of externals.
-        self.externalsList.clear()
-        names = [external.name for external in self.menu.externals]
-        names += ['_'.join((tmGrammar.EXT, external[kName])) for external in self.menu.extSignals.extSignals]
-        names = sorted(set(names), key=Toolbox.natural_sort_key)
-        self.externalsList.addItems(names)
-        # Refresh UI.
-        self.onPreview()
-        # Default message.
-        self.previewLabel.setText(self.tr("""
-            <img src=\"/usr/share/icons/gnome/16x16/actions/help-about.png\"/>
-            <strong>Double click</strong> on an above item to insert it at the current
-            cursor position or click on the <strong><img src=\"/usr/share/icons/gnome/16x16/actions/insert-text.png\"/> Insert</strong> button.
-        """))
-
-
-    def onPreview(self):
-        """Updates preview widget with current selected library item."""
-        self.previewLabel.setText("")
-        self.insertButton.setEnabled(False)
-        self.wizardCheckBox.setEnabled(False)
-        tab = self.tabWidget.currentWidget()
-        # Objects
-        if tab == self.objectsTree:
-            if not self.objectsTree.currentItem(): return # empty list
-            item = self.menu.objectByName(self.objectsTree.currentItem().text(0))
-            # self.wizardCheckBox.setEnabled(True)
-            if not item: return
-            data = {
-                kName: item.name,
-                kType: item.type,
-                kComparisonOperator: Toolbox.fComparison(item.comparison_operator),
-                kThreshold: Toolbox.fCounts(item.threshold) if item.type in CountObjectTypes else Toolbox.fThreshold(item.threshold),
-                kBxOffset: Toolbox.fBxOffset(item.bx_offset),
-            }
-            self.previewLabel.setText(self.ObjectPreview.format(**data))
-            self.insertButton.setEnabled(True)
-            self.wizardCheckBox.setEnabled(True)
-        # Cuts
-        elif tab == self.cutsTree:
-            if not self.cutsTree.currentItem(): return # empty list
-            item = self.menu.cutByName(self.cutsTree.currentItem().text(0))
-            if not item: return
-            data = {
-                kName: item.name,
-                kType: item.type,
-                kObject: item.object,
-                kMinimum: Toolbox.fCut(item.minimum),
-                kMaximum: Toolbox.fCut(item.maximum),
-                kData: item.data or "-",
-                kComment: item.comment or "-",
-            }
-            self.previewLabel.setText(self.CutPreview.format(**data))
-            self.insertButton.setEnabled(True)
-        # Externals
-        elif tab == self.externalsList:
-            if not self.externalsList.currentItem(): return # empty list
-            self.insertButton.setEnabled(True)
-            item = self.menu.externalByName(self.externalsList.currentItem().text())
-            if not item: # Create on the fly if not in list
-                item = External(self.externalsList.currentItem().text(), 0)
-            data = {
-                kName: item.name,
-                kBxOffset: Toolbox.fBxOffset(item.bx_offset)
-            }
-            self.previewLabel.setText(self.ExternalPreview.format(**data))
-            self.insertButton.setEnabled(True)
-        # Operators
-        elif tab == self.operatorsList:
-            row = self.operatorsList.currentRow()
-            self.wizardCheckBox.setEnabled(False)
-            if row < 0: return
-            self.previewLabel.setText(self.Operators[row][1])
-            self.insertButton.setEnabled(True)
-
-    def onInsert(self):
-        """Insert selected item from active library list."""
-        if self.insertButton.isEnabled():
-            widget = self.tabWidget.currentWidget()
-            item = widget.currentItem()
-            if widget is self.objectsTree:
-                    if self.wizardCheckBox.isChecked():
-                        dialog = ObjectEditorDialog(self.menu, self)
-                        dialog.loadObject(str(item.text(0)))
-                        dialog.exec_()
-                        self.selected.emit(dialog.expression())
-                        return
-            if isinstance(widget, QtGui.QTreeWidget):
-                self.selected.emit(item.text(0))
-                return
-            if isinstance(widget, QtGui.QListWidget):
-                self.selected.emit(item.text())
-                return
 
 # -----------------------------------------------------------------------------
 #  Unit test

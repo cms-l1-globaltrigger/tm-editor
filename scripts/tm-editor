@@ -60,8 +60,6 @@ def export_xml(args):
         message = "argument `--export-xml' requires a XML file to be loaded"
         raise RuntimeError(message)
     menu = XmlDecoder.load(args.filenames[0])
-    # Check integrity
-    menu.validate()
     XmlEncoder.dump(menu, args.export_xml)
     return EXIT_OK
 

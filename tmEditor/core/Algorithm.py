@@ -277,9 +277,13 @@ class Object(object):
 
     def __lt__(self, item):
         """Custom sorting by type, threshold and offset."""
+        def sortable_type(type):
+            if type in ObjectTypes:
+                return ObjectTypes.index(type)
+            return type
         return \
-            (self.type, self.decodeThreshold(), self.bx_offset) < \
-            (item.type, item.decodeThreshold(), item.bx_offset)
+            (sortable_type(self.type), self.decodeThreshold(), self.bx_offset) < \
+            (sortable_type(item.type), item.decodeThreshold(), item.bx_offset)
 
     def validate(self):
         pass

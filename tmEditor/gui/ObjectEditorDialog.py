@@ -73,10 +73,11 @@ class ObjectEditorDialog(QtGui.QDialog):
         self.offsetSpinBox.valueChanged.connect(self.updateInfoText)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
+        # Initialize
         self.updateInfoText()
 
     def setupUi(self):
-        self.setWindowIcon(Toolbox.createIcon("wizard"))
+        self.setWindowIcon(Toolbox.createIcon("wizard-object"))
         self.setWindowTitle(self.tr("Object Requirement Editor"))
         self.resize(640, 380)
         self.objectLabel = QtGui.QLabel(self.tr("Object"), self)

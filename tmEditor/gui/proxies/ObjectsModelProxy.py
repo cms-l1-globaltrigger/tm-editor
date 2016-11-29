@@ -37,7 +37,7 @@ class ObjectsModelProxy(QtGui.QSortFilterProxyModel):
                 float(self.sourceModel().data(right, QtCore.Qt.DisplayRole).split()[0])
         if left.column() == self.BxOffsetColumn:
             return int(self.sourceModel().data(left, QtCore.Qt.DisplayRole)) < int(self.sourceModel().data(right, QtCore.Qt.DisplayRole))
-        return super(QtGui.ObjectsModelProxy, self).lessThan(left, right)
+        return super(ObjectsModelProxy, self).lessThan(left, right)
 
     def __toObject(self, index):
         return toObject(self.sourceModel().data(index, QtCore.Qt.DisplayRole))

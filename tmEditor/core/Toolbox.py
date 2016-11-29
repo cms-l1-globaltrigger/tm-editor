@@ -17,6 +17,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 
 import re
+import logging
 import sys, os
 
 # ------------------------------------------------------------------------------
@@ -57,6 +58,17 @@ def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
     """
     return [int(text) if text.isdigit() else text.lower()
             for text in re.split(_nsre, str(s))]
+
+def safe_str(s, attrname):
+    """Returns safe version of string. The function strips:
+     * whitespaces, tabulators
+     * newlines, carriage returns
+     * NULL characters
+    """
+    t = s.strip(" \t\n\r\x00")
+    if s != t:
+        logging.warning("normalized %s: '%s' to '%s'", attrname, s, t)
+    return t
 
 # ------------------------------------------------------------------------------
 #  String formatting functions
@@ -102,6 +114,13 @@ def fComparison(value):
 def fBxOffset(value):
     """Retruns formatted BX offset."""
     return '0' if int(value) == 0 else format(int(value), '+d')
+
+def sizeof_format(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
 
 # -----------------------------------------------------------------------------
 #  Icon factories

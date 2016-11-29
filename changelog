@@ -1,18 +1,27 @@
+tm-editor (0.4.0-1) extra; urgency=medium
+
+  * Verbose reading and writing of XML files.
+  * Added external signal editor dialog.
+  * Improved algorithm editor dialog.
+  * Updated icon sets.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Tue, 29 Nov 2016 13:04:10 +0100
+
 tm-editor (0.3.2-1) extra; urgency=high
 
-  * Additional file integrity checks
+  * Additional file integrity checks.
 
  -- Bernhard Arnold <bernhard.arnold@cern.ch>  Tue, 22 Nov 2016 15:53:21 +0100
 
 tm-editor (0.3.1-1) extra; urgency=high
 
-  * Adjusted input range for DPHI cuts
+  * Adjusted input range for DPHI cuts.
 
  -- Bernhard Arnold <bernhard.arnold@cern.ch>  Tue, 22 Nov 2016 11:51:42 +0100
 
 tm-editor (0.3.0-2) extra; urgency=high
 
-  * Fixed broken makefile
+  * Fixed broken makefile.
 
  -- Bernhard Arnold <bernhard.arnold@cern.ch>  Mon, 21 Nov 2016 18:33:30 +0100
 

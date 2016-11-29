@@ -30,6 +30,8 @@ from tmEditor.gui.CommonWidgets import IconLabel
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
+import logging
+
 __all__ = ['ImportDialog', ]
 
 # -----------------------------------------------------------------------------
@@ -51,9 +53,26 @@ class ImportDialog(QtGui.QDialog):
         self.algorithms = []
         self.cuts = []
         self.baseMenu = menu
-        self.menu = XmlDecoder.load(filename)
-        # Check integrity
-        self.menu.validate()
+
+        dialog = QtGui.QProgressDialog(self)
+        dialog.setWindowTitle(self.tr("Loading..."))
+        dialog.setCancelButton(None)
+        dialog.setWindowModality(QtCore.Qt.WindowModal)
+        dialog.resize(260, dialog.height())
+        dialog.show()
+        QtGui.QApplication.processEvents()
+        queue = XmlDecoder.XmlDecoderQueue(filename)
+        for callback in queue:
+            dialog.setLabelText(self.tr("%1...").arg(queue.message().capitalize()))
+            logging.debug("processing: %s...", queue.message())
+            QtGui.QApplication.sendPostedEvents(dialog, 0)
+            QtGui.QApplication.processEvents()
+            callback()
+            dialog.setValue(queue.progress())
+            QtGui.QApplication.processEvents()
+        self.menu = queue.menu
+        dialog.close()
+
         if self.menu.scales.scaleSet[kName] != self.baseMenu.scales.scaleSet[kName]:
             QtGui.QMessageBox.warning(self,
                 self.tr("Different scale sets"),

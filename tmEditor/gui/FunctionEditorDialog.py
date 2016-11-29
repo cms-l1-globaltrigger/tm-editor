@@ -38,6 +38,7 @@ class FunctionEditorDialog(QtGui.QDialog):
         self.setupUi()
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
+        # Initialize
         self.updateCuts()
         self.updateInfoText()
 

@@ -14,9 +14,6 @@ from PyQt4 import QtGui
 
 __all__ = ['CutsModel', ]
 
-# def miniIcon(name):
-#     return QtGui.QIcon(":/icons/{name}.svg".format(name=name)).pixmap(13, 13)
-
 # ------------------------------------------------------------------------------
 #  Cuts model class
 # ------------------------------------------------------------------------------

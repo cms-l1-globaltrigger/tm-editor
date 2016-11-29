@@ -17,6 +17,9 @@ from tmEditor.core.Types import CountObjectTypes
 from tmEditor.gui.CommonWidgets import IconLabel
 from tmEditor.gui.CommonWidgets import EtaCutChart
 from tmEditor.gui.CommonWidgets import PhiCutChart
+from tmEditor.gui.CommonWidgets import richTextObjectsPreview
+from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
+from tmEditor.gui.CommonWidgets import richTextCutsPreview
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -198,44 +201,9 @@ class BottomWidget(QtGui.QWidget):
         if algorithm.comment:
             content.append(self.tr("<p><strong>Comment:</strong></p>"))
             content.append(self.tr("<p><code>%1</code></p>").arg(algorithm.comment))
-        # List used objects.
-        if algorithm.objects():
-            content.append(self.tr("<p><strong>Used objects:</strong></p>"))
-            content.append(self.tr("<p>"))
-            content.append(self.tr("<ul>"))
-            for object in algorithm.objects():
-                object_ = toObject(object)
-                comparison = Toolbox.fComparison(object_.comparison_operator)
-                if object_.type in CountObjectTypes:
-                    threshold = Toolbox.fCounts(object_.threshold) # TODO
-                else:
-                    threshold = Toolbox.fThreshold(object_.threshold)
-                bxOffset = Toolbox.fBxOffset(object_.bx_offset)
-                content.append(self.tr("<li><img src=\":/icons/%1.svg\"> %2 <span style=\"font-size:8pt; color: gray;\">(%3 %4, %5 BX offset)</span></li>").arg(object_.type.lower()).arg(object_.name).arg(comparison).arg(threshold).arg(bxOffset))
-            content.append(self.tr("</ul>"))
-            content.append(self.tr("</p>"))
-        # List used external signals.
-        if algorithm.externals():
-            content.append(self.tr("<p><strong>Used externals:</strong></p>"))
-            content.append(self.tr("<p>"))
-            content.append(self.tr("<ul>"))
-            for external in algorithm.externals():
-                content.append(self.tr("<li><img src=\":/icons/default.svg\"> %1</li>").arg(external))
-            content.append(self.tr("</ul>"))
-            content.append(self.tr("</p>"))
-        # List used cuts.
-        if algorithm.cuts():
-            content.append(self.tr("<p><strong>Used cuts:</strong></p>"))
-            content.append(self.tr("<p>"))
-            content.append(self.tr("<ul>"))
-            for cut in algorithm.cuts():
-                cut_ = menu.cutByName(cut)
-                if cut_.data:
-                    content.append(self.tr("<li>%1 <span style=\"font-size:8pt; color: gray;\">(%2)</span></li>").arg(cut).arg(cut_.data))
-                else:
-                    content.append(self.tr("<li>%1 <span style=\"font-size:8pt; color: gray;\">(%2 to %3)</span></li>").arg(cut).arg(Toolbox.fCut(cut_.minimum)).arg(Toolbox.fCut(cut_.maximum)))
-            content.append(self.tr("</ul>"))
-            content.append(self.tr("</p>"))
+        content.append(richTextObjectsPreview(algorithm, self))
+        content.append(richTextExtSignalsPreview(algorithm, self))
+        content.append(richTextCutsPreview(menu, algorithm, self))
         self.setText(content.join(""))
 
     def loadCut(self, cut):

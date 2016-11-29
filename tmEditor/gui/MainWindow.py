@@ -219,6 +219,12 @@ class MainWindow(QtGui.QMainWindow):
             # Test if filename is an URL.
             result = RegExUrl.match(filename)
             if result:
+                dialog = QtGui.QProgressDialog(self)
+                dialog.resize(300, dialog.height())
+                dialog.setWindowTitle(self.tr("Downloading..."))
+                dialog.setWindowModality(QtCore.Qt.WindowModal)
+                dialog.show()
+                QtGui.QApplication.processEvents()
                 # Open remote URL
                 u = urllib2.urlopen(filename, timeout=self.remoteTimeout)
                 meta = u.info()
@@ -229,11 +235,9 @@ class MainWindow(QtGui.QMainWindow):
                 fileSize = int(contentLength[0]) if contentLength else 0
                 #dialog.setMaximum(fileSize)
                 logging.info("fetching %s bytes from %s", fileSize or '<unknown>', filename)
+                dialog.setLabelText(self.tr("Receiving data..."))
+                dialog.setMaximum(fileSize)
                 try:
-                    dialog = QtGui.QProgressDialog("Downloading...", "Abort", 0, fileSize, self)
-                    dialog.setWindowModality(QtCore.Qt.WindowModal)
-                    dialog.show()
-                    QtGui.QApplication.processEvents()
                     # Create a temorary file buffer.
                     with tempfile.NamedTemporaryFile(bufsize = fileSize or 2**21) as f:
                         receivedSize = 0
@@ -244,6 +248,7 @@ class MainWindow(QtGui.QMainWindow):
                                 break
                             receivedSize += len(buffer)
                             f.write(buffer)
+                            dialog.setLabelText(self.tr("Downloading %1...").arg(Toolbox.sizeof_format(receivedSize)))
                             QtGui.QApplication.processEvents()
                             if dialog.wasCanceled():
                                 return
@@ -252,9 +257,9 @@ class MainWindow(QtGui.QMainWindow):
                         # begin. Note: do not close the temporary file as it
                         # will vanish (see python tempfile.NamedTemporaryFile).
                         f.seek(0)
+                        dialog.close()
                         # Create document by reading temporary file.
                         document = Document(f.name, self)
-                        dialog.close()
                 except Exception, e: # TODO
                     dialog.close()
                     logging.error("Failed to load XML menu: %s", str(e))
@@ -269,7 +274,7 @@ class MainWindow(QtGui.QMainWindow):
                     logging.error("Failed to load XML menu: %s", str(e))
                     QtGui.QMessageBox.critical(self,
                         self.tr("Failed to load XML menu"), str(e))
-                    return
+                    raise
         except (RuntimeError, OSError), e:
             logging.error("Failed to open XML menu: %s", str(e))
             QtGui.QMessageBox.critical(self,

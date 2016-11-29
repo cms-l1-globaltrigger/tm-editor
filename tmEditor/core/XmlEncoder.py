@@ -10,15 +10,24 @@ import tmTable
 import tmGrammar
 
 import Toolbox
+
+from tmEditor.core.Toolbox import safe_str
+from tmEditor.core.TableHelper import TableHelper
+from tmEditor.core.Queue import Queue
 from tmEditor.core.Settings import MaxAlgorithms
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 
 from distutils.version import StrictVersion
 
+import functools
 import logging
 import uuid
 import sys, os
+
+# -----------------------------------------------------------------------------
+#  Keys
+# -----------------------------------------------------------------------------
 
 kAncestorId = 'ancestor_id'
 kBxOffset = 'bx_offset'
@@ -56,71 +65,108 @@ DEFAULT_UUID = '00000000-0000-0000-0000-000000000000'
 FORMAT_FLOAT = '+23.16E'
 """Floating point string format."""
 
+
+# -----------------------------------------------------------------------------
+#  Decorators
+# -----------------------------------------------------------------------------
+
+def chdir(directory):
+    """Execute function inside a different directory."""
+    def decorate(func):
+        @functools.wraps(func)
+        def chdir_(*args, **kwargs):
+            cwd = os.getcwd()
+            logging.debug("changing to directory '%s'", directory)
+            os.chdir(directory)
+            try:
+                result = func(*args, **kwargs)
+            except:
+                # Make sure to restore directory before raising an exception!
+                logging.debug("returning back to directory '%s'", directory)
+                os.chdir(cwd)
+                raise
+            logging.debug("returning back to directory '%s'", cwd)
+            os.chdir(cwd)
+            return result
+        return chdir_
+    return decorate
+
+# -----------------------------------------------------------------------------
+#  Encoder classes
+# -----------------------------------------------------------------------------
+
 class XmlEncoderError(Exception):
     """Exeption for XML encoder errors."""
     def __init__(self, message):
         super(XmlEncoderError, self).__init__(message)
 
-def safe_str(s):
-    """Returns safe version of string. The function strips:
-     * whitespaces, tabulators
-     * newlines, carriage returns
-     * NULL characters
-    """
-    return str(s).strip(" \t\n\r\x00")
+class XmlEncoderQueue(Queue):
 
-def test_permissions(filename):
-    """Test if target filename is writeable by the user."""
-    if not os.path.isfile(filename):
-        filename = os.path.dirname(filename)
-    if not os.access(filename, os.W_OK):
-        message = "permission denied `{0}`".format(filename)
-        logging.error(message)
-        raise RuntimeError(message)
+    def __init__(self, menu, filename):
+        super(XmlEncoderQueue, self).__init__()
+        self.menu = menu
+        self.filename = os.path.abspath(filename)
+        self.add_callback(self.run_prepare, "preparing writing to file")
+        self.add_callback(self.run_process_info, "preparing menu info")
+        self.add_callback(self.run_process_algorithms, "preparing algorithms")
+        self.add_callback(self.run_process_objects, "preparing objects")
+        self.add_callback(self.run_process_externals, "preparing external signals")
+        self.add_callback(self.run_process_cuts, "preparing cuts")
+        self.add_callback(self.run_dump_xml, "writing XML file")
+        self.add_callback(self.run_verify_dump, "verifying written file")
 
-def dump(menu, filename):
-    """Write XML menu to *filename*. This regenerates the UUID."""
-    filename = os.path.abspath(filename)
+    def run_prepare(self):
+        """Write XML menu to *filename*. This regenerates the UUID."""
+        logging.debug("preparing menu to write to `%s`", self.filename)
 
-    logging.debug("preparing menu to write to `%s`", filename)
+        # WORKAROUND (menu2xml() will not fail on permission denied)
+        """Test if target filename is writeable by the user."""
+        target = self.filename
+        if not os.path.isfile(target):
+            target = os.path.dirname(target)
+        if not os.access(target, os.W_OK):
+            message = "permission denied `{0}`".format(self.filename)
+            logging.error(message)
+            raise RuntimeError(message)
 
-    # WORKAROUND (menu2xml() will not fail on permission denied)
-    test_permissions(filename)
+        # Setup tables
+        self.tables = TableHelper()
+        self.tables.scale = self.menu.scales
+        self.tables.extSignal = self.menu.extSignals
 
-    pwd = os.getcwd()
-    os.chdir(Toolbox.getXsdDir())
-
-    try:
-
+    @chdir(Toolbox.getXsdDir())
+    def run_process_info(self):
         # Create a new menu instance.
-        menu_table = tmTable.Menu()
+        self.tables.menu = tmTable.Menu()
 
         # Regenerate UUID and version
-        menu.menu.regenerate()
-        logging.debug("regenerated menu UUID to: %s", menu.menu.uuid_menu)
-        logging.debug("updated grammar version to: %s", menu.menu.grammar_version)
+        self.menu.menu.regenerate()
+        logging.debug("regenerated menu UUID to: %s", self.menu.menu.uuid_menu)
+        logging.debug("updated grammar version to: %s", self.menu.menu.grammar_version)
 
         # Menu inforamtion
-        menu_table.menu[kName] = safe_str(menu.menu.name)
-        menu_table.menu[kComment] = safe_str(menu.menu.comment)
-        menu_table.menu[kUUIDMenu] = menu.menu.uuid_menu
-        menu_table.menu[kUUIDFirmware] = DEFAULT_UUID
-        menu_table.menu[kGrammarVersion] = menu.menu.grammar_version
-        menu_table.menu[kNModules] = "0"
-        menu_table.menu[kIsValid] = "1"
-        menu_table.menu[kIsObsolete] = "0"
-        menu_table.menu[kAncestorId] = "0"
-        menu_table.menu[kGlobalTag] = ""
+        self.tables.menu.menu[kName] = safe_str(self.menu.menu.name, "menu name")
+        self.tables.menu.menu[kComment] = safe_str(self.menu.menu.comment, "comment")
+        self.tables.menu.menu[kUUIDMenu] = self.menu.menu.uuid_menu
+        self.tables.menu.menu[kUUIDFirmware] = DEFAULT_UUID
+        self.tables.menu.menu[kGrammarVersion] = self.menu.menu.grammar_version
+        self.tables.menu.menu[kNModules] = "0"
+        self.tables.menu.menu[kIsValid] = "1"
+        self.tables.menu.menu[kIsObsolete] = "0"
+        self.tables.menu.menu[kAncestorId] = "0"
+        self.tables.menu.menu[kGlobalTag] = ""
 
-        logging.debug("menu information: %s", dict(menu_table.menu))
+        logging.debug("menu information: %s", dict(self.tables.menu.menu))
 
-        for algorithm in menu.algorithms:
+    @chdir(Toolbox.getXsdDir())
+    def run_process_algorithms(self):
+        for algorithm in self.menu.algorithms:
             # Create algorithm row
             row = tmTable.Row()
             row[kIndex] = str(algorithm.index)
             row[kModuleId] = "0"
             row[kModuleIndex] = str(algorithm.index)
-            row[kName] = safe_str(algorithm.name)
+            row[kName] = safe_str(algorithm.name, "algorithm name")
             row[kExpression] = AlgorithmFormatter.compress(algorithm.expression)
             row[kComment] = algorithm.comment
             # Validate algorithm row
@@ -130,22 +176,25 @@ def dump(menu, filename):
                 raise RuntimeError(message)
             # Append algorithm row
             logging.debug("appending algorithm: %s", dict(row))
-            menu_table.algorithms.append(row)
+            self.tables.menu.algorithms.append(row)
 
+    @chdir(Toolbox.getXsdDir())
+    def run_process_objects(self):
+        for algorithm in self.menu.algorithms:
             # Objects
-            if algorithm.name not in menu_table.objects.keys():
-                menu_table.objects[algorithm.name] = []
+            if algorithm.name not in self.tables.menu.objects.keys():
+                self.tables.menu.objects[algorithm.name] = []
             for name in algorithm.objects():
-                object_ = menu.objectByName(name)
+                object_ = self.menu.objectByName(name)
                 if not object_:
                     message = "missing object requirement: {0}".format(name)
                     logging.error(message)
                     raise RuntimeError(message)
                 # Create object row
                 row = tmTable.Row()
-                row[kName] = safe_str(object_.name)
+                row[kName] = safe_str(object_.name, "object name")
                 row[kType] = object_.type
-                row[kThreshold] = safe_str(format(object_.decodeThreshold(), FORMAT_FLOAT))
+                row[kThreshold] = format(object_.decodeThreshold(), FORMAT_FLOAT)
                 row[kComparisonOperator] = object_.comparison_operator
                 row[kBxOffset] = str(object_.bx_offset)
                 # Validate object row
@@ -155,20 +204,23 @@ def dump(menu, filename):
                     raise RuntimeError(message)
                 # Append object trow
                 logging.debug("appending object requirement: %s", dict(row))
-                menu_table.objects[algorithm.name] = menu_table.objects[algorithm.name] + (row, )
+                self.tables.menu.objects[algorithm.name] = self.tables.menu.objects[algorithm.name] + (row, )
 
+    @chdir(Toolbox.getXsdDir())
+    def run_process_externals(self):
+        for algorithm in self.menu.algorithms:
             # Externals
-            if algorithm.name not in menu_table.externals.keys():
-                menu_table.externals[algorithm.name] = []
+            if algorithm.name not in self.tables.menu.externals.keys():
+                self.tables.menu.externals[algorithm.name] = []
             for name in algorithm.externals():
-                external = menu.externalByName(name)
+                external = self.menu.externalByName(name)
                 if not external:
                     message = "missing external signal: {0}".format(name)
                     logging.error(message)
                     raise RuntimeError(message)
                 # Create external row
                 row = tmTable.Row()
-                row[kName] = safe_str(external.name)
+                row[kName] = safe_str(external.name, "external_name")
                 row[kBxOffset] = str(external.bx_offset)
                 # Validate external row
                 if not tmTable.isExternalRequirement(row):
@@ -177,20 +229,23 @@ def dump(menu, filename):
                     raise RuntimeError(message)
                 # Append external row
                 logging.debug("appending external signal: %s", dict(row))
-                menu_table.externals[algorithm.name] = menu_table.externals[algorithm.name] + (row, )
+                self.tables.menu.externals[algorithm.name] = self.tables.menu.externals[algorithm.name] + (row, )
 
+    @chdir(Toolbox.getXsdDir())
+    def run_process_cuts(self):
+        for algorithm in self.menu.algorithms:
             # Cuts
-            if algorithm.name not in menu_table.cuts.keys():
-                menu_table.cuts[algorithm.name] = []
+            if algorithm.name not in self.tables.menu.cuts.keys():
+                self.tables.menu.cuts[algorithm.name] = []
             for name in algorithm.cuts():
-                cut = menu.cutByName(name)
+                cut = self.menu.cutByName(name)
                 if not cut:
                     message = "missing cut: {0}".format(name)
                     logging.error(message)
                     raise RuntimeError(message)
                 # Create cut row
                 row = tmTable.Row()
-                row[kName] = safe_str(cut.name)
+                row[kName] = safe_str(cut.name, "cut name")
                 row[kObject] = cut.object
                 row[kType] = cut.type
                 if cut.data:
@@ -209,17 +264,21 @@ def dump(menu, filename):
                     raise RuntimeError(message)
                 # Append cut row
                 logging.debug("appending cut: %s", dict(row))
-                menu_table.cuts[algorithm.name] = menu_table.cuts[algorithm.name] + (row, )
+                self.tables.menu.cuts[algorithm.name] = self.tables.menu.cuts[algorithm.name] + (row, )
 
+    @chdir(Toolbox.getXsdDir())
+    def run_dump_xml(self):
         # Write to XML file.
-        logging.debug("writing XML file to `%s'", filename)
-        tmTable.menu2xml(menu_table, menu.scales, menu.extSignals, filename)
+        logging.debug("writing XML file to `%s'", self.filename)
+        self.tables.dump(self.filename)
+
+    def run_verify_dump(self):
         # WORKAROUND (check if file was written)
-        if not os.path.isfile(filename):
-            message = "failed to write to file `{0}'".format(filename)
+        if not os.path.isfile(self.filename):
+            message = "failed to write to file `{0}'".format(self.filename)
             logging.error(message)
             raise RuntimeError(message)
 
-    except:
-        os.chdir(pwd)
-        raise
+def dump(menu, filename):
+    queue = XmlEncoderQueue(menu, filename)
+    queue.exec_()

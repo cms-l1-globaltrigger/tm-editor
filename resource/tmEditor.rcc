@@ -2,7 +2,8 @@
   <qresource>
     <file alias="icons/tm-editor.svg">share/icons/hicolor/scalable/apps/tm-editor.svg</file>
     <file alias="icons/document-import.svg">share/tm-editor/icons/24x24/document-import.svg</file>
-    <file alias="icons/wizard.svg">share/tm-editor/icons/24x24/wizard.svg</file>
+    <file alias="icons/wizard-object.svg">share/tm-editor/icons/24x24/wizard-object.svg</file>
+    <file alias="icons/wizard-ext-signal.svg">share/tm-editor/icons/24x24/wizard-ext-signal.svg</file>
     <file alias="icons/wizard-function.svg">share/tm-editor/icons/24x24/wizard-function.svg</file>
     <file alias="icons/mu.svg">share/tm-editor/icons/13x13/mu.svg</file>
     <file alias="icons/eg.svg">share/tm-editor/icons/13x13/eg.svg</file>
@@ -19,6 +20,7 @@
     <file alias="icons/mbt0hfp.svg">share/tm-editor/icons/13x13/minbias.svg</file>
     <file alias="icons/mbt1hfp.svg">share/tm-editor/icons/13x13/minbias.svg</file>
     <file alias="icons/towercount.svg">share/tm-editor/icons/13x13/towercount.svg</file>
+    <file alias="icons/ext.svg">share/tm-editor/icons/13x13/ext.svg</file>
     <file alias="icons/default.svg">share/tm-editor/icons/13x13/default.svg</file>
     <file alias="icons/eta.svg">share/tm-editor/icons/13x13/eta.svg</file>
     <file alias="icons/phi.svg">share/tm-editor/icons/13x13/phi.svg</file>

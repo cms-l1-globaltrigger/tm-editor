@@ -7,6 +7,7 @@
 #
 
 from .AbstractTableModel import AbstractTableModel
+from tmEditor.core.Toolbox import miniIcon
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -25,9 +26,6 @@ kLabel = 'label'
 kCable = 'cable'
 kChannel = 'channel'
 
-def miniIcon(name):
-    return QtGui.QIcon(":/icons/{name}.svg".format(name=name)).pixmap(13, 13)
-
 # ------------------------------------------------------------------------------
 #  External signals model class
 # ------------------------------------------------------------------------------
@@ -37,7 +35,7 @@ class ExtSignalsModel(AbstractTableModel):
 
     def __init__(self, menu, parent = None):
         super(ExtSignalsModel, self).__init__(menu.extSignals.extSignals, parent)
-        self.addColumnSpec("System", lambda item: item[kSystem])
+        self.addColumnSpec("System", lambda item: item[kSystem], decoration=miniIcon('ext'))
         self.addColumnSpec("Name", lambda item: item[kName])
         self.addColumnSpec("Label", lambda item: item[kLabel] if kLabel in item else "")
         self.addColumnSpec("Cable", lambda item: item[kCable], int, self.AlignRight)
