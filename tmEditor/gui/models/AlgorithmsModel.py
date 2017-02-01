@@ -10,8 +10,7 @@ from tmEditor.core.Toolbox import fAlgorithm
 from tmEditor.core import AlgorithmFormatter
 from .AbstractTableModel import AbstractTableModel
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
 
 __all__ = ['AlgorithmsModel', ]
 

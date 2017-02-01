@@ -8,9 +8,9 @@
 
 import tmGrammar
 
-import Menu
-import Algorithm
-import Types
+from tmEditor.core import Menu, Toolbox
+from tmEditor.core import Algorithm
+from tmEditor.core import Types
 
 from tmEditor.core.Toolbox import safe_str
 from tmEditor.core.Queue import Queue
@@ -20,6 +20,8 @@ from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 
 from distutils.version import StrictVersion
+
+from XmlEncoder import chdir
 
 import logging
 import sys, os
@@ -103,6 +105,7 @@ class XmlDecoderQueue(Queue):
             logging.error(message)
             raise XmlDecoderError(message)
 
+    @chdir(Toolbox.getXsdDir())
     def run_load_xml(self):
         logging.debug("Reading XML file from `%s'", self.filename)
         self.tables = TableHelper()

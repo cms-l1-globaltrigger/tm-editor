@@ -14,8 +14,9 @@ http://stackoverflow.com/questions/6571035/qplaintextedit-change-shiftreturn-beh
 http://www.jjoe64.com/2011/08/qplaintextedit-change-shiftreturn.html
 """
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
+from tmEditor.PyQt5Proxy import QtGui
+from tmEditor.PyQt5Proxy import QtWidgets
 
 import string
 
@@ -25,7 +26,7 @@ __all__ = ['CodeEditor', ]
 #  Code editor class
 # -----------------------------------------------------------------------------
 
-class CodeEditor(QtGui.QPlainTextEdit):
+class CodeEditor(QtWidgets.QPlainTextEdit):
     """Source code editor widget."""
 
     def __init__(self, parent = None):
@@ -36,6 +37,10 @@ class CodeEditor(QtGui.QPlainTextEdit):
         self.cursorPositionChanged.connect(self.highlightCurrentLine)
         self.updateLineNumberAreaWidth()
         self.highlightCurrentLine()
+        # Setup font hints for monospace/typewriter
+        font = QtGui.QFont("Monospace")
+        font.setStyleHint(QtGui.QFont.TypeWriter)
+        self.setFont(font)
         # self.document().setDocumentMargin(0)
 
     def lineNumberAreaPaintEvent(self, event):
@@ -47,7 +52,7 @@ class CodeEditor(QtGui.QPlainTextEdit):
         bottom = top + int(self.blockBoundingRect(block).height())
         while block.isValid() and top <= event.rect().bottom():
             if block.isVisible() and bottom >= event.rect().top():
-                number = QtCore.QString.number(blockNumber + 1)
+                number = format(blockNumber + 1, "d")
                 painter.setPen(QtCore.Qt.darkGray)
                 font = painter.font()
                 font.setWeight(QtGui.QFont.Bold)
@@ -65,7 +70,7 @@ class CodeEditor(QtGui.QPlainTextEdit):
         while maximum >= 10:
             maximum /= 10
             digits += 1
-        space = 8 + max([self.fontMetrics().width(QtCore.QChar(c)) for c in string.digits]) * digits
+        space = 8 + max([self.fontMetrics().width(c) for c in string.digits]) * digits
         return space;
 
     def resizeEvent(self, event):
@@ -79,7 +84,7 @@ class CodeEditor(QtGui.QPlainTextEdit):
     def highlightCurrentLine(self):
         extraSelections = []
         if not self.isReadOnly():
-            selection = QtGui.QTextEdit.ExtraSelection()
+            selection = QtWidgets.QTextEdit.ExtraSelection()
             lineColor = QtGui.QColor(QtCore.Qt.yellow).lighter(170)
             selection.format.setBackground(lineColor)
             selection.format.setProperty(QtGui.QTextFormat.FullWidthSelection, True)
@@ -112,7 +117,7 @@ class CodeEditor(QtGui.QPlainTextEdit):
 #  Line number area, helper class
 # ------------------------------------------------------------------------------
 
-class LineNumberArea(QtGui.QWidget):
+class LineNumberArea(QtWidgets.QWidget):
     """Line number widget for code editor."""
 
     def __init__(self, editor):
@@ -131,7 +136,7 @@ class LineNumberArea(QtGui.QWidget):
 
 if __name__ == '__main__':
     import sys, os
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     editor = CodeEditor()
     editor.show();
     sys.exit(app.exec_())

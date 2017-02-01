@@ -12,15 +12,28 @@
 
 import tmGrammar
 
-from tmEditor.core.Types import ObjectTypes
+from tmEditor.core.Types import ObjectTypes, ExternalObjectTypes
 from tmEditor.core.Settings import MaxAlgorithms
 from tmEditor.core.AlgorithmHelper import decode_threshold, encode_threshold
 
-import re
+import re, math
 import sys, os
 import logging
 
 __all__ = ['Algorithm', ]
+
+# ------------------------------------------------------------------------------
+#  Regular expressions
+# ------------------------------------------------------------------------------
+
+RegExObject = re.compile(r'({0})(?:\.(?:ge|eq)\.)?(\d+(?:p\d+)?)(?:[\+\-]\d+)?(?:\[[^\]]+\])?'.format(r'|'.join(ObjectTypes)))
+"""Precompiled regular expression for matching object requirements."""
+
+RegExExtSignal = re.compile(r'{0}_[\w\d_\.]+(?:[\+\-]\d+)?'.format(r'|'.join(ExternalObjectTypes)))
+"""Precompiled regular expression for matching external signal requirements."""
+
+RegExFunction = re.compile(r'\w+\s*\{[^\}]+\}(?:\[[^\]]+\])?')
+"""Precompiled regular expression for matching function expressions."""
 
 # ------------------------------------------------------------------------------
 #  Helper functions
@@ -28,11 +41,12 @@ __all__ = ['Algorithm', ]
 
 def getObjectType(name):
     """Mapping object type enumeration to actual object names."""
-    # WORKAROUND TODO
-    for type_ in ObjectTypes:
-        if name.startswith(type_):
-            return type_
-    message = "invalid object type `{0}`".format(type_)
+    result = RegExObject.match(name)
+    if result:
+        objectType = result.group(1)
+        if objectType in ObjectTypes:
+            return objectType
+    message = "invalid object type `{0}`".format(name)
     raise RuntimeError(message)
 
 def isOperator(token):
@@ -49,7 +63,7 @@ def isExternal(token):
 
 def isCut(token):
     """Retruns True if token is a cut."""
-    return filter(lambda item: token.startswith(item), tmGrammar.cutName) != []
+    return list(filter(lambda item: token.startswith(item), tmGrammar.cutName)) != []
 
 def isFunction(token):
     """Retruns True if token is a function."""
@@ -119,6 +133,30 @@ def objectCuts(token):
     if not tmGrammar.Object_parser(token, o):
         raise ValueError(token)
     return list(o.cuts)
+
+def calculateDRRange():
+    """Calculate valid DR range. This is function is currently a prototype and
+    should fetch the actual limits from the menus scales in future.
+    dR = sqrt( dEta^2 + dPhi^2 )
+    """
+    dEta = 10.
+    dPhi = math.pi * 2
+    minimum = 0.
+    maximum = math.sqrt(math.pow(dEta, 2) + math.pow(dPhi, 2))
+    return (minimum, maximum)
+
+def calculateInvMassRange():
+    """Calculate valid invariant mass range. This is function is currently a
+    prototype and should fetch the actual limits from the menus scales in future.
+    M = sqrt( 2 pt1 pt2 ( cosh(dEta) - cos(dPhi) )
+    """
+    pt1 = 1024.
+    pt2 = 1024.
+    dEta = 10.
+    dPhi = math.pi
+    minimum = 0.
+    maximum = math.sqrt(2 * pt1 * pt2 * (math.cosh(dEta) - math.cos(dPhi)))
+    return (minimum, maximum)
 
 # ------------------------------------------------------------------------------
 #  Algorithm's container class.

@@ -181,7 +181,7 @@ class ObjectThresholds(SyntaxRule):
             raise AlgorithmSyntaxError(message, token)
         # Check step
         bins = menu.scaleBins(object, ObjectScaleMap[object.type])
-        if not filter(lambda bin: float(bin[kMinimum])==threshold or float(bin[kMaximum])==threshold, bins):
+        if not list(filter(lambda bin: float(bin[kMinimum])==threshold or float(bin[kMaximum])==threshold, bins)):
             message = "Invalid threshold `{object.threshold}` at object `{token}`".format(**locals())
             raise AlgorithmSyntaxError(message, token)
 
@@ -215,7 +215,7 @@ class DistNrObjects(SyntaxRule):
                 continue
             f = tmGrammar.Function_Item()
             if not tmGrammar.Function_parser(token, f):
-                raise AlgorithmSyntaxError(str(f.message))
+                raise AlgorithmSyntaxError(f.message)
             objects = functionObjects(token)
             if len(objects) != 2:
                 message = "Function dist{{...}} requires excactly two object requirements.\n" \
@@ -236,7 +236,7 @@ class DistDeltaRange(SyntaxRule):
                 cut = menu.cutByName(name)
                 if cut.type == tmGrammar.DETA:
                     for object in functionObjects(token):
-                        scale = filter(lambda scale: scale[kObject]==object.type and scale[kType]==tmGrammar.ETA, menu.scales.scales)[0]
+                        scale = list(filter(lambda scale: scale[kObject]==object.type and scale[kType]==tmGrammar.ETA, menu.scales.scales))[0]
                         minimum = 0
                         maximum = abs(float(scale[kMinimum])) + float(scale[kMaximum])
                         if not (minimum <= float(cut.minimum) <= maximum):
@@ -247,7 +247,7 @@ class DistDeltaRange(SyntaxRule):
                             raise AlgorithmSyntaxError(message)
                 if cut.type == tmGrammar.DPHI:
                     for object in functionObjects(token):
-                        scale = filter(lambda scale: scale[kObject]==object.type and scale[kType]==tmGrammar.PHI, menu.scales.scales)[0]
+                        scale = list(filter(lambda scale: scale[kObject]==object.type and scale[kType]==tmGrammar.PHI, menu.scales.scales))[0]
                         minimum = 0
                         maximum = float(format(float(scale[kMaximum]), '.3f'))
                         if not (minimum <= float(cut.minimum) <= maximum):

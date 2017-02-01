@@ -9,8 +9,9 @@
 """Preferences dialog.
 """
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
+from tmEditor.PyQt5Proxy import QtGui
+from tmEditor.PyQt5Proxy import QtWidgets
 
 __all__ = ['PreferencesDialog', ]
 
@@ -18,7 +19,7 @@ __all__ = ['PreferencesDialog', ]
 #  Preferences dialog class
 # -----------------------------------------------------------------------------
 
-class PreferencesDialog(QtGui.QDialog):
+class PreferencesDialog(QtWidgets.QDialog):
     """Preferences dialog providing settings for the application."""
 
     def __init__(self, parent=None):
@@ -29,20 +30,20 @@ class PreferencesDialog(QtGui.QDialog):
         self.setWindowTitle(self.tr("Preferences"))
         self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
         self.resize(240, 100)
-        hbox = QtGui.QHBoxLayout()
-        self.clearHistoryButton = QtGui.QPushButton(self.tr("&Clear"), self)
-        hbox.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum))
+        hbox = QtWidgets.QHBoxLayout()
+        self.clearHistoryButton = QtWidgets.QPushButton(self.tr("&Clear"), self)
+        hbox.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
         hbox.addWidget(self.clearHistoryButton)
-        self.historyGroupBox = QtGui.QGroupBox(self.tr("Download history"), self)
+        self.historyGroupBox = QtWidgets.QGroupBox(self.tr("Download history"), self)
         self.historyGroupBox.setLayout(hbox)
-        self.verticalSpacer = QtGui.QSpacerItem(0, 0,
-            QtGui.QSizePolicy.Minimum,
-            QtGui.QSizePolicy.Expanding
+        self.verticalSpacer = QtWidgets.QSpacerItem(0, 0,
+            QtWidgets.QSizePolicy.Minimum,
+            QtWidgets.QSizePolicy.Expanding
         )
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        self.buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
         self.buttonBox.clicked.connect(self.close)
-        layout = QtGui.QVBoxLayout()
-        hbox = QtGui.QHBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         layout.addWidget(self.historyGroupBox)
         layout.addItem(self.verticalSpacer)
         layout.addWidget(self.buttonBox)
@@ -51,4 +52,4 @@ class PreferencesDialog(QtGui.QDialog):
 
     def onClearHistory(self):
         """Clears history of downloaded URLs."""
-        QtCore.QSettings().setValue("recent/urls", QtCore.QStringList())
+        QtCore.QSettings().setValue("recent/urls", [])

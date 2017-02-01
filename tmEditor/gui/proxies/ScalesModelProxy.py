@@ -6,8 +6,7 @@
 # Last changed date : $Date: $
 #
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
 
 __all__ = ['ScalesModelProxy', ]
 
@@ -15,7 +14,7 @@ __all__ = ['ScalesModelProxy', ]
 #  Scales model proxy
 # -----------------------------------------------------------------------------
 
-class ScalesModelProxy(QtGui.QSortFilterProxyModel):
+class ScalesModelProxy(QtCore.QSortFilterProxyModel):
     """Custom cuts sort/filter proxy."""
 
     MinimumColumn = 2

@@ -8,8 +8,7 @@
 
 from tmEditor.core.Menu import toObject
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
 
 __all__ = ['ObjectsModelProxy', ]
 
@@ -17,7 +16,7 @@ __all__ = ['ObjectsModelProxy', ]
 #  Objects model proxy
 # -----------------------------------------------------------------------------
 
-class ObjectsModelProxy(QtGui.QSortFilterProxyModel):
+class ObjectsModelProxy(QtCore.QSortFilterProxyModel):
     """Custom objects sort/filter proxy."""
 
     NameColumn = 0

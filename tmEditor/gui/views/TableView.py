@@ -6,14 +6,14 @@
 # Last changed date : $Date: $
 #
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
+from tmEditor.PyQt5Proxy import QtWidgets
 
 # ------------------------------------------------------------------------------
 #  Common table view widget
 # ------------------------------------------------------------------------------
 
-class TableView(QtGui.QTableView):
+class TableView(QtWidgets.QTableView):
     """Common sortable table view wiget."""
 
     def __init__(self, parent=None):
@@ -22,18 +22,24 @@ class TableView(QtGui.QTableView):
         super(TableView, self).__init__(parent)
         # Setup table view.
         self.setShowGrid(False)
-        self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.setAlternatingRowColors(True)
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Preferred)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
         # Setup horizontal column appearance.
         horizontalHeader = self.horizontalHeader()
         horizontalHeader.setHighlightSections(False)
-        horizontalHeader.setResizeMode(QtGui.QHeaderView.Interactive)
+        if hasattr(horizontalHeader, 'setSectionResizeMode'): # PyQt5
+            horizontalHeader.setSectionResizeMode(QtWidgets.QHeaderView.Interactive)
+        else: # PyQt4
+            horizontalHeader.setResizeMode(QtWidgets.QHeaderView.Interactive)
         horizontalHeader.setStretchLastSection(True)
         # Setup vertical row appearance.
         verticalHeader = self.verticalHeader()
-        verticalHeader.setResizeMode(QtGui.QHeaderView.Fixed)
+        if hasattr(verticalHeader, 'setSectionResizeMode'): # PyQt5
+            verticalHeader.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+        else: # PyQt4
+            verticalHeader.setResizeMode(QtWidgets.QHeaderView.Fixed)
         verticalHeader.setDefaultSectionSize(20)
         verticalHeader.hide()
         self.setSortingEnabled(True)

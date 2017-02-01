@@ -1,10 +1,15 @@
 <!DOCTYPE RCC><RCC version="1.0">
   <qresource>
+    <!-- Application icons -->
     <file alias="icons/tm-editor.svg">share/icons/hicolor/scalable/apps/tm-editor.svg</file>
-    <file alias="icons/document-import.svg">share/tm-editor/icons/24x24/document-import.svg</file>
+
+    <!-- Custom application icons -->
     <file alias="icons/wizard-object.svg">share/tm-editor/icons/24x24/wizard-object.svg</file>
     <file alias="icons/wizard-ext-signal.svg">share/tm-editor/icons/24x24/wizard-ext-signal.svg</file>
     <file alias="icons/wizard-function.svg">share/tm-editor/icons/24x24/wizard-function.svg</file>
+    <file alias="icons/edit-object.svg">share/tm-editor/icons/24x24/edit-object.svg</file>
+    <file alias="icons/edit-ext-signal.svg">share/tm-editor/icons/24x24/edit-ext-signal.svg</file>
+    <file alias="icons/edit-function.svg">share/tm-editor/icons/24x24/edit-function.svg</file>
     <file alias="icons/mu.svg">share/tm-editor/icons/13x13/mu.svg</file>
     <file alias="icons/eg.svg">share/tm-editor/icons/13x13/eg.svg</file>
     <file alias="icons/jet.svg">share/tm-editor/icons/13x13/jet.svg</file>
@@ -33,11 +38,39 @@
     <file alias="icons/dr.svg">share/tm-editor/icons/13x13/dr.svg</file>
     <file alias="icons/mass.svg">share/tm-editor/icons/13x13/mass.svg</file>
     <file alias="icons/compare.svg">share/tm-editor/icons/16x16/compare.svg</file>
+    <file alias="icons/expression.svg">share/tm-editor/icons/16x16/expression.svg</file>
+    <file alias="icons/path-cut.svg">share/tm-editor/icons/16x16/path-cut.svg</file>
     <file alias="icons/16/edit-clear.svg">share/tm-editor/icons/16x16/edit-clear.svg</file>
     <file alias="icons/16/format-compact.svg">share/tm-editor/icons/16x16/format-compact.svg</file>
     <file alias="icons/16/format-cascade.svg">share/tm-editor/icons/16x16/format-cascade.svg</file>
     <file alias="icons/24/format-compact.svg">share/tm-editor/icons/24x24/format-compact.svg</file>
     <file alias="icons/24/format-cascade.svg">share/tm-editor/icons/24x24/format-cascade.svg</file>
+
+    <!-- Fallback system icons for macOS and others -->
+    <file alias="icons/document-import.svg">share/tm-editor/icons/48x48/document-import.svg</file>
+    <file alias="icons/document-open.svg">share/tm-editor/icons/48x48/document-open.svg</file>
+    <file alias="icons/document-save.svg">share/tm-editor/icons/48x48/document-save.svg</file>
+    <file alias="icons/document-save-as.svg">share/tm-editor/icons/48x48/document-save-as.svg</file>
+    <file alias="icons/info.svg">share/tm-editor/icons/48x48/info.svg</file>
+    <file alias="icons/document.svg">share/tm-editor/icons/48x48/text-x-generic.svg</file>
+    <file alias="icons/list-remove.svg">share/tm-editor/icons/48x48/list-remove.svg</file>
+    <file alias="icons/list-add.svg">share/tm-editor/icons/48x48/list-add.svg</file>
+    <file alias="icons/edit-copy.svg">share/tm-editor/icons/48x48/edit-copy.svg</file>
+    <file alias="icons/text-editor.svg">share/tm-editor/icons/48x48/accessories-text-editor.svg</file>
+    <file alias="icons/dialog-warning.svg">share/tm-editor/icons/48x48/dialog-warning.svg</file>
+    <file alias="icons/search.svg">share/tm-editor/icons/48x48/panel-searchtool.svg</file>
+    <file alias="icons/edit-redo.svg">share/tm-editor/icons/48x48/edit-redo.svg</file>
+    <file alias="icons/edit-undo.svg">share/tm-editor/icons/48x48/edit-undo.svg</file>
+    <file alias="icons/view-refresh.svg">share/tm-editor/icons/48x48/view-refresh.svg</file>
+    <file alias="icons/help-about.svg">share/tm-editor/icons/48x48/help-about.svg</file>
+    <file alias="icons/gtk-preferences.svg">share/tm-editor/icons/48x48/gtk-preferences.svg</file>
+    <file alias="icons/application-exit.svg">share/tm-editor/icons/48x48/system-shutdown.svg</file>
+    <file alias="icons/window-close.svg">share/tm-editor/icons/48x48/window-close.svg</file>
+    <file alias="icons/emblem-downloads.svg">share/tm-editor/icons/48x48/emblem-downloads.svg</file>
+
+    <!-- Side files -->
     <file alias="changelog">share/tm-editor/changelog</file>
+    <file alias="copyright">share/tm-editor/copyright</file>
+
   </qresource>
 </RCC>

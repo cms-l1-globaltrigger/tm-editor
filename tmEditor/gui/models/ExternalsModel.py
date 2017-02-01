@@ -6,11 +6,11 @@
 # Last changed date : $Date: $
 #
 
-from tmEditor.core.Toolbox import fBxOffset, miniIcon
+from tmEditor.core.Toolbox import fBxOffset
+from tmEditor.gui.CommonWidgets import miniIcon
 from .AbstractTableModel import AbstractTableModel
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
 
 __all__ = ['ExternalsModel', ]
 

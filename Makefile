@@ -19,13 +19,17 @@ tarballdir = tarball/$(pkgdir)-$(distro)-$(arch)
 debian_arch = $(shell dpkg --print-architecture)
 
 # Executables
-pyrcc4 = pyrcc4
+pyrcc ?= pyrcc4
+pyinstaller ?= pyinstaller
 
 # Directories
 tmutil_dir = $(rootdir)/tmUtil
 tmxsd_dir = $(rootdir)/tmXsd
 tmtable_dir = $(rootdir)/tmTable
 tmgrammar_dir = $(rootdir)/tmGrammar
+
+# Resource files
+app_icon = resource/share/icons/hicolor/scalable/apps/$(package).svg
 
 # Lang
 tmlang = en_US.UTF-8
@@ -49,26 +53,32 @@ swigmods = \
 title = "Trigger Menu Editor"
 description = "Graphical editor for editing Level-1 trigger menu XML files."
 
-.PHONY: all install rpm rpmbuild deb debbuild tar tarbuild clean rpmclean debclean
+.PHONY: all install rpm rpmbuild deb debbuild tar tarbuild app clean rpmclean debclean tarclean appclean
 
 all: rcc
 
 # -----------------------------------------------------------------------------
 #  Resource processing.
 # -----------------------------------------------------------------------------
-rcc: resource/share/$(package)/changelog tmEditor/tmeditor_rc.py
+rcc: resource/share/$(package)/changelog resource/share/$(package)/copyright tmEditor/tmeditor_rc.py
 
 # -----------------------------------------------------------------------------
-#  Distribute a copy og the changelog.
+#  Distribute a copy of the changelog.
 # -----------------------------------------------------------------------------
 resource/share/$(package)/changelog: changelog
+	cp $< $@
+
+# -----------------------------------------------------------------------------
+#  Distribute a copy of copyright information.
+# -----------------------------------------------------------------------------
+resource/share/$(package)/copyright: copyright
 	cp $< $@
 
 # -----------------------------------------------------------------------------
 #  Generating PyQT4 resource module.
 # -----------------------------------------------------------------------------
 tmEditor/tmeditor_rc.py: resource/tmEditor.rcc
-	$(pyrcc4) -o $@ $<
+	$(pyrcc) -o $@ $<
 
 # -----------------------------------------------------------------------------
 #
@@ -160,6 +170,31 @@ install: all
 	gzip -9 $(prefix)/share/man/man1/$(package).1
 
 # -----------------------------------------------------------------------------
+#  Create MacOS app
+# -----------------------------------------------------------------------------
+
+app: appbuild
+
+appbuild: rcc $(package).icns
+	$(pyinstaller) macos.spec -y
+
+$(package).iconset:
+	mkdir -p $@
+
+$(package).icns: $(package).iconset
+	rsvg-convert $(app_icon) -o $(package).iconset/icon_512x512@2x.png
+	sips -z 16 16 --out $(package).iconset/icon_16x16.png $(package).iconset/icon_512x512@2x.png
+	sips -z 32 32 --out $(package).iconset/icon_16x16@2x.png $(package).iconset/icon_512x512@2x.png
+	sips -z 32 32 --out $(package).iconset/icon_32x32.png $(package).iconset/icon_512x512@2x.png
+	sips -z 64 64 --out $(package).iconset/icon_32x32@2x.png $(package).iconset/icon_512x512@2x.png
+	sips -z 128 128 --out $(package).iconset/icon_128x128.png $(package).iconset/icon_512x512@2x.png
+	sips -z 256 256 --out $(package).iconset/icon_128x128@2x.png $(package).iconset/icon_512x512@2x.png
+	sips -z 256 256 --out $(package).iconset/icon_256x256.png $(package).iconset/icon_512x512@2x.png
+	sips -z 512 512 --out $(package).iconset/icon_256x256@2x.png $(package).iconset/icon_512x512@2x.png
+	sips -z 512 512 --out $(package).iconset/icon_512x512.png $(package).iconset/icon_512x512@2x.png
+	iconutil -c icns $(package).iconset
+
+# -----------------------------------------------------------------------------
 #  Create a RPM package from scratch.
 # -----------------------------------------------------------------------------
 rpm: rpmbuild
@@ -193,11 +228,11 @@ rpmbuild: all
 	echo "Source:    %{name}-%{version}.tar.gz" >> rpm/$(package).spec
 	echo "Prefix:    /usr" >> rpm/$(package).spec
 	echo "Group:     Development/Tools" >> rpm/$(package).spec
-	echo "Requires:  python >= 2.6" >> rpm/$(package).spec
+	echo "Requires:  python >= 3.6" >> rpm/$(package).spec
 	echo "Requires:  python-argparse" >> rpm/$(package).spec
-	echo "Requires:	 PyQt4 >= 4.6" >> rpm/$(package).spec
+	echo "Requires:	 PyQt5 >= 5.7" >> rpm/$(package).spec
 	echo "Requires:  glibc >= 2.4" >> rpm/$(package).spec
-	echo "Requires:  xerces-c >= 3.0" >> rpm/$(package).spec
+	echo "Requires:  xerces-c >= 3.1" >> rpm/$(package).spec
 	echo "Requires:  gnome-icon-theme" >> rpm/$(package).spec
 	echo >> rpm/$(package).spec
 	echo "%description" >> rpm/$(package).spec
@@ -267,7 +302,7 @@ tarbuild: all
 	echo >> $(tarballdir)/README
 	echo 'Dependecies:' >> $(tarballdir)/README
 	echo >> $(tarballdir)/README
-	echo '$$ sudo yum install python python-argparse PyQt4 xerces-c gnome-icon-theme' >> $(tarballdir)/README
+	echo '$$ sudo yum install python3 PyQt5 xerces-c gnome-icon-theme' >> $(tarballdir)/README
 	echo >> $(tarballdir)/README
 	echo 'Run:' >> $(tarballdir)/README
 	echo >> $(tarballdir)/README
@@ -317,6 +352,10 @@ clean:
 	rm -rf tmEditor/tmeditor_rc.py
 	rm -rf `find tmEditor -name '*.pyc'`
 	rm -rf `find tmEditor -name '*.pyo'`
+	rm -rf build
+	rm -rf $(app_icon).png  # remove converted bitmap
+	rm -rf $(package).iconset
+	rm -rf $(pacakge).icns
 
 rpmclean:
 	rm -rf rpm
@@ -327,4 +366,7 @@ debclean:
 tarclean:
 	rm -rf tarball
 
-distclean: clean rpmclean debclean
+appclean:
+	rm -rf dist build
+
+distclean: clean rpmclean debclean tarclean appclean

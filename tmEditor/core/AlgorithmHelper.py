@@ -10,7 +10,11 @@ import tmGrammar
 import re
 
 def join(items, separator=""):
-    return separator.join([str(item) for item in items])
+    """Joins string representation of list items.
+    >>> join(["foo", "bar", 42], "-")
+    'foo-bar-42'
+    """
+    return separator.join([format(item) for item in items])
 
 def encode_comparison_operator(value):
     """Returns encoded comparison operator or an empty string on default value."""
@@ -19,7 +23,7 @@ def encode_comparison_operator(value):
 
 def encode_threshold(value, separator='p'):
     """Returns encoded threshold value, omits comma if decimals are zero."""
-    integer, decimal = re.match(r'(\d+)(?:.(\d+))', str(float(value))).groups()
+    integer, decimal = re.match(r'(\d+)(?:.(\d+))', format(float(value))).groups()
     if int(decimal):
         return separator.join([integer, decimal])
     return integer
@@ -68,7 +72,7 @@ class ObjectHelper(AtomicHelper):
 
 class ExtSignalHelper(AtomicHelper):
 
-    def __init__(self, name ,bx_offset=0):
+    def __init__(self, name, bx_offset=0):
         self.name = name
         self.bx_offset = bx_offset
         if not name.startswith("EXT_"):
@@ -134,4 +138,4 @@ if __name__ == '__main__':
     f.addObject(tmGrammar.MU, 10.5).addCut('MU-QLTY_HQ')
     f.addObject(tmGrammar.JET, 10.5).addCut('JET-ETA_2p4')
     f.addCut('MASS_Z')
-    print expr
+    print(expr)

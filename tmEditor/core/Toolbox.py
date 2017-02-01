@@ -13,16 +13,39 @@ import tmGrammar
 
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+try:
+    # Python 2
+    from urllib2 import urlopen
+    from urllib2 import URLError, HTTPError
+except ImportError:
+    # Python 3
+    from urllib.request import urlopen
+    from urllib.error import URLError, HTTPError
 
 import re
 import logging
 import sys, os
+import json
+import platform
+import ssl
 
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Low level helper functions
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
+def is_frozen():
+    """Defined by PyInstaller, for bundled applications."""
+    return getattr(sys, 'frozen', False)
+
+def resource_path(relative):
+    """Determine resource paths, when packed with PyInstaller"""
+    bundle_dir = os.path.abspath(".")
+    if is_frozen():
+        bundle_dir = sys._MEIPASS
+    return os.path.join(
+        bundle_dir,
+        relative
+    )
 
 def getenv(name):
     """Get environment variable. Raises a RuntimeError exception if variable not set."""
@@ -32,10 +55,14 @@ def getenv(name):
     return value
 
 def getRootDir():
+    if is_frozen():
+        return resource_path(".")
     return getenv('UTM_ROOT')
 
 def getXsdDir():
     """Returns path for XSD files."""
+    if is_frozen():
+      return resource_path("xsd")
     try:
         return getenv('UTM_XSD_DIR')
     except RuntimeError:
@@ -49,7 +76,7 @@ def query(data, **kwargs):
     """
     def lookup(entry, **kwargs):
         return sum([entry[key] == value for key, value in kwargs.items()])
-    return filter(lambda entry: lookup(entry, **kwargs), data)
+    return list(filter(lambda entry: lookup(entry, **kwargs), data))
 
 def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
     """Natural string sorting.
@@ -57,7 +84,7 @@ def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
     ['1', '2', '3b', '10', '100']
     """
     return [int(text) if text.isdigit() else text.lower()
-            for text in re.split(_nsre, str(s))]
+            for text in re.split(_nsre, format(s))]
 
 def safe_str(s, attrname):
     """Returns safe version of string. The function strips:
@@ -70,12 +97,12 @@ def safe_str(s, attrname):
         logging.warning("normalized %s: '%s' to '%s'", attrname, s, t)
     return t
 
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  String formatting functions
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def fSeparate(text, separator=' '):
-    return ''.join([str(token) for token in (separator, text, separator)])
+    return ''.join([token for token in (separator, text, separator)])
 
 def fAlgorithm(expression):
     return AlgorithmFormatter.normalize(expression)
@@ -93,11 +120,11 @@ def fHex(value):
         return ''
 
 def fThreshold(value):
-    value = str(value).replace('p', '.') # Replace 'p' by comma.
+    value = format(value).replace('p', '.') # Replace 'p' by comma.
     return "{0:.1f} GeV".format(float(value))
 
 def fCounts(value):
-    value = str(value).replace('p', '.') # Replace 'p' by comma.
+    value = format(value).replace('p', '.') # Replace 'p' by comma.
     return "{0:.0f} counts".format(float(value))
 
 def fComparison(value):
@@ -109,7 +136,7 @@ def fComparison(value):
         tmGrammar.LE: "<=",
         tmGrammar.LT: "<",
         tmGrammar.NE: "!=",
-    }[str(value)]
+    }[value]
 
 def fBxOffset(value):
     """Retruns formatted BX offset."""
@@ -121,37 +148,6 @@ def sizeof_format(num, suffix='B'):
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
-
-# -----------------------------------------------------------------------------
-#  Icon factories
-# -----------------------------------------------------------------------------
-
-def createIcon(name):
-    """Factory function, creates a multi resolution gnome theme icon."""
-    if hasattr(QtGui.QIcon, "fromTheme"):
-        icon = QtGui.QIcon.fromTheme(name)
-        if not icon.isNull():
-            return icon
-    icon = QtGui.QIcon()
-    for root, dirs, files in os.walk("/usr/share/icons/gnome"):
-        for file in files:
-            if name == os.path.splitext(os.path.basename(file))[0]:
-                icon.addFile(os.path.join(root, file))
-    if not len(icon.availableSizes()):
-        filename = ":/icons/{name}.svg".format(**locals())
-        if QtCore.QFile.exists(filename):
-            icon.addFile(filename)
-        filename = ":/icons/16/{name}.svg".format(**locals())
-        if QtCore.QFile.exists(filename):
-            icon.addPixmap(QtGui.QPixmap(filename))
-        filename = ":/icons/24/{name}.svg".format(**locals())
-        if QtCore.QFile.exists(filename):
-            icon.addPixmap(QtGui.QPixmap(filename))
-    return icon
-
-def miniIcon(name, size=13):
-    """Returns mini icon to be used for items in list and tree views."""
-    return QtGui.QIcon(QtGui.QIcon(":/icons/{name}.svg".format(name=name)).pixmap(size, size))
 
 # -----------------------------------------------------------------------------
 #  Cut settings class
@@ -180,3 +176,63 @@ class CutSpecification(object):
     def data_sorted(self):
         """Returns sorted list of data dict values."""
         return [self.data[key] for key in sorted(self.data.keys())]
+
+    @staticmethod
+    def join(object, type, separator='-'):
+        """Join object and type tokens to build a combined cut name."""
+        return separator.join((object, type))
+
+# -----------------------------------------------------------------------------
+#  Remote file downloader
+# -----------------------------------------------------------------------------
+
+class DownloadHelper(object):
+    """Simple download helper class, utilized to fetch remote XML files."""
+
+    def __init__(self):
+        self.url = None
+        self.contentLength = 0
+        self.charset = None
+        self.receivedSize = 0
+        self.blockSize = 1024 * 10
+
+    def urlopen(self, url, **kwargs):
+        # Workaround for MacOS SSL verification bug (affects python from homebrew and macport).
+        if platform.system() == 'Darwin':
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode =ssl.CERT_NONE
+            kwargs['context'] = ctx
+        # Open remote URL
+        self.url = urlopen(url, **kwargs)
+        # Get byte size of remote content, either integer string or empty if not available.
+        self.contentLength = int(self.url.info().get('Content-Length', 0)) or 0
+        self.charset = self.url.info().get('charset', 'utf-8')
+
+    def handleSSLVerificationError(self, e):
+        """Workaround for MacOS SSL verification bug (affects python from homebrew and macport).
+        Returns a SSL context on OS X and MacOS in case of an SSL verification error.
+        """
+        if "[SSL: CERTIFICATE_VERIFY_FAILED]" in e.reason:
+            if platform.system() == 'Darwin':
+                logging.warning("SSL verification failed for url: %s", url)
+                logging.warning("This is a known bug on OS X and MacOS.")
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode =ssl.CERT_NONE
+                return ctx
+        raise
+
+    def get(self, fp, callback=None):
+        """Use callback to update status while doenloading or return False to stop.
+        """
+        self.receivedSize = 0
+        while True:
+            buffer = self.url.read(self.blockSize)
+            if not buffer:
+                break
+            self.receivedSize += len(buffer)
+            fp.write(buffer) ## TODO /breaks/ .decode(self.charset))
+            if callback:
+                if not callback():
+                    return

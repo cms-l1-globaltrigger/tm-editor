@@ -6,13 +6,26 @@
 # Last changed date : $Date: $
 #
 
-from tmEditor.core.Toolbox import fCut
-from .AbstractTableModel import AbstractTableModel
+import tmGrammar
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.core.Toolbox import fCut
+from tmEditor.core.Algorithm import calculateDRRange
+from tmEditor.core.Algorithm import calculateInvMassRange
+
+from .AbstractTableModel import AbstractTableModel
+# from tmEditor.gui.CommonWidgets import miniIcon
+
+from tmEditor.PyQt5Proxy import QtCore
 
 __all__ = ['CutsModel', ]
+
+def maximumCallback(item):
+    """Custom infinite value getter."""
+    if item.type == tmGrammar.MASS:
+        minimum, maximum = calculateInvMassRange()
+        if item.maximum >= maximum:
+            return float('inf')
+    return item.maximum
 
 # ------------------------------------------------------------------------------
 #  Cuts model class
@@ -28,7 +41,7 @@ class CutsModel(AbstractTableModel):
         self.addColumnSpec("Type", lambda item: item.type)
         self.addColumnSpec("Object", lambda item: item.object)
         self.addColumnSpec("Minimum", lambda item: item.minimum, fCut, self.AlignRight)
-        self.addColumnSpec("Maximum", lambda item: item.maximum, fCut, self.AlignRight)
+        self.addColumnSpec("Maximum", maximumCallback, fCut, self.AlignRight)
         self.addColumnSpec("Data", lambda item: item.data)
 
     # def data(self, index, role):

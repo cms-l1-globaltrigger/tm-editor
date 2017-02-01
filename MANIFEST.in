@@ -1,8 +1,11 @@
 include Makefile
+include README.md
 include resource/*.qrc
 include resource/share/applications/*.desktop
 include resource/share/icons/hicolor/scalable/apps/*.svg
 include resource/share/man/man1/*.1
+include resource/share/tm-editor/icons/13x13/*.svg
 include resource/share/tm-editor/icons/16x16/*.svg
 include resource/share/tm-editor/icons/24x24/*.svg
+include resource/share/tm-editor/icons/48x48/*.svg
 include scripts/tm-editor

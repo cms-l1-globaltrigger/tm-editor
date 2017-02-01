@@ -22,11 +22,11 @@ the module with optional flags:
 __all__ = ["VERSION", "VERSION_MAJOR", "VERSION_MINOR", "VERSION_PATCH", "PKG_RELEASE"]
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 4
+VERSION_MINOR = 5
 VERSION_PATCH = 0
 PKG_RELEASE = 1
 
-VERSION = ".".join([str(item) for item in VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH])
+VERSION = "{0}.{1}.{2}".format(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH)
 
 if __name__ == "__main__":
     import sys, argparse
@@ -39,13 +39,15 @@ if __name__ == "__main__":
     group.add_argument("-r", "--release", action="store_true", help="show package release version")
     args = parser.parse_args()
     if args.major:
-        print VERSION_MAJOR
+        sys.stdout.write(format(VERSION_MAJOR))
     elif args.minor:
-        print VERSION_MINOR
+        sys.stdout.write(format(VERSION_MINOR))
     elif args.patch:
-        print VERSION_PATCH
+        sys.stdout.write(format(VERSION_PATCH))
     elif args.release:
-        print PKG_RELEASE
+        sys.stdout.write(format(PKG_RELEASE))
     else:
-        print VERSION
+        sys.stdout.write(format(VERSION))
+    sys.stdout.write("\n")
+    sys.stdout.flush()
     sys.exit(0)

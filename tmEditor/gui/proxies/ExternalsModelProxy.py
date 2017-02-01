@@ -8,8 +8,7 @@
 
 from tmEditor.core.Menu import toExternal
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
 
 __all__ = ['ExternalsModelProxy', ]
 
@@ -18,7 +17,7 @@ __all__ = ['ExternalsModelProxy', ]
 #  Externals model proxy
 # -----------------------------------------------------------------------------
 
-class ExternalsModelProxy(QtGui.QSortFilterProxyModel):
+class ExternalsModelProxy(QtCore.QSortFilterProxyModel):
     """Custom externals sort/filter proxy."""
 
     NameColumn = 0

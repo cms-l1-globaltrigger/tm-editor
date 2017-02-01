@@ -3,8 +3,6 @@
 # Author: Bernhard Arnold <bernhard.arnold@cern.ch>
 #
 
-import unittest
-
 import tmGrammar
 import tmTable
 
@@ -17,7 +15,9 @@ from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.Algorithm import functionObjects, functionCuts, functionObjectsCuts
 from tmEditor.core.Algorithm import objectCuts
 
+import unittest
 import tempfile
+import logging
 
 class MenuTests(unittest.TestCase):
 
@@ -121,10 +121,9 @@ class MenuTests(unittest.TestCase):
     #     open(filename).close()
     #     XmlEncoder.dump(menu, filename)
     #     menu = XmlDecoder.load(filename)
-        print
-        print "algorithms:", menu.algorithms
-        print "cuts:", menu.cuts
-        print "objects:", menu.objects
+        logging.info("algorithms: %s", menu.algorithms)
+        logging.info("cuts: %s", menu.cuts)
+        logging.info("objects: %s", menu.objects)
 
 if __name__ == '__main__':
     unittest.main()

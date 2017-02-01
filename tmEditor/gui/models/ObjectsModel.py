@@ -8,11 +8,12 @@
 
 import tmGrammar
 
-from tmEditor.core.Toolbox import fComparison, fThreshold, fBxOffset, miniIcon
+from tmEditor.core.Toolbox import fComparison, fThreshold, fBxOffset
+from tmEditor.gui.CommonWidgets import miniIcon
 from .AbstractTableModel import AbstractTableModel
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
+from tmEditor.PyQt5Proxy import QtGui
 
 __all__ = ['ObjectsModel', ]
 

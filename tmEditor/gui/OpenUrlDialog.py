@@ -17,10 +17,9 @@ Example usage:
 >>> print dialog.url()
 """
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
-
-import urllib2
+from tmEditor.PyQt5Proxy import QtCore
+from tmEditor.PyQt5Proxy import QtWidgets
+from tmEditor.PyQt5Proxy import pyqt4_toPyObject, pyqt4_str
 
 __all__ = ['OpenUrlDialog', ]
 
@@ -28,7 +27,7 @@ __all__ = ['OpenUrlDialog', ]
 #  Open URL dialog class
 # -----------------------------------------------------------------------------
 
-class OpenUrlDialog(QtGui.QDialog):
+class OpenUrlDialog(QtWidgets.QDialog):
     """Dialog providing an URL input field."""
 
     def __init__(self, parent = None):
@@ -37,24 +36,24 @@ class OpenUrlDialog(QtGui.QDialog):
         self.setWindowTitle(self.tr("Open URL"))
         self.setFixedWidth(500)
         # URL input
-        self.urlLabel = QtGui.QLabel(self.tr("Please enter a network URL:"), self)
-        self.urlComboBox = QtGui.QComboBox(self)
+        self.urlLabel = QtWidgets.QLabel(self.tr("Please enter a network URL:"), self)
+        self.urlComboBox = QtWidgets.QComboBox(self)
         self.urlComboBox.addItem("")
         self.urlComboBox.setEditable(True)
         self.urlComboBox.editTextChanged.connect(self.onUrlEdit)
-        self.hintLabel = QtGui.QLabel(self.tr("""
+        self.hintLabel = QtWidgets.QLabel(self.tr("""
             <p style="color: #888; margin-left:5px;">
             http://www.example.com/sample.xml<br/>
             ftp://example.org/sample.xml
             </p>"""), self)
         # Button box
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Open | QtGui.QDialogButtonBox.Cancel)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Open | QtWidgets.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
-        self.openButton = buttonBox.button(QtGui.QDialogButtonBox.Open)
+        self.openButton = buttonBox.button(QtWidgets.QDialogButtonBox.Open)
         self.openButton.setEnabled(False)
         # Create layout.
-        gridLayout = QtGui.QVBoxLayout()
+        gridLayout = QtWidgets.QVBoxLayout()
         gridLayout.addWidget(self.urlLabel)
         gridLayout.addWidget(self.urlComboBox)
         gridLayout.addWidget(self.hintLabel)
@@ -66,16 +65,16 @@ class OpenUrlDialog(QtGui.QDialog):
 
     def url(self):
         """Returns current entered URL from combo box."""
-        return str(self.urlComboBox.currentText())
+        return pyqt4_str(self.urlComboBox.currentText())
 
     def loadRecentUrls(self):
         """Load recent URLs from application settings."""
-        urls = QtCore.QSettings().value("recent/urls").toStringList()
-        self.urlComboBox.addItems(urls)
+        urls = pyqt4_toPyObject(QtCore.QSettings().value("recent/urls"))
+        self.urlComboBox.addItems(urls or [])
 
     def storeRecentUrls(self):
         """Store recent URLs including new entries in application settings."""
-        urls = QtCore.QStringList()
+        urls = []
         urls.append(self.urlComboBox.currentText())
         for i in range(self.urlComboBox.count()):
             url = self.urlComboBox.itemText(i)

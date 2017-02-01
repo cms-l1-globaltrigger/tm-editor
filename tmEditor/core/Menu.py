@@ -12,7 +12,7 @@
 
 import tmGrammar
 
-import Toolbox
+from tmEditor.core import Toolbox
 from tmEditor.core.Settings import MaxAlgorithms
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 from tmEditor.core.Algorithm import toObject, toExternal
@@ -89,35 +89,35 @@ class Menu(object):
 
     def algorithmByName(self, name):
         """Returns algorithm item by its *name* or None if no such algorithm exists."""
-        return (filter(lambda item: item.name == name, self.algorithms) or [None])[0]
+        return (list(filter(lambda item: item.name == name, self.algorithms)) or [None])[0]
 
     def algorithmByIndex(self, index):
         """Returns algorithm item by its *index* or None if no such algorithm exists."""
-        return (filter(lambda item: int(item.index) == int(index), self.algorithms) or [None])[0]
+        return (list(filter(lambda item: int(item.index) == int(index), self.algorithms)) or [None])[0]
 
     def algorithmsByObject(self, object):
         """Returns list of algorithms containing *object*."""
-        return filter(lambda algorithm: object.name in algorithm.objects(), self.algorithms)
+        return list(filter(lambda algorithm: object.name in algorithm.objects(), self.algorithms))
 
     def algorithmsByExternal(self, external):
         """Returns list of algorithms containing *external* signal."""
-        return filter(lambda algorithm: external.basename in algorithm.externals(), self.algorithms)
+        return list(filter(lambda algorithm: external.basename in algorithm.externals(), self.algorithms))
 
     def objectByName(self, name):
         """Returns object requirement item by its *name* or None if no such object requirement exists."""
-        return (filter(lambda item: item.name == name, self.objects) or [None])[0]
+        return (list(filter(lambda item: item.name == name, self.objects)) or [None])[0]
 
     def cutByName(self, name):
         """Returns cut item by its *name* or None if no such cut exists."""
-        return (filter(lambda item: item.name == name, self.cuts) or [None])[0]
+        return (list(filter(lambda item: item.name == name, self.cuts)) or [None])[0]
 
     def externalByName(self, name):
         """Returns external signal item by its *name* or None if no such external signal exists."""
-        return (filter(lambda item: item.name == name, self.externals) or [None])[0]
+        return (list(filter(lambda item: item.name == name, self.externals)) or [None])[0]
 
     def scaleMeta(self, object, scaleType):
         """Returns scale information for *object* by *scaleType*."""
-        return (filter(lambda item: item[kObject]==object.type and item[kType]==scaleType, self.scales.scales) or [None])[0]
+        return (list(filter(lambda item: item[kObject]==object.type and item[kType]==scaleType, self.scales.scales)) or [None])[0]
 
     def scaleBins(self, object, scaleType):
         """Returns bins for *object* by *scaleType*."""
@@ -197,8 +197,8 @@ class MenuInfo(object):
 
     def regenerate(self):
         """Regenerate menu UUID and update grammar version."""
-        self.uuid_menu = str(uuid.uuid4())
-        self.grammar_version = str(GrammarVersion)
+        self.uuid_menu = format(uuid.uuid4())
+        self.grammar_version = format(GrammarVersion)
 
     def validate(self):
         """Run consistency checks."""

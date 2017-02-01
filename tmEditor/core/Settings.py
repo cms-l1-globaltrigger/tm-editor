@@ -11,16 +11,28 @@ __all__ = ['MaxAlgorithms', 'CutSettings', ]
 MaxAlgorithms = 512
 """Maximum number of supported algorithms."""
 
+VersionUrl = "https://svnweb.cern.ch/trac/cactus/export/HEAD/trunk/cactusprojects/ugt/menu/version.json"
+"""Server side version and scale set information URL."""
+
+DefaultScaleSetUri = "scales/L1Menu_{scale_set}.xml"
+"""Default URI format string for server side scale set XML files."""
+
+DefaultExtSignalSetUri = "cabling/L1Menu_{ext_signal_set}.xml"
+"""Default URI format string for server side external signal set XML files."""
+
+DownloadSite = "http://globaltrigger.hephy.at/upgrade/tme/downloads"
+"""Web site providing download information."""
+
 CutSettings = (
     CutSpecification(
-        name="MU-ETA",
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.ETA),
         object=tmGrammar.MU,
         type=tmGrammar.ETA,
         title="Muon eta",
         description="Restricts valid eta range for muon object requirement."
     ),
     CutSpecification(
-        name="MU-PHI",
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.PHI),
         object=tmGrammar.MU,
         type=tmGrammar.PHI,
         range_unit="rad",
@@ -28,7 +40,7 @@ CutSettings = (
         description="Restricts valid phi range for muon object requirement."
     ),
     CutSpecification(
-        name="MU-QLTY",
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.QLTY),
         object=tmGrammar.MU,
         type=tmGrammar.QLTY,
         title="Muon quality",
@@ -53,7 +65,7 @@ CutSettings = (
       }
     ),
     CutSpecification(
-        name="MU-ISO",
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.ISO),
         object=tmGrammar.MU,
         type=tmGrammar.ISO,
         title="Muon isolation",
@@ -65,7 +77,7 @@ CutSettings = (
       }
     ),
     CutSpecification(
-        name="MU-CHG",
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.CHG),
         object=tmGrammar.MU,
         type=tmGrammar.CHG,
         title="Muon charge",
@@ -77,13 +89,13 @@ CutSettings = (
       }
     ),
     CutSpecification(
-        name="EG-ETA",
+        name=CutSpecification.join(tmGrammar.EG, tmGrammar.ETA),
         object=tmGrammar.EG,
         type=tmGrammar.ETA,
         title="Electron/gamma eta"
     ),
     CutSpecification(
-        name="EG-PHI",
+        name=CutSpecification.join(tmGrammar.EG, tmGrammar.PHI),
         object=tmGrammar.EG,
         type=tmGrammar.PHI,
         range_unit="rad",
@@ -91,7 +103,7 @@ CutSettings = (
     ),
     CutSpecification(
         enabled=False,
-        name="EG-QLTY",
+        name=CutSpecification.join(tmGrammar.EG, tmGrammar.QLTY),
         object=tmGrammar.EG,
         type=tmGrammar.QLTY,
         title="Electron/gamma quality",
@@ -115,7 +127,7 @@ CutSettings = (
       }
     ),
     CutSpecification(
-        name="EG-ISO",
+        name=CutSpecification.join(tmGrammar.EG, tmGrammar.ISO),
         object=tmGrammar.EG,
         type=tmGrammar.ISO,
         title="Electron/gamma isolation",
@@ -127,13 +139,13 @@ CutSettings = (
       }
     ),
     CutSpecification(
-        name="JET-ETA",
+        name=CutSpecification.join(tmGrammar.JET, tmGrammar.ETA),
         object=tmGrammar.JET,
         type=tmGrammar.ETA,
         title="Jet eta"
     ),
     CutSpecification(
-        name="JET-PHI",
+        name=CutSpecification.join(tmGrammar.JET, tmGrammar.PHI),
         object=tmGrammar.JET,
         type=tmGrammar.PHI,
         range_unit="rad",
@@ -141,7 +153,7 @@ CutSettings = (
     ),
     CutSpecification(
         enabled=False,
-        name="JET-QLTY",
+        name=CutSpecification.join(tmGrammar.JET, tmGrammar.QLTY),
         object=tmGrammar.JET,
         type=tmGrammar.QLTY,
         title="Jet quality",
@@ -165,13 +177,13 @@ CutSettings = (
       }
     ),
     CutSpecification(
-        name="TAU-ETA",
+        name=CutSpecification.join(tmGrammar.TAU, tmGrammar.ETA),
         object=tmGrammar.TAU,
         type=tmGrammar.ETA,
         title="Tau eta"
     ),
     CutSpecification(
-        name="TAU-PHI",
+        name=CutSpecification.join(tmGrammar.TAU, tmGrammar.PHI),
         object=tmGrammar.TAU,
         type=tmGrammar.PHI,
         range_unit="rad",
@@ -179,7 +191,7 @@ CutSettings = (
     ),
     CutSpecification(
         enabled=False,
-        name="TAU-QLTY",
+        name=CutSpecification.join(tmGrammar.TAU, tmGrammar.QLTY),
         object=tmGrammar.TAU,
         type=tmGrammar.QLTY,
         title="Tau quality",
@@ -203,7 +215,7 @@ CutSettings = (
       }
     ),
     CutSpecification(
-        name="TAU-ISO",
+        name=CutSpecification.join(tmGrammar.TAU, tmGrammar.ISO),
         object=tmGrammar.TAU,
         type=tmGrammar.ISO,
         title="Tau isolation",
@@ -215,26 +227,34 @@ CutSettings = (
       }
     ),
     CutSpecification(
-        name="ETM-PHI",
+        name=CutSpecification.join(tmGrammar.ETM, tmGrammar.PHI),
         object=tmGrammar.ETM,
         type=tmGrammar.PHI,
         range_unit="rad",
         title="Missing energy phi"
     ),
     CutSpecification(
-        name="HTM-PHI",
+        name=CutSpecification.join(tmGrammar.ETMHF, tmGrammar.PHI),
+        object=tmGrammar.ETMHF,
+        type=tmGrammar.PHI,
+        range_unit="rad",
+        title="Missing energy phi"
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.HTM, tmGrammar.PHI),
         object=tmGrammar.HTM,
         type=tmGrammar.PHI,
         range_unit="rad",
         title="Missing energy phi"
     ),
     CutSpecification(
-        name="CHGCOR",
+        name=tmGrammar.CHGCOR,
         object=tmGrammar.comb,
         type=tmGrammar.CHGCOR,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
         title="Charge correlation",
-        description="Applies charge correlation restriction to combination of two objects.<br/><br/><strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre>",
+        description="Applies charge correlation restriction to combination of two objects.<br/><br/>" \
+                    "<strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre>",
         data_exclusive=True,
         data={
           "ls": "like sign",
@@ -242,17 +262,18 @@ CutSettings = (
       }
     ),
     CutSpecification(
-        name="DETA",
+        name=tmGrammar.DETA,
         object=tmGrammar.dist,
         type=tmGrammar.DETA,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
         range_precision=3,
         range_step=0.001,
         title="Delta eta",
-        description="Applies delta eta restriction to combination of two objects.<br/><br/><strong>Example:</strong> <pre>dist{MU20, MU20}[DETA_SAMPLE]</pre>"
+        description="Applies delta eta restriction to combination of two objects.<br/><br/>" \
+                    "<strong>Example:</strong> <pre>dist{MU20, MU20}[DETA_SAMPLE]</pre>"
     ),
     CutSpecification(
-        name="DPHI",
+        name=tmGrammar.DPHI,
         object=tmGrammar.dist,
         type=tmGrammar.DPHI,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
@@ -260,20 +281,23 @@ CutSettings = (
         range_step=0.001,
         range_unit="rad",
         title="Delta phi",
-        description="Applies delta phi restriction to combination of two objects.<br/><br/><strong>Example:</strong> <pre>dist{MU20, MU20}[DPHI_SAMPLE]</pre>"
+        description="Applies delta phi restriction to combination of two objects.<br/><br/>" \
+                    "<strong>Example:</strong> <pre>dist{MU20, MU20}[DPHI_SAMPLE]</pre>"
     ),
     CutSpecification(
-        name="DR",
+        name=tmGrammar.DR,
         object=tmGrammar.dist,
         type=tmGrammar.DR,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
         range_precision=1,
         range_step=0.1,
         title="Delta-R",
-        description="Applies delta-R restriction to combination of two objects.<br/><br/>&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span><br/><br/><strong>Example:</strong> <pre>dist{MU20, MU20}[DR_SAMPLE]</pre>"
+        description="Applies delta-R restriction to combination of two objects.<br/><br/>" \
+                    "&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span><br/><br/>" \
+                    "<strong>Example:</strong> <pre>dist{MU20, MU20}[DR_SAMPLE]</pre>"
     ),
     CutSpecification(
-        name="MASS",
+        name=tmGrammar.MASS,
         object=tmGrammar.mass,
         type=tmGrammar.MASS,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
@@ -281,6 +305,8 @@ CutSettings = (
         range_step=0.2,
         range_unit="GeV",
         title="Invariant mass",
-        description="Applies invariant mass restriction to combination of two objects.<br/><br/>M = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/><strong>Example:</strong> <pre>mass{MU20, MU20}[MASS_Z]</pre>"
+        description="Applies invariant mass restriction to combination of two objects.<br/><br/>" \
+                    "M = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "<strong>Example:</strong> <pre>mass{MU20, MU20}[MASS_Z]</pre>"
     ),
 )

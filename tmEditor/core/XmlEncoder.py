@@ -9,7 +9,7 @@
 import tmTable
 import tmGrammar
 
-import Toolbox
+from tmEditor.core import Toolbox
 
 from tmEditor.core.Toolbox import safe_str
 from tmEditor.core.TableHelper import TableHelper
@@ -64,6 +64,12 @@ DEFAULT_UUID = '00000000-0000-0000-0000-000000000000'
 
 FORMAT_FLOAT = '+23.16E'
 """Floating point string format."""
+
+FORMAT_INDEX = 'd'
+"""Algorithm index format."""
+
+FORMAT_BX_OFFSET = '+d'
+"""BX offset format, signed decimal."""
 
 
 # -----------------------------------------------------------------------------
@@ -163,9 +169,9 @@ class XmlEncoderQueue(Queue):
         for algorithm in self.menu.algorithms:
             # Create algorithm row
             row = tmTable.Row()
-            row[kIndex] = str(algorithm.index)
+            row[kIndex] = format(algorithm.index, FORMAT_INDEX)
             row[kModuleId] = "0"
-            row[kModuleIndex] = str(algorithm.index)
+            row[kModuleIndex] = format(algorithm.index, FORMAT_INDEX)
             row[kName] = safe_str(algorithm.name, "algorithm name")
             row[kExpression] = AlgorithmFormatter.compress(algorithm.expression)
             row[kComment] = algorithm.comment
@@ -196,7 +202,7 @@ class XmlEncoderQueue(Queue):
                 row[kType] = object_.type
                 row[kThreshold] = format(object_.decodeThreshold(), FORMAT_FLOAT)
                 row[kComparisonOperator] = object_.comparison_operator
-                row[kBxOffset] = str(object_.bx_offset)
+                row[kBxOffset] = format(object_.bx_offset, FORMAT_BX_OFFSET)
                 # Validate object row
                 if not tmTable.isObjectRequirement(row):
                     message = "invalid object requirement: {0}".format(name)
@@ -221,7 +227,7 @@ class XmlEncoderQueue(Queue):
                 # Create external row
                 row = tmTable.Row()
                 row[kName] = safe_str(external.name, "external_name")
-                row[kBxOffset] = str(external.bx_offset)
+                row[kBxOffset] = format(external.bx_offset, FORMAT_BX_OFFSET)
                 # Validate external row
                 if not tmTable.isExternalRequirement(row):
                     message = "invalid external signal: {0}".format(name)
@@ -238,6 +244,7 @@ class XmlEncoderQueue(Queue):
             if algorithm.name not in self.tables.menu.cuts.keys():
                 self.tables.menu.cuts[algorithm.name] = []
             for name in algorithm.cuts():
+                logging.debug("processing cut: %s", name)
                 cut = self.menu.cutByName(name)
                 if not cut:
                     message = "missing cut: {0}".format(name)

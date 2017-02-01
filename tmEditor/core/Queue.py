@@ -26,7 +26,7 @@ processing data ... 33 %
 saving data ... 66 %
 """
 
-class Callback:
+class Callback(object):
 
     def __init__(self, callback, message=None):
         self.callback = callback
@@ -51,13 +51,18 @@ class Queue(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
+        """Python3 version."""
         if self.__ptr >= len(self.__callbacks):
             raise StopIteration()
         callback = self.__callbacks[self.__ptr]
         self.__message = callback.message
         self.__ptr += 1
         return callback.callback
+
+    def next(self):
+        """Python2 fallback."""
+        return self.__next__()
 
     def exec_(self):
         for callback in self:

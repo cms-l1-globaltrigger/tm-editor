@@ -25,10 +25,11 @@ from tmEditor.gui.models import AlgorithmsModel
 from tmEditor.gui.Document import TableView
 
 # Common widgets
-from tmEditor.gui.CommonWidgets import IconLabel
+from tmEditor.gui.CommonWidgets import IconLabel, createIcon
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
+from tmEditor.PyQt5Proxy import QtWidgets
+from tmEditor.PyQt5Proxy import pyqt4_str
 
 import logging
 
@@ -44,7 +45,7 @@ kName = 'name'
 #  Import dialog class
 # -----------------------------------------------------------------------------
 
-class ImportDialog(QtGui.QDialog):
+class ImportDialog(QtWidgets.QDialog):
     """Dialog providing importing of algorithms from another XML file."""
 
     def __init__(self, filename, menu, parent = None):
@@ -54,29 +55,29 @@ class ImportDialog(QtGui.QDialog):
         self.cuts = []
         self.baseMenu = menu
 
-        dialog = QtGui.QProgressDialog(self)
+        dialog = QtWidgets.QProgressDialog(self)
         dialog.setWindowTitle(self.tr("Loading..."))
         dialog.setCancelButton(None)
         dialog.setWindowModality(QtCore.Qt.WindowModal)
         dialog.resize(260, dialog.height())
         dialog.show()
-        QtGui.QApplication.processEvents()
-        queue = XmlDecoder.XmlDecoderQueue(filename)
+        QtWidgets.QApplication.processEvents()
+        queue = XmlDecoder.XmlDecoderQueue(pyqt4_str(filename))
         for callback in queue:
-            dialog.setLabelText(self.tr("%1...").arg(queue.message().capitalize()))
+            dialog.setLabelText(pyqt4_str(self.tr("{0}...")).format(queue.message().capitalize()))
             logging.debug("processing: %s...", queue.message())
-            QtGui.QApplication.sendPostedEvents(dialog, 0)
-            QtGui.QApplication.processEvents()
+            QtWidgets.QApplication.sendPostedEvents(dialog, 0)
+            QtWidgets.QApplication.processEvents()
             callback()
             dialog.setValue(queue.progress())
-            QtGui.QApplication.processEvents()
+            QtWidgets.QApplication.processEvents()
         self.menu = queue.menu
         dialog.close()
 
         if self.menu.scales.scaleSet[kName] != self.baseMenu.scales.scaleSet[kName]:
-            QtGui.QMessageBox.warning(self,
+            QtWidgets.QMessageBox.warning(self,
                 self.tr("Different scale sets"),
-                QtCore.QString("Unable to import from <em>%1</em> as scale sets do not match.").arg(filename),
+                pyqt4_str(self.tr("Unable to import from <em>{0}</em> as scale sets do not match.")).format(filename),
             )
         # Important: sort out all duplicate algorithms !
         queue = []
@@ -92,7 +93,7 @@ class ImportDialog(QtGui.QDialog):
         self.setMinimumWidth(500)
 
         model = AlgorithmsModel(self.menu, self)
-        proxyModel = QtGui.QSortFilterProxyModel(self)
+        proxyModel = QtCore.QSortFilterProxyModel(self)
         proxyModel.setSourceModel(model)
         self.tableView = TableView(self)
         self.tableView.setObjectName("importDialogTabelView")
@@ -100,13 +101,13 @@ class ImportDialog(QtGui.QDialog):
         self.tableView.setModel(proxyModel)
         self.tableView.sortByColumn(0, QtCore.Qt.AscendingOrder)
         # Button box
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.importSelected)
         buttonBox.rejected.connect(self.reject)
         # Create layout.
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         layout.addWidget(self.tableView)
-        layout.addWidget(IconLabel(Toolbox.createIcon("info"), self.tr("Select available algorithms to import."), self))
+        layout.addWidget(IconLabel(createIcon("info"), self.tr("Select available algorithms to import."), self))
         layout.addWidget(buttonBox)
         self.setLayout(layout)
 

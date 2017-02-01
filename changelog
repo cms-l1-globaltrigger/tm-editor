@@ -1,3 +1,17 @@
+tm-editor (0.5.0-1) extra; urgency=medium
+
+  * Ported application to Python3 and PyQt5.
+  * Added fallback modes for Python2 and/or PyQt4.
+  * Added support for ETMHF-PHI cuts.
+  * Creating new cuts also from object and function editor dialogs.
+  * Added toolbar actions for editing expressions in algorithm editor.
+  * Improved algorithm expression formatting.
+  * Improved expression error messages for function editor dialog.
+  * Updated icon sets, added fallback icons for MacOS.
+  * Various visual improvements.
+
+-- Bernhard Arnold <bernhard.arnold@cern.ch>  Fri, 13 Jan 2017 12:08:29 +0100
+
 tm-editor (0.4.0-1) extra; urgency=medium
 
   * Verbose reading and writing of XML files.

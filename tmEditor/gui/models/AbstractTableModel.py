@@ -8,8 +8,7 @@
 
 from tmEditor.core.Toolbox import *
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
 
 from collections import namedtuple
 

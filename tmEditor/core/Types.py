@@ -8,6 +8,8 @@
 
 import tmGrammar
 
+tmGrammar.ET = "ET"
+
 kET = 'ET'
 kCOUNT = 'COUNT'
 
@@ -37,14 +39,15 @@ CountObjectTypes = (
     # Tower counts
     tmGrammar.TOWERCOUNT,
 )
-"""Ordered list of COUNT type object names."""
+"""Ordered list of count type object names."""
+
+ObjectTypes = ThresholdObjectTypes + CountObjectTypes
+"""Ordered list of all supported threshold and count object types."""
 
 ExternalObjectTypes = (
     tmGrammar.EXT,
 )
-
-ObjectTypes = ThresholdObjectTypes + CountObjectTypes + ExternalObjectTypes
-"""List of supported object types (ordered)."""
+"""Ordered list of supported external signal types."""
 
 CutTypes = (
     tmGrammar.ETA,
@@ -58,7 +61,21 @@ CutTypes = (
     tmGrammar.DR,
     tmGrammar.MASS,
 )
-"""List of supported cut types (ordered)."""
+"""Ordered list of supported cut types."""
+
+ThresholdCutNames = (
+    "-".join((tmGrammar.MU, tmGrammar.ET)),
+    "-".join((tmGrammar.EG, tmGrammar.ET)),
+    "-".join((tmGrammar.JET, tmGrammar.ET)),
+    "-".join((tmGrammar.TAU, tmGrammar.ET)),
+    "-".join((tmGrammar.ETM, tmGrammar.ET)),
+    "-".join((tmGrammar.HTM, tmGrammar.ET)),
+    "-".join((tmGrammar.ETT, tmGrammar.ET)),
+    "-".join((tmGrammar.HTT, tmGrammar.ET)),
+    "-".join((tmGrammar.ETTEM, tmGrammar.ET)),
+    "-".join((tmGrammar.ETMHF, tmGrammar.ET)),
+)
+"""Ordered list of threshold cut names."""
 
 ObjectCutTypes = (
     tmGrammar.ETA,
@@ -68,6 +85,12 @@ ObjectCutTypes = (
     tmGrammar.CHG,
 )
 """Orderd list of cut type names."""
+
+ObjectComparisonTypes = (
+    tmGrammar.GE,
+    tmGrammar.EQ,
+)
+"""Ordered list of supported object comparison types."""
 
 # -----------------------------------------------------------------------------
 #  Mappings

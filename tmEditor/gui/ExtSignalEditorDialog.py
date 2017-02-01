@@ -3,17 +3,16 @@
 
 import tmGrammar
 
-from tmEditor.core import Toolbox
-
 from tmEditor.core.Algorithm import toExternal
 from tmEditor.core.AlgorithmHelper import AlgorithmHelper, decode_threshold
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 
 # Common widgets
-from tmEditor.gui.CommonWidgets import PrefixedSpinBox
+from tmEditor.gui.CommonWidgets import PrefixedSpinBox, createIcon, miniIcon
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
+from tmEditor.PyQt5Proxy import QtWidgets
+from tmEditor.PyQt5Proxy import pyqt4_toPyObject, pyqt4_str
 
 import sys, os
 import re
@@ -35,7 +34,7 @@ kLabel = 'label'
 #  External signal editor dialog class
 # -----------------------------------------------------------------------------
 
-class ExtSignalEditorDialog(QtGui.QDialog):
+class ExtSignalEditorDialog(QtWidgets.QDialog):
     """External signal editor dialog class."""
 
     def __init__(self, menu, parent=None):
@@ -52,27 +51,27 @@ class ExtSignalEditorDialog(QtGui.QDialog):
         self.updateInfoText()
 
     def setupUi(self):
-        self.setWindowIcon(Toolbox.createIcon("wizard-ext-signal"))
+        self.setWindowIcon(createIcon("wizard-ext-signal"))
         self.setWindowTitle(self.tr("External Signal Editor"))
         self.resize(640, 280)
-        self.signalLabel = QtGui.QLabel(self.tr("Signal"), self)
-        self.signalLabel.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
-        self.signalComboBox = QtGui.QComboBox(self)
-        self.signalComboBox.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
+        self.signalLabel = QtWidgets.QLabel(self.tr("Signal"), self)
+        self.signalLabel.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
+        self.signalComboBox = QtWidgets.QComboBox(self)
+        self.signalComboBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
         for signal in self.menu.extSignals.extSignals:
-            self.signalComboBox.addItem(Toolbox.miniIcon('ext'), '_'.join((kEXT, signal[kName])))
+            self.signalComboBox.addItem(miniIcon('ext'), '_'.join((kEXT, signal[kName])))
         self.offsetSpinBox = PrefixedSpinBox(self)
         self.offsetSpinBox.setRange(-2, 2)
         self.offsetSpinBox.setValue(0)
         self.offsetSpinBox.setSuffix(self.tr(" BX"))
-        self.infoTextEdit = QtGui.QTextEdit(self)
+        self.infoTextEdit = QtWidgets.QTextEdit(self)
         self.infoTextEdit.setReadOnly(True)
-        self.infoTextEdit.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Expanding)
-        self.buttonBox = QtGui.QDialogButtonBox(self)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
-        layout = QtGui.QGridLayout()
+        self.infoTextEdit.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Expanding)
+        self.buttonBox = QtWidgets.QDialogButtonBox(self)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        layout = QtWidgets.QGridLayout()
         layout.addWidget(self.signalLabel, 0, 0)
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.signalComboBox)
         hbox.addWidget(self.offsetSpinBox)
         layout.addLayout(hbox, 0, 1)
@@ -82,7 +81,7 @@ class ExtSignalEditorDialog(QtGui.QDialog):
 
     def name(self):
         """Returns external signal name."""
-        return str(self.signalComboBox.currentText())
+        return pyqt4_str(self.signalComboBox.currentText())
 
     def bxOffset(self):
         return self.offsetSpinBox.value()
@@ -99,7 +98,7 @@ class ExtSignalEditorDialog(QtGui.QDialog):
     def updateInfoText(self):
         """Update info box text."""
         name = toExternal(self.name()).signal_name
-        signal = filter(lambda signal: signal[kName] == name, self.menu.extSignals.extSignals)[0]
+        signal = list(filter(lambda signal: signal[kName] == name, self.menu.extSignals.extSignals))[0]
         system = signal[kSystem]
         cable = signal[kCable]
         channel = signal[kChannel]

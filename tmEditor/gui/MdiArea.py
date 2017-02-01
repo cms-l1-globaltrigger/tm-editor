@@ -10,9 +10,11 @@
 """
 
 from tmEditor.core import Toolbox
+from tmEditor.gui.CommonWidgets import createIcon
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from tmEditor.PyQt5Proxy import QtCore
+from tmEditor.PyQt5Proxy import QtWidgets
+from tmEditor.PyQt5Proxy import pyqt4_str
 
 import sys, os
 
@@ -22,7 +24,7 @@ __all__ = ['MdiArea', ]
 #  MDI Area class
 # -----------------------------------------------------------------------------
 
-class MdiArea(QtGui.QTabWidget):
+class MdiArea(QtWidgets.QTabWidget):
     """A tab widget based MDI area widget."""
 
     def __init__(self, parent = None):
@@ -44,12 +46,12 @@ class MdiArea(QtGui.QTabWidget):
         Returns index of tab of added document.
         """
         # Do no re-open a document, just raise its tab.
-        result = filter(lambda item: document.filename() == item.filename(), self.documents())
+        result = list(filter(lambda item: document.filename() == item.filename(), self.documents()))
         if result:
             self.setCurrentWidget(result[0])
             return self.currentIndex()
         document.modified.connect(self.documentModified)
-        return self.addTab(document, Toolbox.createIcon("document"), document.name())
+        return self.addTab(document, createIcon("document"), document.name())
 
     @QtCore.pyqtSlot()
     def currentDocument(self):
@@ -63,14 +65,14 @@ class MdiArea(QtGui.QTabWidget):
             return False
         document = self.widget(index)
         if document.isModified():
-            reply = QtGui.QMessageBox.warning(self, "Close document",
-                QtCore.QString("The document \"%1\" has been modified.\n" \
-                        "Do you want to save your changes or discard them?").arg(document.name()),
-                QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Discard | QtGui.QMessageBox.Save,
-                QtGui.QMessageBox.Cancel)
-            if reply == QtGui.QMessageBox.Cancel:
+            reply = QtWidgets.QMessageBox.warning(self, "Close document",
+                pyqt4_str(self.tr("The document \"{0}\" has been modified.\n" \
+                        "Do you want to save your changes or discard them?")).format(document.name()),
+                QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Save,
+                QtWidgets.QMessageBox.Cancel)
+            if reply == QtWidgets.QMessageBox.Cancel:
                 return False
-            if reply == QtGui.QMessageBox.Save:
+            if reply == QtWidgets.QMessageBox.Save:
                 document.saveMenu()
         self.removeTab(index)
         return True
@@ -82,6 +84,6 @@ class MdiArea(QtGui.QTabWidget):
 
     @QtCore.pyqtSlot()
     def documentModified(self):
-        title = QtCore.QString("*%1").arg(self.currentDocument().name()) # Mark modified tabs with leading asterisk
+        title = "*{0}".format(self.currentDocument().name()) # Mark modified tabs with leading asterisk
         self.setTabText(self.currentIndex(), title)
         self.currentChanged.emit(self.currentIndex())

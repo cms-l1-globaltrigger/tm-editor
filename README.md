@@ -4,7 +4,7 @@ Trigger Menu Editor
 ## Dependecies
 
  * python-argparse
- * PyQt4
+ * PyQt5 (PyQt4 as fallback)
  * xerces-c
  * tmGrammar
  * tmTable

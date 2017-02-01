@@ -30,10 +30,17 @@ class AlgorithmFormatter(object):
     restrictive algorithm equation syntax.
     """
     Functions = (tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, )
-    Operators = (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR, tmGrammar.NOT, )
-    OpeningParanthesis = ('(', '{', '[', )
-    ClosingParanthesis = (')', '}', ']', )
-    Paranthesis = OpeningParanthesis + ClosingParanthesis
+    Negators = (tmGrammar.NOT, )
+    Operators = (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR, ) + Negators
+    LeftPar = '('
+    RightPar = ')'
+    LeftFunctionPar = '{'
+    RightFunctionPar = '}'
+    LeftCutPar = '['
+    RightCutPar = ']'
+    OpeningPar = (LeftPar, LeftFunctionPar, LeftCutPar, )
+    ClosingPar = (RightPar, RightFunctionPar, RightCutPar, )
+    Paranthesis = OpeningPar + ClosingPar
     Separators = (',', )
     Spaces = (' ', '\t', '\r', '\n')
 
@@ -89,7 +96,7 @@ class AlgorithmFormatter(object):
                 if tokens and tokens[-1] in AlgorithmFormatter.Separators:
                     tokens = tokens[:-1]
             # Remove trailing commas.
-            elif token in AlgorithmFormatter.ClosingParanthesis:
+            elif token in AlgorithmFormatter.ClosingPar:
                 if tokens and tokens[-1] in AlgorithmFormatter.Separators:
                     tokens = tokens[:-1]
             tokens.append(token)
@@ -105,7 +112,7 @@ class AlgorithmFormatter(object):
         tokens = []
         for i, token in enumerate(AlgorithmFormatter.sanitize(expression)):
             if token in AlgorithmFormatter.Operators:
-                token = " {token} ".format(token = token)
+                token = " {token} ".format(token=token)
             tokens.append(token)
         return ''.join(tokens)
 
@@ -123,44 +130,77 @@ class AlgorithmFormatter(object):
         return expression.strip()
 
     @staticmethod
-    def expand(expression, tabwidth = 2, ws = " ", eol = "\n"):
+    def expand(expression, tabwidth=2, ws=" ", eol="\n"):
         """Return expression applying an expanded formatting.
 
         >>> print expand("MU10 AND (JET20 OR TAU20)")
-        MU10
-         AND
-        (
-          JET20
-           OR
+        MU10 AND (
+          JET20 OR
           TAU20
         )
         """
-        tokens = AlgorithmFormatter.sanitize(expression)
         level = 0
+        # Returns indent according to current
+        def indent(): return ws * tabwidth * level
         result = []
         previous = None
-        def indent(): return ws * tabwidth * level
-        for token in tokens:
-            if token == ')':
+        # Track paranthesis levels.
+        in_function = False
+        in_cut = False
+
+        negator = tmGrammar.NOT
+        lpars = (AlgorithmFormatter.LeftPar, AlgorithmFormatter.LeftFunctionPar, )
+        rpars = (AlgorithmFormatter.RightPar, AlgorithmFormatter.RightFunctionPar, )
+        pars = lpars + rpars
+
+        for token in AlgorithmFormatter.sanitize(expression):
+            # Update states
+            if token == AlgorithmFormatter.LeftFunctionPar:
+                in_function = True
+            elif token == AlgorithmFormatter.RightFunctionPar:
+                in_function = False
+            elif token == AlgorithmFormatter.LeftCutPar:
+                in_cut = True
+            elif token == AlgorithmFormatter.RightCutPar:
+                in_cut = False
+            # Increase indentation level
+            if token in rpars:
                 level -= 1
-            if token in (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR):
-                result += (eol, indent(), ws, token)
-            elif token in ('(', ')'):
+            #
+            if token in AlgorithmFormatter.Negators:
+                if previous in AlgorithmFormatter.Operators:
+                    result += (eol, indent(), )
+                result += (token, )
+            elif token in AlgorithmFormatter.Operators:
+                result += (ws if previous != AlgorithmFormatter.LeftPar else '', token, )
+            elif token == AlgorithmFormatter.LeftPar:
+                result += (ws if previous else '', token, eol, indent(), ws*tabwidth)
+            elif token in lpars:
+                result += (ws if previous not in AlgorithmFormatter.Functions else '', token)
+            elif token in rpars:
                 result += (eol if previous else '', indent(), token)
             else:
-                if previous in ('(', ):
-                    result += (eol, indent(), token)
-                elif previous in (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR):
-                    result += (eol, indent(), token)
-                elif previous in (tmGrammar.NOT, ):
+                if previous == AlgorithmFormatter.RightPar:
                     result += (ws, token)
+                elif previous == AlgorithmFormatter.LeftPar:
+                    result += (token, )
+                elif previous in lpars:
+                    result += (eol, indent(), token)
+                elif previous == negator:
+                    result += (ws, token)
+                elif previous in AlgorithmFormatter.Operators:
+                    result += (eol, indent(), token)
                 else:
                     result += (token, )
-            if token == '(':
+            # Reduce indentation level
+            if token in lpars:
                 level += 1
+            # Separate after commas inside functions
+            if token in AlgorithmFormatter.Separators:
+                if in_function and not in_cut:
+                    result += (eol, indent(), )
+                else:
+                    result += (ws, )
             previous = token
-            # Separate after commas
-            if token == ',':
-                result += (ws, )
 
         return ''.join(result)

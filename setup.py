@@ -11,14 +11,17 @@ from distutils.core import setup
 from glob import glob
 import subprocess
 
+# Read version from module
+version = subprocess.check_output("python tmEditor/version.py --version".split()).strip()
+
 setup(
     name = "tmEditor",
-    version = subprocess.check_output("python2 tmEditor/version.py --version".split()),
+    version = version,
     description = "Trigger Menu Editor for uGT upgrade",
     author = "Bernhard Arnold",
     author_email = "bernhard.arnold@cern.ch",
-    url = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/GlobalTriggerUpgradeL1T-uTme",
-    packages = ["tmEditor", ],
+    url = "http://globaltrigger.hephy.at/upgrade/tme",
+    packages = ["tmEditor", "tmEditor.core", "tmEditor.gui"],
     data_files = [],
     scripts = [
         "scripts/tm-editor",
