@@ -154,20 +154,36 @@ def sizeof_format(num, suffix='B'):
 # -----------------------------------------------------------------------------
 
 class CutSpecification(object):
-    """Cut specific settings."""
+    """Cut specific settings.
+    name               full cut name (eg. "MU-QLTY_OPEN")
+    object             cut object (eg. "MU") or function type (eg. "dist")
+    type               cut type (eg. "QLTY")
+    count              valid number of cuts of same type to be assigned at once, default is 1
+    objects            optional list of allowed object types
+    range_precision    used precision for range entries, default is 0
+    range_step         single step for linear range entries, default is 0.
+    range_unit         optional unit for range entries
+    data               dictionary of valid data entries (value and name)
+    data_exclusive     set data entries to be exclusive, default is false
+    title              optional title of cut specification
+    description        optional description of cut specification
+    enabled            enable or disable cut specification, default is true
+    """
 
-    def __init__(self, name, object, type, objects=None, range_precision=None,
-                 range_step=None, range_unit=None, data=None, data_exclusive=False,
-                 title=None, description=None, enabled=True):
+    def __init__(self, name, object, type, count=None, objects=None,
+                 range_precision=None, range_step=None, range_unit=None,
+                 data=None, data_exclusive=False, title=None, description=None,
+                 enabled=True):
         self.name = name
         self.object = object
         self.type = type
+        self.count = count or 1
         self.objects = objects or []
         self.range_precision = int(range_precision or 0)
         self.range_step = float(range_step or 0.)
         self.range_unit = range_unit or ""
         self.data = data or {}
-        self.data_exclusive = data_exclusive or False
+        self.data_exclusive = data_exclusive
         self.title = title or ""
         self.description = description or ""
         self.enabled = enabled

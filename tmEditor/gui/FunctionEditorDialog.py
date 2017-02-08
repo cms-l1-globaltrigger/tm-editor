@@ -17,7 +17,7 @@ from tmEditor.gui.CommonWidgets import ComboBoxPlus
 from tmEditor.gui.CommonWidgets import createIcon
 
 from tmEditor.gui.CutEditorDialog import CutEditorDialog
-from tmEditor.gui.ObjectEditorDialog import ObjectEditorDialog, CutItem, getCutSettings
+from tmEditor.gui.ObjectEditorDialog import ObjectEditorDialog, CutItem
 
 # Qt4 python bindings
 from tmEditor.PyQt5Proxy import QtCore
@@ -109,7 +109,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.cutModel = QtGui.QStandardItemModel(self)
         self.cutModel._items = []
         for cut in sorted(self.menu.cuts, key=lambda cut: cut.name):
-            if cut.object == self.functionType():
+            if cut.object == self.functionType() or cut.type == tmGrammar.CHGCOR: # HACK workaround for CHGCOR cuts for functions dist/mass
                 if cut.data:
                     label = "{0} ({1})".format(cut.name, cut.data)
                 else:
@@ -133,7 +133,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
     def updateInfoText(self):
         """Update info box text."""
         functionType = self.functionType()
-        expression = self.expression()
+        expression = AlgorithmFormatter.expand(self.expression())
         text = []
         text.append('<h3>{functionType} Function</h3>')
         text.append('<h4>Preview</h4>')
@@ -170,11 +170,19 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         for cut in self.cutModel._items:
             if pyqt4_str(pyqt4_toPyObject(cut.data()).name) in tmGrammar.Function_getCuts(f):
                 cut.setCheckState(QtCore.Qt.Checked)
+        self.updateInfoText() # refresh
 
     def addCut(self):
         """Raise cut editor to add a new cut."""
         # Load cut settings only for selected function type.
-        dialog = CutEditorDialog(self.menu, getCutSettings(self.functionType()), self)
+        specs = list(
+            filter(lambda spec: spec.enabled and spec.object == self.functionType(), Settings.CutSettings)
+        )
+        # NOTE: workaround for CHGCOR for functions dist/mass
+        specs.extend(list(
+            filter(lambda spec: spec.enabled and spec.type == tmGrammar.CHGCOR, Settings.CutSettings)
+        ))
+        dialog = CutEditorDialog(self.menu, specs, self)
         dialog.setModal(True)
         dialog.updateEntries()
         dialog.exec_()
@@ -182,17 +190,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             return
         cut = dialog.newCut()
         self.menu.addCut(cut)
-        #self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
-        #self.updateBottom()
-        # TODO self.menu.setModified(True)
-        #self.modified.emit()
-        # Select new entry TODO: better to implement insertRow in model!
-        #proxy = item.top.model()
-        #for row in range(proxy.rowCount()):
-        #    index = proxy.index(row, 0)
-        #    if pyqt4_toPyObject(index.data()) == cut.name:
-        #        item.top.setCurrentIndex(index)
-        #        break
+        # TODO
         expression = self.expression()
         self.updateCuts()
         try:
@@ -201,7 +199,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             pass
 
     def accept(self):
-        """Very preliminary validation."""
+        """Validate content before grant accept."""
         # Get object requirements
         helpers = [helper for helper in self.objectHelpers if helper.isValid()]
         # Check minimum required objects
@@ -216,7 +214,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
                 self.validator.validate(AlgorithmFormatter.compress(helper.text()))
             except AlgorithmSyntaxError as e:
                 QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
-                    pyqt4_str(self.tr("Invalid object requirement: {0}")).foramt(pyqt4_str(helper.text()))
+                    pyqt4_str(self.tr("Invalid object requirement {0}: {1},<br /><br />Reason: {2}")).format(helper.index+1, pyqt4_str(helper.text()), format(e))
                 )
                 return
         # Check required cuts
@@ -231,7 +229,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             self.validator.validate(AlgorithmFormatter.compress(self.expression()))
         except AlgorithmSyntaxError as e:
             QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
-                pyqt4_str(self.tr("Invalid expression: {0}")).format(e.token or format(e)),
+                pyqt4_str(self.tr("Invalid expression: {0}")).format(format(e) or e.token),
             )
             return
         super(FunctionEditorDialog, self).accept()

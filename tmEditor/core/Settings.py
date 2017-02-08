@@ -28,6 +28,7 @@ CutSettings = (
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.ETA),
         object=tmGrammar.MU,
         type=tmGrammar.ETA,
+        count=2,
         title="Muon eta",
         description="Restricts valid eta range for muon object requirement."
     ),
@@ -35,6 +36,7 @@ CutSettings = (
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.PHI),
         object=tmGrammar.MU,
         type=tmGrammar.PHI,
+        count=2,
         range_unit="rad",
         title="Muon phi",
         description="Restricts valid phi range for muon object requirement."
@@ -92,12 +94,14 @@ CutSettings = (
         name=CutSpecification.join(tmGrammar.EG, tmGrammar.ETA),
         object=tmGrammar.EG,
         type=tmGrammar.ETA,
+        count=2,
         title="Electron/gamma eta"
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.EG, tmGrammar.PHI),
         object=tmGrammar.EG,
         type=tmGrammar.PHI,
+        count=2,
         range_unit="rad",
         title="Electron/gamma phi"
     ),
@@ -142,12 +146,14 @@ CutSettings = (
         name=CutSpecification.join(tmGrammar.JET, tmGrammar.ETA),
         object=tmGrammar.JET,
         type=tmGrammar.ETA,
+        count=2,
         title="Jet eta"
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.JET, tmGrammar.PHI),
         object=tmGrammar.JET,
         type=tmGrammar.PHI,
+        count=2,
         range_unit="rad",
         title="Jet phi"
     ),
@@ -180,12 +186,14 @@ CutSettings = (
         name=CutSpecification.join(tmGrammar.TAU, tmGrammar.ETA),
         object=tmGrammar.TAU,
         type=tmGrammar.ETA,
+        count=2,
         title="Tau eta"
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.TAU, tmGrammar.PHI),
         object=tmGrammar.TAU,
         type=tmGrammar.PHI,
+        count=2,
         range_unit="rad",
         title="Tau phi"
     ),
@@ -230,6 +238,7 @@ CutSettings = (
         name=CutSpecification.join(tmGrammar.ETM, tmGrammar.PHI),
         object=tmGrammar.ETM,
         type=tmGrammar.PHI,
+        count=2,
         range_unit="rad",
         title="Missing energy phi"
     ),
@@ -237,6 +246,7 @@ CutSettings = (
         name=CutSpecification.join(tmGrammar.ETMHF, tmGrammar.PHI),
         object=tmGrammar.ETMHF,
         type=tmGrammar.PHI,
+        count=2,
         range_unit="rad",
         title="Missing energy phi"
     ),
@@ -244,6 +254,7 @@ CutSettings = (
         name=CutSpecification.join(tmGrammar.HTM, tmGrammar.PHI),
         object=tmGrammar.HTM,
         type=tmGrammar.PHI,
+        count=2,
         range_unit="rad",
         title="Missing energy phi"
     ),
@@ -253,7 +264,7 @@ CutSettings = (
         type=tmGrammar.CHGCOR,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
         title="Charge correlation",
-        description="Applies charge correlation restriction to combination of two objects.<br/><br/>" \
+        description="Applies charge correlation restriction to combinations of two or more muon objects. It can be applied to functions comb, dist and mass.<br/><br/>" \
                     "<strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre>",
         data_exclusive=True,
         data={

@@ -272,18 +272,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
             return
         cut = dialog.newCut()
         self.menu.addCut(cut)
-        #self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
-        #self.updateBottom()
-        # TODO self.menu.setModified(True)
-        #self.modified.emit()
-        # Select new entry TODO: better to implement insertRow in model!
-        #proxy = item.top.model()
-        #for row in range(proxy.rowCount()):
-        #    index = proxy.index(row, 0)
-        #    if pyqt4_toPyObject(index.data()) == cut.name:
-        #        item.top.setCurrentIndex(index)
-        #        break
-        # Ugly...
+        # TODO
         cuts = objectCuts(self.expression())
         self.initCuts()
         for cut in self.cutModel._items:

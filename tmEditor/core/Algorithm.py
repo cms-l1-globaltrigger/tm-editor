@@ -114,17 +114,18 @@ def functionCuts(token):
     return cuts
 
 def functionObjectsCuts(token):
-    """Returns list of cut names assigned to function objects."""
-    cuts = set()
+    """Returns lists of cuts assigned to function objects. Index ist object number.
+    >>> functionObjectsCuts("comb{MU0[MU-QLTY_HQ,MU-ETA_2p1],MU0[MU-QLTY_OPEN]}")
+    ['MU-QLTY_HQ,MU-ETA_2p1', 'MU-QLTY_OPEN']
+    """
+    cuts = []
     f = tmGrammar.Function_Item()
     if not tmGrammar.Function_parser(token, f):
         raise ValueError(token)
-    # Note: returns string containting list of cuts.
+    # Note: returns strings containting list of cuts.
     for names in tmGrammar.Function_getObjectCuts(f):
-        if names:
-            for name in names.split(','):
-                cuts.add(name.strip())
-    return list(cuts)
+        cuts.append(names.split(',') if names else [])
+    return cuts
 
 def objectCuts(token):
     """Returns list of cut names assigned to an object."""
@@ -223,9 +224,10 @@ class Algorithm(object):
                 for cut in functionCuts(token):
                     if not cut in cuts:
                         cuts.add(cut)
-                for cut in functionObjectsCuts(token):
-                    if not cut in cuts:
-                        cuts.add(cut)
+                for objcuts in functionObjectsCuts(token):
+                    for cut in objcuts:
+                        if not cut in cuts:
+                            cuts.add(cut)
         return list(cuts)
 
     def validate(self):

@@ -18,11 +18,13 @@ Usage example
 
 import tmGrammar
 
-from tmEditor.core.Types import ObjectScaleMap
+from tmEditor.core.Settings import CutSettings
+from tmEditor.core.Types import ObjectScaleMap, FunctionTypes
 from tmEditor.core.Algorithm import isOperator, isObject, isExternal, isFunction
 from tmEditor.core.Algorithm import toObject, toExternal
-from tmEditor.core.Algorithm import functionObjects, functionCuts
+from tmEditor.core.Algorithm import functionObjects, functionCuts, functionObjectsCuts, objectCuts
 
+import re
 import logging
 
 __all__ = ['AlgorithmSyntaxValidator', 'AlgorithmSyntaxError']
@@ -50,20 +52,15 @@ class SyntaxValidator(object):
         self.rules = []
 
     def validate(self, expression):
+        tokens = self.tokenize(expression)
         for rule in self.rules:
-            rule.validate(expression)
+            rule.validate(tokens)
 
     def addRule(self, cls):
         """Add a syntx rule class. Creates and tores an instance of the class."""
         self.rules.append(cls(self))
 
-class SyntaxRule(object):
-    """Base class to be inherited by custom syntax rule classes."""
-
-    def __init__(self, validator):
-        self.validator = validator
-
-    def tokens(self, expression):
+    def tokenize(self, expression):
         """Parses algorithm expression and returns list of RPN tokens."""
         # Make sure to clear static algorithm logic.
         tmGrammar.Algorithm_Logic.clear()
@@ -75,6 +72,12 @@ class SyntaxRule(object):
             message = "Invalid expression `{expression}'".format(**locals())
             raise AlgorithmSyntaxError(message)
         return tmGrammar.Algorithm_Logic.getTokens()
+
+class SyntaxRule(object):
+    """Base class to be inherited by custom syntax rule classes."""
+
+    def __init__(self, validator):
+        self.validator = validator
 
     def toObjectItem(self, token):
         item = tmGrammar.Object_Item()
@@ -97,7 +100,7 @@ class SyntaxRule(object):
             raise AlgorithmSyntaxError(message, token)
         return item
 
-    def validate(self, expression):
+    def validate(self, tokens):
         raise NotImplementedError()
 
 # -----------------------------------------------------------------------------
@@ -117,16 +120,18 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
         super(AlgorithmSyntaxValidator, self).__init__(menu)
         self.addRule(BasicSyntax)
         self.addRule(CombBxOffset)
+        self.addRule(ChargeCorrelation)
         self.addRule(ObjectThresholds)
         self.addRule(DistNrObjects)
         self.addRule(DistDeltaRange)
+        self.addRule(CutCount)
 
 class BasicSyntax(SyntaxRule):
     """Validates basic algorithm syntax."""
-    def validate(self, expression):
+    def validate(self, tokens):
         menu = self.validator.menu
         ext_signal_names = [item[kName] for item in menu.extSignals.extSignals]
-        for token in self.tokens(expression):
+        for token in tokens:
             # Validate operators
             if isOperator(token):
                 pass
@@ -153,9 +158,9 @@ class BasicSyntax(SyntaxRule):
 class ObjectThresholds(SyntaxRule):
     """Validates object thresholds/counts."""
 
-    def validate(self, expression):
+    def validate(self, tokens):
         # TODO... better to use floating point representation and compare by string?!
-        for token in self.tokens(expression):
+        for token in tokens:
             # Validate object
             if isObject(token):
                 object = toObject(token)
@@ -188,8 +193,8 @@ class ObjectThresholds(SyntaxRule):
 class CombBxOffset(SyntaxRule):
     """Validates that all objects of a combination function use the same BX offset."""
 
-    def validate(self, expression):
-        for token in self.tokens(expression):
+    def validate(self, tokens):
+        for token in tokens:
             if not isFunction(token):
                 continue
             if not token.startswith(tmGrammar.comb):
@@ -204,11 +209,32 @@ class CombBxOffset(SyntaxRule):
                               "Invalid expression near `{token}`".format(**locals())
                     raise AlgorithmSyntaxError(message, token)
 
+class ChargeCorrelation(SyntaxRule):
+    """Validates that all objects of a function are of type muon if applying a CHGCOR cut."""
+
+    def validate(self, tokens):
+        for token in tokens:
+            if not isFunction(token):
+                continue
+            f = tmGrammar.Function_Item()
+            if not tmGrammar.Function_parser(token, f):
+                raise AlgorithmSyntaxError(f.message)
+            # Test for applied CHGCOR cuts
+            if not list(filter(lambda name: name.startswith(tmGrammar.CHGCOR), functionCuts(token))):
+                continue
+            objects = functionObjects(token)
+            for i in range(len(objects)):
+                if objects[i].type != tmGrammar.MU:
+                    name = token.split('{')[0] # TODO: get function name
+                    message = "All object requirements of function {0}{{...}} must be of type `{1}` when applying a `{2}` cut.\n" \
+                              "Invalid expression near `{3}`".format(name, tmGrammar.MU, tmGrammar.CHGCOR, token)
+                    raise AlgorithmSyntaxError(message, token)
+
 class DistNrObjects(SyntaxRule):
     """Limit number of objects for distance function."""
 
-    def validate(self, expression):
-        for token in self.tokens(expression):
+    def validate(self, tokens):
+        for token in tokens:
             if not isFunction(token):
                 continue
             if not token.startswith(tmGrammar.dist):
@@ -225,9 +251,9 @@ class DistNrObjects(SyntaxRule):
 class DistDeltaRange(SyntaxRule):
     """Validates that delta-eta/phi cut ranges does not exceed assigned objects limits."""
 
-    def validate(self, expression):
+    def validate(self, tokens):
         menu = self.validator.menu
-        for token in self.tokens(expression):
+        for token in tokens:
             if not isFunction(token):
                 continue
             if not token.startswith(tmGrammar.dist):
@@ -258,3 +284,43 @@ class DistDeltaRange(SyntaxRule):
                             raise AlgorithmSyntaxError(message)
                 if cut.type == tmGrammar.DR:
                     pass # TODO
+
+class CutCount(SyntaxRule):
+    """Limit number of cuts allowed to be assigned at once."""
+
+    def validate(self, tokens):
+        for token in tokens:
+            # Objects
+            if isObject(token):
+                counts = self.countCuts(objectCuts(token))
+                self.checkCutCount(token, counts)
+            # Functions
+            if isFunction(token):
+                obj_cuts = functionObjectsCuts(token)
+                for i, obj_token in enumerate(functionObjects(token)):
+                    counts = self.countCuts(obj_cuts[i])
+                    self.checkCutCount(token, counts)
+                counts = self.countCuts(functionCuts(token))
+                self.checkCutCount(token, counts)
+
+    def countCuts(self, names):
+        """Returns dictionary with key of cut object/type pair and occurence as value."""
+        menu = self.validator.menu
+        counts = {}
+        for name in names:
+            cut = menu.cutByName(name)
+            key = (cut.object, cut.type)
+            if not key in counts:
+                counts[key] = 0
+            counts[key] += 1
+        return counts
+
+    def checkCutCount(self, token, counts):
+        """Counts has to be a dictionary of format returned by countCuts()."""
+        for key, count in counts.iteritems():
+            spec = (list(filter(lambda spec: spec.enabled and (spec.object, spec.type) == key, CutSettings)) or [None])[0]
+            if spec:
+                if count > spec.count:
+                    name = key[1] if key[0] in FunctionTypes else '-'.join(key)
+                    message = "In `{token}`, too many cuts of type `{name}` assigned, only {spec.count} allowed.".format(**locals())
+                    raise AlgorithmSyntaxError(message)

@@ -92,6 +92,13 @@ ObjectComparisonTypes = (
 )
 """Ordered list of supported object comparison types."""
 
+FunctionTypes = (
+    tmGrammar.comb,
+    tmGrammar.dist,
+    tmGrammar.mass,
+)
+"""Ordered list of functions."""
+
 # -----------------------------------------------------------------------------
 #  Mappings
 # -----------------------------------------------------------------------------

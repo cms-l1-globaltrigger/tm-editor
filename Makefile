@@ -132,6 +132,7 @@ install: all
 	echo "#!/bin/bash" > $(prefix)/bin/$(package)
 	echo "export LD_LIBRARY_PATH=/usr/lib/$(package):\$$LD_LIBRARY_PATH" >> $(prefix)/bin/$(package)
 	echo "export PYTHONPATH=/usr/lib/$(package):\$$PYTHONPATH" >> $(prefix)/bin/$(package)
+	echo "export UTM_ROOT=/usr/share/$(package)" >> $(prefix)/bin/$(package)
 	echo "export UTM_XSD_DIR=/usr/share/$(package)/xsd" >> $(prefix)/bin/$(package)
 	echo "export LC_ALL=$(tmlang)" >> $(prefix)/bin/$(package)
 	echo "/usr/lib/$(package)/$(package) \"\$$@\"" >> $(prefix)/bin/$(package)
@@ -228,9 +229,9 @@ rpmbuild: all
 	echo "Source:    %{name}-%{version}.tar.gz" >> rpm/$(package).spec
 	echo "Prefix:    /usr" >> rpm/$(package).spec
 	echo "Group:     Development/Tools" >> rpm/$(package).spec
-	echo "Requires:  python >= 3.6" >> rpm/$(package).spec
+	echo "Requires:  python >= 2.6" >> rpm/$(package).spec
 	echo "Requires:  python-argparse" >> rpm/$(package).spec
-	echo "Requires:	 PyQt5 >= 5.7" >> rpm/$(package).spec
+	echo "Requires:	 PyQt4 >= 4.6" >> rpm/$(package).spec
 	echo "Requires:  glibc >= 2.4" >> rpm/$(package).spec
 	echo "Requires:  xerces-c >= 3.1" >> rpm/$(package).spec
 	echo "Requires:  gnome-icon-theme" >> rpm/$(package).spec
@@ -352,6 +353,7 @@ clean:
 	rm -rf tmEditor/tmeditor_rc.py
 	rm -rf `find tmEditor -name '*.pyc'`
 	rm -rf `find tmEditor -name '*.pyo'`
+	rm -rf `find tmEditor -name '__pycache__'`
 	rm -rf build
 	rm -rf $(app_icon).png  # remove converted bitmap
 	rm -rf $(package).iconset
