@@ -12,11 +12,13 @@
 # Trigger menu modules
 import tmGrammar
 
-from tmEditor.core import Toolbox, Settings
+from tmEditor.core import toolbox, Settings
 from tmEditor.core.Settings import MaxAlgorithms
 from tmEditor.core import Menu
 from tmEditor.core.Menu import Algorithm, Cut, Object, External, toObject
 from tmEditor.core import XmlDecoder, XmlEncoder
+from tmEditor.core.XmlEncoder import XmlEncoderError
+from tmEditor.core.XmlDecoder import XmlDecoderError
 
 # Models and proxies for table views
 from tmEditor.gui.models import *
@@ -38,12 +40,11 @@ from tmEditor.gui.CommonWidgets import EtaCutChart, PhiCutChart
 from tmEditor.gui.CommonWidgets import createIcon
 
 # Formatting
-from tmEditor.core.Toolbox import fAlgorithm
-from tmEditor.core.Toolbox import fCut
-from tmEditor.core.Toolbox import fHex
-from tmEditor.core.Toolbox import fThreshold
-from tmEditor.core.Toolbox import fComparison
-from tmEditor.core.Toolbox import fBxOffset
+from tmEditor.core.formatter import fCutValue
+from tmEditor.core.formatter import fHex
+from tmEditor.core.formatter import fThreshold
+from tmEditor.core.formatter import fComparison
+from tmEditor.core.formatter import fBxOffset
 
 # Qt4 python bindings
 from tmEditor.PyQt5Proxy import QtCore
@@ -291,14 +292,18 @@ class Document(BaseDocument):
         QtWidgets.QApplication.processEvents()
         # Create XML decoder and run
         queue = XmlDecoder.XmlDecoderQueue(self.filename())
-        for callback in queue:
-            dialog.setLabelText(pyqt4_str(self.tr("{0}...")).format(queue.message().capitalize()))
-            logging.debug("processing: %s...", queue.message())
-            QtWidgets.QApplication.sendPostedEvents(dialog, 0)
-            QtWidgets.QApplication.processEvents()
-            callback()
-            dialog.setValue(queue.progress())
-            QtWidgets.QApplication.processEvents()
+        try:
+            for callback in queue:
+                dialog.setLabelText(pyqt4_str(self.tr("{0}...")).format(queue.message().capitalize()))
+                logging.debug("processing: %s...", queue.message())
+                QtWidgets.QApplication.sendPostedEvents(dialog, 0)
+                QtWidgets.QApplication.processEvents()
+                callback()
+                dialog.setValue(queue.progress())
+                QtWidgets.QApplication.processEvents()
+        except XmlDecoderError, e:
+            dialog.close()
+            raise
         self._menu = queue.menu
         dialog.close()
         self.setModified(False)
@@ -331,14 +336,18 @@ class Document(BaseDocument):
         QtWidgets.QApplication.processEvents()
         # Create XML encoder queue and run queue
         queue = XmlEncoder.XmlEncoderQueue(self._menu, filename)
-        for callback in queue:
-            dialog.setLabelText(pyqt4_str(self.tr("{0}...")).format(queue.message().capitalize()))
-            logging.debug("processing: %s...", queue.message())
-            QtWidgets.QApplication.sendPostedEvents(dialog, 0)
-            QtWidgets.QApplication.processEvents()
-            callback()
-            dialog.setValue(queue.progress())
-            QtWidgets.QApplication.processEvents()
+        try:
+            for callback in queue:
+                dialog.setLabelText(pyqt4_str(self.tr("{0}...")).format(queue.message().capitalize()))
+                logging.debug("processing: %s...", queue.message())
+                QtWidgets.QApplication.sendPostedEvents(dialog, 0)
+                QtWidgets.QApplication.processEvents()
+                callback()
+                dialog.setValue(queue.progress())
+                QtWidgets.QApplication.processEvents()
+        except XmlEncoderError:
+            dialog.close()
+            raise
         dialog.close()
         # Update document
         self.setFilename(filename)
@@ -470,6 +479,7 @@ class Document(BaseDocument):
         """Import cuts from another menu, ignores if cut already present."""
         for cut in cuts:
             if not self.menu().cutByName(cut.name):
+                cut.modified = True
                 self.menu().addCut(cut)
         self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
 
@@ -497,6 +507,7 @@ class Document(BaseDocument):
                     pyqt4_str(self.tr("Moving algorithm <em>{0}</em> from already used index {1} to free index {2}.")).format(algorithm.name, algorithm.index, index)
                 )
                 algorithm.index = int(index)
+            algorithm.modified = True
             self.menu().addAlgorithm(algorithm)
             self.menu().extendReferenced(algorithm)
         self.algorithmsPage.top.model().setSourceModel(self.algorithmsPage.top.model().sourceModel())
@@ -530,6 +541,7 @@ class Document(BaseDocument):
             dialog.expression(),
             dialog.comment()
         )
+        algorithm.modified = True
         for name in algorithm.cuts():
             if not list(filter(lambda item: item.name == name, self.menu().cuts)):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
@@ -549,13 +561,14 @@ class Document(BaseDocument):
                 break
 
     def addCut(self, index, item):
-        dialog = CutEditorDialog(self.menu(), Settings.CutSettings, self)
+        dialog = CutEditorDialog(self.menu(), Settings.CutSpecs, self)
         dialog.setModal(True)
         dialog.updateEntries()
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         cut = dialog.newCut()
+        cut.modified = True
         self.menu().addCut(cut)
         self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
         self.updateBottom()
@@ -592,6 +605,7 @@ class Document(BaseDocument):
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         self.setModified(True)
+        algorithm.modified = True
         dialog.updateAlgorithm(algorithm)
         for name in algorithm.cuts():
             if not list(filter(lambda item: item.name == name, self.menu().cuts)):
@@ -603,7 +617,7 @@ class Document(BaseDocument):
 
     def editCut(self, index, item):
         cut = self.menu().cuts[index.row()]
-        dialog = CutEditorDialog(self.menu(), Settings.CutSettings, self)
+        dialog = CutEditorDialog(self.menu(), Settings.CutSpecs, self)
         dialog.setModal(True)
         dialog.typeComboBox.setEnabled(False)
         dialog.loadCut(cut)
@@ -611,6 +625,7 @@ class Document(BaseDocument):
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         self.setModified(True)
+        cut.modified = True
         dialog.updateCut(cut)
         self.updateBottom()
         self.modified.emit()
@@ -638,6 +653,7 @@ class Document(BaseDocument):
         algorithm.expression = dialog.expression()
         algorithm.index = int(dialog.index())
         algorithm.name = dialog.name()
+        algorithm.modified = True
         for name in algorithm.cuts():
             if not list(filter(lambda item: item.name == name, self.menu().cuts)):
                 raise RuntimeError("NO SUCH CUT AVAILABLE") # TODO
@@ -662,7 +678,7 @@ class Document(BaseDocument):
                 break
 
     def copyCut(self, index, item):
-        dialog = CutEditorDialog(self.menu(), Settings.CutSettings, self)
+        dialog = CutEditorDialog(self.menu(), Settings.CutSpecs, self)
         dialog.setModal(True)
         dialog.loadCut(self.menu().cuts[index.row()])
         dialog.setSuffix('_'.join([dialog.suffix, pyqt4_str(self.tr("copy"))]))

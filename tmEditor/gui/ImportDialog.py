@@ -18,7 +18,7 @@ Example usage:
 """
 
 from tmEditor.core import XmlDecoder
-from tmEditor.core import Toolbox
+from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxError
 from tmEditor.core.Settings import MaxAlgorithms
 
 from tmEditor.gui.models import AlgorithmsModel
@@ -48,37 +48,15 @@ kName = 'name'
 class ImportDialog(QtWidgets.QDialog):
     """Dialog providing importing of algorithms from another XML file."""
 
-    def __init__(self, filename, menu, parent = None):
+    def __init__(self, filename, menu, parent=None):
         super(ImportDialog, self).__init__(parent)
         # Algorithm selection
         self.algorithms = []
         self.cuts = []
         self.baseMenu = menu
+        self.loadMenu(filename)
+        self.validateMenu()
 
-        dialog = QtWidgets.QProgressDialog(self)
-        dialog.setWindowTitle(self.tr("Loading..."))
-        dialog.setCancelButton(None)
-        dialog.setWindowModality(QtCore.Qt.WindowModal)
-        dialog.resize(260, dialog.height())
-        dialog.show()
-        QtWidgets.QApplication.processEvents()
-        queue = XmlDecoder.XmlDecoderQueue(pyqt4_str(filename))
-        for callback in queue:
-            dialog.setLabelText(pyqt4_str(self.tr("{0}...")).format(queue.message().capitalize()))
-            logging.debug("processing: %s...", queue.message())
-            QtWidgets.QApplication.sendPostedEvents(dialog, 0)
-            QtWidgets.QApplication.processEvents()
-            callback()
-            dialog.setValue(queue.progress())
-            QtWidgets.QApplication.processEvents()
-        self.menu = queue.menu
-        dialog.close()
-
-        if self.menu.scales.scaleSet[kName] != self.baseMenu.scales.scaleSet[kName]:
-            QtWidgets.QMessageBox.warning(self,
-                self.tr("Different scale sets"),
-                pyqt4_str(self.tr("Unable to import from <em>{0}</em> as scale sets do not match.")).format(filename),
-            )
         # Important: sort out all duplicate algorithms !
         queue = []
         for algorithm in self.menu.algorithms:
@@ -86,6 +64,7 @@ class ImportDialog(QtWidgets.QDialog):
                 queue.append(algorithm)
         for algorithm in queue:
             self.menu.algorithms.remove(algorithm)
+
         self.setupUi()
 
     def setupUi(self):
@@ -110,6 +89,45 @@ class ImportDialog(QtWidgets.QDialog):
         layout.addWidget(IconLabel(createIcon("info"), self.tr("Select available algorithms to import."), self))
         layout.addWidget(buttonBox)
         self.setLayout(layout)
+
+    def loadMenu(self, filename):
+        """Load XML menu from file."""
+        dialog = QtWidgets.QProgressDialog(self)
+        dialog.setWindowTitle(self.tr("Loading..."))
+        dialog.setCancelButton(None)
+        dialog.setWindowModality(QtCore.Qt.WindowModal)
+        dialog.resize(260, dialog.height())
+        dialog.show()
+        QtWidgets.QApplication.processEvents()
+        try:
+            queue = XmlDecoder.XmlDecoderQueue(pyqt4_str(filename))
+            for callback in queue:
+                dialog.setLabelText(pyqt4_str(self.tr("{0}...")).format(queue.message().capitalize()))
+                logging.debug("processing: %s...", queue.message())
+                QtWidgets.QApplication.sendPostedEvents(dialog, 0)
+                QtWidgets.QApplication.processEvents()
+                callback()
+                dialog.setValue(queue.progress())
+                QtWidgets.QApplication.processEvents()
+        except XmlDecoder.XmlDecoderError, e:
+            dialog.close() # make sure to close the progress dialog
+            raise
+        except Exception:
+            dialog.close()
+            raise
+        dialog.close()
+        self.menu = queue.menu
+
+    def validateMenu(self):
+        baseScaleSet = self.baseMenu.scales.scaleSet[kName]
+        scaleSet = self.menu.scales.scaleSet[kName]
+        # Perform more checks
+        if scaleSet != baseScaleSet:
+            logging.warning("imported scale set \"%s\" does not match with current scale set \"%s\"", scaleSet, baseScaleSet)
+            QtWidgets.QMessageBox.warning(self,
+                self.tr("Different scale sets"),
+                pyqt4_str(self.tr("Imported scale set <em>{0}</em> does not match with current scale set <em>{1}</em>.")).format(scaleSet, baseScaleSet),
+            )
 
     def importSelected(self):
         """Import selected algorithms and auto adding new cuts."""

@@ -5,13 +5,28 @@
 # Last changed by   : $Author:  $
 # Last changed date : $Date: $
 #
+#
+#
+
+"""This module contains type tuples and mappings derived from tmGrammar.
+"""
 
 import tmGrammar
 
+# HACK: overload with missing attributes.
 tmGrammar.ET = "ET"
+
+# -----------------------------------------------------------------------------
+#  Keys
+# -----------------------------------------------------------------------------
 
 kET = 'ET'
 kCOUNT = 'COUNT'
+kSeparator = '-'
+
+# -----------------------------------------------------------------------------
+#  Type tuples
+# -----------------------------------------------------------------------------
 
 ThresholdObjectTypes = (
     # Muon objects
@@ -64,16 +79,16 @@ CutTypes = (
 """Ordered list of supported cut types."""
 
 ThresholdCutNames = (
-    "-".join((tmGrammar.MU, tmGrammar.ET)),
-    "-".join((tmGrammar.EG, tmGrammar.ET)),
-    "-".join((tmGrammar.JET, tmGrammar.ET)),
-    "-".join((tmGrammar.TAU, tmGrammar.ET)),
-    "-".join((tmGrammar.ETM, tmGrammar.ET)),
-    "-".join((tmGrammar.HTM, tmGrammar.ET)),
-    "-".join((tmGrammar.ETT, tmGrammar.ET)),
-    "-".join((tmGrammar.HTT, tmGrammar.ET)),
-    "-".join((tmGrammar.ETTEM, tmGrammar.ET)),
-    "-".join((tmGrammar.ETMHF, tmGrammar.ET)),
+    kSeparator.join((tmGrammar.MU, tmGrammar.ET)),
+    kSeparator.join((tmGrammar.EG, tmGrammar.ET)),
+    kSeparator.join((tmGrammar.JET, tmGrammar.ET)),
+    kSeparator.join((tmGrammar.TAU, tmGrammar.ET)),
+    kSeparator.join((tmGrammar.ETM, tmGrammar.ET)),
+    kSeparator.join((tmGrammar.HTM, tmGrammar.ET)),
+    kSeparator.join((tmGrammar.ETT, tmGrammar.ET)),
+    kSeparator.join((tmGrammar.HTT, tmGrammar.ET)),
+    kSeparator.join((tmGrammar.ETTEM, tmGrammar.ET)),
+    kSeparator.join((tmGrammar.ETMHF, tmGrammar.ET)),
 )
 """Ordered list of threshold cut names."""
 

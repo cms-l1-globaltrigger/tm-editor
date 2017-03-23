@@ -8,8 +8,6 @@
 
 from .AlgorithmsModel import AlgorithmsModel
 from .CutsModel import CutsModel
-from .ObjectsModel import ObjectsModel
-from .ExternalsModel import ExternalsModel
 from .ScalesModel import ScalesModel
 from .BinsModel import BinsModel
 from .ExtSignalsModel import ExtSignalsModel

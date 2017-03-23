@@ -10,7 +10,7 @@
 """
 
 from tmEditor.version import VERSION, PKG_RELEASE
-from tmEditor.core import Toolbox
+from tmEditor.core import toolbox
 from tmEditor import tmeditor_rc
 
 from tmEditor.PyQt5Proxy import QtCore
@@ -75,8 +75,8 @@ class AboutDialog(QtWidgets.QDialog):
         )
         pythonVersion = "Python version {0}.{1}.{2}-{3}{4}".format(*sys.version_info)
         pyqtVersion = "{0} version {1}".format(PyQtSignature, QtCore.QT_VERSION_STR)
-        rootDir = Toolbox.getRootDir()
-        xsdDir = Toolbox.getXsdDir()
+        rootDir = toolbox.getRootDir()
+        xsdDir = toolbox.getXsdDir()
         self.aboutTextEdit.setText(pyqt4_str(self.tr("{0}<br /><br />Version <strong>{1}-{2}</strong>")).format(title, VERSION, PKG_RELEASE, ))
         self.environTextEdit.setText(pyqt4_str(self.tr("{0}<br />{1}<br />UTM_ROOT={2}<br />UTM_XSD_DIR={3}")).format(pythonVersion, pyqtVersion, rootDir, xsdDir))
         self.changelogTextEdit.setText(self._readfile(":changelog"))

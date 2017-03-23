@@ -9,9 +9,9 @@
 import tmTable
 import tmGrammar
 
-from tmEditor.core import Toolbox
+from tmEditor.core import toolbox
 
-from tmEditor.core.Toolbox import safe_str
+from tmEditor.core.toolbox import safe_str
 from tmEditor.core.TableHelper import TableHelper
 from tmEditor.core.Queue import Queue
 from tmEditor.core.Settings import MaxAlgorithms
@@ -133,14 +133,14 @@ class XmlEncoderQueue(Queue):
         if not os.access(target, os.W_OK):
             message = "permission denied `{0}`".format(self.filename)
             logging.error(message)
-            raise RuntimeError(message)
+            raise XmlEncoderError(message)
 
         # Setup tables
         self.tables = TableHelper()
         self.tables.scale = self.menu.scales
         self.tables.extSignal = self.menu.extSignals
 
-    @chdir(Toolbox.getXsdDir())
+    @chdir(toolbox.getXsdDir())
     def run_process_info(self):
         # Create a new menu instance.
         self.tables.menu = tmTable.Menu()
@@ -164,7 +164,7 @@ class XmlEncoderQueue(Queue):
 
         logging.debug("menu information: %s", dict(self.tables.menu.menu))
 
-    @chdir(Toolbox.getXsdDir())
+    @chdir(toolbox.getXsdDir())
     def run_process_algorithms(self):
         for algorithm in self.menu.algorithms:
             # Create algorithm row
@@ -179,12 +179,12 @@ class XmlEncoderQueue(Queue):
             if not tmTable.isAlgorithm(row):
                 message = "invalid algorithm ({algorithm.index}): {algorithm.name}".format(algorithm=algorithm)
                 logging.error(message)
-                raise RuntimeError(message)
+                raise XmlEncoderError(message)
             # Append algorithm row
             logging.debug("appending algorithm: %s", dict(row))
             self.tables.menu.algorithms.append(row)
 
-    @chdir(Toolbox.getXsdDir())
+    @chdir(toolbox.getXsdDir())
     def run_process_objects(self):
         for algorithm in self.menu.algorithms:
             # Objects
@@ -195,7 +195,7 @@ class XmlEncoderQueue(Queue):
                 if not object_:
                     message = "missing object requirement: {0}".format(name)
                     logging.error(message)
-                    raise RuntimeError(message)
+                    raise XmlEncoderError(message)
                 # Create object row
                 row = tmTable.Row()
                 row[kName] = safe_str(object_.name, "object name")
@@ -207,12 +207,12 @@ class XmlEncoderQueue(Queue):
                 if not tmTable.isObjectRequirement(row):
                     message = "invalid object requirement: {0}".format(name)
                     logging.error(message)
-                    raise RuntimeError(message)
+                    raise XmlEncoderError(message)
                 # Append object trow
                 logging.debug("appending object requirement: %s", dict(row))
                 self.tables.menu.objects[algorithm.name] = self.tables.menu.objects[algorithm.name] + (row, )
 
-    @chdir(Toolbox.getXsdDir())
+    @chdir(toolbox.getXsdDir())
     def run_process_externals(self):
         for algorithm in self.menu.algorithms:
             # Externals
@@ -223,7 +223,7 @@ class XmlEncoderQueue(Queue):
                 if not external:
                     message = "missing external signal: {0}".format(name)
                     logging.error(message)
-                    raise RuntimeError(message)
+                    raise XmlEncoderError(message)
                 # Create external row
                 row = tmTable.Row()
                 row[kName] = safe_str(external.name, "external_name")
@@ -232,12 +232,12 @@ class XmlEncoderQueue(Queue):
                 if not tmTable.isExternalRequirement(row):
                     message = "invalid external signal: {0}".format(name)
                     logging.error(message)
-                    raise RuntimeError(message)
+                    raise XmlEncoderError(message)
                 # Append external row
                 logging.debug("appending external signal: %s", dict(row))
                 self.tables.menu.externals[algorithm.name] = self.tables.menu.externals[algorithm.name] + (row, )
 
-    @chdir(Toolbox.getXsdDir())
+    @chdir(toolbox.getXsdDir())
     def run_process_cuts(self):
         for algorithm in self.menu.algorithms:
             # Cuts
@@ -249,7 +249,7 @@ class XmlEncoderQueue(Queue):
                 if not cut:
                     message = "missing cut: {0}".format(name)
                     logging.error(message)
-                    raise RuntimeError(message)
+                    raise XmlEncoderError(message)
                 # Create cut row
                 row = tmTable.Row()
                 row[kName] = safe_str(cut.name, "cut name")
@@ -268,12 +268,12 @@ class XmlEncoderQueue(Queue):
                 if not tmTable.isCut(row):
                     message = "invalid cut: {0}".format(name)
                     logging.error(message)
-                    raise RuntimeError(message)
+                    raise XmlEncoderError(message)
                 # Append cut row
                 logging.debug("appending cut: %s", dict(row))
                 self.tables.menu.cuts[algorithm.name] = self.tables.menu.cuts[algorithm.name] + (row, )
 
-    @chdir(Toolbox.getXsdDir())
+    @chdir(toolbox.getXsdDir())
     def run_dump_xml(self):
         # Write to XML file.
         logging.debug("writing XML file to `%s'", self.filename)
@@ -284,7 +284,7 @@ class XmlEncoderQueue(Queue):
         if not os.path.isfile(self.filename):
             message = "failed to write to file `{0}'".format(self.filename)
             logging.error(message)
-            raise RuntimeError(message)
+            raise XmlEncoderError(message)
 
 def dump(menu, filename):
     queue = XmlEncoderQueue(menu, filename)

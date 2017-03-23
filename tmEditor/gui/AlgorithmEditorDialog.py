@@ -16,10 +16,10 @@ class MessageBarWidget
 
 import tmGrammar
 
-from tmEditor.core import Toolbox
+from tmEditor.core import toolbox
 from tmEditor.core.Algorithm import Algorithm, External, toObject, toExternal
 from tmEditor.core.Settings import MaxAlgorithms
-from tmEditor.core.Types import ObjectTypes, CountObjectTypes
+from tmEditor.core.types import ObjectTypes, CountObjectTypes
 from tmEditor.core.Algorithm import RegExObject, RegExExtSignal, RegExFunction
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
@@ -218,6 +218,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         self.parseTimer.setSingleShot(True)
         self.parseTimer.timeout.connect(self.onTextChangedDelayed)
         self.onTextChanged()
+        self.messageBar.showMore.connect(self.onParse)
         # Store last used formatting
         self.currentFormatter = AlgorithmFormatter.normalize
 
@@ -490,9 +491,6 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         try:
             self.validator.validate(self.expression())
         except AlgorithmSyntaxError as e:
-            #if e.token:
-            #    self.messageBar.setErrorMessage(pyqt4_str(self.tr("Error near token `{0}' {1}")).format(e.token, format(e)))
-            #else:
             self.messageBar.setErrorMessage(format(e))
         else:
             self.messageBar.setMessage(self.tr("Expression OK"))
@@ -582,9 +580,9 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
             self.validator.validate(self.expression())
         except AlgorithmSyntaxError as e:
             if e.token:
-                QtWidgets.QMessageBox.warning(self, pyqt4_str(self.tr("Invalid expression"), self.tr("{0} near {1}")).format(e, e.token))
+                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), pyqt4_str(self.tr("{0} near {1}")).format(e, e.token))
             else:
-                QtWidgets.QMessageBox.warning(self, pyqt4_str(self.tr("Invalid expression"), self.tr("{0}")).format(e))
+                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), pyqt4_str(self.tr("{0}")).format(e))
 
     def updateFreeIndices(self, ignore=None):
         # Get list of free indices.
@@ -777,28 +775,38 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
 class MessageBarWidget(QtWidgets.QWidget):
     """Message bar widget to show expression problems."""
 
+    showMore = QtCore.pyqtSignal()
+
     def __init__(self, parent = None):
         super(MessageBarWidget, self).__init__(parent)
         self.setMaximumHeight(31)
         self.icon = QtWidgets.QLabel(self)
         self.icon.setPixmap(createIcon("dialog-warning").pixmap(16, 16))
         self.icon.setFixedSize(16, 16)
-        self.message = QtWidgets.QTextEdit(self)
-        self.message.setReadOnly(True)
-        self.message.setMinimumHeight(31)
-        self.message.setStyleSheet("QTextEdit {border: 0; background: transparent;}")
+        self.message = QtWidgets.QLabel(self)
+        self.message.linkActivated.connect(self.onLinkActivated)
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(10, 10, 0, 0)
         layout.addWidget(self.icon)
         layout.addWidget(self.message)
         self.setLayout(layout)
 
+    def onLinkActivated(self, link):
+        if link == "#more":
+            self.showMore.emit()
+
     def setMessage(self, text):
         self.icon.hide()
         self.message.setText("<span style=\"color:green;\">{0}</span>".format(text))
         self.message.setToolTip(text)
 
-    def setErrorMessage(self, text):
+    def setErrorMessage(self, text, maxlength=32):
+        """Set error message. If text message exceeds maxlength limit, a link
+        is provided instead. Use signal showMore on to handle on click events.
+        """
         self.icon.show()
-        self.message.setText("<span style=\"color:red;\">{0}</span>".format(text))
+        if len(text) > maxlength:
+            self.message.setText("<span style=\"color:red;\">Syntax error, show <a href=\"#more\">more...</a></span>")
+        else:
+            self.message.setText("<span style=\"color:red;\">{0}</span>".format(text))
         self.message.setToolTip(text)

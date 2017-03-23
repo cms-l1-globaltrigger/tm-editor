@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 #
 
-from tmEditor.core.Toolbox import CutSpecification
+from tmEditor.core.toolbox import CutSpecificationPool, CutSpecification
 
 import tmGrammar
 import sys, os
 
-__all__ = ['MaxAlgorithms', 'CutSettings', ]
+__all__ = ['MaxAlgorithms', 'CutSpecs', ]
 
 MaxAlgorithms = 512
 """Maximum number of supported algorithms."""
@@ -23,7 +23,7 @@ DefaultExtSignalSetUri = "cabling/L1Menu_{ext_signal_set}.xml"
 DownloadSite = "http://globaltrigger.hephy.at/upgrade/tme/downloads"
 """Web site providing download information."""
 
-CutSettings = (
+CutSpecs = CutSpecificationPool(
     CutSpecification(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.ETA),
         object=tmGrammar.MU,

@@ -9,7 +9,6 @@
 """Multi Document Interface (MDI) area.
 """
 
-from tmEditor.core import Toolbox
 from tmEditor.gui.CommonWidgets import createIcon
 
 from tmEditor.PyQt5Proxy import QtCore

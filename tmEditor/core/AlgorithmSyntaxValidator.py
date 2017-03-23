@@ -18,8 +18,8 @@ Usage example
 
 import tmGrammar
 
-from tmEditor.core.Settings import CutSettings
-from tmEditor.core.Types import ObjectScaleMap, FunctionTypes
+from tmEditor.core.Settings import CutSpecs
+from tmEditor.core.types import ObjectScaleMap, FunctionTypes
 from tmEditor.core.Algorithm import isOperator, isObject, isExternal, isFunction
 from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.Algorithm import functionObjects, functionCuts, functionObjectsCuts, objectCuts
@@ -318,7 +318,8 @@ class CutCount(SyntaxRule):
     def checkCutCount(self, token, counts):
         """Counts has to be a dictionary of format returned by countCuts()."""
         for key, count in counts.iteritems():
-            spec = (list(filter(lambda spec: spec.enabled and (spec.object, spec.type) == key, CutSettings)) or [None])[0]
+            object_, type_ = key
+            spec = (CutSpecs.query(enabled=True, object=object_, type=type_) or [None])[0]
             if spec:
                 if count > spec.count:
                     name = key[1] if key[0] in FunctionTypes else '-'.join(key)

@@ -9,9 +9,11 @@
 """Main window class holding a MDI area.
 """
 
-from tmEditor.core import Toolbox
+from tmEditor.core.formatter import fFileSize
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxError
-from tmEditor.core.Toolbox import DownloadHelper
+from tmEditor.core.toolbox import DownloadHelper
+from tmEditor.core.XmlEncoder import XmlEncoderError
+from tmEditor.core.XmlDecoder import XmlDecoderError
 
 from tmEditor.gui.AboutDialog import AboutDialog
 from tmEditor.gui.PreferencesDialog import PreferencesDialog
@@ -48,7 +50,7 @@ RegExUrl = re.compile(r'(\w+)\://(.+)')
 Returned groups are protocol and path.
 """
 
-# NOTE: Bugfix for PyQt5.6
+# NOTE: Bugfix for PyQt4.6
 if not hasattr(QtGui.QKeySequence, 'Quit'):
     QtGui.QKeySequence.Quit = QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_Q)
 
@@ -179,12 +181,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar()
         self.statusAlgorithms = QtWidgets.QLabel(self)
         self.statusCuts = QtWidgets.QLabel(self)
-        self.statusObjects = QtWidgets.QLabel(self)
-        self.statusExternals = QtWidgets.QLabel(self)
         self.statusBar().addPermanentWidget(self.statusAlgorithms)
         self.statusBar().addPermanentWidget(self.statusCuts)
-        self.statusBar().addPermanentWidget(self.statusObjects)
-        self.statusBar().addPermanentWidget(self.statusExternals)
 
     @QtCore.pyqtSlot(str)
     def updateStatusBarMessage(self, message):
@@ -197,12 +195,8 @@ class MainWindow(QtWidgets.QMainWindow):
         document = self.mdiArea.currentDocument()
         algorithms = len(document.menu().algorithms) if document else self.tr("--")
         cuts = len(document.menu().cuts) if document else self.tr("--")
-        objects = len(document.menu().objects) if document else self.tr("--")
-        externals = len(document.menu().externals) if document else self.tr("--")
         self.statusAlgorithms.setText(pyqt4_str(self.tr("Algorithms: {0}")).format(algorithms))
         self.statusCuts.setText(pyqt4_str(self.tr("Cuts: {0}")).format(cuts))
-        self.statusObjects.setText(pyqt4_str(self.tr("Objects: {0}")).format(objects))
-        self.statusExternals.setText(pyqt4_str(self.tr("Externals: {0}")).format(externals))
 
     @QtCore.pyqtSlot()
     def syncActions(self):
@@ -244,7 +238,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
                     def callback():
                         """Callback for updating the progress dialog."""
-                        dialog.setLabelText(pyqt4_str(self.tr("Downloading {0}...")).format(Toolbox.sizeof_format(helper.receivedSize)))
+                        dialog.setLabelText(pyqt4_str(self.tr("Downloading {0}...")).format(fFileSize(helper.receivedSize)))
                         dialog.setValue(helper.receivedSize)
                         QtWidgets.QApplication.processEvents()
                         if dialog.wasCanceled():
@@ -262,7 +256,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             dialog.close()
                             # Create document by reading temporary file.
                             document = Document(fp.name, self)
-                    except RuntimeError as e: # TODO
+                    except (XmlDecoderError, RuntimeError) as e: # TODO
                         dialog.close()
                         logging.error("Failed to load XML menu: %s", e)
                         QtWidgets.QMessageBox.critical(self,
@@ -340,7 +334,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 except AlgorithmSyntaxError as e:
                     QtWidgets.QMessageBox.critical(self, self.tr("Import error"), pyqt4_str(e))
                     return
-                except (RuntimeError, ValueError) as e:
+                except (XmlDecoderError, RuntimeError, ValueError) as e:
                     QtWidgets.QMessageBox.critical(self, self.tr("Import error"), pyqt4_str(e))
                     return
                 dialog.setModal(True)
@@ -360,7 +354,7 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             document.saveMenu()
             self.mdiArea.setTabText(self.mdiArea.currentIndex(), document.name())
-        except (RuntimeError, ValueError, IOError) as e:
+        except (XmlEncoderError, RuntimeError, ValueError, IOError) as e:
             QtWidgets.QMessageBox.critical(self,
                 self.tr("Failed to write XML menu"), format(e))
 
@@ -380,7 +374,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 document.saveMenu(filename)
                 # TODO
                 self.mdiArea.setTabText(self.mdiArea.currentIndex(), document.name())
-            except RuntimeError as e:
+            except (XmlEncoderError, RuntimeError, ValueError, IOError) as e:
                 QtWidgets.QMessageBox.critical(self,
                     self.tr("Failed to write XML menu"), format(e))
         self.syncActions()

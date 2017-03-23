@@ -13,7 +13,7 @@ class AlgorithmSelectIndexDialog
 
 import tmGrammar
 
-from tmEditor.core import Toolbox
+from tmEditor.core import toolbox
 from tmEditor.core.Settings import MaxAlgorithms
 
 # Common widgets

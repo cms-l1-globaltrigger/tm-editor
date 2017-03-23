@@ -25,9 +25,9 @@
  * PhiCutChart
 """
 
-from tmEditor.core import Toolbox
+from tmEditor.core import formatter
 from tmEditor.core.Algorithm import toObject, toExternal
-from tmEditor.core.Types import CountObjectTypes
+from tmEditor.core.types import CountObjectTypes
 
 from tmEditor.PyQt5Proxy import QtCore
 from tmEditor.PyQt5Proxy import QtGui
@@ -55,12 +55,12 @@ def richTextObjectsPreview(algorithm, parent):
         objects = [toObject(obj) for obj in algorithm.objects()]
         objects.sort()
         for obj in objects:
-            comparison = Toolbox.fComparison(obj.comparison_operator)
+            comparison = formatter.fComparison(obj.comparison_operator)
             if obj.type in CountObjectTypes:
-                threshold = Toolbox.fCounts(obj.threshold) # TODO
+                threshold = formatter.fCounts(obj.threshold) # TODO
             else:
-                threshold = Toolbox.fThreshold(obj.threshold)
-            bxOffset = Toolbox.fBxOffset(obj.bx_offset)
+                threshold = formatter.fThreshold(obj.threshold)
+            bxOffset = formatter.fBxOffset(obj.bx_offset)
             content.append(pyqt4_str(parent.tr("<img src=\":/icons/{0}.svg\"> {1} <span style=\"color: gray;\">({2} {3}, {4} BX offset)</span><br/>")).format(obj.type.lower(), obj.name, comparison, threshold, bxOffset))
         content.append(pyqt4_str(parent.tr("</p>")))
     return "".join(content)
@@ -87,9 +87,9 @@ def richTextCutsPreview(menu, algorithm, parent):
         cuts.sort()
         for cut in cuts:
             if cut.data:
-                content.append(pyqt4_str(parent.tr("{0} <span style=\"color: gray;\">({1})</span><br/>")).format(cut.name, cut.data))
+                content.append(pyqt4_str(parent.tr("{0} <span style=\"color: gray;\">({1})</span><br/>")).format(cut.name, formatter.fCutData(cut)))
             else:
-                content.append(pyqt4_str(parent.tr("{0} <span style=\"color: gray;\">({1} to {2})</span><br/>")).format(cut.name, Toolbox.fCut(cut.minimum), Toolbox.fCut(cut.maximum)))
+                content.append(pyqt4_str(parent.tr("{0} <span style=\"color: gray;\">({1} to {2})</span><br/>")).format(cut.name, formatter.fCutValue(cut.minimum), formatter.fCutValue(cut.maximum)))
         content.append(pyqt4_str(parent.tr("</p>")))
     return "".join(content)
 

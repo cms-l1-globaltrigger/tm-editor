@@ -4,10 +4,10 @@ tmEditor Package Documentation
 `tmEditor` package
 -----------------------
 
-`Toolbox` module
+`toolbox` module
 ^^^^^^^^^^^^^^^^
 
-.. module:: tmEditor.Toolbox
+.. module:: tmEditor.core.toolbox
 
 Important tmEditor.Menu constants
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

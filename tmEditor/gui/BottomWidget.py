@@ -8,10 +8,11 @@
 
 import tmGrammar
 
-from tmEditor.core import Toolbox
-from tmEditor.core import Settings
+from tmEditor.core import formatter
+from tmEditor.core.Settings import CutSpecs
 from tmEditor.core.Algorithm import toObject
-from tmEditor.core.Types import CountObjectTypes
+from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
+from tmEditor.core.types import CountObjectTypes
 
 # Common widgets
 from tmEditor.gui.CommonWidgets import IconLabel
@@ -53,7 +54,7 @@ kType = 'type'
 
 def highlight(expression):
     """Simple rich text highlighter for algorithm expressions."""
-    expression = Toolbox.fAlgorithm(expression)
+    expression = AlgorithmFormatter.normalize(expression)
     for name in (tmGrammar.comb, tmGrammar.dist, tmGrammar.mass):
         expression = re.sub(
             r'({0})({{)'.format(name),
@@ -219,7 +220,7 @@ class BottomWidget(QtWidgets.QWidget):
         self.reset()
         # Format expression
         content = []
-        content.append(pyqt4_str(self.tr("<h2>{0} {1}</h2>")).format(algorithm.index, algorithm.name))
+        content.append(pyqt4_str(self.tr("<h2><span>{0}</span> {1}</h2>")).format(algorithm.index, algorithm.name))
         content.append(pyqt4_str(self.tr("<p><strong>Expression:</strong></p>")))
         content.append(pyqt4_str(self.tr("<p><code>{0}</code></p>")).format(highlight(algorithm.expression)))
         if algorithm.comment:
@@ -237,18 +238,14 @@ class BottomWidget(QtWidgets.QWidget):
         content.append(pyqt4_str(self.tr("<p><strong>Type:</strong> {0}</p>")).format(cut.object))
         if cut.data:
             content.append(pyqt4_str(self.tr("<p><strong>Data:</strong></p>")))
-            if cut.object == tmGrammar.comb: # TODO TODO TODO
-                typename = cut.type
-            else:
-                typename = '-'.join((cut.object, cut.type)) # '<object>-<type>'
-            data_ = list(filter(lambda entry: entry.name == typename, Settings.CutSettings))[0].data # TODO
+            data_ = CutSpecs.query(type=cut.type, object=cut.object)[0].data # TODO
             datalist = []
             for key in cut.data.split(','):
                 datalist.append(pyqt4_str(self.tr("<li>[{0}] {1}</li>")).format(key, data_[key]))
             content.append(pyqt4_str(self.tr("<p><ul>{0}</ul></p>")).format("".join(datalist)))
         else:
-            content.append(pyqt4_str(self.tr("<p><strong>Minimum:</strong> {0}</p>")).format(Toolbox.fCut(cut.minimum)))
-            content.append(pyqt4_str(self.tr("<p><strong>Maximum:</strong> {0}</p>")).format(Toolbox.fCut(cut.maximum)))
+            content.append(pyqt4_str(self.tr("<p><strong>Minimum:</strong> {0}</p>")).format(formatter.fCutValue(cut.minimum)))
+            content.append(pyqt4_str(self.tr("<p><strong>Maximum:</strong> {0}</p>")).format(formatter.fCutValue(cut.maximum)))
         if cut.comment:
             content.append(pyqt4_str(self.tr("<p><strong>Comment:</strong></p>")))
             content.append(pyqt4_str(self.tr("<p><code>{0}</code></p>")).format(cut.comment))
@@ -265,10 +262,10 @@ class BottomWidget(QtWidgets.QWidget):
         content.append(pyqt4_str(self.tr("<h2>{0}</h2>")).format(obj.name))
         content.append(pyqt4_str(self.tr("<p><strong>Type:</strong> {0}</p>")).format(obj.type))
         if obj.type in CountObjectTypes:
-            content.append(pyqt4_str(self.tr("<p><strong>Threshold:</strong> {0} {1}</p>")).format(Toolbox.fComparison(obj.comparison_operator), Toolbox.fCounts(obj.threshold)))
+            content.append(pyqt4_str(self.tr("<p><strong>Threshold:</strong> {0} {1}</p>")).format(formatter.fComparison(obj.comparison_operator), formatter.fCounts(obj.threshold)))
         else:
-            content.append(pyqt4_str(self.tr("<p><strong>Threshold:</strong> {0} {1}</p>")).format(Toolbox.fComparison(obj.comparison_operator), Toolbox.fThreshold(obj.threshold)))
-        content.append(pyqt4_str(self.tr("<p><strong>BX offset:</strong> {0}</p>")).format(Toolbox.fBxOffset(obj.bx_offset)))
+            content.append(pyqt4_str(self.tr("<p><strong>Threshold:</strong> {0} {1}</p>")).format(formatter.fComparison(obj.comparison_operator), formatter.fThreshold(obj.threshold)))
+        content.append(pyqt4_str(self.tr("<p><strong>BX offset:</strong> {0}</p>")).format(formatter.fBxOffset(obj.bx_offset)))
         if obj.comment:
             content.append(pyqt4_str(self.tr("<p><strong>Comment:</strong></p>")))
             content.append(pyqt4_str(self.tr("<p><code>{0}</code></p>")).format(obj.comment))
@@ -278,7 +275,7 @@ class BottomWidget(QtWidgets.QWidget):
         self.reset()
         content = []
         content.append(pyqt4_str(self.tr("<h2>{0}</h2>")).format(external.name))
-        content.append(pyqt4_str(self.tr("<p><strong>BX offset:</strong> {0}</p>")).format(Toolbox.fBxOffset(external.bx_offset)))
+        content.append(pyqt4_str(self.tr("<p><strong>BX offset:</strong> {0}</p>")).format(formatter.fBxOffset(external.bx_offset)))
         data = list(filter(lambda item: item[kName] == external.signal_name, menu.extSignals.extSignals))[0]
         content.append(pyqt4_str(self.tr("<p><strong>System:</strong> {0}</p>")).format(data[kSystem]))
         if kLabel in data.keys():
@@ -297,9 +294,9 @@ class BottomWidget(QtWidgets.QWidget):
         content = []
         content.append(pyqt4_str(self.tr("<p><strong>Object:</strong> {0}</p>")).format(data[kObject]))
         content.append(pyqt4_str(self.tr("<p><strong>Type:</strong> {0}</p>")).format(fPatchType(data)))
-        content.append(pyqt4_str(self.tr("<p><strong>Minimum:</strong> {0}</p>")).format(Toolbox.fCut(data[kMinimum])))
-        content.append(pyqt4_str(self.tr("<p><strong>Maximum:</strong> {0}</p>")).format(Toolbox.fCut(data[kMaximum])))
-        content.append(pyqt4_str(self.tr("<p><strong>Step:</strong> {0}</p>")).format(Toolbox.fCut(data[kStep])))
+        content.append(pyqt4_str(self.tr("<p><strong>Minimum:</strong> {0}</p>")).format(formatter.fCutValue(data[kMinimum])))
+        content.append(pyqt4_str(self.tr("<p><strong>Maximum:</strong> {0}</p>")).format(formatter.fCutValue(data[kMaximum])))
+        content.append(pyqt4_str(self.tr("<p><strong>Step:</strong> {0}</p>")).format(formatter.fCutValue(data[kStep])))
         content.append(pyqt4_str(self.tr("<p><strong>Bitwidth:</strong> {0}</p>")).format(data[kNBits]))
         self.setText("".join(content))
 
@@ -308,8 +305,8 @@ class BottomWidget(QtWidgets.QWidget):
         content = []
         content.append(pyqt4_str(self.tr("<h2>Scale {0}</h2>")).format(name))
         content.append(pyqt4_str(self.tr("<p><strong>Number:</strong> {0}</p>")).format(data[kNumber]))
-        content.append(pyqt4_str(self.tr("<p><strong>Minimum:</strong> {0}</p>")).format(Toolbox.fCut(data[kMinimum])))
-        content.append(pyqt4_str(self.tr("<p><strong>Maximum:</strong> {0}</p>")).format(Toolbox.fCut(data[kMaximum])))
+        content.append(pyqt4_str(self.tr("<p><strong>Minimum:</strong> {0}</p>")).format(formatter.fCutValue(data[kMinimum])))
+        content.append(pyqt4_str(self.tr("<p><strong>Maximum:</strong> {0}</p>")).format(formatter.fCutValue(data[kMaximum])))
         self.setText("".join(content))
 
     def loadSignal(self, data): # TODO

@@ -8,11 +8,11 @@
 
 import tmGrammar
 
-from tmEditor.core import Menu, Toolbox
+from tmEditor.core import Menu, toolbox
 from tmEditor.core import Algorithm
-from tmEditor.core import Types
+from tmEditor.core import types
 
-from tmEditor.core.Toolbox import safe_str
+from tmEditor.core.toolbox import safe_str
 from tmEditor.core.Queue import Queue
 from tmEditor.core.TableHelper import TableHelper
 from tmEditor.core.Settings import MaxAlgorithms
@@ -105,7 +105,7 @@ class XmlDecoderQueue(Queue):
             logging.error(message)
             raise XmlDecoderError(message)
 
-    @chdir(Toolbox.getXsdDir())
+    @chdir(toolbox.getXsdDir())
     def run_load_xml(self):
         logging.debug("Reading XML file from `%s'", self.filename)
         self.tables = TableHelper()
@@ -173,7 +173,7 @@ class XmlDecoderQueue(Queue):
                 cut = Algorithm.Cut(name, object, type, minimum, maximum, data, comment)
                 # Patch old formats
                 patch_cut(cut)
-                if cut.type not in Types.CutTypes:
+                if cut.type not in types.CutTypes:
                     message = "Unsupported cut type {0} (grammar version <= {1})".format(cut.type, Menu.GrammarVersion)
                     logging.error(message)
                     raise XmlDecoderError(message)
@@ -192,7 +192,7 @@ class XmlDecoderQueue(Queue):
                 bx_offset = int(row[kBxOffset])
                 comment = row.get(kComment, "")
                 obj = Algorithm.Object(name, type, threshold, comparison_operator, bx_offset, comment)
-                if obj.type not in Types.ObjectTypes:
+                if obj.type not in types.ObjectTypes:
                     message = "Unsupported object type {0} (grammar version <= {1})".format(obj.type, Menu.GrammarVersion)
                     logging.error(message)
                     raise XmlDecoderError(message)

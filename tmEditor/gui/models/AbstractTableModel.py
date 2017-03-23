@@ -6,7 +6,7 @@
 # Last changed date : $Date: $
 #
 
-from tmEditor.core.Toolbox import *
+from tmEditor.core.toolbox import *
 
 from tmEditor.PyQt5Proxy import QtCore
 

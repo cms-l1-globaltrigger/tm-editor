@@ -12,7 +12,6 @@
 
 import tmGrammar
 
-from tmEditor.core import Toolbox
 from tmEditor.core.Settings import MaxAlgorithms
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 from tmEditor.core.Algorithm import toObject, toExternal

@@ -24,10 +24,11 @@ try:
     from tmEditor.PyQt5Proxy import QtCore
     from tmEditor.PyQt5Proxy import QtWidgets
     from tmEditor.PyQt5Proxy import PyQtSignature
-    from tmEditor.gui.MainWindow import MainWindow
     CommandLineMode = False
 except ImportError:
     CommandLineMode = True
+
+from tmEditor.gui.MainWindow import MainWindow
 
 EXIT_OK = 0
 EXIT_FAIL = 1

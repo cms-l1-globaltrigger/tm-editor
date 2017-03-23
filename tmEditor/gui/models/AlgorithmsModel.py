@@ -6,11 +6,10 @@
 # Last changed date : $Date: $
 #
 
-from tmEditor.core.Toolbox import fAlgorithm
-from tmEditor.core import AlgorithmFormatter
+from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from .AbstractTableModel import AbstractTableModel
 
-from tmEditor.PyQt5Proxy import QtCore
+from tmEditor.PyQt5Proxy import QtCore, QtGui
 
 __all__ = ['AlgorithmsModel', ]
 
@@ -25,7 +24,18 @@ class AlgorithmsModel(AbstractTableModel):
         super(AlgorithmsModel, self).__init__(menu.algorithms, parent)
         self.addColumnSpec("Index", lambda item: item.index, int, self.AlignRight)
         self.addColumnSpec("Name", lambda item: item.name)
-        self.addColumnSpec("Expression", lambda item: item.expression, fAlgorithm)
+        self.addColumnSpec("Expression", lambda item: item.expression, AlgorithmFormatter.normalize)
+
+    def data(self, index, role):
+        """Overloaded for experimental decoration."""
+        if index.isValid():
+            if role == QtCore.Qt.FontRole:
+                algorithm = self.values[index.row()]
+                if algorithm.modified:
+                    font = QtGui.QFont()
+                    font.setWeight(QtGui.QFont.Bold)
+                    return font
+        return super(AlgorithmsModel, self).data(index, role)
 
     def insertRows(self, position, rows, parent = QtCore.QModelIndex()):
         self.beginInsertRows(parent, position, position + rows - 1)

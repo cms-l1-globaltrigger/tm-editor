@@ -1,6 +1,6 @@
 from tmEditor.gui.CutEditorDialog import CutEditorDialog
 
-from tmEditor.core.Toolbox import CutSpecification
+from tmEditor.core.toolbox import CutSpecification
 from tmEditor.core.Menu import Menu
 from tmEditor.core import XmlDecoder
 from tmEditor import tmeditor_rc

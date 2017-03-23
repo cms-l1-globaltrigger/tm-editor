@@ -11,8 +11,6 @@
 
 import tmGrammar
 
-from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
-
 try:
     # Python 2
     from urllib2 import urlopen
@@ -97,61 +95,47 @@ def safe_str(s, attrname):
         logging.warning("normalized %s: '%s' to '%s'", attrname, s, t)
     return t
 
-# -----------------------------------------------------------------------------
-#  String formatting functions
-# -----------------------------------------------------------------------------
+def listextent(values):
+    """Retruns extent of sorted list."""
+    if values[0] == values[-1]:
+        return values[0]
+    return values[0], values[-1]
 
-def fSeparate(text, separator=' '):
-    return ''.join([token for token in (separator, text, separator)])
-
-def fAlgorithm(expression):
-    return AlgorithmFormatter.normalize(expression)
-
-def fCut(value):
-    try:
-        return format(float(value), '+.3f')
-    except ValueError:
-        return ''
-
-def fHex(value):
-    try:
-        return '0x{0:x}'.format(int(value))
-    except ValueError:
-        return ''
-
-def fThreshold(value):
-    value = format(value).replace('p', '.') # Replace 'p' by comma.
-    return "{0:.1f} GeV".format(float(value))
-
-def fCounts(value):
-    value = format(value).replace('p', '.') # Replace 'p' by comma.
-    return "{0:.0f} counts".format(float(value))
-
-def fComparison(value):
-    """Retruns formatted thresold comparisons signs."""
-    return {
-        tmGrammar.EQ: "==",
-        tmGrammar.GE: ">=",
-        tmGrammar.GT: ">",
-        tmGrammar.LE: "<=",
-        tmGrammar.LT: "<",
-        tmGrammar.NE: "!=",
-    }[value]
-
-def fBxOffset(value):
-    """Retruns formatted BX offset."""
-    return '0' if int(value) == 0 else format(int(value), '+d')
-
-def sizeof_format(num, suffix='B'):
-    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
-        if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, suffix)
-        num /= 1024.0
-    return "%.1f%s%s" % (num, 'Yi', suffix)
+def listcompress(values):
+    """Returns compressed ranges for sortel list."""
+    ranges=[]
+    for value in values:
+        if not ranges: ranges.append([value])
+        elif value - ranges[-1][-1] > 1:
+            ranges.append([value])
+        else:
+            ranges[-1].append(value)
+    return [listextent(values) for values in ranges]
 
 # -----------------------------------------------------------------------------
 #  Cut settings class
 # -----------------------------------------------------------------------------
+
+class CutSpecificationPool(object):
+    """Cut specification pool."""
+    def __init__(self, *args):
+        self.specs = args
+
+    def __len__(self):
+        return len(self.specs)
+
+    def __iter__(self):
+        return iter(self.specs)
+
+    def query(self, **kwargs):
+        """Query specifications by attributes and values.
+        >>> pool.filter(object='MU', type='ISO')
+        [CutSpecification instance at 0x...>]
+        """
+        results = self.specs
+        for key, value in kwargs.iteritems():
+            results = list(filter(lambda spec: hasattr(spec, key) and getattr(spec, key) == value, results))
+        return results
 
 class CutSpecification(object):
     """Cut specific settings.

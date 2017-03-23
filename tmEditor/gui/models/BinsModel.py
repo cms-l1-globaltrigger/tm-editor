@@ -6,8 +6,8 @@
 # Last changed date : $Date: $
 #
 
-from tmEditor.core.Toolbox import fHex, fCut
-from tmEditor.core.Types import ThresholdCutNames
+from tmEditor.core.formatter import fHex, fCutValue
+from tmEditor.core.types import ThresholdCutNames
 from .AbstractTableModel import AbstractTableModel
 
 from tmEditor.PyQt5Proxy import QtCore
@@ -30,8 +30,8 @@ class BinsModel(AbstractTableModel):
         self.name = name
         self.addColumnSpec("Number dec", lambda item: item[kNumber], int, self.AlignRight)
         self.addColumnSpec("Number hex", lambda item: item[kNumber], fHex, self.AlignRight)
-        self.addColumnSpec("Minimum", lambda item: item[kMinimum], fCut, self.AlignRight)
-        self.addColumnSpec("Maximum", self.maximumCallback, fCut, self.AlignRight)
+        self.addColumnSpec("Minimum", lambda item: item[kMinimum], fCutValue, self.AlignRight)
+        self.addColumnSpec("Maximum", self.maximumCallback, fCutValue, self.AlignRight)
         self.addEmptyColumn()
         # Calculate first and last bin sortd by maximum
         sortedBins = sorted(self.values, key=lambda item: float(item[kMaximum]))

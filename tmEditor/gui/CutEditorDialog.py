@@ -11,8 +11,8 @@
 
 import tmGrammar
 
-from tmEditor.core import Toolbox
-from tmEditor.core import Settings
+from tmEditor.core import toolbox
+from tmEditor.core.Settings import CutSpecs
 
 from tmEditor.core.Algorithm import Cut
 from tmEditor.core.Algorithm import calculateDRRange
@@ -183,7 +183,7 @@ class DataField(QtWidgets.QScrollArea):
         self.clear()
         widget = QtWidgets.QWidget(self)
         layout = QtWidgets.QVBoxLayout(self)
-        for key, label in sorted(d.items(), key=Toolbox.natural_sort_key):
+        for key, label in sorted(d.items(), key=toolbox.natural_sort_key):
             entry = QtWidgets.QRadioButton(label, self) if exclusive else QtWidgets.QCheckBox(label, self)
             entry.key = key
             self.entries.append(entry)
@@ -221,13 +221,13 @@ class DataField(QtWidgets.QScrollArea):
 class CutEditorDialog(QtWidgets.QDialog):
     """Dialog providing cut creation/editing interface."""
 
-    def __init__(self, menu, settings=None, parent=None):
+    def __init__(self, menu, specs=None, parent=None):
         """Param title is the applciation name.
         Settings is a list of cut specification items."""
         super(CutEditorDialog, self).__init__(parent)
         # Attributes
         self.menu = menu
-        self.settings = settings or Settings.CutSettings
+        self.specs = specs or CutSpecs
         self.loadedCut = None
         self.setupUi()
         self.reset()
@@ -247,7 +247,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         self.suffixLineEdit.setRegexPattern('[a-zA-Z0-9_]+')
         self.suffixLabel = QtWidgets.QLabel(self.tr("Suffix"), self)
         # Initialize list of cut types
-        self.loadCutTypes(self.settings)
+        self.loadCutTypes(self.specs)
         # Sizes
         unitLabelSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         # Minimum
@@ -329,22 +329,22 @@ class CutEditorDialog(QtWidgets.QDialog):
         self.suffixLineEdit.setText(self.tr("Unnamed"))
         self.updateEntries()
 
-    def loadCutTypes(self, settings):
-        """Load cut types from settings."""
+    def loadCutTypes(self, specs):
+        """Load cut types from specifications."""
         # Populate cut types.
         self.typeComboBox.clear()
-        for cut in settings:
+        for spec in specs:
             # Check if item is disabled: { enabled: false } [optional]
-            if cut.enabled:
-                self.typeComboBox.addItem(cut.name, cut)
+            if spec.enabled:
+                self.typeComboBox.addItem(spec.name, spec)
                 # on missing scale (editing outdated XML?)
-                if cut.type in (tmGrammar.ETA, tmGrammar.PHI):
-                    if cut.name not in self.menu.scales.bins:
+                if spec.type in (tmGrammar.ETA, tmGrammar.PHI):
+                    if spec.name not in self.menu.scales.bins:
                         self.typeComboBox.setItemEnabled(self.typeComboBox.count() - 1, False)
 
     @property
     def spec(self):
-        return list(filter(lambda spec: spec.name == self.typename, Settings.CutSettings))[0]
+        return (CutSpecs.query(name=self.typename) or [None])[0]
 
     @property
     def name(self):

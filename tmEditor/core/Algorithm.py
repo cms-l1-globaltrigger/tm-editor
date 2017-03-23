@@ -12,7 +12,7 @@
 
 import tmGrammar
 
-from tmEditor.core.Types import ObjectTypes, ExternalObjectTypes
+from tmEditor.core.types import ObjectTypes, ExternalObjectTypes
 from tmEditor.core.Settings import MaxAlgorithms
 from tmEditor.core.AlgorithmHelper import decode_threshold, encode_threshold
 
@@ -172,6 +172,7 @@ class Algorithm(object):
         self.name = name
         self.expression = expression
         self.comment = comment or ""
+        self.modified = False
 
     def __eq__(self, item):
         """Distinquish algorithms."""
@@ -259,6 +260,7 @@ class Cut(object):
         self.maximum = maximum or 0. if not data else ""
         self.data = data or ""
         self.comment = comment or ""
+        self.modified = False
 
     @property
     def typename(self):
@@ -281,7 +283,6 @@ class Cut(object):
             return scale.bins[self.typename]
 
     def validate(self):
-
         if not self.RegExCutName.match(self.name):
             message = "invalid cut name: {self.name}".format(**locals())
             logging.error(message)

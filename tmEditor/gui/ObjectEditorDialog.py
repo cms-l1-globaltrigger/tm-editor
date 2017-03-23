@@ -3,10 +3,11 @@
 
 import tmGrammar
 
-from tmEditor.core import Settings
-from tmEditor.core.Types import ThresholdObjectTypes
-from tmEditor.core.Types import CountObjectTypes
-from tmEditor.core.Types import ObjectCutTypes
+from tmEditor.core.Settings import CutSpecs
+from tmEditor.core.formatter import fCutData, fCutValue
+from tmEditor.core.types import ThresholdObjectTypes
+from tmEditor.core.types import CountObjectTypes
+from tmEditor.core.types import ObjectCutTypes
 
 from tmEditor.core.Algorithm import toObject, objectCuts
 from tmEditor.core.AlgorithmHelper import AlgorithmHelper, decode_threshold
@@ -41,13 +42,6 @@ kStep = 'step'
 kType = 'type'
 kET = 'ET'
 kCOUNT = 'COUNT'
-
-# -----------------------------------------------------------------------------
-#  Helper functions
-# -----------------------------------------------------------------------------
-
-def getCutSettings(objectType):
-    return list(filter(lambda spec: spec.enabled and spec.object == objectType, Settings.CutSettings))
 
 # -----------------------------------------------------------------------------
 #  Cut item class
@@ -155,8 +149,8 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         self.updateInfoText()
         self.initCuts()
         # Toggle cut creation button (disable if no cuts available for object type).
-        self.addCutButton.setEnabled(len(getCutSettings(self.objectType())))
-
+        specs = CutSpecs.query(object=self.objectType())
+        self.addCutButton.setEnabled(len(specs))
 
     def initObjectList(self, menu):
         """Initialize list of available objects. Ignores objects with no scales."""
@@ -172,11 +166,15 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         for cut in sorted(self.menu.cuts, key=lambda cut: cut.name):
             if cut.object == self.objectType():
                 if cut.data:
-                    label = "{0} ({1})".format(cut.name, cut.data)
+                    label = "{0} ({1})".format(cut.name, fCutData(cut))
                 else:
-                    label = "{0} ({1:.3f}-{2:.3f})".format(cut.name, cut.minimum, cut.maximum)
+                    label = "{0} ({1} to {2})".format(cut.name, fCutValue(cut.minimum), fCutValue(cut.maximum))
                 item = CutItem(label)
                 item.setData(cut)
+                if cut.modified:
+                    font = item.font()
+                    font.setWeight(QtGui.QFont.Bold)
+                    item.setFont(font)
                 self.cutModel.appendRow(item)
                 self.cutModel._items.append(item)
         self.cutProxy = QtCore.QSortFilterProxyModel(self)
@@ -264,17 +262,24 @@ class ObjectEditorDialog(QtWidgets.QDialog):
     def addCut(self):
         """Raise cut editor to add a new cut."""
         # Load cut settings only for selected object type
-        dialog = CutEditorDialog(self.menu, getCutSettings(self.objectType()), self)
+        dialog = CutEditorDialog(self.menu, CutSpecs.query(object=self.objectType()), self)
         dialog.setModal(True)
         dialog.updateEntries()
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
-        cut = dialog.newCut()
-        self.menu.addCut(cut)
-        # TODO
-        cuts = objectCuts(self.expression())
+        new_cut = dialog.newCut()
+        new_cut.modified = True
+        self.menu.addCut(new_cut)
+        # TODO code refactoring!
+        # Restore selected cuts and newly added one.
+        selectedCuts = self.selectedCuts()
         self.initCuts()
+        # TODO code refactoring!
+        # Restore selected cuts and newly added one.
         for cut in self.cutModel._items:
-            if pyqt4_str(pyqt4_toPyObject(cut.data).name) in cuts:
+            if pyqt4_str(pyqt4_toPyObject(cut.data()).name) in selectedCuts:
+                cut.setCheckState(QtCore.Qt.Checked)
+            # Select newly added cut
+            if pyqt4_str(pyqt4_toPyObject(cut.data()).name) == new_cut.name:
                 cut.setCheckState(QtCore.Qt.Checked)

@@ -3,8 +3,8 @@
 
 import tmGrammar
 
-from tmEditor.core import Toolbox
-from tmEditor.core import Settings
+from tmEditor.core.formatter import fCutData, fCutValue
+from tmEditor.core.Settings import CutSpecs
 
 from tmEditor.core.AlgorithmHelper import AlgorithmHelper
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
@@ -111,11 +111,15 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         for cut in sorted(self.menu.cuts, key=lambda cut: cut.name):
             if cut.object == self.functionType() or cut.type == tmGrammar.CHGCOR: # HACK workaround for CHGCOR cuts for functions dist/mass
                 if cut.data:
-                    label = "{0} ({1})".format(cut.name, cut.data)
+                    label = "{0} ({1})".format(cut.name, fCutData(cut))
                 else:
-                    label = "{0} ({1:.3f}-{2:.3f})".format(cut.name, cut.minimum, cut.maximum)
+                    label = "{0} ({1} to {2})".format(cut.name, fCutValue(cut.minimum), fCutValue(cut.maximum))
                 item = CutItem(label)
                 item.setData(cut)
+                if cut.modified:
+                    font = item.font()
+                    font.setWeight(QtGui.QFont.Bold)
+                    item.setFont(font)
                 self.cutModel.appendRow(item)
                 self.cutModel._items.append(item)
         self.cutProxy = QtCore.QSortFilterProxyModel(self)
@@ -174,32 +178,44 @@ class FunctionEditorDialog(QtWidgets.QDialog):
 
     def addCut(self):
         """Raise cut editor to add a new cut."""
+        # TODO code refactoring!
         # Load cut settings only for selected function type.
-        specs = list(
-            filter(lambda spec: spec.enabled and spec.object == self.functionType(), Settings.CutSettings)
-        )
-        # NOTE: workaround for CHGCOR for functions dist/mass
-        specs.extend(list(
-            filter(lambda spec: spec.enabled and spec.type == tmGrammar.CHGCOR, Settings.CutSettings)
-        ))
+        specs = CutSpecs.query(enabled=True, object=self.functionType())
+        # NOTE: workaround for CHGCOR for functions dist/mass, append at end of spec list.
+        specs += CutSpecs.query(enabled=True, type=tmGrammar.CHGCOR)
+        # Remove duplicates, sort in original order.
+        specs = sorted(set(specs), key=lambda spec: CutSpecs.specs.index(spec))
+        # Create dialog
         dialog = CutEditorDialog(self.menu, specs, self)
         dialog.setModal(True)
         dialog.updateEntries()
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
-        cut = dialog.newCut()
-        self.menu.addCut(cut)
-        # TODO
-        expression = self.expression()
+        # Add new cut to menu
+        new_cut = dialog.newCut()
+        new_cut.modified = True
+        self.menu.addCut(new_cut)
+        # TODO code refactoring!
+        # Remember selected cuts before re-initalizing cut list.
+        selectedCuts = self.selectedCuts()
         self.updateCuts()
+        # TODO code refactoring!
+        # Restore selected cuts and newly added one.
+        for cut in self.cutModel._items:
+            if pyqt4_toPyObject(cut.data()).name in selectedCuts:
+                cut.setCheckState(QtCore.Qt.Checked)
+            # Select newly create cut
+            if pyqt4_str(pyqt4_toPyObject(cut.data()).name) == new_cut.name:
+                cut.setCheckState(QtCore.Qt.Checked)
         try:
-            self.loadFunction(expression)
+            self.loadFunction(self.expression())
         except ValueError:
             pass
 
     def accept(self):
         """Validate content before grant accept."""
+        # TODO code refactoring!
         # Get object requirements
         helpers = [helper for helper in self.objectHelpers if helper.isValid()]
         # Check minimum required objects
