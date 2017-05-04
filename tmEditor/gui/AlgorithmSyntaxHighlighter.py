@@ -21,6 +21,8 @@ Attaching a syntax hilighter to an text document is quite simple:
 
 import tmGrammar
 
+from tmEditor.core.types import FunctionTypes
+
 from tmEditor.PyQt5Proxy import QtCore
 from tmEditor.PyQt5Proxy import QtGui
 
@@ -64,11 +66,12 @@ class AlgorithmSyntaxHighlighter(QtGui.QSyntaxHighlighter):
         for pattern in keywordPatterns:
             self.highlightingRules.append(
                 self.HighlightingRule(keywordFormat, QtCore.QRegExp(pattern)))
+        # Highlight function names
         functionFormat = QtGui.QTextCharFormat()
         functionFormat.setForeground(QtCore.Qt.blue)
         functionFormat.setFontWeight(QtGui.QFont.Bold)
         rule = self.HighlightingRule(functionFormat,
-            QtCore.QRegExp("\\b{tmGrammar.comb}|{tmGrammar.dist}|{tmGrammar.mass}+(?=\\{{)".format(tmGrammar=tmGrammar)))
+            QtCore.QRegExp("\\b{tokens}+(?=\\{{)".format(tokens="|".join(FunctionTypes))))
         self.highlightingRules.append(rule)
 
     def highlightBlock(self, text):

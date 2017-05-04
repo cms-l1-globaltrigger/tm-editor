@@ -64,19 +64,20 @@ CutSpecs = CutSpecificationPool(
           "13": "quality level 13",
           "14": "quality level 14",
           "15": "quality level 15"
-      }
+        }
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.ISO),
         object=tmGrammar.MU,
         type=tmGrammar.ISO,
         title="Muon isolation",
+        description="",
         data={
           "0": "isolated",
           "1": "non-isolated",
           "2": "n/a",
           "3": "n/a"
-      }
+        }
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.CHG),
@@ -88,14 +89,24 @@ CutSpecs = CutSpecificationPool(
         data={
           "positive": "positive",
           "negative": "negative"
-      }
+        }
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.SLICE),
+        object=tmGrammar.MU,
+        type=tmGrammar.SLICE,
+        range_precision=0,
+        range_step=1,
+        title="Muon slice",
+        description="Restricts collection range for muon object requirement."
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.EG, tmGrammar.ETA),
         object=tmGrammar.EG,
         type=tmGrammar.ETA,
         count=2,
-        title="Electron/gamma eta"
+        title="Electron/gamma eta",
+        description=""
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.EG, tmGrammar.PHI),
@@ -103,7 +114,8 @@ CutSpecs = CutSpecificationPool(
         type=tmGrammar.PHI,
         count=2,
         range_unit="rad",
-        title="Electron/gamma phi"
+        title="Electron/gamma phi",
+        description=""
     ),
     CutSpecification(
         enabled=False,
@@ -111,6 +123,7 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.EG,
         type=tmGrammar.QLTY,
         title="Electron/gamma quality",
+        description="",
         data={
           "0": "quality level 0",
           "1": "quality level 1",
@@ -128,26 +141,35 @@ CutSpecs = CutSpecificationPool(
           "13": "quality level 13",
           "14": "quality level 14",
           "15": "quality level 15"
-      }
+        }
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.EG, tmGrammar.ISO),
         object=tmGrammar.EG,
         type=tmGrammar.ISO,
         title="Electron/gamma isolation",
+        description="",
         data={
           "0": "isolated",
           "1": "non-isolated",
           "2": "n/a",
           "3": "n/a"
-      }
+        }
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.EG, tmGrammar.SLICE),
+        object=tmGrammar.EG,
+        type=tmGrammar.SLICE,
+        title="Electron/gamma slice",
+        description="Restricts collection range for electron/gamma object requirement."
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.JET, tmGrammar.ETA),
         object=tmGrammar.JET,
         type=tmGrammar.ETA,
         count=2,
-        title="Jet eta"
+        title="Jet eta",
+        description=""
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.JET, tmGrammar.PHI),
@@ -155,7 +177,8 @@ CutSpecs = CutSpecificationPool(
         type=tmGrammar.PHI,
         count=2,
         range_unit="rad",
-        title="Jet phi"
+        title="Jet phi",
+        description=""
     ),
     CutSpecification(
         enabled=False,
@@ -163,6 +186,7 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.JET,
         type=tmGrammar.QLTY,
         title="Jet quality",
+        description="",
         data={
           "0": "quality level 0",
           "1": "quality level 1",
@@ -180,14 +204,22 @@ CutSpecs = CutSpecificationPool(
           "13": "quality level 13",
           "14": "quality level 14",
           "15": "quality level 15"
-      }
+        }
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.JET, tmGrammar.SLICE),
+        object=tmGrammar.JET,
+        type=tmGrammar.SLICE,
+        title="Jet slice",
+        description="Restricts collection range for jet object requirement."
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.TAU, tmGrammar.ETA),
         object=tmGrammar.TAU,
         type=tmGrammar.ETA,
         count=2,
-        title="Tau eta"
+        title="Tau eta",
+        description=""
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.TAU, tmGrammar.PHI),
@@ -195,7 +227,8 @@ CutSpecs = CutSpecificationPool(
         type=tmGrammar.PHI,
         count=2,
         range_unit="rad",
-        title="Tau phi"
+        title="Tau phi",
+        description=""
     ),
     CutSpecification(
         enabled=False,
@@ -203,6 +236,7 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.TAU,
         type=tmGrammar.QLTY,
         title="Tau quality",
+        description="",
         data={
           "0": "quality level 0",
           "1": "quality level 1",
@@ -220,19 +254,27 @@ CutSpecs = CutSpecificationPool(
           "13": "quality level 13",
           "14": "quality level 14",
           "15": "quality level 15"
-      }
+        }
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.TAU, tmGrammar.ISO),
         object=tmGrammar.TAU,
         type=tmGrammar.ISO,
         title="Tau isolation",
+        description="",
         data={
           "0": "isolated",
           "1": "non-isolated",
           "2": "n/a",
           "3": "n/a"
-      }
+        }
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.TAU, tmGrammar.SLICE),
+        object=tmGrammar.TAU,
+        type=tmGrammar.SLICE,
+        title="Tau slice",
+        description="Restricts collection range for tau object requirement."
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.ETM, tmGrammar.PHI),
@@ -240,7 +282,8 @@ CutSpecs = CutSpecificationPool(
         type=tmGrammar.PHI,
         count=2,
         range_unit="rad",
-        title="Missing energy phi"
+        title="Missing energy phi",
+        description=""
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.ETMHF, tmGrammar.PHI),
@@ -248,7 +291,8 @@ CutSpecs = CutSpecificationPool(
         type=tmGrammar.PHI,
         count=2,
         range_unit="rad",
-        title="Missing energy phi"
+        title="Missing energy HF phi",
+        description=""
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.HTM, tmGrammar.PHI),
@@ -256,27 +300,30 @@ CutSpecs = CutSpecificationPool(
         type=tmGrammar.PHI,
         count=2,
         range_unit="rad",
-        title="Missing energy phi"
+        title="Missing energy phi",
+        description=""
     ),
     CutSpecification(
         name=tmGrammar.CHGCOR,
         object=tmGrammar.comb,
         type=tmGrammar.CHGCOR,
-        objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
+        objects=[tmGrammar.MU],
+        functions=[tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_trv],
         title="Charge correlation",
-        description="Applies charge correlation restriction to combinations of two or more muon objects. It can be applied to functions comb, dist and mass.<br/><br/>" \
+        description="Applies charge correlation restriction to combinations of two or more muon objects. It can be applied to functions comb, dist, mass_inv and mass_trv.<br/><br/>" \
                     "<strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre>",
         data_exclusive=True,
         data={
           "ls": "like sign",
           "os": "opposite sign"
-      }
+        }
     ),
     CutSpecification(
         name=tmGrammar.DETA,
         object=tmGrammar.dist,
         type=tmGrammar.DETA,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
+        functions=[tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_trv],
         range_precision=3,
         range_step=0.001,
         title="Delta eta",
@@ -288,6 +335,7 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.dist,
         type=tmGrammar.DPHI,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
+        functions=[tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_trv],
         range_precision=3,
         range_step=0.001,
         range_unit="rad",
@@ -300,6 +348,7 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.dist,
         type=tmGrammar.DR,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
+        functions=[tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_trv],
         range_precision=1,
         range_step=0.1,
         title="Delta-R",
@@ -311,7 +360,8 @@ CutSpecs = CutSpecificationPool(
         name=tmGrammar.MASS,
         object=tmGrammar.mass,
         type=tmGrammar.MASS,
-        objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
+        objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF],
+        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_trv],
         range_precision=1,
         range_step=0.2,
         range_unit="GeV",
@@ -319,5 +369,56 @@ CutSpecs = CutSpecificationPool(
         description="Applies invariant mass restriction to combination of two objects.<br/><br/>" \
                     "M = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
                     "<strong>Example:</strong> <pre>mass{MU20, MU20}[MASS_Z]</pre>"
+    ),
+    CutSpecification(
+        name=tmGrammar.TBPT,
+        object=tmGrammar.mass,
+        type=tmGrammar.TBPT,
+        objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF],
+        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_trv],
+        range_precision=1,
+        range_step=0.1,
+        range_unit="GeV",
+        title="Two body Pt",
+        description="Applies two body Pt (energy of origin object) threshold to combination of two objects.<br/><br/>"
+                    "<strong>Example:</strong> <pre>mass_inv{MU20, MU20}[MASS_Z, TBPT_A]</pre>"
+    ),
+    CutSpecification(
+        name=tmGrammar.ORMDETA,
+        object=tmGrammar.dist,
+        type=tmGrammar.ORMDETA,
+        objects=[tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
+        functions=[tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_trv_orm],
+        range_precision=3,
+        range_step=0.001,
+        title="Delta eta",
+        description="Applies delta eta overlap removal restriction to combination of two/three objects.<br/><br/>" \
+                    "<strong>Example:</strong> <pre>comb_orm{TAU0, TAU0, JET0}[ORMDETA_SAMPLE]</pre>"
+    ),
+    CutSpecification(
+        name=tmGrammar.ORMDPHI,
+        object=tmGrammar.dist,
+        type=tmGrammar.ORMDPHI,
+        objects=[tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
+        functions=[tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_trv_orm],
+        range_precision=3,
+        range_step=0.001,
+        range_unit="rad",
+        title="Delta phi",
+        description="Applies delta phi overlap removal restriction to combination of two/three objects.<br/><br/>" \
+                    "<strong>Example:</strong> <pre>comb_orm{TAU0, TAU0, JET0}[ORMDPHI_SAMPLE]</pre>"
+    ),
+    CutSpecification(
+        name=tmGrammar.ORMDR,
+        object=tmGrammar.dist,
+        type=tmGrammar.ORMDR,
+        objects=[tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
+        functions=[tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_trv_orm],
+        range_precision=1,
+        range_step=0.1,
+        title="Delta-R Overlap Removal",
+        description="Applies delta-R overlap removal restriction to combination of two/three objects.<br/><br/>" \
+                    "&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span><br/><br/>" \
+                    "<strong>Example:</strong> <pre>comb_orm{TAU0, TAU0, JET0}[ORMDR_SAMPLE]</pre>"
     ),
 )

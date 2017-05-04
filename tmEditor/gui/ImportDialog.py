@@ -26,6 +26,7 @@ from tmEditor.gui.Document import TableView
 
 # Common widgets
 from tmEditor.gui.CommonWidgets import IconLabel, createIcon
+from tmEditor.gui.CommonWidgets import TextFilterWidget
 
 from tmEditor.PyQt5Proxy import QtCore
 from tmEditor.PyQt5Proxy import QtWidgets
@@ -70,9 +71,14 @@ class ImportDialog(QtWidgets.QDialog):
     def setupUi(self):
         self.setWindowTitle(self.tr("Import"))
         self.setMinimumWidth(500)
-
+        # Filter bar
+        self.filterWidget = TextFilterWidget(self, spacer=True)
+        self.filterWidget.textChanged.connect(self.setFilterText)
+        # Table view
         model = AlgorithmsModel(self.menu, self)
         proxyModel = QtCore.QSortFilterProxyModel(self)
+        proxyModel.setFilterKeyColumn(-1) # Filter all collumns
+        proxyModel.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         proxyModel.setSourceModel(model)
         self.tableView = TableView(self)
         self.tableView.setObjectName("importDialogTabelView")
@@ -85,10 +91,14 @@ class ImportDialog(QtWidgets.QDialog):
         buttonBox.rejected.connect(self.reject)
         # Create layout.
         layout = QtWidgets.QGridLayout()
+        layout.addWidget(self.filterWidget)
         layout.addWidget(self.tableView)
         layout.addWidget(IconLabel(createIcon("info"), self.tr("Select available algorithms to import."), self))
         layout.addWidget(buttonBox)
         self.setLayout(layout)
+
+    def setFilterText(self, text):
+        self.tableView.model().setFilterWildcard(text)
 
     def loadMenu(self, filename):
         """Load XML menu from file."""
@@ -126,7 +136,7 @@ class ImportDialog(QtWidgets.QDialog):
             logging.warning("imported scale set \"%s\" does not match with current scale set \"%s\"", scaleSet, baseScaleSet)
             QtWidgets.QMessageBox.warning(self,
                 self.tr("Different scale sets"),
-                pyqt4_str(self.tr("Imported scale set <em>{0}</em> does not match with current scale set <em>{1}</em>.")).format(scaleSet, baseScaleSet),
+                pyqt4_str(self.tr("Imported scale set <em>{0}</em> does not match with current scale set <em>{1}</em>, but might be compatible.")).format(scaleSet, baseScaleSet),
             )
 
     def importSelected(self):

@@ -23,6 +23,7 @@ from tmEditor.core.types import ObjectTypes, CountObjectTypes
 from tmEditor.core.Algorithm import RegExObject, RegExExtSignal, RegExFunction
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
+from tmEditor.core.XmlDecoder import patch_mass_function # HACK
 
 from tmEditor.gui.AlgorithmSyntaxHighlighter import AlgorithmSyntaxHighlighter
 from tmEditor.gui.CodeEditor import CodeEditor
@@ -671,6 +672,8 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
         algorithm.name = self.name()
         algorithm.expression = self.expression()
         algorithm.comment = self.comment()
+        # Patch algorithm expression HACK
+        patch_mass_function(algorithm)
 
     def parse(self):
         try:

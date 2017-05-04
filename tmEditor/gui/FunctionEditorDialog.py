@@ -5,6 +5,7 @@ import tmGrammar
 
 from tmEditor.core.formatter import fCutData, fCutValue
 from tmEditor.core.Settings import CutSpecs
+from tmEditor.core.types import FunctionCutsMap, ObjectTypes
 
 from tmEditor.core.AlgorithmHelper import AlgorithmHelper
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
@@ -35,7 +36,7 @@ __all__ = ['FunctionEditorDialog', ]
 # -----------------------------------------------------------------------------
 
 class FunctionEditorDialog(QtWidgets.QDialog):
-    ObjectReqs = 4
+    ObjectReqs = 5
 
     def __init__(self, menu, parent=None):
         super(FunctionEditorDialog, self).__init__(parent)
@@ -48,6 +49,8 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         # Initialize
         self.updateCuts()
         self.updateInfoText()
+        # Trigger slots
+        self.onUpdateObjectHelpers(0) # glitch
 
     def setupUi(self):
         self.setWindowIcon(createIcon("wizard-function"))
@@ -55,7 +58,12 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.functionComboBox = QtWidgets.QComboBox(self)
         self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (combination)")).format(tmGrammar.comb), tmGrammar.comb)
         self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (correlation)")).format(tmGrammar.dist), tmGrammar.dist)
-        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (invariant mass)")).format(tmGrammar.mass), tmGrammar.mass)
+        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (invariant mass)")).format(tmGrammar.mass_inv), tmGrammar.mass_inv)
+        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (transverse mass)")).format(tmGrammar.mass_trv), tmGrammar.mass_trv)
+        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (combination + overlap removal)")).format(tmGrammar.comb_orm), tmGrammar.comb_orm)
+        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (correlation + overlap removal)")).format(tmGrammar.dist_orm), tmGrammar.dist_orm)
+        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (invariant mass + overlap removal)")).format(tmGrammar.mass_inv_orm), tmGrammar.mass_inv_orm)
+        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (transverse mass + overlap removal)")).format(tmGrammar.mass_trv_orm), tmGrammar.mass_trv_orm)
         self.functionComboBox.currentIndexChanged.connect(self.onUpdateObjectHelpers)
         self.objectHelpers = [FunctionReqHelper(i, self) for i in range(self.ObjectReqs)]
         self.cutListView = QtWidgets.QListView(self)
@@ -76,14 +84,14 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             layout.addWidget(helper.lineEdit, 1+helper.index, 1)
             layout.addWidget(helper.editButton, 1+helper.index, 2)
             helper.lineEdit.textChanged.connect(self.updateInfoText)
-        layout.addWidget(QtWidgets.QLabel(self.tr("Cuts"), self), 5, 0)
-        layout.addWidget(self.cutListView, 5, 1, 1, 2)
+        layout.addWidget(QtWidgets.QLabel(self.tr("Cuts"), self), 6, 0)
+        layout.addWidget(self.cutListView, 6, 1, 1, 2)
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.filterWidget)
         hbox.addWidget(self.addCutButton)
-        layout.addLayout(hbox, 6, 1, 1, 2)
+        layout.addLayout(hbox, 7, 1, 1, 2)
         layout.addWidget(self.infoTextEdit, 0, 3, 7, 1)
-        layout.addWidget(self.buttonBox, 7, 0, 1, 4)
+        layout.addWidget(self.buttonBox, 8, 0, 1, 4)
         self.setLayout(layout)
 
     def functionType(self):
@@ -96,10 +104,16 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         return [pyqt4_str(pyqt4_toPyObject(item.data()).name) for item in list(filter(lambda item: item.checkState() == QtCore.Qt.Checked, self.cutModel._items))]
 
     def onUpdateObjectHelpers(self, index):
+        """Update object helper widgets."""
         self.updateCuts()
         for helper in self.objectHelpers:
             helper.setEnabled(True)
-            if self.functionType() in (tmGrammar.dist, tmGrammar.mass) and helper.index >= 2:
+            # Disable helpers if not needed
+            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv) and helper.index >= 2:
+                helper.setEnabled(False)
+            if self.functionType() in (tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_trv_orm) and helper.index >= 3:
+                helper.setEnabled(False)
+            if self.functionType() == tmGrammar.comb and helper.index >= 4:
                 helper.setEnabled(False)
 
         self.updateInfoText()
@@ -109,7 +123,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.cutModel = QtGui.QStandardItemModel(self)
         self.cutModel._items = []
         for cut in sorted(self.menu.cuts, key=lambda cut: cut.name):
-            if cut.object == self.functionType() or cut.type == tmGrammar.CHGCOR: # HACK workaround for CHGCOR cuts for functions dist/mass
+            if cut.type in FunctionCutsMap[self.functionType()]:
                 if cut.data:
                     label = "{0} ({1})".format(cut.name, fCutData(cut))
                 else:
@@ -180,21 +194,23 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         """Raise cut editor to add a new cut."""
         # TODO code refactoring!
         # Load cut settings only for selected function type.
-        specs = CutSpecs.query(enabled=True, object=self.functionType())
+        specs = []
+        for spec in CutSpecs:
+            if spec.functions and self.functionType() in spec.functions:
+                specs.append(spec)
         # NOTE: workaround for CHGCOR for functions dist/mass, append at end of spec list.
         specs += CutSpecs.query(enabled=True, type=tmGrammar.CHGCOR)
         # Remove duplicates, sort in original order.
         specs = sorted(set(specs), key=lambda spec: CutSpecs.specs.index(spec))
         # Create dialog
-        dialog = CutEditorDialog(self.menu, specs, self)
+        dialog = CutEditorDialog(self.menu, self)
+        dialog.setupCuts(specs)
         dialog.setModal(True)
-        dialog.updateEntries()
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         # Add new cut to menu
         new_cut = dialog.newCut()
-        new_cut.modified = True
         self.menu.addCut(new_cut)
         # TODO code refactoring!
         # Remember selected cuts before re-initalizing cut list.
@@ -234,7 +250,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
                 )
                 return
         # Check required cuts
-        if self.functionType() in (tmGrammar.dist, tmGrammar.mass):
+        if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv):
             if len(self.selectedCuts()) < 1:
                 QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
                     pyqt4_str(self.tr("Function {0}{{...}} requires at least one function cut.")).format(self.functionType())
@@ -264,6 +280,7 @@ class FunctionReqHelper(object):
         self.editButton = QtWidgets.QToolButton(parent)
         self.editButton.setText(parent.tr("..."))
         self.editButton.clicked.connect(self.edit)
+        self.types = ObjectTypes # allowd object types
 
     def text(self):
         """Returns text of line edit."""

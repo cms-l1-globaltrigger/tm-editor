@@ -12,7 +12,7 @@
 
 import tmGrammar
 
-from tmEditor.core.types import ObjectTypes, ExternalObjectTypes
+from tmEditor.core.types import ObjectTypes, ExternalObjectTypes, FunctionCutTypes
 from tmEditor.core.Settings import MaxAlgorithms
 from tmEditor.core.AlgorithmHelper import decode_threshold, encode_threshold
 
@@ -159,6 +159,18 @@ def calculateInvMassRange():
     maximum = math.sqrt(2 * pt1 * pt2 * (math.cosh(dEta) - math.cos(dPhi)))
     return (minimum, maximum)
 
+def calculateTwoBodyPtRange():
+    """Calculate valid invariant mass range. This is function is currently a
+    prototype and should fetch the actual limits from the menus scales in future.
+    M = sqrt( 2 pt1 pt2 ( cosh(dEta) - cos(dPhi) )
+    """
+    pt1 = 2048.
+    pt2 = 2048.
+    dPhi = math.pi
+    minimum = 0.
+    maximum = math.sqrt(pt1**2 + pt2**2 + 2*pt1*pt2*(math.cos(dPhi)*math.cos(dPhi) + math.sin(dPhi)*math.sin(dPhi)))
+    return (minimum, maximum)
+
 # ------------------------------------------------------------------------------
 #  Algorithm's container class.
 # ------------------------------------------------------------------------------
@@ -263,7 +275,13 @@ class Cut(object):
         self.modified = False
 
     @property
+    def isFunctionCut(self):
+        return self.type in FunctionCutTypes
+
+    @property
     def typename(self):
+        if self.isFunctionCut:
+            return self.type # HACK for function cuts
         return '-'.join([self.object, self.type])
 
     @property

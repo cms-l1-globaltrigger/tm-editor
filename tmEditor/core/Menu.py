@@ -25,9 +25,9 @@ import uuid
 import re
 import sys, os
 
-__all__ = ['Menu', ]
+__all__ = ['Menu', 'GrammarVersion']
 
-GrammarVersion = StrictVersion('0.4')
+GrammarVersion = StrictVersion('0.6')
 """Supported grammar version."""
 
 # ------------------------------------------------------------------------------

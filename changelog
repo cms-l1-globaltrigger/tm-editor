@@ -1,9 +1,22 @@
+tm-editor (0.7.0-1) extra; urgency=medium
+
+  * Support for grammar revision 0.6
+  * Improved cut editor dialog.
+  * Added invariant/transverse mass functions (mass_inv, mass_trv).
+  * Added two body Pt cut for mass functions (TBPT).
+  * Added delta-R, delta-Eta and delta-Phi cuts for mass functions.
+  * Added object collection slice cuts (SLICE).
+  * Added overlap removal functions.
+  * Added overlap removal cuts for overlap removal functions.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Wed, 03 Apr 2017 15:20:51 +0200
+
 tm-editor (0.6.0-1) extra; urgency=medium
 
   * Highlighting modified algorithms and cuts in main table views.
   * Removed obsolete information from status bar.
   * Improved message bar in algorithm editor.
-  * Improved formatting of cut data and various visual improvments.
+  * Improved formatting of cut data and various visual improvements.
 
  -- Bernhard Arnold <bernhard.arnold@cern.ch>  Wed, 22 Mar 2017 17:05:18 +0100
 

@@ -54,6 +54,10 @@ def parse():
         default = 10,
         help = "timeout for remote connections in seconds (default 10)",
     )
+    parser.add_argument('--no-update-check',
+        action = 'store_true',
+        help = "do not check for application updates using a remote server",
+    )
     parser.add_argument('-v', '--verbose',
         action = 'count',
         help = "increase output verbosity",
@@ -133,20 +137,21 @@ def main():
     bootstrap(args)
 
     # Version check
-    version_info = RemoteVersionInfo(Settings.VersionUrl)
-    if version_info.is_valid:
-        if version_info.version > StrictVersion(VERSION):
-            version = "{0}.{1}.{2}".format(*version_info.version.version)
-            hint = ""
-            if find_executable('yum'):
-                hint = "via 'apt-get upgrade' or "
-            elif find_executable("apt-get"):
-                hint = "via 'apt-get upgrade' or "
-            logging.info("A new version of tm-editor has been released!")
-            logging.info("Version %s is available %sto download at %s", version, hint, Settings.DownloadSite)
+    if not args.no_update_check:
+        version_info = RemoteVersionInfo(Settings.VersionUrl)
+        if version_info.is_valid:
+            if version_info.version > StrictVersion(VERSION):
+                version = "{0}.{1}.{2}".format(*version_info.version.version)
+                hint = ""
+                if find_executable('yum'):
+                    hint = "via 'apt-get upgrade' or "
+                elif find_executable("apt-get"):
+                    hint = "via 'apt-get upgrade' or "
+                logging.info("A new version of tm-editor has been released!")
+                logging.info("Version %s is available %sto download at %s", version, hint, Settings.DownloadSite)
 
-            # Download new scales and cabling to cache
-            # ... TODO 0.6.0
+                # Download new scales and cabling to cache
+                # ... TODO 0.6.0
 
     # Export options
     if args.export_xml:
@@ -177,20 +182,21 @@ def main():
         window.show()
 
         # Version check
-        if version_info.is_valid:
-            if version_info.version > StrictVersion(VERSION):
-                version = "{0}.{1}.{2}".format(*version_info.version.version)
-                title = window.tr("New version available")
-                hint = window.tr("")
-                if find_executable('yum'):
-                    hint = window.tr("via <strong>apt-get upgrade</strong> or ")
-                elif find_executable("apt-get"):
-                    hint = window.tr("via <strong>apt-get upgrade</strong> or ")
-                QtWidgets.QMessageBox.information(window,
-                    title,
-                    window.tr("A new version of tm-editor has been released!<br/><br/>" \
-                              "Version {0} is available {1}to download at<br/><br/><a href=\"{2}\">{2}</a>".format(version, hint, Settings.DownloadSite))
-                )
+        if not args.no_update_check:
+            if version_info.is_valid:
+                if version_info.version > StrictVersion(VERSION):
+                    version = "{0}.{1}.{2}".format(*version_info.version.version)
+                    title = window.tr("New version available")
+                    hint = window.tr("")
+                    if find_executable('yum'):
+                        hint = window.tr("via <strong>apt-get upgrade</strong> or ")
+                    elif find_executable("apt-get"):
+                        hint = window.tr("via <strong>apt-get upgrade</strong> or ")
+                    QtWidgets.QMessageBox.information(window,
+                        title,
+                        window.tr("A new version of tm-editor has been released!<br/><br/>" \
+                                  "Version {0} is available {1}to download at<br/><br/><a href=\"{2}\">{2}</a>".format(version, hint, Settings.DownloadSite))
+                    )
 
         # Load documents from command line (optional).
         for filename in args.filenames:

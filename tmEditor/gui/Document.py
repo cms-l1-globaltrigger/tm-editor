@@ -561,14 +561,13 @@ class Document(BaseDocument):
                 break
 
     def addCut(self, index, item):
-        dialog = CutEditorDialog(self.menu(), Settings.CutSpecs, self)
+        dialog = CutEditorDialog(self.menu(), self)
+        dialog.setupCuts(Settings.CutSpecs)
         dialog.setModal(True)
-        dialog.updateEntries()
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         cut = dialog.newCut()
-        cut.modified = True
         self.menu().addCut(cut)
         self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
         self.updateBottom()
@@ -617,15 +616,14 @@ class Document(BaseDocument):
 
     def editCut(self, index, item):
         cut = self.menu().cuts[index.row()]
-        dialog = CutEditorDialog(self.menu(), Settings.CutSpecs, self)
+        dialog = CutEditorDialog(self.menu(), self)
+        dialog.setupCuts(Settings.CutSpecs)
         dialog.setModal(True)
-        dialog.typeComboBox.setEnabled(False)
         dialog.loadCut(cut)
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         self.setModified(True)
-        cut.modified = True
         dialog.updateCut(cut)
         self.updateBottom()
         self.modified.emit()
@@ -678,12 +676,13 @@ class Document(BaseDocument):
                 break
 
     def copyCut(self, index, item):
-        dialog = CutEditorDialog(self.menu(), Settings.CutSpecs, self)
+        dialog = CutEditorDialog(self.menu(), self)
+        dialog.setupCuts(Settings.CutSpecs)
         dialog.setModal(True)
         dialog.loadCut(self.menu().cuts[index.row()])
-        dialog.setSuffix('_'.join([dialog.suffix, pyqt4_str(self.tr("copy"))]))
-        dialog.suffixLineEdit.setEnabled(True) # todo
-        dialog.copyMode = True
+        suffix = "{0}{1}".format(pyqt4_str(dialog.suffixLineEdit.text()), pyqt4_str(self.tr("_copy")))
+        dialog.suffixLineEdit.setText(suffix)
+        dialog.copyMode = True # TODO TODO TODO
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return

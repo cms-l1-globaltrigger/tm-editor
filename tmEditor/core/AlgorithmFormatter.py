@@ -23,13 +23,15 @@ Cascade an algorithm expression to increase human readability:
 
 import tmGrammar
 
+from tmEditor.core.types import FunctionTypes
+
 __all__ = ['AlgorithmFormatter', ]
 
 class AlgorithmFormatter(object):
     """Formatter class used to format user input to the (currently very)
     restrictive algorithm equation syntax.
     """
-    Functions = (tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, )
+    Functions = FunctionTypes
     Negators = (tmGrammar.NOT, )
     Operators = (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR, ) + Negators
     LeftPar = '('
@@ -134,8 +136,10 @@ class AlgorithmFormatter(object):
         """Return expression applying an expanded formatting.
 
         >>> print expand("MU10 AND (JET20 OR TAU20)")
-        MU10 AND (
-          JET20 OR
+        MU10
+         AND (
+          JET20
+           OR
           TAU20
         )
         """
@@ -172,7 +176,10 @@ class AlgorithmFormatter(object):
                     result += (eol, indent(), )
                 result += (token, )
             elif token in AlgorithmFormatter.Operators:
-                result += (ws if previous != AlgorithmFormatter.LeftPar else '', token, )
+                if previous != AlgorithmFormatter.LeftPar:
+                    result += (eol, ws, token)
+                else:
+                    result += (token, )
             elif token == AlgorithmFormatter.LeftPar:
                 result += (ws if previous else '', token, eol, indent(), ws*tabwidth)
             elif token in lpars:

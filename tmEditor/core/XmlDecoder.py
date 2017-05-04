@@ -25,6 +25,7 @@ from XmlEncoder import chdir
 
 import logging
 import sys, os
+import re
 
 # -----------------------------------------------------------------------------
 #  Keys
@@ -57,7 +58,7 @@ kUUIDFirmware = 'uuid_firmware'
 kUUIDMenu = 'uuid_menu'
 
 # -----------------------------------------------------------------------------
-#  Helper functions
+#  Patch functions
 # -----------------------------------------------------------------------------
 
 def patch_cut(cut):
@@ -66,10 +67,21 @@ def patch_cut(cut):
     "1" -> "os"
     """
     if cut.object == tmGrammar.comb and cut.type == tmGrammar.CHGCOR:
-        if cut.data == "0":
+        if cut.data.strip() == "0":
             cut.data = "ls"
-        if cut.data == "1":
+            logging.info("patched cut %s: '0' => 'ls'", cut.name)
+        if cut.data.strip() == "1":
             cut.data = "os"
+            logging.info("patched cut %s: '1' => 'os'", cut.name)
+
+def patch_mass_function(algorithm):
+    """Patch old mass functions, replace by mass_inv:
+    "mass" -> "mass_inv"
+    """
+    expression = re.sub(r"\b{0}\b".format(tmGrammar.mass), tmGrammar.mass_inv, algorithm.expression)
+    if algorithm.expression != expression:
+        algorithm.expression = expression
+        logging.info("patched '%s' => '%s' function: %s", tmGrammar.mass, tmGrammar.mass_inv, expression)
 
 # -----------------------------------------------------------------------------
 #  Decoder classes
@@ -156,6 +168,8 @@ class XmlDecoderQueue(Queue):
             expression = row[kExpression]
             comment = row.get(kComment, "")
             algorithm = Algorithm.Algorithm(index, name, expression, comment)
+            # Patch outdated expressions
+            patch_mass_function(algorithm)
             logging.debug("adding algorithm: %s", algorithm.__dict__)
             self.menu.addAlgorithm(algorithm)
 
@@ -166,6 +180,9 @@ class XmlDecoderQueue(Queue):
                 name = safe_str(row[kName], "cut name")
                 object = row[kObject]
                 type = row[kType]
+                # HACK remove object definition from function cuts!
+                if type in types.FunctionCutTypes:
+                    object = ""
                 minimum = float(row[kMinimum])
                 maximum = float(row[kMaximum])
                 data = row[kData]

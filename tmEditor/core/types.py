@@ -64,18 +64,30 @@ ExternalObjectTypes = (
 )
 """Ordered list of supported external signal types."""
 
-CutTypes = (
+ObjectCutTypes = (
     tmGrammar.ETA,
     tmGrammar.PHI,
-    tmGrammar.QLTY,
     tmGrammar.ISO,
+    tmGrammar.QLTY,
     tmGrammar.CHG,
+    tmGrammar.SLICE,
+)
+"""Orderd list of object cut type names."""
+
+FunctionCutTypes = (
     tmGrammar.CHGCOR,
     tmGrammar.DETA,
     tmGrammar.DPHI,
     tmGrammar.DR,
     tmGrammar.MASS,
+    tmGrammar.TBPT,
+    tmGrammar.ORMDETA,
+    tmGrammar.ORMDPHI,
+    tmGrammar.ORMDR,
 )
+"""Orderd list of function cut type names."""
+
+CutTypes = ObjectCutTypes + FunctionCutTypes
 """Ordered list of supported cut types."""
 
 ThresholdCutNames = (
@@ -92,15 +104,6 @@ ThresholdCutNames = (
 )
 """Ordered list of threshold cut names."""
 
-ObjectCutTypes = (
-    tmGrammar.ETA,
-    tmGrammar.PHI,
-    tmGrammar.ISO,
-    tmGrammar.QLTY,
-    tmGrammar.CHG,
-)
-"""Orderd list of cut type names."""
-
 ObjectComparisonTypes = (
     tmGrammar.GE,
     tmGrammar.EQ,
@@ -110,7 +113,12 @@ ObjectComparisonTypes = (
 FunctionTypes = (
     tmGrammar.comb,
     tmGrammar.dist,
-    tmGrammar.mass,
+    tmGrammar.mass_inv,
+    tmGrammar.mass_trv,
+    tmGrammar.comb_orm,
+    tmGrammar.dist_orm,
+    tmGrammar.mass_inv_orm,
+    tmGrammar.mass_trv_orm,
 )
 """Ordered list of functions."""
 
@@ -136,3 +144,15 @@ ObjectScaleMap = {
     tmGrammar.TOWERCOUNT: kCOUNT,
 }
 """Mapping of threshold/count scale types for objects."""
+
+FunctionCutsMap = {
+    tmGrammar.comb: [tmGrammar.CHGCOR, tmGrammar.TBPT],
+    tmGrammar.dist: [tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
+    tmGrammar.mass_inv: [tmGrammar.MASS, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
+    tmGrammar.mass_trv: [tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
+    tmGrammar.comb_orm: [tmGrammar.ORMDETA, tmGrammar.ORMDPHI, tmGrammar.ORMDR, tmGrammar.TBPT],
+    tmGrammar.dist_orm: [tmGrammar.ORMDETA, tmGrammar.ORMDPHI, tmGrammar.ORMDR, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
+    tmGrammar.mass_inv_orm: [tmGrammar.MASS, tmGrammar.ORMDETA, tmGrammar.ORMDPHI, tmGrammar.ORMDR, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
+    tmGrammar.mass_trv_orm: [tmGrammar.MASS, tmGrammar.ORMDETA, tmGrammar.ORMDPHI, tmGrammar.ORMDR, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
+}
+"""Mapping function to cuts."""

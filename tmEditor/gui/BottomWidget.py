@@ -12,7 +12,7 @@ from tmEditor.core import formatter
 from tmEditor.core.Settings import CutSpecs
 from tmEditor.core.Algorithm import toObject
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
-from tmEditor.core.types import CountObjectTypes
+from tmEditor.core.types import FunctionTypes, CountObjectTypes
 
 # Common widgets
 from tmEditor.gui.CommonWidgets import IconLabel
@@ -55,7 +55,7 @@ kType = 'type'
 def highlight(expression):
     """Simple rich text highlighter for algorithm expressions."""
     expression = AlgorithmFormatter.normalize(expression)
-    for name in (tmGrammar.comb, tmGrammar.dist, tmGrammar.mass):
+    for name in FunctionTypes:
         expression = re.sub(
             r'({0})({{)'.format(name),
             r'<span style="color: blue; font-weight: bold;">\1</span>\2',
@@ -238,11 +238,24 @@ class BottomWidget(QtWidgets.QWidget):
         content.append(pyqt4_str(self.tr("<p><strong>Type:</strong> {0}</p>")).format(cut.object))
         if cut.data:
             content.append(pyqt4_str(self.tr("<p><strong>Data:</strong></p>")))
-            data_ = CutSpecs.query(type=cut.type, object=cut.object)[0].data # TODO
             datalist = []
-            for key in cut.data.split(','):
-                datalist.append(pyqt4_str(self.tr("<li>[{0}] {1}</li>")).format(key, data_[key]))
-            content.append(pyqt4_str(self.tr("<p><ul>{0}</ul></p>")).format("".join(datalist)))
+            # TODO HACK
+            if cut.type == tmGrammar.SLICE:
+                if cut.data:
+                    cut.minimum = float(cut.data.split(",")[0].strip())
+                    cut.maximum = float(cut.data.split(",")[-1].strip())
+                if cut.minimum == cut.maximum:
+                    data = "[{0}]".format(int(cut.minimum))
+                else:
+                    data = "[{0}-{1}]".format(int(cut.minimum), int(cut.maximum))
+                content.append(pyqt4_str(self.tr("<p><strong>Range:</strong> {0}</p>".format(data))))
+            else:
+                content.append(pyqt4_str(self.tr("<p><strong>Options:</strong></p>")))
+                data_ = CutSpecs.query(type=cut.type, object=cut.object)[0].data # TODO
+                for key in cut.data.split(','):
+                    datalist.append(pyqt4_str(self.tr("<li>[{0}] {1}</li>")).format(key, data_[key]))
+                content.append(pyqt4_str(self.tr("<p><ul>{0}</ul></p>")).format("".join(datalist)))
+
         else:
             content.append(pyqt4_str(self.tr("<p><strong>Minimum:</strong> {0}</p>")).format(formatter.fCutValue(cut.minimum)))
             content.append(pyqt4_str(self.tr("<p><strong>Maximum:</strong> {0}</p>")).format(formatter.fCutValue(cut.maximum)))

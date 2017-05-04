@@ -8,6 +8,7 @@ from tmEditor.core.formatter import fCutData, fCutValue
 from tmEditor.core.types import ThresholdObjectTypes
 from tmEditor.core.types import CountObjectTypes
 from tmEditor.core.types import ObjectCutTypes
+from tmEditor.core.types import ObjectTypes
 
 from tmEditor.core.Algorithm import toObject, objectCuts
 from tmEditor.core.AlgorithmHelper import AlgorithmHelper, decode_threshold
@@ -69,7 +70,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         super(ObjectEditorDialog, self).__init__(parent)
         self.menu = menu
         self.setupUi()
-        self.initObjectList(menu)
+        self.initObjectList()
         self.initCuts()
         self.updateObjectType()
         # Connect signals
@@ -152,9 +153,9 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         specs = CutSpecs.query(object=self.objectType())
         self.addCutButton.setEnabled(len(specs))
 
-    def initObjectList(self, menu):
+    def initObjectList(self):
         """Initialize list of available objects. Ignores objects with no scales."""
-        for index, name in enumerate(ThresholdObjectTypes + CountObjectTypes):
+        for index, name in enumerate(ObjectTypes):
             self.typeComboBox.addItem(miniIcon(name.lower()), name)
             if not self.getScale(name): # on missing scale (editing outdated XML?)
                 self.typeComboBox.setItemEnabled(index, False)
@@ -262,14 +263,14 @@ class ObjectEditorDialog(QtWidgets.QDialog):
     def addCut(self):
         """Raise cut editor to add a new cut."""
         # Load cut settings only for selected object type
-        dialog = CutEditorDialog(self.menu, CutSpecs.query(object=self.objectType()), self)
+        dialog = CutEditorDialog(self.menu, self)
+        specs = CutSpecs.query(object=self.objectType())
+        dialog.setupCuts(specs)
         dialog.setModal(True)
-        dialog.updateEntries()
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         new_cut = dialog.newCut()
-        new_cut.modified = True
         self.menu.addCut(new_cut)
         # TODO code refactoring!
         # Restore selected cuts and newly added one.

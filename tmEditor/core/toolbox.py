@@ -144,6 +144,7 @@ class CutSpecification(object):
     type               cut type (eg. "QLTY")
     count              valid number of cuts of same type to be assigned at once, default is 1
     objects            optional list of allowed object types
+    functions          optional list of allowed function types
     range_precision    used precision for range entries, default is 0
     range_step         single step for linear range entries, default is 0.
     range_unit         optional unit for range entries
@@ -154,7 +155,7 @@ class CutSpecification(object):
     enabled            enable or disable cut specification, default is true
     """
 
-    def __init__(self, name, object, type, count=None, objects=None,
+    def __init__(self, name, object, type, count=None, objects=None, functions=None,
                  range_precision=None, range_step=None, range_unit=None,
                  data=None, data_exclusive=False, title=None, description=None,
                  enabled=True):
@@ -163,6 +164,7 @@ class CutSpecification(object):
         self.type = type
         self.count = count or 1
         self.objects = objects or []
+        self.functions = functions or []
         self.range_precision = int(range_precision or 0)
         self.range_step = float(range_step or 0.)
         self.range_unit = range_unit or ""
