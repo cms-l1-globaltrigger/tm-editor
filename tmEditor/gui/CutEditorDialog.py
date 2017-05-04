@@ -803,10 +803,10 @@ class CutEditorDialog(QtWidgets.QDialog):
         # Initial calls
         self.showSelectedCut()
 
-    def setupCuts(self, specs):
+    def setupCuts(self, specifictions):
         """Setup dialog by providing a list of cut specifications."""
         # Initialize tree widget
-        self.treeWidget.loadCutSpecs(specs)
+        self.treeWidget.loadCutSpecs(specifictions)
         # Clear stack
         while self.stackWidget.count():
             self.stackWidget.removeWidget(self.stackWidget.currentWidget())
@@ -814,16 +814,28 @@ class CutEditorDialog(QtWidgets.QDialog):
         # TODO
         rootItems = {}
         self._items = []
-        for spec in specs:
+        scales = self.menu.scales
+        for spec in specifictions:
+            # Check if item is disabled: { enabled: false } [optional]
+            if not spec.enabled:
+                continue
+            # Create root item key
             key = spec.object
             if spec.type in FunctionCutTypes:
-                key = "Functions"
+                key = "Functions" # Root entry for function cuts
+            # If key does not exist, create an empty entry
             if key not in rootItems:
                 widget = self.stackWidget.widget(0)
                 rootItems[key] = self.treeWidget.addRootItem(key, widget)
             root = rootItems[key]
+            # On missing scale (editing outdated XML?)
+            if spec.type in (tmGrammar.ETA, tmGrammar.PHI):
+                if spec.name not in scales.bins:
+                    widget = self.stackWidget.widget(0)
+                    item = self.treeWidget.addCutItem(root, spec, widget) # TODO
+                    item.setDisabled(True)
+                    continue
             # Create entry widget
-            scales = self.menu.scales
             widget = self.InputWidgetFactory[spec.type](spec, scales, self)
             item = self.treeWidget.addCutItem(root, spec, widget)
             # Add input form to stack
