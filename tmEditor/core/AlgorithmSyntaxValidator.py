@@ -197,7 +197,8 @@ class CombBxOffset(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            if not token.startswith(tmGrammar.comb):
+            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            if not name in (tmGrammar.comb, tmGrammar.comb_orm): # weak!
                 continue
             f = tmGrammar.Function_Item()
             if not tmGrammar.Function_parser(token, f):
@@ -237,14 +238,15 @@ class DistNrObjects(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            if not token.startswith(tmGrammar.dist):
+            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            if not name in (tmGrammar.dist, tmGrammar.dist_orm): # weak!
                 continue
             f = tmGrammar.Function_Item()
             if not tmGrammar.Function_parser(token, f):
                 raise AlgorithmSyntaxError(f.message)
             objects = functionObjects(token)
-            if len(objects) != 2:
-                message = "Function dist{{...}} requires excactly two object requirements.\n" \
+            if name == tmGrammar.dist and len(objects) != 2:
+                message = "Function {name}{{...}} requires excactly two object requirements.\n" \
                           "Invalid expression near `{token}`".format(**locals())
                 raise AlgorithmSyntaxError(message)
 
@@ -256,7 +258,8 @@ class DistDeltaRange(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            if not token.startswith(tmGrammar.dist):
+            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            if not name in (tmGrammar.dist, tmGrammar.dist_orm): # weak!
                 continue
             for name in functionCuts(token):
                 cut = menu.cutByName(name)

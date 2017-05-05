@@ -162,13 +162,13 @@ def calculateInvMassRange():
 def calculateTwoBodyPtRange():
     """Calculate valid invariant mass range. This is function is currently a
     prototype and should fetch the actual limits from the menus scales in future.
-    M = sqrt( 2 pt1 pt2 ( cosh(dEta) - cos(dPhi) )
+    M = sqrt( pt1^2 + pt2^2 + 2pt1pt2 ( cos(dPhi)^2 + sin(dPhi)^2 )
     """
     pt1 = 2048.
     pt2 = 2048.
     dPhi = math.pi
     minimum = 0.
-    maximum = math.sqrt(pt1**2 + pt2**2 + 2*pt1*pt2*(math.cos(dPhi)*math.cos(dPhi) + math.sin(dPhi)*math.sin(dPhi)))
+    maximum = math.sqrt(pt1**2 + pt2**2 + 2*pt1*pt2*(math.cos(dPhi)**2 + math.sin(dPhi)**2))
     return (minimum, maximum)
 
 # ------------------------------------------------------------------------------

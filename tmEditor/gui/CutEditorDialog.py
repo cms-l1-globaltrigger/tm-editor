@@ -555,6 +555,54 @@ class ThresholdWidget(InputWidget):
         cut.maximum = 0.
         cut.data = ""
 
+class MaximumWidget(InputWidget):
+    """Provides a maximum only entriy."""
+
+    def __init__(self, specification, scales, parent=None):
+        super(MaximumWidget, self).__init__(specification, scales, parent)
+        self.setupUi()
+        self.initRange()
+
+    def setupUi(self):
+        # Create labels
+        self.maximumLabel = QtWidgets.QLabel(self.tr("Maximum"), self)
+        self.maximumLabel.setObjectName("maximumLabel")
+        # Create maximum input widget
+        self.maximumSpinBox = RangeSpinBox(self)
+        self.maximumSpinBox.setObjectName("maximumSpinBox")
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(1);
+        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHeightForWidth(self.maximumSpinBox.sizePolicy().hasHeightForWidth())
+        self.maximumSpinBox.setSizePolicy(sizePolicy)
+        self.maximumSpinBox.setSingleStep(self.specification.range_step)
+        self.maximumSpinBox.setDecimals(self.specification.range_precision)
+        self.maximumSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
+        # Create layout
+        layout = QtWidgets.QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.maximumLabel, 0, 0)
+        layout.addWidget(self.maximumSpinBox, 0, 1)
+        layout.addItem(createVerticalSpacerItem())
+        self.setLayout(layout)
+
+    def initRange(self):
+        """Set range for inputs."""
+        minimum, maximum = calculateRange(self.specification, self.scales)
+        self.maximumSpinBox.setRange(minimum, maximum)
+        minimum = self.maximumSpinBox.minimum()
+        self.maximumSpinBox.setValue(minimum)
+
+    def loadCut(self, cut):
+        """Initialize widget from cut item."""
+        self.maximumSpinBox.setValue(float(cut.maximum))
+
+    def updateCut(self, cut):
+        """Update existing cut from inputs."""
+        cut.minimum = 0.
+        cut.maximum = self.maximumSpinBox.value()
+        cut.data = ""
+
 class MultipleJoiceWidget(InputWidget):
     """Provides a multiple joice entry."""
 
@@ -599,7 +647,7 @@ class MultipleJoiceWidget(InputWidget):
 
     def loadCut(self, cut):
         """Initialize widget from cut item."""
-        tokens = [token.split() for token in cut.data.split(",")]
+        tokens = [token.strip() for token in cut.data.split(",")]
         for token in tokens:
             if token not in self.options.keys():
                 raise CutEditorError("Invalid cut data: {0}".format(token))
@@ -613,8 +661,8 @@ class MultipleJoiceWidget(InputWidget):
                 tokens.append(key)
         if not tokens:
             raise CutEditorError("No option checked!")
-        cut.minimum = 0.
-        cut.maximum = 0.
+        cut.minimum = ""
+        cut.maximum = ""
         cut.data = ",".join(tokens)
 
 
@@ -669,8 +717,6 @@ class SingleJoiceWidget(InputWidget):
 
     def updateCut(self, cut):
         """Update existing cut from inputs."""
-        cut.minimum = 0.
-        cut.maximum = 0.
         token = None
         for key, button in self.options.iteritems():
             if button.isChecked():
@@ -678,8 +724,8 @@ class SingleJoiceWidget(InputWidget):
                 break
         if not token:
             raise CutEditorError("No option checked!")
-        cut.minimum = 0.
-        cut.maximum = 0.
+        cut.minimum = ""
+        cut.maximum = ""
         cut.data = token
 
 # -----------------------------------------------------------------------------
@@ -733,9 +779,9 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.DR: InfiniteRangeWidget,
         tmGrammar.MASS: InfiniteRangeWidget,
         tmGrammar.TBPT: ThresholdWidget,
-        tmGrammar.ORMDETA: RangeWidget,
-        tmGrammar.ORMDPHI: RangeWidget,
-        tmGrammar.ORMDR: InfiniteRangeWidget,
+        tmGrammar.ORMDETA: MaximumWidget,
+        tmGrammar.ORMDPHI: MaximumWidget,
+        tmGrammar.ORMDR: MaximumWidget,
     }
     """Widget factory for different cut input types."""
 
@@ -846,6 +892,9 @@ class CutEditorDialog(QtWidgets.QDialog):
         """Initialize dialog from existing cut."""
         self.loadedCut = cut
         self.suffixLineEdit.setText(cut.suffix)
+        self.suffixLineEdit.setEnabled(not list(filter(lambda algorithm: cut.name in algorithm.cuts(), self.menu.algorithms)))
+        if self.copyMode:
+            self.suffixLineEdit.setEnabled(True) # HACK overrule on copy
         if cut.isFunctionCut: # TODO not efficient
             result = filter(lambda item: item.spec.type==cut.type, self._items)
         else:

@@ -12,7 +12,7 @@ from tmEditor.core import formatter
 from tmEditor.core.Settings import CutSpecs
 from tmEditor.core.Algorithm import toObject
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
-from tmEditor.core.types import FunctionTypes, CountObjectTypes
+from tmEditor.core.types import FunctionTypes, CountObjectTypes, FunctionCutTypes
 
 # Common widgets
 from tmEditor.gui.CommonWidgets import IconLabel
@@ -235,7 +235,8 @@ class BottomWidget(QtWidgets.QWidget):
         self.reset()
         content = []
         content.append(pyqt4_str(self.tr("<h2>{0}</h2>")).format(cut.name))
-        content.append(pyqt4_str(self.tr("<p><strong>Type:</strong> {0}</p>")).format(cut.object))
+        if cut.type not in FunctionCutTypes:
+            content.append(pyqt4_str(self.tr("<p><strong>Type:</strong> {0}</p>")).format(cut.object))
         if cut.data:
             content.append(pyqt4_str(self.tr("<p><strong>Data:</strong></p>")))
             datalist = []
@@ -251,7 +252,10 @@ class BottomWidget(QtWidgets.QWidget):
                 content.append(pyqt4_str(self.tr("<p><strong>Range:</strong> {0}</p>".format(data))))
             else:
                 content.append(pyqt4_str(self.tr("<p><strong>Options:</strong></p>")))
-                data_ = CutSpecs.query(type=cut.type, object=cut.object)[0].data # TODO
+                if cut.type == tmGrammar.CHGCOR: # HACK
+                    data_ = CutSpecs.query(type=cut.type)[0].data # TODO
+                else:
+                    data_ = CutSpecs.query(type=cut.type, object=cut.object)[0].data # TODO
                 for key in cut.data.split(','):
                     datalist.append(pyqt4_str(self.tr("<li>[{0}] {1}</li>")).format(key, data_[key]))
                 content.append(pyqt4_str(self.tr("<p><ul>{0}</ul></p>")).format("".join(datalist)))

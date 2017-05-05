@@ -8,7 +8,7 @@
 
 import tmGrammar
 
-from tmEditor.core import Settings
+from tmEditor.core.Settings import CutSpecs
 from tmEditor.core.formatter import fCutValue, fCutData
 from tmEditor.core.Algorithm import calculateDRRange
 from tmEditor.core.Algorithm import calculateInvMassRange
@@ -21,10 +21,20 @@ from tmEditor.PyQt5Proxy import QtCore, QtGui
 __all__ = ['CutsModel', ]
 
 def maximumCallback(item):
-    """Custom infinite value getter."""
+    """Custom infinite value getter. Still a quick workaround."""
     if item.type == tmGrammar.MASS:
+        spec = CutSpecs.query(type=item.type)[0]
         minimum, maximum = calculateInvMassRange()
+        scale = spec.range_precision
+        maximum = int(maximum * scale) / scale
         if item.maximum >= maximum:
+            return float('inf')
+    if item.type == tmGrammar.DR:
+        spec = CutSpecs.query(type=item.type)[0]
+        minimum, maximum = calculateDRRange()
+        scale = spec.range_precision
+        maximum = int(maximum * scale) / scale
+        if item.maximum >= maximum: # HACK ...
             return float('inf')
     return item.maximum
 

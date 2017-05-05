@@ -469,6 +469,7 @@ class Document(BaseDocument):
             if index:
                 item.bottom.toolbar.removeButton.setEnabled(True)
                 cut = self.menu().cuts[index.row()]
+                # Disable edit and remove button for cuts already used in algorithms
                 for algorithm in self.menu().algorithms:
                     if cut.name in algorithm.cuts():
                         item.bottom.toolbar.removeButton.setEnabled(False)
@@ -677,12 +678,12 @@ class Document(BaseDocument):
 
     def copyCut(self, index, item):
         dialog = CutEditorDialog(self.menu(), self)
+        dialog.copyMode = True # TODO TODO TODO
         dialog.setupCuts(Settings.CutSpecs)
         dialog.setModal(True)
         dialog.loadCut(self.menu().cuts[index.row()])
         suffix = "{0}{1}".format(pyqt4_str(dialog.suffixLineEdit.text()), pyqt4_str(self.tr("_copy")))
         dialog.suffixLineEdit.setText(suffix)
-        dialog.copyMode = True # TODO TODO TODO
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return

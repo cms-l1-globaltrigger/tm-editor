@@ -12,6 +12,7 @@
 from tmEditor.core.toolbox import listcompress
 from tmEditor.core.Settings import CutSpecs
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
+from tmEditor.core.types import FunctionCutTypes
 
 import tmGrammar
 
@@ -67,14 +68,22 @@ def fCutValue(value, precision=3):
 
 def fCutData(cut, separator=", "):
     """Returns pretty formatted cut data according to cut specification settings."""
-    spec = (CutSpecs.query(object=cut.object, type=cut.type) or [None])[0]
+    if cut.type in FunctionCutTypes:
+        spec = (CutSpecs.query(type=cut.type) or [None])[0]
+    else:
+        spec = (CutSpecs.query(object=cut.object, type=cut.type) or [None])[0]
     if spec:
         # Translate exclusive entries in a more human readable way
         if spec.data_exclusive:
             return spec.data[cut.data.strip()]
+        elif cut.type == tmGrammar.SLICE:
+            if cut.minimum == cut.maximum:
+                return "[{0}]".format(int(cut.minimum))
+            else:
+                return "[{0}-{1}]".format(int(cut.minimum), int(cut.maximum))
         else:
             entries = [entry.strip() for entry in cut.data.split(",")]
-            if cut.type == tmGrammar.ISO:
+            if cut.type == tmGrammar.ISO: # except isolation luts
                 return ", ".join([spec.data[entry] for entry in entries])
             return fCompress([int(entry) for entry in entries if entry.isdigit()])
     return cut.data
