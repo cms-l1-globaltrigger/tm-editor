@@ -6,6 +6,7 @@ Trigger Menu Editor
  * python-argparse
  * PyQt5 (PyQt4 as fallback)
  * xerces-c
+ * boost-system, boost-filesystem
  * tmGrammar
  * tmTable
  * tmXsd

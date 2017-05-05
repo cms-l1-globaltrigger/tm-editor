@@ -1,3 +1,9 @@
+tm-editor (0.7.1-1) extra; urgency=medium
+
+  * Fixed available cuts in function editor.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Fri, 05 May 2017 16:20:12 +0200
+
 tm-editor (0.7.0-1) extra; urgency=medium
 
   * Support for grammar revision 0.6
