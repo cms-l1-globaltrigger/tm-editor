@@ -122,8 +122,14 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         """Initialize list of checkable cuts."""
         self.cutModel = QtGui.QStandardItemModel(self)
         self.cutModel._items = []
+        # Calculate supported cut types.
+        cutTypes = []
+        for spec in CutSpecs:
+            if spec.enabled:
+                if spec.functions and self.functionType() in spec.functions:
+                    cutTypes.append(spec.type)
         for cut in sorted(self.menu.cuts, key=lambda cut: cut.name):
-            if cut.type in FunctionCutsMap[self.functionType()]:
+            if cut.type in cutTypes:
                 if cut.data:
                     label = "{0} ({1})".format(cut.name, fCutData(cut))
                 else:
@@ -154,6 +160,24 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         expression = AlgorithmFormatter.expand(self.expression())
         text = []
         text.append('<h3>{functionType} Function</h3>')
+        if functionType == tmGrammar.comb:
+            text.append('<p>Object combinations (di- tri- quad- objects).</p>')
+        elif functionType == tmGrammar.comb_orm:
+            text.append('<p>Object combinations with overlap removal.</p>')
+        elif functionType == tmGrammar.dist:
+            text.append('<p>Topological distance (correlation) of two object requirements.</p>')
+        elif functionType == tmGrammar.dist_orm:
+            text.append('<p>Topological distance (correlation) of two object requirements with overlap removal.</p>')
+        elif functionType == tmGrammar.mass_inv:
+            text.append('<p>Invariant mass correlation of two object requirements.</p>')
+        elif functionType == tmGrammar.mass_inv_orm:
+            text.append('<p>Invariant mass correlation of two object requirements with overlap removal.</p>')
+        elif functionType == tmGrammar.mass_inv:
+            text.append('<p>Transverse mass correlation of two object requirements (at least on without eta component).</p>')
+        elif functionType == tmGrammar.mass_inv_orm:
+            text.append('<p>Transverse mass correlation of two object requirements (at least on without eta component) with overlap removal.</p>')
+        if functionType in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_inv_orm):
+            text.append('<p>The <em>last</em> object requirement must be of a diffrent type, applying the overlap removal on the <em>preceding</em> object requirement(s).</p>')
         text.append('<h4>Preview</h4>')
         text.append('<p><pre>{expression}</pre></p>')
         self.infoTextEdit.setText(''.join(text).format(**locals()))
@@ -196,15 +220,15 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         # Load cut settings only for selected function type.
         specs = []
         for spec in CutSpecs:
-            if spec.functions and self.functionType() in spec.functions:
-                specs.append(spec)
-        # NOTE: workaround for CHGCOR for functions dist/mass, append at end of spec list.
-        specs += CutSpecs.query(enabled=True, type=tmGrammar.CHGCOR)
+            if spec.enabled:
+                if spec.functions and self.functionType() in spec.functions:
+                    specs.append(spec)
         # Remove duplicates, sort in original order.
         specs = sorted(set(specs), key=lambda spec: CutSpecs.specs.index(spec))
         # Create dialog
         dialog = CutEditorDialog(self.menu, self)
         dialog.setupCuts(specs)
+        dialog.treeWidget.expandAll() # show all sub items
         dialog.setModal(True)
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:

@@ -12,6 +12,9 @@ timestamp := $(shell date)
 arch := $(shell uname -p)
 distro ?= linux
 
+# For package distribution, make sure to set the proper version.
+boost_version ?= 1.41
+
 # for tarball target
 tarballdir = tarball/$(pkgdir)-$(distro)-$(arch)
 
@@ -234,6 +237,8 @@ rpmbuild: all
 	echo "Requires:	 PyQt4 >= 4.6" >> rpm/$(package).spec
 	echo "Requires:  glibc >= 2.4" >> rpm/$(package).spec
 	echo "Requires:  xerces-c >= 3.1" >> rpm/$(package).spec
+	echo "Requires:  boost-system >= $(boost_version)" >> rpm/$(package).spec
+	echo "Requires:  boost-filesystem >= $(boost_version)" >> rpm/$(package).spec
 	echo "Requires:  gnome-icon-theme" >> rpm/$(package).spec
 	echo >> rpm/$(package).spec
 	echo "%description" >> rpm/$(package).spec
@@ -280,7 +285,7 @@ debbuild: all
 	echo "Architecture: $(debian_arch)"  >> deb/control
 	echo "Maintainer: $(maintainer)" >> deb/control
 	echo "Installed-Size: $(shell du -sk . | awk '{print $1}')" >> deb/control
-	echo "Depends: python (>= 2.6), python-qt4 (>= 4.6), libc6 (>= 2.4), libxerces-c3.1 (>= 3.1), gnome-icon-theme" >> deb/control
+	echo "Depends: python (>= 2.6), python-qt4 (>= 4.6), libc6 (>= 2.4), libxerces-c3.1 (>= 3.1), libboost-system$(boost_version) (>= $(boost_version)), libboost-filesystem$(boost_version) (>= $(boost_version)), gnome-icon-theme" >> deb/control
 	echo "Replaces: $(package)" >> deb/control
 	echo "Provides: $(package)" >> deb/control
 	echo "Section: gnome" >> deb/control

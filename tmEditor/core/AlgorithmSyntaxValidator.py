@@ -125,6 +125,7 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
         self.addRule(DistNrObjects)
         self.addRule(DistDeltaRange)
         self.addRule(CutCount)
+        self.addRule(TransverseMass)
 
 class BasicSyntax(SyntaxRule):
     """Validates basic algorithm syntax."""
@@ -198,16 +199,19 @@ class CombBxOffset(SyntaxRule):
             if not isFunction(token):
                 continue
             name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
-            if not name in (tmGrammar.comb, tmGrammar.comb_orm): # weak!
+            if not name in (tmGrammar.comb, tmGrammar.comb_orm):
                 continue
             f = tmGrammar.Function_Item()
             if not tmGrammar.Function_parser(token, f):
                 raise AlgorithmSyntaxError(f.message)
             objects = functionObjects(token)
-            for i in range(len(objects)):
+            sameBxRange = len(objects)
+            if name == tmGrammar.comb_orm:
+                sameBxRange -= 1 # exclude last object
+            for i in range(sameBxRange):
                 if int(objects[i].bx_offset) != int(objects[0].bx_offset):
-                    message = "All object requirements of function comb{{...}} must be of same bunch crossing offset.\n" \
-                              "Invalid expression near `{token}`".format(**locals())
+                    message = "All object requirements of function {name}{{...}} must be of same bunch crossing offset.\n" \
+                              "Invalid expression near `{token}`".format(**locals()) # TODO differentiate!
                     raise AlgorithmSyntaxError(message, token)
 
 class ChargeCorrelation(SyntaxRule):
@@ -239,7 +243,7 @@ class DistNrObjects(SyntaxRule):
             if not isFunction(token):
                 continue
             name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
-            if not name in (tmGrammar.dist, tmGrammar.dist_orm): # weak!
+            if not name in (tmGrammar.dist, tmGrammar.dist_orm):
                 continue
             f = tmGrammar.Function_Item()
             if not tmGrammar.Function_parser(token, f):
@@ -259,7 +263,7 @@ class DistDeltaRange(SyntaxRule):
             if not isFunction(token):
                 continue
             name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
-            if not name in (tmGrammar.dist, tmGrammar.dist_orm): # weak!
+            if not name in (tmGrammar.dist, tmGrammar.dist_orm):
                 continue
             for name in functionCuts(token):
                 cut = menu.cutByName(name)
@@ -328,3 +332,23 @@ class CutCount(SyntaxRule):
                     name = key[1] if key[0] in FunctionTypes else '-'.join(key)
                     message = "In `{token}`, too many cuts of type `{name}` assigned, only {spec.count} allowed.".format(**locals())
                     raise AlgorithmSyntaxError(message)
+
+class TransverseMass(SyntaxRule):
+    """Validates transverse mass object requirements At least one non eta object is required."""
+
+    def validate(self, tokens):
+        for token in tokens:
+            if not isFunction(token):
+                continue
+            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            if not name in (tmGrammar.mass_trv, tmGrammar.mass_trv_orm):
+                continue
+            objects = functionObjects(token)
+            nonEtaCount = 0
+            for obj in objects:
+                if obj.type in (tmGrammar.ETM, tmGrammar.ETMHF, tmGrammar.HTM):
+                    nonEtaCount += 1
+            if nonEtaCount < 1:
+                message = "Transverse mass functions require at least one object requirement without an eta component (ETM, ETMHF, HTM).\n" \
+                          "Invalid expression near `{token}`".format(**locals())
+                raise AlgorithmSyntaxError(message, token)

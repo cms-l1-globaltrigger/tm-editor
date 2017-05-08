@@ -42,6 +42,14 @@ kNumber = 'number'
 kType = 'type'
 kObject = 'object'
 
+ObjectCollectionRanges = {
+    tmGrammar.MU: (0, 7),
+    tmGrammar.EG: (0, 11),
+    tmGrammar.JET:  (0, 11),
+    tmGrammar.TAU: (0, 11),
+}
+"""Limits for slice cuts on object collections."""
+
 # -----------------------------------------------------------------------------
 #  Regular expressions
 # -----------------------------------------------------------------------------
@@ -92,10 +100,7 @@ def calculateRange(specification, scales):
         return calculateTwoBodyPtRange()
     # Slices
     if specification.type == tmGrammar.SLICE:
-        if specification.object == tmGrammar.MU:
-            return 0, 8 # TODO
-        if specification.object in (tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU):
-            return 0, 12 # TODO
+        return ObjectCollectionRanges[specification.object]
     raise RuntimeError("invalid cut type")
 
 # -----------------------------------------------------------------------------
@@ -912,6 +917,10 @@ class CutEditorDialog(QtWidgets.QDialog):
     def updateCut(self, cut):
         """Update existing cut from dialog inputs."""
         item = self.currentTreeItem()
+        if not item: # No cut type selected (eg. parent nodes)
+            raise CutEditorError(
+                pyqt4_str(self.tr("No cut type selected."))
+            )
         item.widget.updateCut(cut)
         cut.object = item.widget.specification.object
         cut.type = item.widget.specification.type
@@ -960,9 +969,9 @@ class CutEditorDialog(QtWidgets.QDialog):
         item = self.currentTreeItem()
         if item and item.spec:
             description = []
-            description = ["<h3 style=\"background-color:#efefef;gray;color:#729fcf;width:100%;\">{0} cut</h3>{1}".format(item.spec.title, item.spec.description)]
+            description = ["<h3>{0} cut</h3>{1}".format(item.spec.title, item.spec.description)]
             if item.spec.functions:
-                description.append("<h4 style=\"background-color:#efefef;gray;color:#729fcf;width:100%;\">Compatible functions:</h4>")
+                description.append("<h4>Compatible functions:</h4>")
                 description.append("<ul>")
                 for function in item.spec.functions:
                     # ignore depricated mass function
@@ -970,7 +979,7 @@ class CutEditorDialog(QtWidgets.QDialog):
                         description.append("<li><span style=\"color:blue;font-weight:bold;\">{0}</span>{{ ... }}[{1}_N, ...]</li>".format(function, item.spec.type))
                 description.append("</ul>")
             if item.spec.objects:
-                description.append("<h4 style=\"background-color:#efefef;gray;color:#729fcf;width:100%;\">Compatible object types:</h4>")
+                description.append("<h4>Compatible object types:</h4>")
                 description.append("<ul>")
                 for obj in item.spec.objects:
                     description.append("<li><span>{0}</span></li>".format(obj))

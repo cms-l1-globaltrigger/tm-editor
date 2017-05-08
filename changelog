@@ -1,3 +1,12 @@
+tm-editor (0.7.2-1) extra; urgency=medium
+
+  * Fixed available cuts in function editor.
+  * Fixed validation of transverse mass functions.
+  * Fixed limits for object requirement slice cuts.
+  * Updated descriptions and various minor visual improvements.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Mon, 08 May 2017 15:52:51 +0200
+
 tm-editor (0.7.1-1) extra; urgency=medium
 
   * Fixed available cuts in function editor.

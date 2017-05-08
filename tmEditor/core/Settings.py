@@ -308,7 +308,7 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.comb,
         type=tmGrammar.CHGCOR,
         objects=[tmGrammar.MU],
-        functions=[tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_trv],
+        functions=[tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv],
         title="Charge correlation",
         description="Applies charge correlation restriction to combinations of two or more muon objects. It can be applied to functions comb, dist, mass_inv and mass_trv.<br/><br/>" \
                     "<strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre>",
@@ -323,7 +323,7 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.dist,
         type=tmGrammar.DETA,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
-        functions=[tmGrammar.dist, tmGrammar.dist_orm, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm, tmGrammar.mass_trv, tmGrammar.mass_trv_orm],
+        functions=[tmGrammar.dist, tmGrammar.dist_orm, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm],
         range_precision=3,
         range_step=0.001,
         title="Delta eta",
@@ -348,7 +348,7 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.dist,
         type=tmGrammar.DR,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
-        functions=[tmGrammar.dist, tmGrammar.dist_orm, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm, tmGrammar.mass_trv, tmGrammar.mass_trv_orm],
+        functions=[tmGrammar.dist, tmGrammar.dist_orm, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm],
         range_precision=1,
         range_step=0.1,
         title="Delta-R",
@@ -365,8 +365,11 @@ CutSpecs = CutSpecificationPool(
         range_precision=1,
         range_step=0.2,
         range_unit="GeV",
-        title="Invariant mass",
-        description="Applies invariant mass restriction to combination of two objects.<br/><br/>" \
+        title="Invariant or Transverse mass",
+        description="Applies invariant or transverse mass restriction to combination of two objects depending on the used function.<br/><br/>" \
+                    "Calculation of transverse mass:<br/><br/>" \
+                    "M = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "Calculation of invariant mass:<br/><br/>" \
                     "M = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
                     "<strong>Example:</strong> <pre>mass{MU20, MU20}[MASS_Z]</pre>"
     ),
