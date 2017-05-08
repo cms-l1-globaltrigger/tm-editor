@@ -367,10 +367,10 @@ CutSpecs = CutSpecificationPool(
         range_unit="GeV",
         title="Invariant or Transverse mass",
         description="Applies invariant or transverse mass restriction to combination of two objects depending on the used function.<br/><br/>" \
-                    "Calculation of transverse mass:<br/><br/>" \
-                    "M = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
                     "Calculation of invariant mass:<br/><br/>" \
-                    "M = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "M<sub>(inv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "Calculation of transverse mass:<br/><br/>" \
+                    "M<sub>(trv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (1 - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
                     "<strong>Example:</strong> <pre>mass{MU20, MU20}[MASS_Z]</pre>"
     ),
     CutSpecification(
