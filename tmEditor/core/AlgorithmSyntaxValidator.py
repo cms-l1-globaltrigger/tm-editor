@@ -126,6 +126,7 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
         self.addRule(DistDeltaRange)
         self.addRule(CutCount)
         self.addRule(TransverseMass)
+        self.addRule(TwoBodyPtNrObjects)
 
 class BasicSyntax(SyntaxRule):
     """Validates basic algorithm syntax."""
@@ -341,7 +342,7 @@ class TransverseMass(SyntaxRule):
             if not isFunction(token):
                 continue
             name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
-            if not name in (tmGrammar.mass_trv, tmGrammar.mass_trv_orm):
+            if not name == tmGrammar.mass_trv:
                 continue
             objects = functionObjects(token)
             nonEtaCount = 0
@@ -352,3 +353,24 @@ class TransverseMass(SyntaxRule):
                 message = "Transverse mass functions require at least one object requirement without an eta component (ETM, ETMHF, HTM).\n" \
                           "Invalid expression near `{token}`".format(**locals())
                 raise AlgorithmSyntaxError(message, token)
+
+class TwoBodyPtNrObjects(SyntaxRule):
+    """Validates number of objects in combination with two body Pt cuts."""
+
+    def validate(self, tokens):
+        menu = self.validator.menu
+        for token in tokens:
+            if not isFunction(token):
+                continue
+            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            requiredObjects = (2, 2)
+            if name in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm):
+                requiredObjects = (2, 3) # for overlap removal add the reference
+            objects = functionObjects(token)
+            for cutname in functionCuts(token):
+                cut = menu.cutByName(cutname)
+                if cut.type == tmGrammar.TBPT:
+                    if not requiredObjects[0] <= len(objects) <= requiredObjects[1]:
+                        message = "Two body Pt cut requires exactly two base object requirements to be applied on.\n" \
+                          "Invalid expression in function `{name}` with cut `{cutname}` near `{token}`".format(**locals())
+                        raise AlgorithmSyntaxError(message, token)

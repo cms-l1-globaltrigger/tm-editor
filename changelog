@@ -1,3 +1,12 @@
+tm-editor (0.7.3-1) extra; urgency=medium
+
+  * Removed function mass_trv_orm lacking any valid use case.
+  * Fixed validation rules for two body Pt cuts (only for two objects).
+  * Fixed available objects in function editor dialog.
+  * Fixed import dialog, fore to select at least one algorithm to import.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Tue, 16 May 2017 12:57:14 +0200
+
 tm-editor (0.7.2-1) extra; urgency=medium
 
   * Fixed available cuts in function editor.

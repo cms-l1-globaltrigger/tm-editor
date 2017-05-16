@@ -63,7 +63,6 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (combination + overlap removal)")).format(tmGrammar.comb_orm), tmGrammar.comb_orm)
         self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (correlation + overlap removal)")).format(tmGrammar.dist_orm), tmGrammar.dist_orm)
         self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (invariant mass + overlap removal)")).format(tmGrammar.mass_inv_orm), tmGrammar.mass_inv_orm)
-        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (transverse mass + overlap removal)")).format(tmGrammar.mass_trv_orm), tmGrammar.mass_trv_orm)
         self.functionComboBox.currentIndexChanged.connect(self.onUpdateObjectHelpers)
         self.objectHelpers = [FunctionReqHelper(i, self) for i in range(self.ObjectReqs)]
         self.cutListView = QtWidgets.QListView(self)
@@ -107,14 +106,19 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         """Update object helper widgets."""
         self.updateCuts()
         for helper in self.objectHelpers:
+            # Enable all object types
+            helper.types = ObjectTypes
             helper.setEnabled(True)
             # Disable helpers if not needed
             if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv) and helper.index >= 2:
                 helper.setEnabled(False)
-            if self.functionType() in (tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_trv_orm) and helper.index >= 3:
+            if self.functionType() in (tmGrammar.dist_orm, tmGrammar.mass_inv_orm) and helper.index >= 3:
                 helper.setEnabled(False)
             if self.functionType() == tmGrammar.comb and helper.index >= 4:
                 helper.setEnabled(False)
+            # Set object types for object dialog
+            if self.functionType() in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm):
+                helper.types = (tmGrammar.EG, tmGrammar.TAU, tmGrammar.JET)
 
         self.updateInfoText()
 
@@ -304,7 +308,7 @@ class FunctionReqHelper(object):
         self.editButton = QtWidgets.QToolButton(parent)
         self.editButton.setText(parent.tr("..."))
         self.editButton.clicked.connect(self.edit)
-        self.types = ObjectTypes # allowd object types
+        self.types = ObjectTypes # allowed object types
 
     def text(self):
         """Returns text of line edit."""
@@ -320,7 +324,7 @@ class FunctionReqHelper(object):
         self.editButton.setEnabled(enabled)
 
     def edit(self):
-        dialog = ObjectEditorDialog(self.parent.menu, self.parent)
+        dialog = ObjectEditorDialog(self.parent.menu, self.parent, objects=self.types)
         token = self.text()
         if token: # else start with empty editor
             try:

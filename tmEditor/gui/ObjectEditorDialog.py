@@ -65,12 +65,15 @@ class CutItem(QtGui.QStandardItem):
 class ObjectEditorDialog(QtWidgets.QDialog):
     """Object editor dialog class."""
 
-    def __init__(self, menu, parent=None):
-        """Constructor, takes a reference to a menu and an optional parent."""
+    def __init__(self, menu, parent=None, objects=None):
+        """Constructor, takes a reference to a menu and an optional parent.
+        Optionally a custom list of objects can be assigned to the dialog.
+        """
         super(ObjectEditorDialog, self).__init__(parent)
         self.menu = menu
         self.setupUi()
-        self.initObjectList()
+        self.objectTypes = objects or ObjectTypes
+        self.initObjectList(self.objectTypes)
         self.initCuts()
         self.updateObjectType()
         # Connect signals
@@ -153,9 +156,11 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         specs = CutSpecs.query(object=self.objectType())
         self.addCutButton.setEnabled(len(specs))
 
-    def initObjectList(self):
+    def initObjectList(self, objects):
         """Initialize list of available objects. Ignores objects with no scales."""
         for index, name in enumerate(ObjectTypes):
+            if name not in objects:
+                continue # ignore if not in init list
             self.typeComboBox.addItem(miniIcon(name.lower()), name)
             if not self.getScale(name): # on missing scale (editing outdated XML?)
                 self.typeComboBox.setItemEnabled(index, False)
@@ -251,6 +256,8 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         *token* is not a valid object.
         """
         object_ = toObject(token)
+        if object_.type not in self.objectTypes:
+            raise ValueError("Invalid object type.")
         object_.cuts = objectCuts(token)
         self.typeComboBox.setCurrentIndex(self.typeComboBox.findText(object_.type))
         self.compareComboBox.setCurrentIndex(self.compareComboBox.findData(object_.comparison_operator))

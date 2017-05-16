@@ -141,7 +141,15 @@ class ImportDialog(QtWidgets.QDialog):
 
     def importSelected(self):
         """Import selected algorithms and auto adding new cuts."""
-        for index in self.tableView.selectedIndexes():
+        selectedIndexes = self.tableView.selectedIndexes()
+        # Make sure something is selected.
+        if not selectedIndexes:
+            QtWidgets.QMessageBox.warning(self,
+                self.tr("Empty selection"),
+                pyqt4_str(self.tr("No algorithms are selected to import.")),
+            )
+            return
+        for index in selectedIndexes:
             if index.column() == 0:
                 # Use the assigned proxy model to map the index.
                 #
