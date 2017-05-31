@@ -1,3 +1,12 @@
+tm-editor (0.7.4-1) extra; urgency=medium
+
+  * Fixed isolation cut type descriptions.
+  * Fixed CHGCOR patch for old menus using outdated notations.
+  * Updated open from URL dialog (re-sizable).
+  * Updated manpage file.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Wed, 31 May 2017 12:56:22 +0200
+
 tm-editor (0.7.3-1) extra; urgency=medium
 
   * Removed function mass_trv_orm lacking any valid use case.

@@ -71,12 +71,12 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.MU,
         type=tmGrammar.ISO,
         title="Muon isolation",
-        description="",
+        description="Two bits for isolation, bit 0 represents isolation, meaning of bit 1 is currently not defined.",
         data={
-          "0": "isolated",
-          "1": "non-isolated",
+          "0": "non-isolated",
+          "1": "isolated",
           "2": "n/a",
-          "3": "n/a"
+          "3": "n/a+isolated"
         }
     ),
     CutSpecification(
@@ -148,12 +148,12 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.EG,
         type=tmGrammar.ISO,
         title="Electron/gamma isolation",
-        description="",
+        description="Two bits for isolation, bit 0 represents isolation, meaning of bit 1 is currently not defined.",
         data={
-          "0": "isolated",
-          "1": "non-isolated",
+          "0": "non-isolated",
+          "1": "isolated",
           "2": "n/a",
-          "3": "n/a"
+          "3": "n/a+isolated"
         }
     ),
     CutSpecification(
@@ -261,12 +261,12 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.TAU,
         type=tmGrammar.ISO,
         title="Tau isolation",
-        description="",
+        description="Two bits for isolation, bit 0 represents isolation, meaning of bit 1 is currently not defined.",
         data={
-          "0": "isolated",
-          "1": "non-isolated",
+          "0": "non-isolated",
+          "1": "isolated",
           "2": "n/a",
-          "3": "n/a"
+          "3": "n/a+isolated"
         }
     ),
     CutSpecification(

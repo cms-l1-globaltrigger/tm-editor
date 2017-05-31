@@ -34,10 +34,12 @@ class OpenUrlDialog(QtWidgets.QDialog):
         super(OpenUrlDialog, self).__init__(parent)
         # Dialog appeareance
         self.setWindowTitle(self.tr("Open URL"))
-        self.setFixedWidth(500)
+        self.setMinimumWidth(500)
         # URL input
         self.urlLabel = QtWidgets.QLabel(self.tr("Please enter a network URL:"), self)
         self.urlComboBox = QtWidgets.QComboBox(self)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed)
+        self.urlComboBox.setSizePolicy(sizePolicy)
         self.urlComboBox.addItem("")
         self.urlComboBox.setEditable(True)
         self.urlComboBox.editTextChanged.connect(self.onUrlEdit)

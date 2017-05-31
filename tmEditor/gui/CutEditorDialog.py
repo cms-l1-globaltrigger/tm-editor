@@ -631,13 +631,17 @@ class MultipleJoiceWidget(InputWidget):
         layout.addWidget(self.scrollArea)
         self.setLayout(layout)
 
+    def format_label(self, key, value):
+        """Check box label formatter provided for overlaoding."""
+        return value
+
     def createScrollAreaContent(self):
         widget = QtWidgets.QWidget(self)
         widget.setObjectName("widget")
         vbox = QtWidgets.QVBoxLayout()
         self.options = {}
         for key, value in self.sortedItems():
-            option = QtWidgets.QCheckBox(value, self)
+            option = QtWidgets.QCheckBox(self.format_label(key, value), self)
             option.data = key
             vbox.addWidget(option)
             self.options[key] = option
@@ -670,6 +674,16 @@ class MultipleJoiceWidget(InputWidget):
         cut.maximum = ""
         cut.data = ",".join(tokens)
 
+class MultipleJoiceIsoWidget(MultipleJoiceWidget):
+    """Provides a multiple joice entry for isolation."""
+
+    def __init__(self, specification, scales, parent=None):
+        super(MultipleJoiceIsoWidget, self).__init__(specification, scales, parent)
+
+    def format_label(self, key, value):
+        """Check box label formatter provided for overlaoding."""
+        index = int(key)
+        return "[0b{index:02b}] {value}".format(**locals())
 
 class SingleJoiceWidget(InputWidget):
     """Provides a single joice entry."""
@@ -774,7 +788,7 @@ class CutEditorDialog(QtWidgets.QDialog):
     InputWidgetFactory = {
         tmGrammar.ETA: ScaleWidget,
         tmGrammar.PHI: ScaleWidget,
-        tmGrammar.ISO: MultipleJoiceWidget,
+        tmGrammar.ISO: MultipleJoiceIsoWidget,
         tmGrammar.QLTY: MultipleJoiceWidget,
         tmGrammar.CHG: SingleJoiceWidget,
         tmGrammar.SLICE: SliceWidget,

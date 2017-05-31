@@ -238,9 +238,8 @@ class BottomWidget(QtWidgets.QWidget):
         if cut.type not in FunctionCutTypes:
             content.append(pyqt4_str(self.tr("<p><strong>Type:</strong> {0}</p>")).format(cut.object))
         if cut.data:
-            content.append(pyqt4_str(self.tr("<p><strong>Data:</strong></p>")))
             datalist = []
-            # TODO HACK
+            # TODO HACK transitional backward compatibility
             if cut.type == tmGrammar.SLICE:
                 if cut.data:
                     cut.minimum = float(cut.data.split(",")[0].strip())
@@ -257,7 +256,10 @@ class BottomWidget(QtWidgets.QWidget):
                 else:
                     data_ = CutSpecs.query(type=cut.type, object=cut.object)[0].data # TODO
                 for key in cut.data.split(','):
-                    datalist.append(pyqt4_str(self.tr("<li>[{0}] {1}</li>")).format(key, data_[key]))
+                    if cut.type == tmGrammar.ISO:
+                        datalist.append(pyqt4_str(self.tr("<li>[0b{0:02b}] {1}</li>")).format(int(key), data_[key]))
+                    else:
+                        datalist.append(pyqt4_str(self.tr("<li>[{0}] {1}</li>")).format(key, data_[key]))
                 content.append(pyqt4_str(self.tr("<p><ul>{0}</ul></p>")).format("".join(datalist)))
 
         else:
