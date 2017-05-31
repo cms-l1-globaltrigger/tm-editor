@@ -66,7 +66,7 @@ def patch_cut(cut):
     "0" -> "ls"
     "1" -> "os"
     """
-    if cut.object == tmGrammar.comb and cut.type == tmGrammar.CHGCOR:
+    if cut.type == tmGrammar.CHGCOR:
         if cut.data.strip() == "0":
             cut.data = "ls"
             logging.info("patched cut %s: '0' => 'ls'", cut.name)
