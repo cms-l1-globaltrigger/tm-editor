@@ -39,15 +39,21 @@ class MdiArea(QtWidgets.QTabWidget):
         """Returns list containing all documents. Provided for convenience."""
         return [self.widget(index) for index in range(self.count())]
 
+    def findDocument(self, filename):
+        """Returns document if filename exists, else returns None."""
+        result = list(filter(lambda document: document.filename() == filename, self.documents()))
+        if result:
+            return result[0]
+
     @QtCore.pyqtSlot(str)
     def addDocument(self, document):
         """Adds document to MDI area. Prevents adding the same document twice.
         Returns index of tab of added document.
         """
         # Do no re-open a document, just raise its tab.
-        result = list(filter(lambda item: document.filename() == item.filename(), self.documents()))
-        if result:
-            self.setCurrentWidget(result[0])
+        duplicate = self.findDocument(document.filename())
+        if duplicate:
+            self.setCurrentWidget(duplicate)
             return self.currentIndex()
         document.modified.connect(self.documentModified)
         return self.addTab(document, createIcon("document"), document.name())

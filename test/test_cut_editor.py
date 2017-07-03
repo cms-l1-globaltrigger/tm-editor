@@ -1,6 +1,6 @@
 from tmEditor.gui.CutEditorDialog import CutEditorDialog
-
-from tmEditor.core.toolbox import CutSpecification
+from tmEditor.core.Algorithm import Cut
+from tmEditor.core.Settings import CutSpecs
 from tmEditor.core.Menu import Menu
 from tmEditor.core import XmlDecoder
 from tmEditor import tmeditor_rc
@@ -30,28 +30,17 @@ def test_dialog():
     app = QtWidgets.QApplication(sys.argv)
 
     window = CutEditorDialog(menu)
+    window.setupCuts(CutSpecs)
     window.show()
     app.exec_()
 
-    type_assert(window.spec, CutSpecification)
-    type_assert(window.name, str)
-    type_assert(window.type, str)
-    type_assert(window.object, str)
-    type_assert(window.typename, str)
-    type_assert(window.suffix, str)
-    type_assert(window.minimum, float)
-    type_assert(window.maximum, float)
-    type_assert(window.data, str)
-
-    dump(window.spec.__dict__)
-    dump(window.name)
-    dump(window.type)
-    dump(window.object)
-    dump(window.typename)
-    dump(window.suffix)
-    dump(window.minimum)
-    dump(window.maximum)
-    dump(window.data)
+    cut = window.newCut()
+    print "name    :", cut.name
+    print "object  :", cut.object
+    print "type    :", cut.type
+    print "minimum :", format(cut.minimum, '+23.16E')
+    print "maximum :", format(cut.maximum, '+23.16E')
+    print "data    :", cut.data
 
 if __name__ == '__main__':
     test_dialog()

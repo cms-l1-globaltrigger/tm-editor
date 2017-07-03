@@ -26,6 +26,7 @@ try:
     from tmEditor.PyQt5Proxy import PyQtSignature
     CommandLineMode = False
 except ImportError:
+    logging.warning("failed to import PyQt4/5, switching to command line mode")
     CommandLineMode = True
 
 from tmEditor.gui.MainWindow import MainWindow

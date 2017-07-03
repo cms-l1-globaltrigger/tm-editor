@@ -27,7 +27,6 @@ L1ApplicationAuthors = (
 )
 L1ApplicationContributors = (
     (u"Manfred Jeitler", "manfred.jeitler@cern.ch"),
-    (u"Takashi Matsushita", "takashi.matsushita@cern.ch"),
     (u"Vasile Ghete", "vasile.mihai.ghete@cern.ch"),
 )
 

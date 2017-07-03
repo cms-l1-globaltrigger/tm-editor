@@ -25,6 +25,8 @@
  * PhiCutChart
 """
 
+import tmGrammar
+
 from tmEditor.core import formatter
 from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.types import CountObjectTypes
@@ -86,10 +88,8 @@ def richTextCutsPreview(menu, algorithm, parent):
         cuts = [menu.cutByName(name) for name in algorithm.cuts()]
         cuts.sort()
         for cut in cuts:
-            if cut.data:
-                content.append(pyqt4_str(parent.tr("{0} <span style=\"color: gray;\">({1})</span><br/>")).format(cut.name, formatter.fCutData(cut)))
-            else:
-                content.append(pyqt4_str(parent.tr("{0} <span style=\"color: gray;\">({1} to {2})</span><br/>")).format(cut.name, formatter.fCutValue(cut.minimum), formatter.fCutValue(cut.maximum)))
+            content.append(formatter.fCutLabelRichText(cut))
+            content.append(pyqt4_str(parent.tr("<br/>")))
         content.append(pyqt4_str(parent.tr("</p>")))
     return "".join(content)
 

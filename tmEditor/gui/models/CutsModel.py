@@ -36,6 +36,9 @@ def maximumCallback(item):
         maximum = int(maximum * scale) / scale
         if item.maximum >= maximum: # HACK ...
             return float('inf')
+    if item.type == tmGrammar.TBPT:
+        # There is no maximum for TBPT
+        return ""
     return item.maximum
 
 # ------------------------------------------------------------------------------

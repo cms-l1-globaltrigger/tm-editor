@@ -45,6 +45,7 @@
     <file alias="icons/16/format-cascade.svg">share/tm-editor/icons/16x16/format-cascade.svg</file>
     <file alias="icons/24/format-compact.svg">share/tm-editor/icons/24x24/format-compact.svg</file>
     <file alias="icons/24/format-cascade.svg">share/tm-editor/icons/24x24/format-cascade.svg</file>
+    <file alias="icons/24/select-index.svg">share/tm-editor/icons/24x24/select-index.svg</file>
 
     <!-- Fallback system icons for macOS and others -->
     <file alias="icons/document-import.svg">share/tm-editor/icons/48x48/document-import.svg</file>

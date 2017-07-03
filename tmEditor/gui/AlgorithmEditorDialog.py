@@ -23,7 +23,7 @@ from tmEditor.core.types import ObjectTypes, CountObjectTypes
 from tmEditor.core.Algorithm import RegExObject, RegExExtSignal, RegExFunction
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
-from tmEditor.core.XmlDecoder import patch_mass_function # HACK
+from tmEditor.core.XmlDecoder import mirgrate_mass_function # HACK
 
 from tmEditor.gui.AlgorithmSyntaxHighlighter import AlgorithmSyntaxHighlighter
 from tmEditor.gui.CodeEditor import CodeEditor
@@ -237,7 +237,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         self.redoAct.setIcon(createIcon("edit-redo"))
         self.redoAct.triggered.connect(self.onRedo)
         self.selectIndexAct = QtWidgets.QAction(self.tr("Select &Index"), self)
-        self.selectIndexAct.setIcon(createIcon("search"))
+        self.selectIndexAct.setIcon(createIcon("select-index"))
         self.selectIndexAct.triggered.connect(self.onSelectIndex)
         self.insertObjectAct = QtWidgets.QAction(self.tr("&Object..."), self)
         self.insertObjectAct.setToolTip(self.tr("Insert Object..."))
@@ -519,7 +519,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         if self.loadedIndex in reserved:
             reserved.remove(self.loadedIndex)
         dialog = AlgorithmSelectIndexDialog(self)
-        dialog.setup(index, reserved)
+        dialog.setup(reserved, [index])
         dialog.setModal(True)
         if dialog.exec_() == QtWidgets.QDialog.Accepted:
             logging.debug("Selected new algorithm index %d", dialog.index)
@@ -673,7 +673,7 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
         algorithm.expression = self.expression()
         algorithm.comment = self.comment()
         # Patch algorithm expression HACK
-        patch_mass_function(algorithm)
+        mirgrate_mass_function(algorithm)
 
     def parse(self):
         try:

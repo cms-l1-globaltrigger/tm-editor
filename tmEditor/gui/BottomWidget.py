@@ -86,6 +86,7 @@ class ToolbarWidget(QtWidgets.QWidget):
     editTriggered = QtCore.pyqtSignal()
     copyTriggered = QtCore.pyqtSignal()
     removeTriggered = QtCore.pyqtSignal()
+    moveTriggered = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         super(ToolbarWidget, self).__init__(parent)
@@ -104,6 +105,9 @@ class ToolbarWidget(QtWidgets.QWidget):
         self.removeButton = QtWidgets.QPushButton(createIcon("list-remove"), self.tr("Remove"), self)
         self.removeButton.clicked.connect(lambda: self.removeTriggered.emit())
         layout.addWidget(self.removeButton)
+        self.moveButton = QtWidgets.QPushButton(createIcon("select-index"), self.tr("Move"), self)
+        self.moveButton.clicked.connect(lambda: self.moveTriggered.emit())
+        layout.addWidget(self.moveButton)
         self.setLayout(layout)
         self.setAutoFillBackground(True)
 
@@ -111,6 +115,7 @@ class ToolbarWidget(QtWidgets.QWidget):
         self.editButton.setEnabled(enabled)
         self.copyButton.setEnabled(enabled)
         self.removeButton.setEnabled(enabled)
+        self.moveButton.setEnabled(enabled)
 
 # ------------------------------------------------------------------------------
 #  Bottom preview widget
@@ -236,7 +241,7 @@ class BottomWidget(QtWidgets.QWidget):
         content = []
         content.append(pyqt4_str(self.tr("<h2>{0}</h2>")).format(cut.name))
         if cut.type not in FunctionCutTypes:
-            content.append(pyqt4_str(self.tr("<p><strong>Type:</strong> {0}</p>")).format(cut.object))
+            content.append(pyqt4_str(self.tr("<p><strong>Object:</strong> {0}</p>")).format(cut.object))
         if cut.data:
             datalist = []
             # TODO HACK transitional backward compatibility
@@ -261,7 +266,8 @@ class BottomWidget(QtWidgets.QWidget):
                     else:
                         datalist.append(pyqt4_str(self.tr("<li>[{0}] {1}</li>")).format(key, data_[key]))
                 content.append(pyqt4_str(self.tr("<p><ul>{0}</ul></p>")).format("".join(datalist)))
-
+        elif cut.type == tmGrammar.TBPT:
+            content.append(pyqt4_str(self.tr("<p><strong>Threshold:</strong> {0}</p>")).format(formatter.fCutValue(cut.minimum)))
         else:
             content.append(pyqt4_str(self.tr("<p><strong>Minimum:</strong> {0}</p>")).format(formatter.fCutValue(cut.minimum)))
             content.append(pyqt4_str(self.tr("<p><strong>Maximum:</strong> {0}</p>")).format(formatter.fCutValue(cut.maximum)))

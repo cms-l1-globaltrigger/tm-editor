@@ -14,7 +14,9 @@ from tmEditor.core.Algorithm import (
 
 from tmEditor.gui.CommonWidgets import (
     RestrictedLineEdit,
-    RestrictedPlainTextEdit
+    RestrictedPlainTextEdit,
+    EtaCutChart,
+    PhiCutChart
 )
 
 from tmEditor.PyQt5Proxy import (
@@ -24,6 +26,7 @@ from tmEditor.PyQt5Proxy import (
     pyqt4_toPyObject
 )
 
+import math
 import logging
 import re
 
@@ -83,11 +86,8 @@ def calculateRange(specification, scales):
         return minimum, maximum
     # Delta phi
     if specification.type in (tmGrammar.DPHI, tmGrammar.ORMDPHI):
-        def isMuPhi(scale): # filter
-            return scale[kObject]==tmGrammar.MU and scale[kType]==tmGrammar.PHI
-        scale = list(filter(isMuPhi, scales.scales))[0]
         minimum = 0.
-        maximum = float(scale[kMaximum])
+        maximum = math.pi
         return minimum, maximum
     # Delta-R
     if specification.type in (tmGrammar.DR, tmGrammar.ORMDR):
@@ -252,7 +252,8 @@ class ScaleWidget(InputWidget):
         sizePolicy.setVerticalStretch(0);
         sizePolicy.setHeightForWidth(self.minimumSpinBox.sizePolicy().hasHeightForWidth())
         self.minimumSpinBox.setSizePolicy(sizePolicy)
-        self.minimumSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
+        if self.specification.range_unit:
+            self.minimumSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
         # Create maximum input widget
         self.maximumSpinBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
         self.maximumSpinBox.setObjectName("maximumSpinBox")
@@ -261,7 +262,13 @@ class ScaleWidget(InputWidget):
         sizePolicy.setVerticalStretch(0);
         sizePolicy.setHeightForWidth(self.maximumSpinBox.sizePolicy().hasHeightForWidth())
         self.maximumSpinBox.setSizePolicy(sizePolicy)
-        self.maximumSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
+        if self.specification.range_unit:
+            self.maximumSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
+        # Optional eta/phi graphs
+        self.etaCutChart = EtaCutChart(self)
+        self.etaCutChart.hide()
+        self.phiCutChart = PhiCutChart(self)
+        self.phiCutChart.hide()
         # Create layout
         layout = QtWidgets.QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -269,8 +276,12 @@ class ScaleWidget(InputWidget):
         layout.addWidget(self.minimumSpinBox, 0, 1)
         layout.addWidget(self.maximumLabel, 1, 0)
         layout.addWidget(self.maximumSpinBox, 1, 1)
+        layout.addWidget(self.etaCutChart, 2, 1, 1, 2)
+        layout.addWidget(self.phiCutChart, 3, 1, 1, 2)
         layout.addItem(createVerticalSpacerItem())
         self.setLayout(layout)
+        self.minimumSpinBox.valueChanged.connect(self.updateCharts)
+        self.maximumSpinBox.valueChanged.connect(self.updateCharts)
 
     def initRange(self):
         scale = self.scales.bins[self.specification.name]
@@ -292,6 +303,16 @@ class ScaleWidget(InputWidget):
         cut.maximum = self.maximumSpinBox.value()
         cut.data = ""
 
+    def updateCharts(self):
+        """Update optional charts for eta and phi."""
+        if self.specification.type == tmGrammar.ETA:
+            self.etaCutChart.setRange(self.minimumSpinBox.value(), self.maximumSpinBox.value())
+            self.etaCutChart.update()
+            self.etaCutChart.show()
+        elif self.specification.type == tmGrammar.PHI:
+            self.phiCutChart.setRange(self.minimumSpinBox.value(), self.maximumSpinBox.value())
+            self.phiCutChart.update()
+            self.phiCutChart.show()
 
 class RangeWidget(InputWidget):
     """Provides range entries."""
@@ -317,7 +338,8 @@ class RangeWidget(InputWidget):
         self.minimumSpinBox.setSizePolicy(sizePolicy)
         self.minimumSpinBox.setSingleStep(self.specification.range_step)
         self.minimumSpinBox.setDecimals(self.specification.range_precision)
-        self.minimumSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
+        if self.specification.range_unit:
+            self.minimumSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
         # Create maximum input widget
         self.maximumSpinBox = RangeSpinBox(self)
         self.maximumSpinBox.setObjectName("maximumSpinBox")
@@ -328,7 +350,8 @@ class RangeWidget(InputWidget):
         self.maximumSpinBox.setSizePolicy(sizePolicy)
         self.maximumSpinBox.setSingleStep(self.specification.range_step)
         self.maximumSpinBox.setDecimals(self.specification.range_precision)
-        self.maximumSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
+        if self.specification.range_unit:
+            self.maximumSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
         # Create layout
         layout = QtWidgets.QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)

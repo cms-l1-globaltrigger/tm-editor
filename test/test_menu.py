@@ -87,13 +87,13 @@ class MenuTests(unittest.TestCase):
 
     def test_functionObjectsCuts(self):
         cases = {
-            "comb{MU20,MU10}": [],
-            "comb{MU20[MU-ISO_Q],MU10[MU-ISO_Q]}": ["MU-ISO_Q"],
-            "comb{TAU20[TAU-ETA_Q,TAU-PHI_Q],TAU20[TAU-ETA_Q,TAU-PHI_Q]}": ["TAU-ETA_Q", "TAU-PHI_Q"],
-            "comb{TAU20[TAU-PHI_Q],TAU20[TAU-ETA_Q]}": ["TAU-ETA_Q", "TAU-PHI_Q"],
-            "comb{MU80,MU60,MU40,MU20}": [],
-            "comb{MU80[MU-ETA_Q],MU60[MU-ETA_Q],MU40[MU-ETA_Q],MU20[MU-ETA_Q]}": ["MU-ETA_Q"],
-            "comb{MU400[MU-ETA_Q],MU300[MU-ETA_Q,MU-PHI_Q,MU-ISO_Q],MU200[MU-PHI_Q],MU100[MU-ETA_Q]}": ["MU-PHI_Q", "MU-ETA_Q", "MU-ISO_Q"],
+            "comb{MU20,MU10}": [[], []],
+            "comb{MU20[MU-ISO_Q],MU10[MU-ISO_Q]}": [["MU-ISO_Q"], ["MU-ISO_Q"]],
+            "comb{TAU20[TAU-ETA_Q,TAU-PHI_Q],TAU20[TAU-ETA_Q,TAU-PHI_Q]}": [["TAU-ETA_Q", "TAU-PHI_Q"], ["TAU-ETA_Q", "TAU-PHI_Q"]],
+            "comb{TAU20[TAU-PHI_Q],TAU20[TAU-ETA_Q]}": [["TAU-PHI_Q"], ["TAU-ETA_Q"]],
+            "comb{MU80,MU60,MU40,MU20}": [[], [], [], []],
+            "comb{MU80[MU-ETA_A],MU60[MU-ETA_B],MU40[MU-ETA_C],MU20[MU-ETA_D]}": [["MU-ETA_A"], ["MU-ETA_B"], ["MU-ETA_C"], ["MU-ETA_D"]],
+            "comb{MU400[MU-ETA_Q],MU300[MU-ETA_Q,MU-PHI_Q,MU-ISO_Q],MU200[MU-PHI_Q],MU100[MU-ETA_Q]}": [["MU-ETA_Q"], ["MU-ETA_Q","MU-PHI_Q","MU-ISO_Q"], ["MU-PHI_Q"], ["MU-ETA_Q"]],
         }
         for token, ref in cases.items():
             self.assertEqual(functionObjectsCuts(token), ref)

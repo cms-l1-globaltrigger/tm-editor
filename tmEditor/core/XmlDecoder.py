@@ -20,6 +20,7 @@ from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 
 from distutils.version import StrictVersion
+from collections import namedtuple
 
 from XmlEncoder import chdir
 
@@ -58,30 +59,47 @@ kUUIDFirmware = 'uuid_firmware'
 kUUIDMenu = 'uuid_menu'
 
 # -----------------------------------------------------------------------------
-#  Patch functions
+#  Migration functions
 # -----------------------------------------------------------------------------
 
-def patch_cut(cut):
-    """Patch old cut data specifications:
-    "0" -> "ls"
-    "1" -> "os"
-    """
-    if cut.type == tmGrammar.CHGCOR:
-        if cut.data.strip() == "0":
-            cut.data = "ls"
-            logging.info("patched cut %s: '0' => 'ls'", cut.name)
-        if cut.data.strip() == "1":
-            cut.data = "os"
-            logging.info("patched cut %s: '1' => 'os'", cut.name)
+MirgrationResult = namedtuple('MirgrationResult', 'subject,param,before,after')
 
-def patch_mass_function(algorithm):
-    """Patch old mass functions, replace by mass_inv:
+def mirgrate_chgcor_cut(cut):
+    """Migrates old CHGCOR cut data specifications:
+      "0" -> "ls"
+      "1" -> "os"
+    """
+    chgcor_mapping = {
+        '0': 'ls',
+        '1': 'os',
+    }
+    if cut.type == tmGrammar.CHGCOR:
+        data = cut.data.strip()
+        if data in chgcor_mapping:
+            cut.data = chgcor_mapping[data]
+            logging.info("migrated cut %s: '%s' => '%s'", cut.name, data, cut.data)
+            return MirgrationResult(cut, 'data', data, cut.data)
+
+def mirgrate_cut_object(cut):
+    """Migrate obsolete object entries for function cuts."""
+    object_ = cut.object
+    if cut.type in types.FunctionCutTypes:
+        object_ = cut.object
+        if cut.object:
+            cut.object = "" # clear
+            logging.info("migrated function cut object type %s: '%s' => '%s'", cut.name, object_, cut.object)
+            return MirgrationResult(cut, 'object', object_, cut.object)
+
+def mirgrate_mass_function(algorithm):
+    """Migrates old mass functions to newer mass_inv:
     "mass" -> "mass_inv"
     """
     expression = re.sub(r"\b{0}\b".format(tmGrammar.mass), tmGrammar.mass_inv, algorithm.expression)
     if algorithm.expression != expression:
+        prev_expression = algorithm.expression
         algorithm.expression = expression
-        logging.info("patched '%s' => '%s' function: %s", tmGrammar.mass, tmGrammar.mass_inv, expression)
+        logging.info("migrated function '%s' => '%s' in algorithm %s: %s", tmGrammar.mass, tmGrammar.mass_inv, algorithm.name, expression)
+        return MirgrationResult(algorithm, 'expression', tmGrammar.mass, tmGrammar.mass_inv)
 
 # -----------------------------------------------------------------------------
 #  Decoder classes
@@ -97,6 +115,7 @@ class XmlDecoderQueue(Queue):
     def __init__(self, filename):
         super(XmlDecoderQueue, self).__init__()
         self.filename = os.path.abspath(filename)
+        self.applied_mirgrations = []
         self.menu = None
         self.add_callback(self.run_prepare, "check access rights")
         self.add_callback(self.run_load_xml, "loading XML file")
@@ -169,7 +188,9 @@ class XmlDecoderQueue(Queue):
             comment = row.get(kComment, "")
             algorithm = Algorithm.Algorithm(index, name, expression, comment)
             # Patch outdated expressions
-            patch_mass_function(algorithm)
+            result = mirgrate_mass_function(algorithm)
+            if result:
+                self.applied_mirgrations.append(result)
             logging.debug("adding algorithm: %s", algorithm.__dict__)
             self.menu.addAlgorithm(algorithm)
 
@@ -180,16 +201,18 @@ class XmlDecoderQueue(Queue):
                 name = safe_str(row[kName], "cut name")
                 object = row[kObject]
                 type = row[kType]
-                # HACK remove object definition from function cuts!
-                if type in types.FunctionCutTypes:
-                    object = ""
                 minimum = float(row[kMinimum])
                 maximum = float(row[kMaximum])
                 data = row[kData]
                 comment = row.get(kComment, "")
                 cut = Algorithm.Cut(name, object, type, minimum, maximum, data, comment)
-                # Patch old formats
-                patch_cut(cut)
+                # Migrate old formats
+                result = mirgrate_cut_object(cut)
+                if result:
+                    self.applied_mirgrations.append(result)
+                result = mirgrate_chgcor_cut(cut)
+                if result:
+                    self.applied_mirgrations.append(result)
                 if cut.type not in types.CutTypes:
                     message = "Unsupported cut type {0} (grammar version <= {1})".format(cut.type, Menu.GrammarVersion)
                     logging.error(message)
@@ -234,8 +257,7 @@ class XmlDecoderQueue(Queue):
                 external = Algorithm.External(name, bx_offset, comment)
                 # Verify that all external signals are part of the external signal set.
                 if external.signal_name not in ext_signal_names:
-                    algorithm = menu.algorithmsByExternal(external)[0]
-                    message = "External signal `{0}' assigned to algorithm `{1} {2}' is missing in external signal set `{3}'".format(external.basename, algorithm.index, algorithm.name, ext_signal_set_name)
+                    message = "External signal `{0}' is missing in external signal set `{1}'".format(external.basename, ext_signal_set_name)
                     logging.error(message)
                     raise XmlDecoderError(message)
                 if external not in self.menu.externals:

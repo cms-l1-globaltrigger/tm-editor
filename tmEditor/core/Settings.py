@@ -21,7 +21,13 @@ DefaultExtSignalSetUri = "cabling/L1Menu_{ext_signal_set}.xml"
 """Default URI format string for server side external signal set XML files."""
 
 DownloadSite = "http://globaltrigger.hephy.at/upgrade/tme/downloads"
-"""Web site providing download information."""
+"""Web URL providing download information."""
+
+ContentsURL = "http://globaltrigger.hephy.at/upgrade/tme/userguide"
+"""Web URL hosting the user guide."""
+
+Empty = ""
+"""Empty string entry."""
 
 CutSpecs = CutSpecificationPool(
     CutSpecification(
@@ -305,7 +311,7 @@ CutSpecs = CutSpecificationPool(
     ),
     CutSpecification(
         name=tmGrammar.CHGCOR,
-        object=tmGrammar.comb,
+        object=Empty,
         type=tmGrammar.CHGCOR,
         objects=[tmGrammar.MU],
         functions=[tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv],
@@ -320,7 +326,7 @@ CutSpecs = CutSpecificationPool(
     ),
     CutSpecification(
         name=tmGrammar.DETA,
-        object=tmGrammar.dist,
+        object=Empty,
         type=tmGrammar.DETA,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
         functions=[tmGrammar.dist, tmGrammar.dist_orm, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm],
@@ -332,7 +338,7 @@ CutSpecs = CutSpecificationPool(
     ),
     CutSpecification(
         name=tmGrammar.DPHI,
-        object=tmGrammar.dist,
+        object=Empty,
         type=tmGrammar.DPHI,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
         functions=[tmGrammar.dist, tmGrammar.dist_orm, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
@@ -345,7 +351,7 @@ CutSpecs = CutSpecificationPool(
     ),
     CutSpecification(
         name=tmGrammar.DR,
-        object=tmGrammar.dist,
+        object=Empty,
         type=tmGrammar.DR,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
         functions=[tmGrammar.dist, tmGrammar.dist_orm, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm],
@@ -358,7 +364,7 @@ CutSpecs = CutSpecificationPool(
     ),
     CutSpecification(
         name=tmGrammar.MASS,
-        object=tmGrammar.mass,
+        object=Empty,
         type=tmGrammar.MASS,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF],
         functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
@@ -375,7 +381,7 @@ CutSpecs = CutSpecificationPool(
     ),
     CutSpecification(
         name=tmGrammar.TBPT,
-        object=tmGrammar.mass,
+        object=Empty,
         type=tmGrammar.TBPT,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF],
         functions=[tmGrammar.comb, tmGrammar.comb_orm, tmGrammar.dist, tmGrammar.dist_orm, tmGrammar.mass_inv, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
@@ -388,7 +394,7 @@ CutSpecs = CutSpecificationPool(
     ),
     CutSpecification(
         name=tmGrammar.ORMDETA,
-        object=tmGrammar.dist,
+        object=Empty,
         type=tmGrammar.ORMDETA,
         objects=[tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
         functions=[tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm],
@@ -400,7 +406,7 @@ CutSpecs = CutSpecificationPool(
     ),
     CutSpecification(
         name=tmGrammar.ORMDPHI,
-        object=tmGrammar.dist,
+        object=Empty,
         type=tmGrammar.ORMDPHI,
         objects=[tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
         functions=[tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm],
@@ -413,7 +419,7 @@ CutSpecs = CutSpecificationPool(
     ),
     CutSpecification(
         name=tmGrammar.ORMDR,
-        object=tmGrammar.dist,
+        object=Empty,
         type=tmGrammar.ORMDR,
         objects=[tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
         functions=[tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm],

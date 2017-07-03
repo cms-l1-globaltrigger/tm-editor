@@ -88,6 +88,24 @@ def fCutData(cut, separator=", "):
             return fCompress([int(entry) for entry in entries if entry.isdigit()])
     return cut.data
 
+def fCutLabel(cut):
+    """Formatted cut label containing name and values."""
+    if cut.data:
+        data = fCutData(cut)
+        return "{0} ({1})".format(cut.name, data)
+    elif cut.type == tmGrammar.TBPT:
+        threshold = fCutValue(cut.minimum)
+        return "{0} (>= {1})".format(cut.name, threshold)
+    else:
+        minimum = fCutValue(cut.minimum)
+        maximum = fCutValue(cut.maximum)
+        return "{0} [{1}, {2}]".format(cut.name, minimum, maximum)
+
+def fCutLabelRichText(cut):
+    """Rich text foramtted cut label, provided for convenience."""
+    tokens = fCutLabel(cut).split()
+    return "{0} {1}".format(tokens[0], " ".join(tokens[1:]))
+
 # -----------------------------------------------------------------------------
 #  Formatters for object requirements
 # -----------------------------------------------------------------------------

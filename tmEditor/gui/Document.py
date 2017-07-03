@@ -27,7 +27,7 @@ from tmEditor.gui.views import *
 
 from tmEditor.gui.CutEditorDialog import CutEditorDialog
 from tmEditor.gui.AlgorithmEditorDialog import AlgorithmEditorDialog
-from tmEditor.gui.AlgorithmSelectIndexDialog import AlgorithmSelectIndexDialog, find_gaps, map_reserved, map_free # TODO
+from tmEditor.gui.AlgorithmSelectIndexDialog import AlgorithmSelectIndexDialog
 from tmEditor.gui.BottomWidget import BottomWidget
 
 # Common widgets
@@ -201,6 +201,7 @@ class Document(BaseDocument):
         self.bottomWidget.toolbar.editTriggered.connect(self.editItem)
         self.bottomWidget.toolbar.copyTriggered.connect(self.copyItem)
         self.bottomWidget.toolbar.removeTriggered.connect(self.removeItem)
+        self.bottomWidget.toolbar.moveTriggered.connect(self.moveItems)
 
     def createMenuPage(self):
         menuView = MenuWidget(self)
@@ -306,6 +307,32 @@ class Document(BaseDocument):
             raise
         self._menu = queue.menu
         dialog.close()
+        if queue.applied_mirgrations:
+            msgBox = QtWidgets.QMessageBox(self)
+            msgBox.setIcon(QtWidgets.QMessageBox.Information)
+            msgBox.setWindowTitle(self.tr("Migration report"))
+            msgBox.setText(self.tr("The loaded XML document has been migrated to the most recent grammar <strong>version {0}</strong>".format(Menu.GrammarVersion)))
+            messages = [
+                "in file '{filename}'".format(**locals())
+            ]
+            for migration in queue.applied_mirgrations:
+                if isinstance(migration.subject, Cut):
+                    if migration.param == 'object':
+                        message = "in cut '{migration.subject.name}':\n" \
+                                  "  in attribute '{migration.param}': removed obsolete entry '{migration.before}'".format(**locals())
+                        messages.append(message)
+                    else:
+                        message = "in cut '{migration.subject.name}':\n" \
+                                  "  in attribute '{migration.param}': '{migration.before}' => '{migration.after}'".format(**locals())
+                        messages.append(message)
+                elif isinstance(migration.subject, Algorithm):
+                    message = "in algorithm '{migration.subject.name}':\n  " \
+                              "  in attribute '{migration.param}': '{migration.before}' => '{migration.after}'".format(**locals())
+                    messages.append(message)
+            msgBox.setDetailedText("\n\n".join(messages))
+            msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msgBox.setDefaultButton(QtWidgets.QMessageBox.Ok)
+            msgBox.exec_()
         self.setModified(False)
 
     def saveMenu(self, filename=None):
@@ -409,6 +436,11 @@ class Document(BaseDocument):
         if hasattr(item.bottom, 'reset'):
             item.bottom.reset()
         self.bottomWidget.show()
+        if item is self.algorithmsPage:
+            item.bottom.toolbar.moveButton.show()
+            item.bottom.toolbar.moveButton.setEnabled(True)
+        else:
+            item.bottom.toolbar.moveButton.hide()
         if item is self.menuPage:
             lines = []
             lines.append(pyqt4_str(self.tr("<p><strong>Scale Set:</strong> {0}</p>")).format(self.menu().scales.scaleSet[kName]))
@@ -425,37 +457,39 @@ class Document(BaseDocument):
             if rows > 1:
                 item.bottom.toolbar.setButtonsEnabled(False)
                 item.bottom.toolbar.removeButton.setEnabled(True)
+                if item is self.algorithmsPage:
+                    item.bottom.toolbar.moveButton.setEnabled(True)
             else:
                 item.bottom.toolbar.setButtonsEnabled(True)
 
             if item is self.algorithmsPage:
                 if 1 < rows:
-                    item.bottom.setText(pyqt4_str(self.tr("Selected {0} algorithms.")).format(rows))
+                    item.bottom.setText(pyqt4_str(self.tr("<p>Selected {0} algorithms.</p>")).format(rows))
                 else:
                     item.bottom.loadAlgorithm(data, self.menu())
             elif item is self.cutsPage:
                 if 1 < rows:
-                    item.bottom.setText(pyqt4_str(self.tr("Selected {0} cuts.")).format(rows))
+                    item.bottom.setText(pyqt4_str(self.tr("<p>Selected {0} cuts.</p>")).format(rows))
                 else:
                     item.bottom.loadCut(data)
             elif item is self.scalesPage:
                 if 1 < rows:
-                    item.bottom.setText(pyqt4_str(self.tr("Selected {0} scale sets.")).format(rows))
+                    item.bottom.setText(pyqt4_str(self.tr("<p>Selected {0} scale sets.</p>")).format(rows))
                 else:
                     item.bottom.loadScale(data)
             elif item in self.scalesTypePages.values():
                 if 1 < rows:
-                    item.bottom.setText(pyqt4_str(self.tr("Selected {0} scale bins.")).format(rows))
+                    item.bottom.setText(pyqt4_str(self.tr("<p>Selected {0} scale bins.</p>")).format(rows))
                 else:
                     item.bottom.loadScaleType(item.name, data)
             elif item is self.extSignalsPage:
                 if 1 < rows:
-                    item.bottom.setText(pyqt4_str(self.tr("Selected {0} external signals.")).format(rows))
+                    item.bottom.setText(pyqt4_str(self.tr("<p>Selected {0} external signals.</p>")).format(rows))
                 else:
                     item.bottom.loadSignal(data)
         else:
             item.bottom.reset()
-            item.bottom.setText(self.tr("Nothing selected..."))
+            item.bottom.setText(self.tr("<p>Nothing selected...</p>"))
             item.bottom.toolbar.setButtonsEnabled(False)
         item.bottom.clearNotice()
         item.bottom.toolbar.hide()
@@ -523,6 +557,10 @@ class Document(BaseDocument):
                 self.addCut(index, item)
         except RuntimeError as e:
             QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(e))
+        item.top.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        selectedeRows = item.top.selectionModel().selectedRows()
+        if selectedeRows:
+            item.top.scrollTo(selectedeRows[0])
 
     def addAlgorithm(self, index, item):
         dialog = AlgorithmEditorDialog(self.menu(), self)
@@ -592,6 +630,10 @@ class Document(BaseDocument):
             self.updateBottom()
         except RuntimeError as e:
             QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(e))
+        item.top.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        selectedeRows = item.top.selectionModel().selectedRows()
+        if selectedeRows:
+            item.top.scrollTo(selectedeRows[0])
 
     def editAlgorithm(self, index, item):
         algorithm = self.menu().algorithms[index.row()]
@@ -635,6 +677,10 @@ class Document(BaseDocument):
             self.copyAlgorithm(index, item)
         if item is self.cutsPage:
             self.copyCut(index, item)
+        item.top.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        selectedeRows = item.top.selectionModel().selectedRows()
+        if selectedeRows:
+            item.top.scrollTo(selectedeRows[0])
 
     def copyAlgorithm(self, index, item):
         algorithm = copy.deepcopy(self.menu().algorithms[index.row()])
@@ -758,6 +804,34 @@ class Document(BaseDocument):
             self.updateBottom()
             self.modified.emit()
             self.setModified(True)
+
+    def moveItems(self):
+        item = self.algorithmsPage
+        indices = []
+        if item.top.selectionModel().hasSelection():
+            rows = item.top.selectionModel().selectedRows()
+            for row in rows:
+                algorithm = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
+                indices.append(algorithm.index)
+        reserved = [i for i in range(MaxAlgorithms) if self.menu().algorithmByIndex(i) is not None]
+        dialog = AlgorithmSelectIndexDialog(self)
+        dialog.setup(reserved, indices)
+        dialog.setModal(True)
+        if dialog.exec_() == QtWidgets.QDialog.Accepted:
+            logging.debug("moving algorithms:")
+            for k, v in dialog.mapping.iteritems():
+                algorithm = self.menu().algorithmByIndex(k)
+                logging.debug("%s => %s", algorithm.index, v)
+                assert algorithm.index == k
+                algorithm.index = v
+                algorithm.modified = True
+            self.setModified(True)
+            self.modified.emit()
+            item.top.sortByColumn(0, QtCore.Qt.AscendingOrder)
+            selectedeRows = item.top.selectionModel().selectedRows()
+            if selectedeRows:
+                item.top.scrollTo(selectedeRows[0])
+        self.update()
 
 # ------------------------------------------------------------------------------
 #  Splitter and custom handle

@@ -31,35 +31,15 @@ __all__ = ['AlgorithmSelectIndexDialog', ]
 #  Helper functions
 # -----------------------------------------------------------------------------
 
-def map_reserved(reserved):
-    """Returns state map for all buttons."""
-    return [index in reserved for index in range(MaxAlgorithms)]
+def map_expand(indices):
+    return [index in indices for index in range(MaxAlgorithms)]
 
-def map_free(free):
-    """Returns state map for all buttons."""
-    return [index not in free for index in range(MaxAlgorithms)]
-
-def find_gaps(reserved, size=1):
-    """Retruns list of free indices ranges to accomodate chunks of *size*."""
-    states = map_reserved(reserved)
-    gaps = set()
-    index = 0
-    while index < MaxAlgorithms:
-        try:
-            next_free = states.index(False, index)
-        except ValueError:
-            break
-        try:
-            next_reserved = states.index(True, next_free)
-        except ValueError:
-            next_reserved = MaxAlgorithms
-        gap_min = next_free
-        gap_max = next_reserved - 1
-        gap_size = gap_max - gap_min + 1
-        if size <= gap_size:
-            gaps.update(range(gap_min, (gap_max + 1)-size + 1)) # remove offset by bunch size
-        index = next_reserved
-    return list(gaps)
+def match_pattern(a, b):
+    assert len(a) == len(b)
+    for i in range(len(a)):
+        if a[i] and b[i]:
+            return False
+    return True
 
 # -----------------------------------------------------------------------------
 #  Algorithm select index dialog.
@@ -101,6 +81,7 @@ class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
                 button.index = index
                 button.setCheckable(True)
                 button.setMaximumWidth(50)
+                #self._setButtonStyle(button, self.Green)
                 button.clicked[bool].connect(self._updateIndex)
                 self.buttons.append(button)
                 gridLayout.addWidget(button, row, column)
@@ -120,21 +101,49 @@ class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
         layout.addLayout(bottomLayout)
         self.setLayout(layout)
 
-    def setup(self, index, reserved):
+    def setup(self, occupied, selected):
         """Setup button states, disable reserved indices."""
+
+        occupied = list(set(occupied)-set(selected))
+        occupied_pattern = map_expand(occupied)
+        selected_pattern = map_expand(selected)[selected[0]:selected[-1]+1]
+        free = []
+        for i in range(MaxAlgorithms):
+            a = occupied_pattern[i:i+len(selected_pattern)]
+            b = selected_pattern
+            if len(a) == len(b):
+                if match_pattern(a, b):
+                    free.append(i)
+
+        self.mapping = {}
+        self.selected = selected
+
         for button in self.buttons:
-            if button.index in reserved:
+            button.setChecked(False)
+            button.setEnabled(False)
+            button.setStyleSheet("font-weight: normal;")
+            if button.index in free:
+                button.setEnabled(True)
+            if button.index in occupied:
                 button.setChecked(True)
                 button.setEnabled(False)
-            if button.index == index:
+            if button.index in selected:
+                self.mapping[button.index] = button.index
                 button.setChecked(True)
-                button.setEnabled(True)
+                #button.setEnabled(True)
+                button.setStyleSheet("font-weight: bold;")
                 self.currentButton = button
-        self.scrollArea.ensureWidgetVisible(self.currentButton)
+                self.scrollArea.ensureWidgetVisible(self.currentButton)
 
     def _updateIndex(self):
         """Get new index from the button."""
+        diff = self.selected[0] - self.sender().index
         self.index = self.sender().index
+        for k, v in self.mapping.iteritems():
+            if diff > 0:
+                self.mapping[k] = v - abs(diff)
+            else:
+                self.mapping[k] = v + abs(diff)
         self.accept()
 
 # -----------------------------------------------------------------------------
@@ -145,12 +154,12 @@ if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
 
-    bundle_size = 3
+    occupied = [0,2,3,4,5,16,17,18,21,26,46,47,49,50,51,101,510,511]
 
-    reserved = [0,2,3,4,5,16,17,18,26,46,47,49,50,51,101,510,511]
-    gaps = find_gaps(reserved, bundle_size)
+    selected = [16,18]
+
 
     window = AlgorithmSelectIndexDialog()
-    window.setup(42, reserved)
+    window.setup(occupied, selected)
     window.show()
     sys.exit(app.exec_())

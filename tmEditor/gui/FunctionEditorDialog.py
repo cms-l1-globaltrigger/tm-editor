@@ -3,7 +3,7 @@
 
 import tmGrammar
 
-from tmEditor.core.formatter import fCutData, fCutValue
+from tmEditor.core.formatter import fCutLabel
 from tmEditor.core.Settings import CutSpecs
 from tmEditor.core.types import FunctionCutsMap, ObjectTypes
 
@@ -134,10 +134,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
                     cutTypes.append(spec.type)
         for cut in sorted(self.menu.cuts, key=lambda cut: cut.name):
             if cut.type in cutTypes:
-                if cut.data:
-                    label = "{0} ({1})".format(cut.name, fCutData(cut))
-                else:
-                    label = "{0} ({1} to {2})".format(cut.name, fCutValue(cut.minimum), fCutValue(cut.maximum))
+                label = fCutLabel(cut)
                 item = CutItem(label)
                 item.setData(cut)
                 if cut.modified:

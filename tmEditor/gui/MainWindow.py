@@ -12,6 +12,7 @@
 from tmEditor.core.formatter import fFileSize
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxError
 from tmEditor.core.toolbox import DownloadHelper
+from tmEditor.core.Settings import ContentsURL
 from tmEditor.core.XmlEncoder import XmlEncoderError
 from tmEditor.core.XmlDecoder import XmlDecoderError
 
@@ -28,6 +29,7 @@ from tmEditor.PyQt5Proxy import QtCore
 from tmEditor.PyQt5Proxy import QtGui
 from tmEditor.PyQt5Proxy import QtWidgets
 from tmEditor.PyQt5Proxy import pyqt4_str
+from tmEditor.PyQt5Proxy import pyqt4_toPyObject
 
 try:
     from urllib.error import HTTPError, URLError
@@ -42,7 +44,6 @@ import sys, os, re
 
 __all__ = ['MainWindow', ]
 
-L1ContentsURL = "http://globaltrigger.hephy.at/upgrade/tme/userguide"
 XmlFileExtension = '.xml'
 
 RegExUrl = re.compile(r'(\w+)\://(.+)')
@@ -83,6 +84,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.syncActions()
         # Setup connections.
         self.mdiArea.currentChanged.connect(self.syncActions)
+        self.updateRecentFilesMenu()
 
     def createActions(self):
         # Action for opening an existing file.
@@ -148,6 +150,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fileMenu.addAction(self.openAct)
         self.fileMenu.addAction(self.openUrlAct)
         self.fileMenu.addSeparator()
+        self.recentFilesMenu = self.fileMenu.addMenu(self.tr("&Recent Files"))
+        self.recentFilesSeparator = self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.saveAct)
         self.fileMenu.addAction(self.saveAsAct)
         self.fileMenu.addSeparator()
@@ -211,9 +215,103 @@ class MainWindow(QtWidgets.QMainWindow):
             document = self.mdiArea.currentDocument()
             self.saveAct.setEnabled(os.access(document.filename(), os.W_OK))
 
+    def loadRecentFiles(self):
+        """Returns recent files from application settings."""
+        filenames = pyqt4_toPyObject(QtCore.QSettings().value("recent/files")) or []
+        return [pyqt4_str(filename) for filename in filenames]
+
+    def storeRecentFiles(self, filenames):
+        """Store recent files to application settings."""
+        QtCore.QSettings().setValue("recent/files", filenames)
+
+    def insertRecentFile(self, filename, limit=5):
+        """Insert file to recent files history, remove duplicated entries from
+        the list, update recent files menu."""
+        filenames = self.loadRecentFiles()
+        if filename in filenames:
+            filenames.pop(filenames.index(filename)) # Remove same entry
+        if filename:
+            filenames.insert(0, filename)
+        self.storeRecentFiles(filenames[:limit])
+
+    def updateRecentFilesMenu(self):
+        """Update recent files menu from application settings."""
+        self.recentFilesMenu.clear()
+        for filename in self.loadRecentFiles():
+            action = self.recentFilesMenu.addAction(os.path.basename(filename))
+            action.setStatusTip(self.tr("Open recent file \"{0}\"".format(filename)))
+            action.setData(os.path.realpath(filename))
+            action.triggered.connect(self.onOpenRecentFile)
+        self.recentFilesMenu.setEnabled(not self.recentFilesMenu.isEmpty())
+        self.recentFilesSeparator.setEnabled(not self.recentFilesMenu.isEmpty())
+
     def setRemoteTimeout(self, seconds):
         """Set remote timeout in second (loading documents from remote locations)."""
         self.remoteTimeout = seconds
+
+    def downloadDocument(self, url):
+        """Download document to temporary file and load it."""
+        try:
+            dialog = QtWidgets.QProgressDialog(self)
+            dialog.resize(300, dialog.height())
+            dialog.setWindowTitle(self.tr("Downloading..."))
+            dialog.setWindowModality(QtCore.Qt.WindowModal)
+            dialog.show()
+            QtWidgets.QApplication.processEvents()
+
+            helper = DownloadHelper()
+            helper.urlopen(url, timeout=self.remoteTimeout)
+
+            logging.info("fetching %s bytes from %s", helper.contentLength or "<unknown>", url)
+            dialog.setLabelText(self.tr("Receiving data..."))
+            dialog.setMaximum(helper.contentLength)
+
+            def callback():
+                """Callback for updating the progress dialog."""
+                dialog.setLabelText(pyqt4_str(self.tr("Downloading {0}...")).format(fFileSize(helper.receivedSize)))
+                dialog.setValue(helper.receivedSize)
+                QtWidgets.QApplication.processEvents()
+                if dialog.wasCanceled():
+                    return False
+                return True
+
+            # Create a temorary file buffer.
+            with tempfile.NamedTemporaryFile() as fp:
+                helper.get(fp, callback)
+                # Reset file pointer so make sure document is read from
+                # begin. Note: do not close the temporary file as it
+                # will vanish (see python tempfile.NamedTemporaryFile).
+                fp.seek(0)
+                dialog.close()
+                try:
+                    # Create document by reading temporary file.
+                    document = Document(fp.name, self)
+                except (RuntimeError, OSError) as e:
+                    logging.error("Failed to open XML menu: %s", e)
+                    QtWidgets.QMessageBox.critical(self,
+                        self.tr("Failed to open XML menu"), format(e),
+                    )
+                    return
+                else:
+                    index = self.mdiArea.addDocument(document)
+                    self.mdiArea.setCurrentIndex(index)
+                    return
+        except HTTPError as e:
+            dialog.close()
+            logging.error("Failed to download remote XML menu %s, %s", url, format(e))
+            QtWidgets.QMessageBox.critical(self,
+                self.tr("Failed to download remote XML menu"),
+                pyqt4_str(self.tr("HTTP error, failed to download from {0}, {1}")).format(url, format(e))
+            )
+            return
+        except URLError as e:
+            dialog.close()
+            logging.error("Failed to download remote XML menu %s, %s", url, format(e))
+            QtWidgets.QMessageBox.critical(self,
+                self.tr("Failed to download remote XML menu"),
+                pyqt4_str(self.tr("URL error, failed to download from {0}, {1}")).format(url, format(e))
+            )
+            return
 
     def loadDocument(self, filename):
         """Load document from file or remote loaction and add it to the MDI area."""
@@ -221,68 +319,19 @@ class MainWindow(QtWidgets.QMainWindow):
             # Test if filename is an URL.
             result = RegExUrl.match(filename)
             if result:
-                try:
-                    dialog = QtWidgets.QProgressDialog(self)
-                    dialog.resize(300, dialog.height())
-                    dialog.setWindowTitle(self.tr("Downloading..."))
-                    dialog.setWindowModality(QtCore.Qt.WindowModal)
-                    dialog.show()
-                    QtWidgets.QApplication.processEvents()
-
-                    helper = DownloadHelper()
-                    helper.urlopen(filename, timeout=self.remoteTimeout)
-
-                    logging.info("fetching %s bytes from %s", helper.contentLength or "<unknown>", filename)
-                    dialog.setLabelText(self.tr("Receiving data..."))
-                    dialog.setMaximum(helper.contentLength)
-
-                    def callback():
-                        """Callback for updating the progress dialog."""
-                        dialog.setLabelText(pyqt4_str(self.tr("Downloading {0}...")).format(fFileSize(helper.receivedSize)))
-                        dialog.setValue(helper.receivedSize)
-                        QtWidgets.QApplication.processEvents()
-                        if dialog.wasCanceled():
-                            return False
-                        return True
-
-                    try:
-                        # Create a temorary file buffer.
-                        with tempfile.NamedTemporaryFile() as fp:
-                            helper.get(fp, callback)
-                            # Reset file pointer so make sure document is read from
-                            # begin. Note: do not close the temporary file as it
-                            # will vanish (see python tempfile.NamedTemporaryFile).
-                            fp.seek(0)
-                            dialog.close()
-                            # Create document by reading temporary file.
-                            document = Document(fp.name, self)
-                    except (XmlDecoderError, RuntimeError) as e: # TODO
-                        dialog.close()
-                        logging.error("Failed to load XML menu: %s", e)
-                        QtWidgets.QMessageBox.critical(self,
-                            self.tr("Failed to load XML menu"), pyqt4_str(e))
-                        return
-                except HTTPError as e:
-                    dialog.close()
-                    logging.error("Failed to download remote XML menu %s, %s", filename, format(e))
-                    QtWidgets.QMessageBox.critical(self,
-                        self.tr("Failed to download remote XML menu"),
-                        pyqt4_str(self.tr("HTTP error, failed to download from {0}, {1}")).format(filename, format(e))
-                    )
-                    return
-                except URLError as e:
-                    dialog.close()
-                    logging.error("Failed to download remote XML menu %s, %s", filename, format(e))
-                    QtWidgets.QMessageBox.critical(self,
-                        self.tr("Failed to download remote XML menu"),
-                        pyqt4_str(self.tr("URL error, failed to download from {0}, {1}")).format(filename, format(e))
-                    )
-                    return
+                url = filename
+                self.downloadDocument(url)
+                return
             # Else it is a local filesystem path.
             else:
                 try:
+                    # Do no re-open a document, just raise its tab.
+                    duplicate = self.mdiArea.findDocument(filename)
+                    if duplicate:
+                        self.mdiArea.setCurrentWidget(duplicate)
+                        return
                     document = Document(filename, self)
-                except Exception as e: # TODO
+                except Exception as e:
                     logging.error("Failed to load XML menu: %s", e)
                     QtWidgets.QMessageBox.critical(self,
                         self.tr("Failed to load XML menu"), format(e))
@@ -295,6 +344,8 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             index = self.mdiArea.addDocument(document)
             self.mdiArea.setCurrentIndex(index)
+            self.insertRecentFile(os.path.realpath(filename))
+            self.updateRecentFilesMenu()
 
     def onOpen(self):
         """Select a XML menu file using an dialog."""
@@ -318,6 +369,14 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         self.loadDocument(pyqt4_str(dialog.url()))
         dialog.storeRecentUrls()
+
+    def onOpenRecentFile(self):
+        """Open file by recent files action. Connect this slot with every recent
+        file menu action."""
+        action = self.sender()
+        if action:
+            filename = pyqt4_str(pyqt4_toPyObject(action.data()))
+            self.loadDocument(filename)
 
     def onImport(self):
         """Import algorithms from another XML file."""
@@ -374,10 +433,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 document.saveMenu(filename)
                 # TODO
                 self.mdiArea.setTabText(self.mdiArea.currentIndex(), document.name())
+                self.insertRecentFile(os.path.realpath(document.filename()))
             except (XmlEncoderError, RuntimeError, ValueError, IOError) as e:
                 QtWidgets.QMessageBox.critical(self,
                     self.tr("Failed to write XML menu"), format(e))
         self.syncActions()
+        self.updateRecentFilesMenu()
 
     def onClose(self):
         """Removes the current active document."""
@@ -386,12 +447,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onShowContents(self):
         """Raise remote contents help."""
-        webbrowser.open_new_tab(L1ContentsURL)
+        webbrowser.open_new_tab(ContentsURL)
 
     def onPreferences(self):
         """Raise preferences dialog."""
         dialog = PreferencesDialog(self)
         dialog.exec_()
+        # In case history was cleared
+        self.updateRecentFilesMenu()
 
     def onShowAbout(self):
         """Raise about this application dialog."""

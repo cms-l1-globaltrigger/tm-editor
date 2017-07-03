@@ -1,3 +1,16 @@
+tm-editor (0.8.0-1) extra; urgency=medium
+
+  * Fixed DPHI cut range (now limited to Pi).
+  * Fixed function cut object attribute (not used for function cuts).
+  * Improved formatting of cuts and various visual improvements.
+  * Added recent files history to file menu.
+  * Added move index for multiple selected algorithms.
+  * Added migration details dialog to inspect applied changes to the menu.
+  * Improved cut editor dialog.
+  * Improved preferences dialog.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Tue, 27 Jun 2017 12:50:02 +0200
+
 tm-editor (0.7.4-1) extra; urgency=medium
 
   * Fixed isolation cut type descriptions.
