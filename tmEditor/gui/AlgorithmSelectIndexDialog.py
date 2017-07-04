@@ -121,17 +121,19 @@ class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
         for button in self.buttons:
             button.setChecked(False)
             button.setEnabled(False)
-            button.setStyleSheet("font-weight: normal;")
+            button.setStyleSheet("font-weight: normal; color: grey;")
             if button.index in free:
                 button.setEnabled(True)
+                button.setStyleSheet("font-weight: normal; color: green;")
             if button.index in occupied:
                 button.setChecked(True)
                 button.setEnabled(False)
+                button.setStyleSheet("font-weight: normal; color: red;")
             if button.index in selected:
                 self.mapping[button.index] = button.index
                 button.setChecked(True)
                 #button.setEnabled(True)
-                button.setStyleSheet("font-weight: bold;")
+                button.setStyleSheet("font-weight: bold; color: blue;")
                 self.currentButton = button
                 self.scrollArea.ensureWidgetVisible(self.currentButton)
 
