@@ -85,7 +85,11 @@ def richTextCutsPreview(menu, algorithm, parent):
     if algorithm.cuts():
         content.append(pyqt4_str(parent.tr("<p><strong>Used cuts:</strong></p>")))
         content.append(pyqt4_str(parent.tr("<p>")))
-        cuts = [menu.cutByName(name) for name in algorithm.cuts()]
+        cuts = []
+        for name in algorithm.cuts():
+            cut = menu.cutByName(name)
+            if cut: # might be None!
+                cuts.append(cut)
         cuts.sort()
         for cut in cuts:
             content.append(formatter.fCutLabelRichText(cut))

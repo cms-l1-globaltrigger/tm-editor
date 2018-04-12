@@ -317,10 +317,11 @@ class CutCount(SyntaxRule):
         counts = {}
         for name in names:
             cut = menu.cutByName(name)
-            key = (cut.object, cut.type)
-            if not key in counts:
-                counts[key] = 0
-            counts[key] += 1
+            if cut:
+                key = (cut.object, cut.type)
+                if not key in counts:
+                    counts[key] = 0
+                counts[key] += 1
         return counts
 
     def checkCutCount(self, token, counts):

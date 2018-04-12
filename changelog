@@ -1,3 +1,9 @@
+tm-editor (0.8.1-1) extra; urgency=high
+
+  * Fixed bug/crash when entering non existent cut names in algorithm editor.
+
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Thu, 12 Apr 2018 15:11:01 +0200
+
 tm-editor (0.8.0-1) extra; urgency=medium
 
   * Fixed DPHI cut range (now limited to Pi).
