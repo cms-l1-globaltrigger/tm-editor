@@ -3,18 +3,15 @@ Trigger Menu Editor
 
 ## Dependecies
 
- * python-argparse
  * PyQt5 (PyQt4 as fallback)
- * xerces-c
- * boost-system, boost-filesystem
- * tmGrammar
- * tmTable
- * tmXsd
- * tmUtil
+ * utm (>= 0.6.5)
+   * xerces-c
+   * boost-system, boost-filesystem
+   * tmGrammar, tmTable, tmXsd, tmUtil
 
 ## Build locally
 
-    $ source ../setup.sh
+    $ source path/to/utm/setup.sh
     $ make
 
 **Note:** running the makefile is required to build the resource python module.
