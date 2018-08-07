@@ -40,6 +40,7 @@ from tmEditor.gui.CommonWidgets import RestrictedLineEdit
 from tmEditor.gui.CommonWidgets import ListSpinBox
 from tmEditor.gui.CommonWidgets import IconLabel
 from tmEditor.gui.CommonWidgets import richTextObjectsPreview
+from tmEditor.gui.CommonWidgets import richTextSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextCutsPreview
 from tmEditor.gui.CommonWidgets import createIcon
@@ -501,6 +502,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         algorithm = Algorithm(self.index(), self.name(), self.expression())
         try:
             content.append(richTextObjectsPreview(algorithm, self))
+            content.append(richTextSignalsPreview(algorithm, self))
             content.append(richTextExtSignalsPreview(algorithm, self))
             content.append(richTextCutsPreview(self.menu, algorithm, self))
         except ValueError:

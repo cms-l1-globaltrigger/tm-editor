@@ -29,7 +29,7 @@ import tmGrammar
 
 from tmEditor.core import formatter
 from tmEditor.core.Algorithm import toObject, toExternal
-from tmEditor.core.types import CountObjectTypes
+from tmEditor.core.types import CountObjectTypes, ObjectTypes, SignalTypes
 
 from tmEditor.PyQt5Proxy import QtCore
 from tmEditor.PyQt5Proxy import QtGui
@@ -39,11 +39,14 @@ from tmEditor.PyQt5Proxy import pyqt4_str
 import math
 import os
 
-__all__ = ['richTextObjectsPreview', 'richTextExtSignalsPreview', 'richTextCutsPreview',
-           'ColorIcon', 'ColorLabel', 'IconLabel', 'SelectableLabel',
-           'PrefixedSpinBox', 'ReadOnlyLineEdit', 'FilterLineEdit',
-           'ComboBoxPlus', 'RestrictedLineEdit', 'RestrictedPlainTextEdit',
-           'ListSpinBox', 'EtaCutChart', 'PhiCutChart']
+__all__ = [
+    'richTextObjectsPreview', 'richTextSignalsPreview',
+    'richTextExtSignalsPreview', 'richTextCutsPreview',
+    'ColorIcon', 'ColorLabel', 'IconLabel', 'SelectableLabel',
+    'PrefixedSpinBox', 'ReadOnlyLineEdit', 'FilterLineEdit',
+    'ComboBoxPlus', 'RestrictedLineEdit', 'RestrictedPlainTextEdit',
+    'ListSpinBox', 'EtaCutChart', 'PhiCutChart'
+]
 
 # -----------------------------------------------------------------------------
 #  Functions
@@ -55,6 +58,7 @@ def richTextObjectsPreview(algorithm, parent):
         content.append(pyqt4_str(parent.tr("<p><strong>Used objects:</strong></p>")))
         content.append(pyqt4_str(parent.tr("<p>")))
         objects = [toObject(obj) for obj in algorithm.objects()]
+        objects = [obj for obj in objects if obj.type in ObjectTypes]
         objects.sort()
         for obj in objects:
             comparison = formatter.fComparison(obj.comparison_operator)
@@ -64,6 +68,20 @@ def richTextObjectsPreview(algorithm, parent):
                 threshold = formatter.fThreshold(obj.threshold)
             bxOffset = formatter.fBxOffset(obj.bx_offset)
             content.append(pyqt4_str(parent.tr("<img src=\":/icons/{0}.svg\"> {1} <span style=\"color: gray;\">({2} {3}, {4} BX offset)</span><br/>")).format(obj.type.lower(), obj.name, comparison, threshold, bxOffset))
+        content.append(pyqt4_str(parent.tr("</p>")))
+    return "".join(content)
+
+def richTextSignalsPreview(algorithm, parent):
+    content = []
+    if algorithm.objects():
+        content.append(pyqt4_str(parent.tr("<p><strong>Used objects:</strong></p>")))
+        content.append(pyqt4_str(parent.tr("<p>")))
+        signals = [toObject(obj) for obj in algorithm.objects()]
+        signals = [sig for sig in signals if sig.type in SignalTypes]
+        signals.sort()
+        for sig in signals:
+            bxOffset = formatter.fBxOffset(sig.bx_offset)
+            content.append(pyqt4_str(parent.tr("<img src=\":/icons/{0}.svg\"> {1} <span style=\"color: gray;\">({2} BX offset)</span><br/>")).format(sig.type.lower(), sig.name, bxOffset))
         content.append(pyqt4_str(parent.tr("</p>")))
     return "".join(content)
 

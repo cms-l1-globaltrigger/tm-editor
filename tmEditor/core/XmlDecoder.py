@@ -232,15 +232,16 @@ class XmlDecoderQueue(Queue):
                 bx_offset = int(row[kBxOffset])
                 comment = row.get(kComment, "")
                 obj = Algorithm.Object(name, type, threshold, comparison_operator, bx_offset, comment)
-                if obj.type not in types.ObjectTypes:
+                if obj.type not in (types.ObjectTypes + types.SignalTypes):
                     message = "Unsupported object type {0} (grammar version <= {1})".format(obj.type, Menu.GrammarVersion)
                     logging.error(message)
                     raise XmlDecoderError(message)
-                if obj.type not in [scaleSet[kObject] for scaleSet in self.tables.scale.scales]:
-                    algorithm = self.menu.algorithmsByObject(obj)[0]
-                    message = "Object type `{0}' assigned to algorithm `{1} {2}' is missing in scales set `{3}'".format(obj.type, algorithm.index, algorithm.name, self.tables.scale.scaleSet[kName])
-                    logging.error(message)
-                    raise XmlDecoderError(message)
+                if obj.type in types.ObjectTypes:
+                    if obj.type not in [scaleSet[kObject] for scaleSet in self.tables.scale.scales]:
+                        algorithm = self.menu.algorithmsByObject(obj)[0]
+                        message = "Object type `{0}' assigned to algorithm `{1} {2}' is missing in scales set `{3}'".format(obj.type, algorithm.index, algorithm.name, self.tables.scale.scaleSet[kName])
+                        logging.error(message)
+                        raise XmlDecoderError(message)
                 if not obj in self.menu.objects:
                     logging.debug("adding object requirement: %s", obj.__dict__)
                     self.menu.addObject(obj)

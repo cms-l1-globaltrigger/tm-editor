@@ -64,6 +64,19 @@ CountObjectTypes = (
 ObjectTypes = ThresholdObjectTypes + CountObjectTypes
 """Ordered list of all supported threshold and count object types."""
 
+SignalTypes = (
+    # Centrality
+    tmGrammar.CENT0,
+    tmGrammar.CENT1,
+    tmGrammar.CENT2,
+    tmGrammar.CENT3,
+    tmGrammar.CENT4,
+    tmGrammar.CENT5,
+    tmGrammar.CENT6,
+    tmGrammar.CENT7,
+)
+"""Ordered list of all supported signal types."""
+
 ExternalObjectTypes = (
     tmGrammar.EXT,
 )

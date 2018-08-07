@@ -19,6 +19,7 @@ from tmEditor.gui.CommonWidgets import IconLabel
 from tmEditor.gui.CommonWidgets import EtaCutChart
 from tmEditor.gui.CommonWidgets import PhiCutChart
 from tmEditor.gui.CommonWidgets import richTextObjectsPreview
+from tmEditor.gui.CommonWidgets import richTextSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextCutsPreview
 from tmEditor.gui.CommonWidgets import createIcon
@@ -232,6 +233,7 @@ class BottomWidget(QtWidgets.QWidget):
             content.append(pyqt4_str(self.tr("<p><strong>Comment:</strong></p>")))
             content.append(pyqt4_str(self.tr("<p><code>{0}</code></p>")).format(algorithm.comment))
         content.append(richTextObjectsPreview(algorithm, self))
+        content.append(richTextSignalsPreview(algorithm, self))
         content.append(richTextExtSignalsPreview(algorithm, self))
         content.append(richTextCutsPreview(menu, algorithm, self))
         self.setText("".join(content))

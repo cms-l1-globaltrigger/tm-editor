@@ -12,7 +12,7 @@
 
 import tmGrammar
 
-from tmEditor.core.types import ObjectTypes, ExternalObjectTypes, FunctionCutTypes
+from tmEditor.core.types import ObjectTypes, SignalTypes, ExternalObjectTypes, FunctionCutTypes
 from tmEditor.core.Settings import MaxAlgorithms
 from tmEditor.core.AlgorithmHelper import decode_threshold, encode_threshold
 
@@ -28,6 +28,9 @@ __all__ = ['Algorithm', ]
 
 RegExObject = re.compile(r'({0})(?:\.(?:ge|eq)\.)?(\d+(?:p\d+)?)(?:[\+\-]\d+)?(?:\[[^\]]+\])?'.format(r'|'.join(ObjectTypes)))
 """Precompiled regular expression for matching object requirements."""
+
+RegExSignal = re.compile(r'({0})(?:[\+\-]\d+)?'.format(r'|'.join(SignalTypes)))
+"""Precompiled regular expression for matching signal requirements."""
 
 RegExExtSignal = re.compile(r'{0}_[\w\d_\.]+(?:[\+\-]\d+)?'.format(r'|'.join(ExternalObjectTypes)))
 """Precompiled regular expression for matching external signal requirements."""
@@ -46,7 +49,12 @@ def getObjectType(name):
         objectType = result.group(1)
         if objectType in ObjectTypes:
             return objectType
-    message = "invalid object type `{0}`".format(name)
+    result = RegExSignal.match(name)
+    if result:
+        signalType = result.group(1)
+        if signalType in SignalTypes:
+            return signalType
+    message = "invalid object/signal type `{0}`".format(name)
     raise RuntimeError(message)
 
 def isOperator(token):
@@ -320,8 +328,13 @@ class Object(object):
         self.bx_offset = bx_offset or 0
         self.comment = comment or ""
 
+    def isSignal(self):
+        return self.type in SignalTypes
+
     def decodeThreshold(self):
         """Returns decoded threshold as float."""
+        if self.isSignal():
+            return 0
         return decode_threshold(self.threshold)
 
     def encodeThreshold(self, value):

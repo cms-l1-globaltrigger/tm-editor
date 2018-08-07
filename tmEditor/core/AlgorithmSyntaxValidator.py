@@ -19,7 +19,7 @@ Usage example
 import tmGrammar
 
 from tmEditor.core.Settings import CutSpecs
-from tmEditor.core.types import ObjectScaleMap, FunctionTypes
+from tmEditor.core.types import SignalTypes, ObjectScaleMap, FunctionTypes
 from tmEditor.core.Algorithm import isOperator, isObject, isExternal, isFunction
 from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.Algorithm import functionObjects, functionCuts, functionObjectsCuts, objectCuts
@@ -166,7 +166,8 @@ class ObjectThresholds(SyntaxRule):
             # Validate object
             if isObject(token):
                 object = toObject(token)
-                self.validateThreshold(token, object)
+                if object.type not in SignalTypes:
+                    self.validateThreshold(token, object)
             # Validate function
             if isFunction(token):
                 for object in functionObjects(token):

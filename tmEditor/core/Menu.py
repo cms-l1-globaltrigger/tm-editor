@@ -12,6 +12,7 @@
 
 import tmGrammar
 
+from tmEditor.core.types import ObjectTypes
 from tmEditor.core.Settings import MaxAlgorithms
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 from tmEditor.core.Algorithm import toObject, toExternal
@@ -175,6 +176,10 @@ class Menu(object):
                 cutByName(cut).validate()
 
             for object in algorithm.objects():
+                if object.startswith("CENT"):
+                    print "[1] object =>", object
+                    print "[2] objectByName(object) =>", objectByName(object)
+                    print "[3] dir(objectByName(object)) =>", dir(objectByName(object))
                 objectByName(object).validate()
 
             for external in algorithm.externals():
