@@ -1,0 +1,9 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Resource files
+tmEditor/tmeditor_rc.py
+resource/share/tm-editor/changelog
+resource/share/tm-editor/copyright
