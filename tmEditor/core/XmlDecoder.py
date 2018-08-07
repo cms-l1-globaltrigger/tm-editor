@@ -237,8 +237,8 @@ class XmlDecoderQueue(Queue):
                     logging.error(message)
                     raise XmlDecoderError(message)
                 if obj.type not in [scaleSet[kObject] for scaleSet in self.tables.scale.scales]:
-                    algorithm = menu.algorithmsByObject(obj)[0]
-                    message = "Object type `{0}' assigned to algorithm `{1} {2}' is missing in scales set `{3}'".format(obj.type, algorithm.index, algorithm.name, scale.scaleSet[kName])
+                    algorithm = self.menu.algorithmsByObject(obj)[0]
+                    message = "Object type `{0}' assigned to algorithm `{1} {2}' is missing in scales set `{3}'".format(obj.type, algorithm.index, algorithm.name, self.tables.scale.scaleSet[kName])
                     logging.error(message)
                     raise XmlDecoderError(message)
                 if not obj in self.menu.objects:

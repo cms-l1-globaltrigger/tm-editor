@@ -53,6 +53,11 @@ CountObjectTypes = (
     tmGrammar.MBT1HFM,
     # Tower counts
     tmGrammar.TOWERCOUNT,
+    # Asymmetry
+    tmGrammar.ASYM0X,
+    tmGrammar.ASYM1X,
+    tmGrammar.ASYM2X,
+    tmGrammar.ASYM3X,
 )
 """Ordered list of count type object names."""
 
@@ -141,6 +146,10 @@ ObjectScaleMap = {
     tmGrammar.MBT0HFM: kCOUNT,
     tmGrammar.MBT1HFM: kCOUNT,
     tmGrammar.TOWERCOUNT: kCOUNT,
+    tmGrammar.ASYM0X: kCOUNT,
+    tmGrammar.ASYM1X: kCOUNT,
+    tmGrammar.ASYM2X: kCOUNT,
+    tmGrammar.ASYM3X: kCOUNT,
 }
 """Mapping of threshold/count scale types for objects."""
 

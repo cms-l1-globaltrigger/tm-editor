@@ -25,6 +25,10 @@
     <file alias="icons/mbt0hfp.svg">share/tm-editor/icons/13x13/minbias.svg</file>
     <file alias="icons/mbt1hfp.svg">share/tm-editor/icons/13x13/minbias.svg</file>
     <file alias="icons/towercount.svg">share/tm-editor/icons/13x13/towercount.svg</file>
+    <file alias="icons/asym0x.svg">share/tm-editor/icons/13x13/default.svg</file>
+    <file alias="icons/asym1x.svg">share/tm-editor/icons/13x13/default.svg</file>
+    <file alias="icons/asym2x.svg">share/tm-editor/icons/13x13/default.svg</file>
+    <file alias="icons/asym3x.svg">share/tm-editor/icons/13x13/default.svg</file>
     <file alias="icons/ext.svg">share/tm-editor/icons/13x13/ext.svg</file>
     <file alias="icons/default.svg">share/tm-editor/icons/13x13/default.svg</file>
     <file alias="icons/eta.svg">share/tm-editor/icons/13x13/eta.svg</file>
