@@ -1,3 +1,9 @@
+tm-editor (0.9.0-1) extra; urgency=medium
+
+  * Support for grammar revision 0.7
+  * Added Asymmetry object requirements.
+  * Added Centrality signal requirements.
+
 tm-editor (0.8.1-1) extra; urgency=high
 
   * Fixed bug/crash when entering non existent cut names in algorithm editor.
