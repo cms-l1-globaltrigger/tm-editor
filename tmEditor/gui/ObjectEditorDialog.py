@@ -96,7 +96,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         self.typeComboBox = ComboBoxPlus(self)
         self.typeComboBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
         self.compareComboBox = QtWidgets.QComboBox(self)
-        self.compareComboBox.addItem('=>', tmGrammar.GE)
+        self.compareComboBox.addItem('>=', tmGrammar.GE)
         self.compareComboBox.addItem('==', tmGrammar.EQ)
         self.thresholdSpinBox = QtWidgets.QDoubleSpinBox(self)
         self.offsetSpinBox = PrefixedSpinBox(self)
