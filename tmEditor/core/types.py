@@ -46,6 +46,11 @@ ThresholdObjectTypes = (
 """Ordered list of ET threshold type object names."""
 
 CountObjectTypes = (
+    # Asymmetry
+    tmGrammar.ASYMET,
+    tmGrammar.ASYMHT,
+    tmGrammar.ASYMETHF,
+    tmGrammar.ASYMHTHF,
     # Minimum Bias
     tmGrammar.MBT0HFP,
     tmGrammar.MBT1HFP,
@@ -53,11 +58,6 @@ CountObjectTypes = (
     tmGrammar.MBT1HFM,
     # Tower counts
     tmGrammar.TOWERCOUNT,
-    # Asymmetry
-    tmGrammar.ASYM0X,
-    tmGrammar.ASYM1X,
-    tmGrammar.ASYM2X,
-    tmGrammar.ASYM3X,
 )
 """Ordered list of count type object names."""
 
@@ -159,10 +159,10 @@ ObjectScaleMap = {
     tmGrammar.MBT0HFM: kCOUNT,
     tmGrammar.MBT1HFM: kCOUNT,
     tmGrammar.TOWERCOUNT: kCOUNT,
-    tmGrammar.ASYM0X: kCOUNT,
-    tmGrammar.ASYM1X: kCOUNT,
-    tmGrammar.ASYM2X: kCOUNT,
-    tmGrammar.ASYM3X: kCOUNT,
+    tmGrammar.ASYMET: kCOUNT,
+    tmGrammar.ASYMHT: kCOUNT,
+    tmGrammar.ASYMETHF: kCOUNT,
+    tmGrammar.ASYMHTHF: kCOUNT,
 }
 """Mapping of threshold/count scale types for objects."""
 
