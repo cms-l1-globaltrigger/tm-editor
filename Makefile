@@ -124,7 +124,7 @@ install: all
 	echo "//     adding SWIG python modules..."
 	cp $(swigmods) $(prefix)/lib/$(package)
 
-	echo "//     adding SWIG libraries..."```
+	echo "//     adding SWIG libraries..."
 	cp $(swiglibs) $(prefix)/lib/$(package)
 
 	echo "//     adding shared files (generating directory tree)..."
