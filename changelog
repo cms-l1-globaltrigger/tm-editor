@@ -4,6 +4,8 @@ tm-editor (0.9.0-1) extra; urgency=medium
   * Added Asymmetry object requirements.
   * Added Centrality signal requirements.
 
+ -- Bernhard Arnold <bernhard.arnold@cern.ch>  Mon, 17 Sep 2018 12:10:15 +0200
+
 tm-editor (0.8.1-1) extra; urgency=high
 
   * Fixed bug/crash when entering non existent cut names in algorithm editor.
