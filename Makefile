@@ -133,8 +133,8 @@ install: all
 	cp copyright $(prefix)/share/doc/$(package)
 
 	echo "//     adding XSD files..."
-	cp $(tmxsd_dir)/*.xsd $(prefix)/share/$(package)/xsd
-	cp $(tmxsd_dir)/xsd-type/*.xsd $(prefix)/share/$(package)/xsd/xsd-type
+	cp $(utm_dir)/tmXsd/*.xsd $(prefix)/share/$(package)/xsd
+	cp $(utm_dir)/tmXsd/xsd-type/*.xsd $(prefix)/share/$(package)/xsd/xsd-type
 
 	echo "//     compressing changelog..."
 	cp changelog  $(prefix)/share/doc/$(package)/changelog
