@@ -1,11 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 from tmEditor.core import XmlDecoder, XmlEncoder, Settings
 from tmEditor.core.RemoteVersionInfo import RemoteVersionInfo

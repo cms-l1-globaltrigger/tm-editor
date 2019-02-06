@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 """Code editor widget derived from:
 http://doc.qt.io/qt-4.8/qt-widgets-codeeditor-example.html
