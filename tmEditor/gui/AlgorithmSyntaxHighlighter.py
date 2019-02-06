@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 """Algorithm syntax highlighter derived from QtGui.QSyntaxHighlighter class,
  to be attached to an QtGui.QTextDocument instance.

@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 #
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 # Transitional PyQt wrapper supporting PyQt4 fallback for PyQt5 codebase.
 # See also http://pyqt.sourceforge.net/Docs/PyQt5/pyqt4_differences.html
 #

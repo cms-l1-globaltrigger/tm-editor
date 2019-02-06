@@ -1,11 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL: $
-# Last committed    : $Revision: $
-# Last changed by   : $Author: $
-# Last changed date : $Date: $
-#
 
 """Versions.
 
@@ -22,7 +16,7 @@ the module with optional flags:
 __all__ = ["VERSION", "VERSION_MAJOR", "VERSION_MINOR", "VERSION_PATCH", "PKG_RELEASE"]
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 9
+VERSION_MINOR = 10
 VERSION_PATCH = 0
 PKG_RELEASE = 1
 
