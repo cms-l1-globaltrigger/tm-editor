@@ -19,11 +19,11 @@ from tmEditor.gui.CommonWidgets import createIcon
 from tmEditor.gui.Document import Document
 from tmEditor.gui.MdiArea import MdiArea
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_str
-from tmEditor.PyQt5Proxy import pyqt4_toPyObject
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
+from PyQt5 import pyqt4_str
+from PyQt5 import pyqt4_toPyObject
 
 try:
     from urllib.error import HTTPError, URLError

@@ -10,9 +10,9 @@ from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 # Common widgets
 from tmEditor.gui.CommonWidgets import PrefixedSpinBox, createIcon, miniIcon
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_toPyObject, pyqt4_str
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
+from PyQt5 import pyqt4_toPyObject, pyqt4_str
 
 import sys, os
 import re

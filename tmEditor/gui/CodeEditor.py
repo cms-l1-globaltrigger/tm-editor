@@ -8,9 +8,9 @@ http://stackoverflow.com/questions/6571035/qplaintextedit-change-shiftreturn-beh
 http://www.jjoe64.com/2011/08/qplaintextedit-change-shiftreturn.html
 """
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
-from tmEditor.PyQt5Proxy import QtWidgets
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 import string
 

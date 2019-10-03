@@ -41,9 +41,9 @@ from tmEditor.core.formatter import fComparison
 from tmEditor.core.formatter import fBxOffset
 
 # Qt4 python bindings
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_toPyObject, pyqt4_str
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
+from PyQt5 import pyqt4_toPyObject, pyqt4_str
 
 import math
 import logging

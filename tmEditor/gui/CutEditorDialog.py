@@ -19,7 +19,7 @@ from tmEditor.gui.CommonWidgets import (
     PhiCutChart
 )
 
-from tmEditor.PyQt5Proxy import (
+from PyQt5 import (
     QtCore,
     QtWidgets,
     pyqt4_str,

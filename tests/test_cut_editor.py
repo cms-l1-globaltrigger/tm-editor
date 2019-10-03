@@ -5,7 +5,7 @@ from tmEditor.core.Menu import Menu
 from tmEditor.core import XmlDecoder
 from tmEditor import tmeditor_rc
 
-from tmEditor.PyQt5Proxy import QtWidgets
+from PyQt5 import QtWidgets
 
 import argparse
 import logging

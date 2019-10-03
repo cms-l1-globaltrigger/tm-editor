@@ -21,10 +21,10 @@ from tmEditor.gui.CutEditorDialog import CutEditorDialog
 from tmEditor.gui.ObjectEditorDialog import ObjectEditorDialog, CutItem
 
 # Qt4 python bindings
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_toPyObject, pyqt4_str
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
+from PyQt5 import pyqt4_toPyObject, pyqt4_str
 
 import sys, os
 import re

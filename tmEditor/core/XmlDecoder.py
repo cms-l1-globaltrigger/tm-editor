@@ -16,7 +16,7 @@ from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, Alg
 from distutils.version import StrictVersion
 from collections import namedtuple
 
-from XmlEncoder import chdir
+from .XmlEncoder import chdir
 
 import logging
 import sys, os

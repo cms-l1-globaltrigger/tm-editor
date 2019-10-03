@@ -11,9 +11,9 @@ Example usage:
 >>> print dialog.url()
 """
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_toPyObject, pyqt4_str
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
+from PyQt5 import pyqt4_toPyObject, pyqt4_str
 
 __all__ = ['OpenUrlDialog', ]
 

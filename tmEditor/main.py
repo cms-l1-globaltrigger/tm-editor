@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from tmEditor.core import XmlDecoder, XmlEncoder, Settings
 from tmEditor.core.RemoteVersionInfo import RemoteVersionInfo
-from tmEditor.version import VERSION, PKG_RELEASE
+from tmEditor import __version__
 
 from distutils.version import StrictVersion
 from distutils.spawn import find_executable
@@ -13,15 +10,7 @@ import logging
 import signal
 import sys, os
 
-try:
-    # Import PyQt5 modules for graphical operation.
-    from tmEditor.PyQt5Proxy import QtCore
-    from tmEditor.PyQt5Proxy import QtWidgets
-    from tmEditor.PyQt5Proxy import PyQtSignature
-    CommandLineMode = False
-except ImportError:
-    logging.warning("failed to import PyQt4/5, switching to command line mode")
-    CommandLineMode = True
+from PyQt5 import QtCore, QtWidgets
 
 from tmEditor.gui.MainWindow import MainWindow
 
@@ -59,7 +48,7 @@ def parse():
     )
     parser.add_argument('-V', '--version',
         action = 'version',
-        version = "%(prog)s {0}-{1}".format(VERSION, PKG_RELEASE),
+        version = "%(prog)s {}".format(__version__),
         help = "show the application's version",
     )
     return parser.parse_args()
@@ -115,7 +104,7 @@ def bootstrap(args):
 
     # Diagnostic output.
     logging.debug("launching L1-Trigger Menu Editor")
-    logging.debug("version %s-%s", VERSION, PKG_RELEASE)
+    logging.debug("version %s", __version__)
     logging.debug("__file__='%s'", __file__)
     logging.debug("sys.argv='%s'", " ".join(sys.argv))
     logging.debug("LD_LIBRARY_PATH='%s'", os.getenv('LD_LIBRARY_PATH'))
@@ -131,35 +120,14 @@ def main():
     args = parse()
     bootstrap(args)
 
-    # Version check
-    if not args.no_update_check:
-        version_info = RemoteVersionInfo(Settings.VersionUrl)
-        if version_info.is_valid:
-            if version_info.version > StrictVersion(VERSION):
-                version = "{0}.{1}.{2}".format(*version_info.version.version)
-                hint = ""
-                if find_executable('yum'):
-                    hint = "via 'apt-get upgrade' or "
-                elif find_executable("apt-get"):
-                    hint = "via 'apt-get upgrade' or "
-                logging.info("A new version of tm-editor has been released!")
-                logging.info("Version %s is available %sto download at %s", version, hint, Settings.DownloadSite)
-
-                # Download new scales and cabling to cache
-                # ... TODO 0.6.0
-
     # Export options
     if args.export_xml:
         return export_xml(args)
 
-    # End of command line only mode.
-    if CommandLineMode:
-        return dump_information(args)
-
     # Create application window.
     try:
         # Diagnostic output.
-        logging.debug("%s version %s", PyQtSignature, QtCore.QT_VERSION_STR)
+        logging.debug("PyQt5 version %s", QtCore.QT_VERSION_STR)
 
         app = QtWidgets.QApplication(sys.argv)
 
@@ -175,23 +143,6 @@ def main():
         window = MainWindow()
         window.setRemoteTimeout(args.timeout)
         window.show()
-
-        # Version check
-        if not args.no_update_check:
-            if version_info.is_valid:
-                if version_info.version > StrictVersion(VERSION):
-                    version = "{0}.{1}.{2}".format(*version_info.version.version)
-                    title = window.tr("New version available")
-                    hint = window.tr("")
-                    if find_executable('yum'):
-                        hint = window.tr("via <strong>apt-get upgrade</strong> or ")
-                    elif find_executable("apt-get"):
-                        hint = window.tr("via <strong>apt-get upgrade</strong> or ")
-                    QtWidgets.QMessageBox.information(window,
-                        title,
-                        window.tr("A new version of tm-editor has been released!<br/><br/>" \
-                                  "Version {0} is available {1}to download at<br/><br/><a href=\"{2}\">{2}</a>".format(version, hint, Settings.DownloadSite))
-                    )
 
         # Load documents from command line (optional).
         for filename in args.filenames:

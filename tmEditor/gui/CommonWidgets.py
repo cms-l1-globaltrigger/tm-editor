@@ -25,10 +25,10 @@ from tmEditor.core import formatter
 from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.types import CountObjectTypes, ObjectTypes, SignalTypes
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_str
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
+from PyQt5 import pyqt4_str
 
 import math
 import os

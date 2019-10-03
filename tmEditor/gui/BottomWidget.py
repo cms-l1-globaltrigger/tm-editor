@@ -18,10 +18,9 @@ from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextCutsPreview
 from tmEditor.gui.CommonWidgets import createIcon
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_str
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 import re
 

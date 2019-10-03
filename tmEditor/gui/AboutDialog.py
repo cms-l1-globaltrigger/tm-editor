@@ -3,14 +3,13 @@
 """About dialog.
 """
 
-from tmEditor.version import VERSION, PKG_RELEASE
+from tmEditor import __version__
 from tmEditor.core import toolbox
 from tmEditor import tmeditor_rc
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_str, PyQtSignature
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 import sys
 
@@ -30,7 +29,7 @@ class AboutDialog(QtWidgets.QDialog):
     def __init__(self, title, parent=None):
         """Param title is the applciation name."""
         super(AboutDialog, self).__init__(parent)
-        self.setWindowTitle(pyqt4_str(self.tr("About {0}")).format(title))
+        self.setWindowTitle(self.tr("About {0}").format(title))
         self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
         self.icon = QtWidgets.QLabel(self)
         self.icon.setPixmap(QtGui.QPixmap(QtGui.QIcon(':icons/tm-editor.svg').pixmap(QtCore.QSize(32, 32))))
@@ -63,15 +62,15 @@ class AboutDialog(QtWidgets.QDialog):
         self.setLayout(layout)
         # Initialize
         self.titleLabel.setText('<span style="font:bold 16px">{0}</span><br />{1}'.format(
-            pyqt4_str(self.tr("{0}")).format(title),
+            self.tr("{0}").format(title),
             self.tr("Graphical editor for L1-Trigger Menus for the CERN CMS L1-Global Trigger."))
         )
         pythonVersion = "Python version {0}.{1}.{2}-{3}{4}".format(*sys.version_info)
-        pyqtVersion = "{0} version {1}".format(PyQtSignature, QtCore.QT_VERSION_STR)
+        pyqtVersion = "PyQt5 version {1}".format(QtCore.QT_VERSION_STR)
         rootDir = toolbox.getRootDir()
         xsdDir = toolbox.getXsdDir()
-        self.aboutTextEdit.setText(pyqt4_str(self.tr("{0}<br /><br />Version <strong>{1}-{2}</strong>")).format(title, VERSION, PKG_RELEASE, ))
-        self.environTextEdit.setText(pyqt4_str(self.tr("{0}<br />{1}<br />UTM_ROOT={2}<br />UTM_XSD_DIR={3}")).format(pythonVersion, pyqtVersion, rootDir, xsdDir))
+        self.aboutTextEdit.setText(self.tr("{0}<br /><br />Version <strong>{1}-{2}</strong>").format(title, __version__, ))
+        self.environTextEdit.setText(self.tr("{0}<br />{1}<br />UTM_ROOT={2}<br />UTM_XSD_DIR={3}").format(pythonVersion, pyqtVersion, rootDir, xsdDir))
         self.changelogTextEdit.setText(self._readfile(":changelog"))
         self.authorsTextEdit.setText(self._userlist(L1ApplicationAuthors))
         self.thanksTextEdit.setText(self._userlist(L1ApplicationContributors))
@@ -87,5 +86,5 @@ class AboutDialog(QtWidgets.QDialog):
             return ''
         istream = QtCore.QTextStream(file)
         while not istream.atEnd():
-           lines.append(pyqt4_str(istream.readLine()))
+           lines.append(istream.readLine())
         return "\n".join(lines)

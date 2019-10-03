@@ -3,7 +3,7 @@
 from .AbstractTableModel import AbstractTableModel
 from tmEditor.gui.CommonWidgets import miniIcon
 
-from tmEditor.PyQt5Proxy import QtCore
+from PyQt5 import QtCore
 
 from collections import namedtuple
 
