@@ -17,8 +17,8 @@ import tmGrammar
 
 from tmEditor.core.types import FunctionTypes
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from collections import namedtuple
 

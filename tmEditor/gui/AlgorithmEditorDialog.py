@@ -39,10 +39,7 @@ from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextCutsPreview
 from tmEditor.gui.CommonWidgets import createIcon
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_toPyObject, pyqt4_str
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import webbrowser
 import sys, os
@@ -83,7 +80,7 @@ def findFunction(text, pos):
 def currentData(widget):
     rows = widget.selectionModel().selectedRows()
     if rows:
-        return pyqt4_toPyObject(rows[0].data())
+        return rows[0].data()
     return
 
 # -----------------------------------------------------------------------------
@@ -123,7 +120,7 @@ class ExpressionCodeEditor(CodeEditor):
         funcAct.setEnabled(False)
         # Get text cursor position and expression text
         pos = self.cursorForPosition(event.pos()).position()
-        text = pyqt4_str(self.toPlainText())
+        text = self.toPlainText()
         # If text below pointer position
         if pos < len(text):
             # Try to locate requirement and/or function at pointer position
@@ -348,21 +345,21 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         self.indexSpinBox.setValue(int(index))
 
     def name(self):
-        return pyqt4_str(self.nameLineEdit.text())
+        return self.nameLineEdit.text()
 
     def setName(self, name):
         self.nameLineEdit.setText(name)
 
     def expression(self):
         """Returns a machine readable formatted version of the loaded algorithm."""
-        expression = pyqt4_str(self.textEdit.toPlainText())
+        expression = self.textEdit.toPlainText()
         return AlgorithmFormatter.compress(expression)
 
     def setExpression(self, expression):
         self.textEdit.setPlainText(AlgorithmFormatter.normalize(expression))
 
     def comment(self):
-        return pyqt4_str(self.commentEdit.toPlainText())
+        return self.commentEdit.toPlainText()
 
     def setComment(self, comment):
         self.commentEdit.setPlainText(comment)
@@ -386,7 +383,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         pos = self.textEdit.textCursor().position()
         if self.textEdit.textCursor().hasSelection():
             pos = pos - 1
-        text = pyqt4_str(self.textEdit.toPlainText())
+        text = self.textEdit.toPlainText()
         self.editObjectAct.setEnabled(False)
         self.editExtSignalAct.setEnabled(False)
         self.editFunctionAct.setEnabled(False)
@@ -407,7 +404,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
                 self.editFunctionAct.setEnabled(True)
 
     def onEditObject(self, token):
-        text = pyqt4_str(self.textEdit.toPlainText())
+        text = self.textEdit.toPlainText()
         dialog = ObjectEditorDialog(self.menu, self)
         try:
             dialog.loadObject(token[0])
@@ -427,7 +424,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
             )
 
     def onEditExtSignal(self, token):
-        text = pyqt4_str(self.textEdit.toPlainText())
+        text = self.textEdit.toPlainText()
         dialog = ExtSignalEditorDialog(self.menu, self)
         try:
             dialog.loadExtSignal(token[0])
@@ -447,10 +444,10 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
             )
 
     def onEditFunction(self, token):
-        text = pyqt4_str(self.textEdit.toPlainText())
+        text = self.textEdit.toPlainText()
         dialog = FunctionEditorDialog(self.menu, self)
         try:
-            dialog.loadFunction(AlgorithmFormatter.compress(pyqt4_str(token[0])))
+            dialog.loadFunction(AlgorithmFormatter.compress(token[0]))
         except ValueError:
             QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), token[0])
             return
@@ -556,7 +553,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         convenient and helpful maner.
         """
         cursor = self.textEdit.textCursor()
-        ref = pyqt4_str(self.textEdit.toPlainText())
+        ref = self.textEdit.toPlainText()
         # Get text cursor position/selection slice.
         start, end = sorted((cursor.position(), cursor.anchor()))
         # If selection does not start at begin of document
@@ -577,9 +574,9 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
             self.validator.validate(self.expression())
         except AlgorithmSyntaxError as e:
             if e.token:
-                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), pyqt4_str(self.tr("{0} near {1}")).format(e, e.token))
+                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("{} near {}").format(e, e.token))
             else:
-                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), pyqt4_str(self.tr("{0}")).format(e))
+                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), format(e))
 
     def updateFreeIndices(self, ignore=None):
         # Get list of free indices.
@@ -680,10 +677,10 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
                 if algorithm is self.loadedAlgorithm:
                     continue
                 if int(algorithm.index) == int(self.index()):
-                    QtWidgets.QMessageBox.warning(self, self.tr("Index used"), pyqt4_str(self.tr("Algorithm index {0} already used. Please select a different index.")).format(algorithm.index))
+                    QtWidgets.QMessageBox.warning(self, self.tr("Index used"), self.tr("Algorithm index {} already used. Please select a different index.").format(algorithm.index))
                     return
                 if algorithm.name == self.name():
-                    QtWidgets.QMessageBox.warning(self, self.tr("Name used"), pyqt4_str(self.tr("Algorithm name {0} already used (by index {1})")).format(algorithm.name, algorithm.index))
+                    QtWidgets.QMessageBox.warning(self, self.tr("Name used"), self.tr("Algorithm name {} already used (by index {})").format(algorithm.name, algorithm.index))
                     return
                 # Check existance of cuts and external signals.
                 #
@@ -725,7 +722,7 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
             self.editor.setExpression(self.editor.expression()) # normalize expression
             self.editor.textEdit.moveCursor(QtGui.QTextCursor.Start)
             self.editor.textEdit.find(token)
-            QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), pyqt4_str(self.tr("Found invalid expression near:<br/>{0}")).format(token))
+            QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("Found invalid expression near:<br/>{}").format(token))
             return False
         return True
 
@@ -746,9 +743,9 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
             mbox = QtWidgets.QMessageBox(self)
             mbox.setIcon(QtWidgets.QMessageBox.Question)
             mbox.setWindowTitle(self.tr("Close algorithm editor"))
-            mbox.setText(pyqt4_str(self.tr(
-                "The algorithm \"{0}\" has been modified.\n" \
-                "Do you want to apply your changes or discard them?")).format(self.name()))
+            mbox.setText(self.tr(
+                "The algorithm \"{}\" has been modified.\n" \
+                "Do you want to apply your changes or discard them?").format(self.name()))
             mbox.addButton(QtWidgets.QMessageBox.Cancel)
             mbox.addButton(QtWidgets.QMessageBox.Apply)
             mbox.addButton(QtWidgets.QPushButton(self.tr("Discard changes")), QtWidgets.QMessageBox.DestructiveRole)

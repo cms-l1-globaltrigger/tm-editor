@@ -3,17 +3,6 @@
 """Toolbox containing various helpers.
 """
 
-import tmGrammar
-
-try:
-    # Python 2
-    from urllib2 import urlopen
-    from urllib2 import URLError, HTTPError
-except ImportError:
-    # Python 3
-    from urllib.request import urlopen
-    from urllib.error import URLError, HTTPError
-
 import re
 import logging
 import sys, os
@@ -21,23 +10,14 @@ import json
 import platform
 import ssl
 
+from urllib.request import urlopen
+from urllib.error import URLError, HTTPError
+
+import tmTable
+
 # -----------------------------------------------------------------------------
 #  Low level helper functions
 # -----------------------------------------------------------------------------
-
-def is_frozen():
-    """Defined by PyInstaller, for bundled applications."""
-    return getattr(sys, 'frozen', False)
-
-def resource_path(relative):
-    """Determine resource paths, when packed with PyInstaller"""
-    bundle_dir = os.path.abspath(".")
-    if is_frozen():
-        bundle_dir = sys._MEIPASS
-    return os.path.join(
-        bundle_dir,
-        relative
-    )
 
 def getenv(name):
     """Get environment variable. Raises a RuntimeError exception if variable not set."""
@@ -46,19 +26,9 @@ def getenv(name):
         raise RuntimeError("`{name}' environment not set".format(**locals()))
     return value
 
-def getRootDir():
-    if is_frozen():
-        return resource_path(".")
-    return getenv('UTM_ROOT')
-
 def getXsdDir():
     """Returns path for XSD files."""
-    if is_frozen():
-      return resource_path("xsd")
-    try:
-        return getenv('UTM_XSD_DIR')
-    except RuntimeError:
-        return os.path.join(getRootDir(), 'tmXsd')
+    return tmTable.UTM_XSD_DIR
 
 def query(data, **kwargs):
     """Perform dictionary query.
@@ -127,7 +97,7 @@ class CutSpecificationPool(object):
         [CutSpecification instance at 0x...>]
         """
         results = self.specs
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             results = list(filter(lambda spec: hasattr(spec, key) and getattr(spec, key) == value, results))
         return results
 

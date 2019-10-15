@@ -1,24 +1,27 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+from setuptools import setup, find_packages
 
-from distutils.core import setup
-from glob import glob
-import subprocess
-
-# Read version from module
-version = subprocess.check_output("python tmEditor/version.py --version".split()).strip()
+long_description = open('README.md').read()
 
 setup(
-    name = "tmEditor",
-    version = version,
-    description = "Trigger Menu Editor for uGT upgrade",
+    name='tm-editor',
+    version='0.10.0',
+    description="CMS Level-1 Trigger Menu Editor",
+    long_description=long_description,
     author = "Bernhard Arnold",
     author_email = "bernhard.arnold@cern.ch",
     url = "http://globaltrigger.hephy.at/upgrade/tme",
-    packages = ["tmEditor", "tmEditor.core", "tmEditor.gui"],
-    data_files = [],
-    scripts = [
-        "scripts/tm-editor",
+    packages = find_packages(),
+    install_requires=[
+        'tm-table>=0.7.3',
+        'tm-grammar>=0.7.3',
+        'tm-eventsetup>=0.7.3',
+        'PyQt5>=5.13'
     ],
-    provides = ["tmEditor", ],
+    entry_points={
+        'console_scripts': [
+            'tm-editor = tmEditor.__main__:main',
+        ],
+    },
+    test_suite='tests',
+    license='GPLv3'
 )

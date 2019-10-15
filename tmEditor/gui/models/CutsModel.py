@@ -10,7 +10,7 @@ from tmEditor.core.Algorithm import calculateInvMassRange
 from .AbstractTableModel import AbstractTableModel
 # from tmEditor.gui.CommonWidgets import miniIcon
 
-from tmEditor.PyQt5Proxy import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 
 __all__ = ['CutsModel', ]
 

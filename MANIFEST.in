@@ -8,4 +8,3 @@ include resource/share/tm-editor/icons/13x13/*.svg
 include resource/share/tm-editor/icons/16x16/*.svg
 include resource/share/tm-editor/icons/24x24/*.svg
 include resource/share/tm-editor/icons/48x48/*.svg
-include scripts/tm-editor

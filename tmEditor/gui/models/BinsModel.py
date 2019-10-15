@@ -4,7 +4,7 @@ from tmEditor.core.formatter import fHex, fCutValue
 from tmEditor.core.types import ThresholdCutNames
 from .AbstractTableModel import AbstractTableModel
 
-from tmEditor.PyQt5Proxy import QtCore
+from PyQt5 import QtCore
 
 __all__ = ['BinsModel', ]
 

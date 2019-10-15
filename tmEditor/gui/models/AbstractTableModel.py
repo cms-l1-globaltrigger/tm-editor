@@ -2,7 +2,7 @@
 
 from tmEditor.core.toolbox import *
 
-from tmEditor.PyQt5Proxy import QtCore
+from PyQt5 import QtCore
 
 from collections import namedtuple
 

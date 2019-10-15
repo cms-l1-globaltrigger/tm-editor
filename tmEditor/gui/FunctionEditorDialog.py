@@ -21,10 +21,7 @@ from tmEditor.gui.CutEditorDialog import CutEditorDialog
 from tmEditor.gui.ObjectEditorDialog import ObjectEditorDialog, CutItem
 
 # Qt4 python bindings
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_toPyObject, pyqt4_str
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import sys, os
 import re
@@ -56,13 +53,13 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.setWindowIcon(createIcon("wizard-function"))
         self.setWindowTitle(self.tr("Function Editor"))
         self.functionComboBox = QtWidgets.QComboBox(self)
-        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (combination)")).format(tmGrammar.comb), tmGrammar.comb)
-        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (correlation)")).format(tmGrammar.dist), tmGrammar.dist)
-        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (invariant mass)")).format(tmGrammar.mass_inv), tmGrammar.mass_inv)
-        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (transverse mass)")).format(tmGrammar.mass_trv), tmGrammar.mass_trv)
-        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (combination + overlap removal)")).format(tmGrammar.comb_orm), tmGrammar.comb_orm)
-        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (correlation + overlap removal)")).format(tmGrammar.dist_orm), tmGrammar.dist_orm)
-        self.functionComboBox.addItem(pyqt4_str(self.tr("{0} (invariant mass + overlap removal)")).format(tmGrammar.mass_inv_orm), tmGrammar.mass_inv_orm)
+        self.functionComboBox.addItem(self.tr("{} (combination)").format(tmGrammar.comb), tmGrammar.comb)
+        self.functionComboBox.addItem(self.tr("{} (correlation)").format(tmGrammar.dist), tmGrammar.dist)
+        self.functionComboBox.addItem(self.tr("{} (invariant mass)").format(tmGrammar.mass_inv), tmGrammar.mass_inv)
+        self.functionComboBox.addItem(self.tr("{} (transverse mass)").format(tmGrammar.mass_trv), tmGrammar.mass_trv)
+        self.functionComboBox.addItem(self.tr("{} (combination + overlap removal)").format(tmGrammar.comb_orm), tmGrammar.comb_orm)
+        self.functionComboBox.addItem(self.tr("{} (correlation + overlap removal)").format(tmGrammar.dist_orm), tmGrammar.dist_orm)
+        self.functionComboBox.addItem(self.tr("{} (invariant mass + overlap removal)").format(tmGrammar.mass_inv_orm), tmGrammar.mass_inv_orm)
         self.functionComboBox.currentIndexChanged.connect(self.onUpdateObjectHelpers)
         self.objectHelpers = [FunctionReqHelper(i, self) for i in range(self.ObjectReqs)]
         self.cutListView = QtWidgets.QListView(self)
@@ -96,11 +93,11 @@ class FunctionEditorDialog(QtWidgets.QDialog):
     def functionType(self):
         """Returns function type."""
         comboBox = self.functionComboBox
-        return pyqt4_str(pyqt4_toPyObject(comboBox.itemData(comboBox.currentIndex())))
+        return comboBox.itemData(comboBox.currentIndex())
 
     def selectedCuts(self):
         """Retruns list of checked cut names."""
-        return [pyqt4_str(pyqt4_toPyObject(item.data()).name) for item in list(filter(lambda item: item.checkState() == QtCore.Qt.Checked, self.cutModel._items))]
+        return [item.data().name for item in list(filter(lambda item: item.checkState() == QtCore.Qt.Checked, self.cutModel._items))]
 
     def onUpdateObjectHelpers(self, index):
         """Update object helper widgets."""
@@ -211,7 +208,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             else:
                 helper.lineEdit.clear()
         for cut in self.cutModel._items:
-            if pyqt4_str(pyqt4_toPyObject(cut.data()).name) in tmGrammar.Function_getCuts(f):
+            if cut.data().name in tmGrammar.Function_getCuts(f):
                 cut.setCheckState(QtCore.Qt.Checked)
         self.updateInfoText() # refresh
 
@@ -244,10 +241,10 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         # TODO code refactoring!
         # Restore selected cuts and newly added one.
         for cut in self.cutModel._items:
-            if pyqt4_toPyObject(cut.data()).name in selectedCuts:
+            if cut.data().name in selectedCuts:
                 cut.setCheckState(QtCore.Qt.Checked)
             # Select newly create cut
-            if pyqt4_str(pyqt4_toPyObject(cut.data()).name) == new_cut.name:
+            if cut.data().name == new_cut.name:
                 cut.setCheckState(QtCore.Qt.Checked)
         try:
             self.loadFunction(self.expression())
@@ -262,7 +259,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         # Check minimum required objects
         if len(helpers) < 2:
             QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
-                pyqt4_str(self.tr("Function {0}{{...}} requires at least two object requirements.")).format(self.functionType())
+                self.tr("Function {0}{{...}} requires at least two object requirements.").format(self.functionType())
             )
             return
         # Validate object requirements.
@@ -271,14 +268,14 @@ class FunctionEditorDialog(QtWidgets.QDialog):
                 self.validator.validate(AlgorithmFormatter.compress(helper.text()))
             except AlgorithmSyntaxError as e:
                 QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
-                    pyqt4_str(self.tr("Invalid object requirement {0}: {1},<br /><br />Reason: {2}")).format(helper.index+1, pyqt4_str(helper.text()), format(e))
+                    self.tr("Invalid object requirement {0}: {1},<br /><br />Reason: {2}").format(helper.index+1, helper.text(), format(e))
                 )
                 return
         # Check required cuts
         if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv):
             if len(self.selectedCuts()) < 1:
                 QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
-                    pyqt4_str(self.tr("Function {0}{{...}} requires at least one function cut.")).format(self.functionType())
+                    self.tr("Function {0}{{...}} requires at least one function cut.").format(self.functionType())
                 )
                 return
         # Validate whole expression
@@ -286,7 +283,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             self.validator.validate(AlgorithmFormatter.compress(self.expression()))
         except AlgorithmSyntaxError as e:
             QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
-                pyqt4_str(self.tr("Invalid expression: {0}")).format(format(e) or e.token),
+                self.tr("Invalid expression: {0}").format(format(e) or e.token),
             )
             return
         super(FunctionEditorDialog, self).accept()
@@ -300,7 +297,7 @@ class FunctionReqHelper(object):
     def __init__(self, index, parent):
         self.index = index
         self.parent = parent
-        self.label = QtWidgets.QLabel(pyqt4_str(parent.tr("Req. {0}")).format(index+1))
+        self.label = QtWidgets.QLabel(parent.tr("Req. {0}").format(index+1))
         self.lineEdit = QtWidgets.QLineEdit(parent)
         self.editButton = QtWidgets.QToolButton(parent)
         self.editButton.setText(parent.tr("..."))
@@ -309,7 +306,7 @@ class FunctionReqHelper(object):
 
     def text(self):
         """Returns text of line edit."""
-        return pyqt4_str(self.lineEdit.text())
+        return self.lineEdit.text()
 
     def isValid(self):
         """Retruns True if helper is enabled and contains input."""
@@ -328,7 +325,7 @@ class FunctionReqHelper(object):
                 dialog.loadObject(token)
             except ValueError as e:
                 QtWidgets.QMessageBox.warning(self.parent, self.parent.tr("Invalid expression"),
-                    pyqt4_str(self.parent.tr("Invalid object expression: {0}")).format(e),
+                    self.parent.tr("Invalid object expression: {0}").format(e),
                 )
         dialog.exec_()
         if dialog.result() == QtWidgets.QDialog.Accepted:

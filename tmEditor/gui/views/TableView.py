@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtWidgets
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
 # ------------------------------------------------------------------------------
 #  Common table view widget

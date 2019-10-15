@@ -2,7 +2,7 @@
 
 """Simple helper class for retrieving remote version information."""
 
-from tmEditor.core import Settings
+from . import Settings
 from distutils.version import StrictVersion
 import logging
 import json

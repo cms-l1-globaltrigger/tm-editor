@@ -1,18 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """About dialog.
 """
 
-from tmEditor.version import VERSION, PKG_RELEASE
+from tmEditor import __version__
 from tmEditor.core import toolbox
 from tmEditor import tmeditor_rc
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_str, PyQtSignature
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-import sys
+import sys, os
 
 __all__ = ['AboutDialog', ]
 
@@ -30,15 +25,13 @@ class AboutDialog(QtWidgets.QDialog):
     def __init__(self, title, parent=None):
         """Param title is the applciation name."""
         super(AboutDialog, self).__init__(parent)
-        self.setWindowTitle(pyqt4_str(self.tr("About {0}")).format(title))
+        self.setWindowTitle(self.tr("About {}").format(title))
         self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
         self.icon = QtWidgets.QLabel(self)
         self.icon.setPixmap(QtGui.QPixmap(QtGui.QIcon(':icons/tm-editor.svg').pixmap(QtCore.QSize(32, 32))))
         self.titleLabel = QtWidgets.QLabel(self)
         self.aboutTextEdit = QtWidgets.QTextEdit(self)
         self.aboutTextEdit.setReadOnly(True)
-        self.environTextEdit = QtWidgets.QTextEdit(self)
-        self.environTextEdit.setReadOnly(True)
         self.changelogTextEdit = QtWidgets.QTextEdit(self)
         self.changelogTextEdit.setReadOnly(True)
         self.authorsTextEdit = QtWidgets.QTextEdit(self)
@@ -47,7 +40,6 @@ class AboutDialog(QtWidgets.QDialog):
         self.thanksTextEdit.setReadOnly(True)
         self.tabs = QtWidgets.QTabWidget(self)
         self.tabs.addTab(self.aboutTextEdit, self.tr("&About"))
-        self.tabs.addTab(self.environTextEdit, self.tr("&Environment"))
         self.tabs.addTab(self.changelogTextEdit, self.tr("&Changelog"))
         self.tabs.addTab(self.authorsTextEdit, self.tr("A&uthors"))
         self.tabs.addTab(self.thanksTextEdit, self.tr("&Thanks to"))
@@ -62,23 +54,20 @@ class AboutDialog(QtWidgets.QDialog):
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
         # Initialize
-        self.titleLabel.setText('<span style="font:bold 16px">{0}</span><br />{1}'.format(
-            pyqt4_str(self.tr("{0}")).format(title),
+        self.titleLabel.setText('<span style="font:bold 16px">{}</span><br />{}'.format(
+            title,
             self.tr("Graphical editor for L1-Trigger Menus for the CERN CMS L1-Global Trigger."))
         )
-        pythonVersion = "Python version {0}.{1}.{2}-{3}{4}".format(*sys.version_info)
-        pyqtVersion = "{0} version {1}".format(PyQtSignature, QtCore.QT_VERSION_STR)
-        rootDir = toolbox.getRootDir()
-        xsdDir = toolbox.getXsdDir()
-        self.aboutTextEdit.setText(pyqt4_str(self.tr("{0}<br /><br />Version <strong>{1}-{2}</strong>")).format(title, VERSION, PKG_RELEASE, ))
-        self.environTextEdit.setText(pyqt4_str(self.tr("{0}<br />{1}<br />UTM_ROOT={2}<br />UTM_XSD_DIR={3}")).format(pythonVersion, pyqtVersion, rootDir, xsdDir))
+        pythonVersion = "Python version {}.{}.{}-{}{}".format(*sys.version_info)
+        pyqtVersion = "PyQt5 version {}".format(QtCore.QT_VERSION_STR)
+        self.aboutTextEdit.setText(self.tr("{}<br /><br />Version <strong>{}</strong>").format(title, __version__))
         self.changelogTextEdit.setText(self._readfile(":changelog"))
         self.authorsTextEdit.setText(self._userlist(L1ApplicationAuthors))
         self.thanksTextEdit.setText(self._userlist(L1ApplicationContributors))
 
     def _userlist(self, userlist, separator = "<br />"):
         """Return HTML containing full name and email address of a user list tuple."""
-        return separator.join(["{0} &lt;{1}&gt;".format(name, email) for name, email in userlist])
+        return separator.join(["{} &lt;{}&gt;".format(name, email) for name, email in userlist])
 
     def _readfile(self, filename):
         lines = []
@@ -87,5 +76,5 @@ class AboutDialog(QtWidgets.QDialog):
             return ''
         istream = QtCore.QTextStream(file)
         while not istream.atEnd():
-           lines.append(pyqt4_str(istream.readLine()))
-        return "\n".join(lines)
+           lines.append(istream.readLine())
+        return os.linesep.join(lines)

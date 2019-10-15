@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from tmEditor.PyQt5Proxy import QtCore
+from PyQt5 import QtCore
 
 __all__ = ['CutsModelProxy', ]
 
