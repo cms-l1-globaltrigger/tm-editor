@@ -33,7 +33,7 @@ pip install git+https://github.com/cms-l1-globaltrigger/tm-editor.git@0.10.0
 
 ## Build
 
-Regenerate the PyQt5 resource module
+Regenerate the PyQt5 resource module.
 
 ```bash
 pyrcc5 resource/tmEditor.rcc -o tmEditor/tmeditor_rc.py
