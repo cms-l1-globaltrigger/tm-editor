@@ -123,6 +123,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.contentsAct.setStatusTip(self.tr("Open L1 Trigger Menu online manual"))
         self.contentsAct.setIcon(createIcon("help-about"))
         self.contentsAct.triggered.connect(self.onShowContents)
+        # Action to raise about Qt dialog.
+        self.aboutQtAct = QtWidgets.QAction(self.tr("About &Qt"), self)
+        self.aboutQtAct.setStatusTip(self.tr("About Qt framework"))
+        self.aboutQtAct.triggered.connect(self.onShowAboutQt)
         # Action to raise about dialog.
         self.aboutAct = QtWidgets.QAction(self.tr("&About"), self)
         self.aboutAct.setStatusTip(self.tr("About this application"))
@@ -150,6 +154,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Help menu
         self.helpMenu = self.menuBar().addMenu(self.tr("&Help"))
         self.helpMenu.addAction(self.contentsAct)
+        self.helpMenu.addAction(self.aboutQtAct)
         self.helpMenu.addAction(self.aboutAct)
 
     def createToolbar(self):
@@ -437,6 +442,10 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog.exec_()
         # In case history was cleared
         self.updateRecentFilesMenu()
+
+    def onShowAboutQt(self):
+        """Raise about Qt dialog."""
+        QtWidgets.QMessageBox.aboutQt(self)
 
     def onShowAbout(self):
         """Raise about this application dialog."""
