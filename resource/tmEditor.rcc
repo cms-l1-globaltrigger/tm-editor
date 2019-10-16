@@ -82,8 +82,7 @@
     <file alias="icons/emblem-downloads.svg">share/tm-editor/icons/48x48/emblem-downloads.svg</file>
 
     <!-- Side files -->
-    <file alias="changelog">share/tm-editor/changelog</file>
-    <file alias="copyright">share/tm-editor/copyright</file>
+    <file alias="changelog">../changelog</file>
 
   </qresource>
 </RCC>

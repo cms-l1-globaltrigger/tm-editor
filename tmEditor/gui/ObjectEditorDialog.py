@@ -22,10 +22,7 @@ from tmEditor.gui.CommonWidgets import createIcon, miniIcon
 
 from tmEditor.gui.CutEditorDialog import CutEditorDialog
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5 import pyqt4_toPyObject, pyqt4_str
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import sys, os
 import re
@@ -145,7 +142,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         if scale is None:
             QtWidgets.QMessageBox.critical(self,
                 self.tr("Failed to load scales"),
-                pyqt4_str(self.tr("Missing scales for object of type {0}")).format(objectType),
+                self.tr("Missing scales for object of type {0}").format(objectType),
             )
             return
         self.thresholdSpinBox.setRange(float(scale[kMinimum]), float(scale[kMaximum]))
@@ -201,11 +198,11 @@ class ObjectEditorDialog(QtWidgets.QDialog):
 
     def objectType(self):
         """Returns object type."""
-        return pyqt4_str(self.typeComboBox.currentText())
+        return self.typeComboBox.currentText()
 
     def comparisonOperator(self):
         """Returns comparison operator."""
-        return pyqt4_str(pyqt4_toPyObject(self.compareComboBox.itemData(self.compareComboBox.currentIndex())))
+        return self.compareComboBox.itemData(self.compareComboBox.currentIndex())
 
     def threshold(self):
         """Returns objects threshold."""
@@ -216,7 +213,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
 
     def selectedCuts(self):
         """Retruns list of checked cut names."""
-        return [pyqt4_str(pyqt4_toPyObject(item.data()).name) for item in list(filter(lambda item: item.checkState() == QtCore.Qt.Checked, self.cutModel._items))]
+        return [item.data().name for item in list(filter(lambda item: item.checkState() == QtCore.Qt.Checked, self.cutModel._items))]
 
     def expression(self):
         """Returns object expression selected by the inputs."""
@@ -261,7 +258,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         self.thresholdSpinBox.setValue(object_.decodeThreshold())
         self.offsetSpinBox.setValue(object_.bx_offset)
         for cut in self.cutModel._items:
-            if pyqt4_toPyObject(cut.data()).name in object_.cuts:
+            if cut.data().name in object_.cuts:
                 cut.setCheckState(QtCore.Qt.Checked)
 
     def addCut(self):
@@ -283,8 +280,8 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         # TODO code refactoring!
         # Restore selected cuts and newly added one.
         for cut in self.cutModel._items:
-            if pyqt4_str(pyqt4_toPyObject(cut.data()).name) in selectedCuts:
+            if cut.data().name in selectedCuts:
                 cut.setCheckState(QtCore.Qt.Checked)
             # Select newly added cut
-            if pyqt4_str(pyqt4_toPyObject(cut.data()).name) == new_cut.name:
+            if cut.data().name == new_cut.name:
                 cut.setCheckState(QtCore.Qt.Checked)

@@ -1,20 +1,22 @@
 Trigger Menu Editor
 ===================
 
-## Dependecies
+## Install
 
- * PyQt5 (PyQt4 as fallback)
- * utm (>= 0.6.5)
-   * xerces-c
-   * boost-system, boost-filesystem
-   * tmGrammar, tmTable, tmXsd, tmUtil
+Install using pip (>= 19.0)
 
-## Build locally
+```bash
+pip install --upgrade pip
+pip install git+https://github.com/cms-l1-globaltrigger/tm-editor.git@0.10.0
+```
 
-    $ source path/to/utm/setup.sh
-    $ make
+## Build
 
-**Note:** running the makefile is required to build the resource python module.
+Regenerate the PyQt5 resource module.
+
+```bash
+pyrcc5 resource/tmEditor.rcc -o tmEditor/tmeditor_rc.py
+```
 
 ## Synopsis
 

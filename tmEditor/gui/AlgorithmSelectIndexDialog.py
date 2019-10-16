@@ -13,8 +13,7 @@ from tmEditor.core.Settings import MaxAlgorithms
 # Common widgets
 from tmEditor.gui.CommonWidgets import IconLabel, createIcon
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 import sys, os
 
@@ -134,7 +133,7 @@ class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
         """Get new index from the button."""
         diff = self.selected[0] - self.sender().index
         self.index = self.sender().index
-        for k, v in self.mapping.iteritems():
+        for k, v in self.mapping.items():
             if diff > 0:
                 self.mapping[k] = v - abs(diff)
             else:

@@ -5,9 +5,7 @@
 
 from tmEditor.gui.CommonWidgets import createIcon
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
-from PyQt5 import pyqt4_str
+from PyQt5 import QtCore, QtWidgets
 
 import sys, os
 
@@ -65,8 +63,8 @@ class MdiArea(QtWidgets.QTabWidget):
         document = self.widget(index)
         if document.isModified():
             reply = QtWidgets.QMessageBox.warning(self, "Close document",
-                pyqt4_str(self.tr("The document \"{0}\" has been modified.\n" \
-                        "Do you want to save your changes or discard them?")).format(document.name()),
+                self.tr("The document \"{}\" has been modified.\n" \
+                        "Do you want to save your changes or discard them?").format(document.name()),
                 QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Save,
                 QtWidgets.QMessageBox.Cancel)
             if reply == QtWidgets.QMessageBox.Cancel:

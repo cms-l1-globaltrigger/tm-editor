@@ -25,10 +25,7 @@ from tmEditor.core import formatter
 from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.types import CountObjectTypes, ObjectTypes, SignalTypes
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5 import pyqt4_str
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import math
 import os
@@ -49,8 +46,8 @@ __all__ = [
 def richTextObjectsPreview(algorithm, parent):
     content = []
     if algorithm.objects():
-        content.append(pyqt4_str(parent.tr("<p><strong>Used objects:</strong></p>")))
-        content.append(pyqt4_str(parent.tr("<p>")))
+        content.append(parent.tr("<p><strong>Used objects:</strong></p>"))
+        content.append(parent.tr("<p>"))
         objects = [toObject(obj) for obj in algorithm.objects()]
         objects = [obj for obj in objects if obj.type in ObjectTypes]
         objects.sort()
@@ -61,42 +58,42 @@ def richTextObjectsPreview(algorithm, parent):
             else:
                 threshold = formatter.fThreshold(obj.threshold)
             bxOffset = formatter.fBxOffset(obj.bx_offset)
-            content.append(pyqt4_str(parent.tr("<img src=\":/icons/{0}.svg\"> {1} <span style=\"color: gray;\">({2} {3}, {4} BX offset)</span><br/>")).format(obj.type.lower(), obj.name, comparison, threshold, bxOffset))
-        content.append(pyqt4_str(parent.tr("</p>")))
+            content.append(parent.tr("<img src=\":/icons/{0}.svg\"> {1} <span style=\"color: gray;\">({2} {3}, {4} BX offset)</span><br/>").format(obj.type.lower(), obj.name, comparison, threshold, bxOffset))
+        content.append(parent.tr("</p>"))
     return "".join(content)
 
 def richTextSignalsPreview(algorithm, parent):
     content = []
     if algorithm.objects():
-        content.append(pyqt4_str(parent.tr("<p><strong>Used objects:</strong></p>")))
-        content.append(pyqt4_str(parent.tr("<p>")))
+        content.append(parent.tr("<p><strong>Used objects:</strong></p>"))
+        content.append(parent.tr("<p>"))
         signals = [toObject(obj) for obj in algorithm.objects()]
         signals = [sig for sig in signals if sig.type in SignalTypes]
         signals.sort()
         for sig in signals:
             bxOffset = formatter.fBxOffset(sig.bx_offset)
-            content.append(pyqt4_str(parent.tr("<img src=\":/icons/{0}.svg\"> {1} <span style=\"color: gray;\">({2} BX offset)</span><br/>")).format(sig.type.lower(), sig.name, bxOffset))
-        content.append(pyqt4_str(parent.tr("</p>")))
+            content.append(parent.tr("<img src=\":/icons/{0}.svg\"> {1} <span style=\"color: gray;\">({2} BX offset)</span><br/>").format(sig.type.lower(), sig.name, bxOffset))
+        content.append(parent.tr("</p>"))
     return "".join(content)
 
 def richTextExtSignalsPreview(algorithm, parent):
     content = []
     if algorithm.externals():
-        content.append(pyqt4_str(parent.tr("<p><strong>Used externals:</strong></p>")))
-        content.append(pyqt4_str(parent.tr("<p>")))
+        content.append(parent.tr("<p><strong>Used externals:</strong></p>"))
+        content.append(parent.tr("<p>"))
         externals = [toExternal(ext) for ext in algorithm.externals()]
         externals.sort()
         for ext in externals:
-            content.append(pyqt4_str(parent.tr("<img src=\":/icons/ext.svg\"> {0}<br/>")).format(ext.name))
-        content.append(pyqt4_str(parent.tr("</p>")))
+            content.append(parent.tr("<img src=\":/icons/ext.svg\"> {0}<br/>").format(ext.name))
+        content.append(parent.tr("</p>"))
     return "".join(content)
 
 def richTextCutsPreview(menu, algorithm, parent):
     # List used cuts.
     content = []
     if algorithm.cuts():
-        content.append(pyqt4_str(parent.tr("<p><strong>Used cuts:</strong></p>")))
-        content.append(pyqt4_str(parent.tr("<p>")))
+        content.append(parent.tr("<p><strong>Used cuts:</strong></p>"))
+        content.append(parent.tr("<p>"))
         cuts = []
         for name in algorithm.cuts():
             cut = menu.cutByName(name)
@@ -105,8 +102,8 @@ def richTextCutsPreview(menu, algorithm, parent):
         cuts.sort()
         for cut in cuts:
             content.append(formatter.fCutLabelRichText(cut))
-            content.append(pyqt4_str(parent.tr("<br/>")))
-        content.append(pyqt4_str(parent.tr("</p>")))
+            content.append(parent.tr("<br/>"))
+        content.append(parent.tr("</p>"))
     return "".join(content)
 
 # -----------------------------------------------------------------------------
@@ -468,7 +465,7 @@ class ListSpinBox(QtWidgets.QSpinBox):
 
     def valueFromText(self, text):
         """Re-implementation of valueFromText(), it returns only the nearest."""
-        return self.nearest(int(pyqt4_str(text).strip(" =<>!")))
+        return self.nearest(int(text.strip(" =<>!")))
 
     def nearest(self, value):
         """Returns nearest neighbor of value in range."""

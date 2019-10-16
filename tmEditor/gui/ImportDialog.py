@@ -22,9 +22,7 @@ from tmEditor.gui.Document import TableView
 from tmEditor.gui.CommonWidgets import IconLabel, createIcon
 from tmEditor.gui.CommonWidgets import TextFilterWidget
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
-from PyQt5 import pyqt4_str
+from PyQt5 import QtCore, QtWidgets
 
 import logging
 
@@ -104,16 +102,16 @@ class ImportDialog(QtWidgets.QDialog):
         dialog.show()
         QtWidgets.QApplication.processEvents()
         try:
-            queue = XmlDecoder.XmlDecoderQueue(pyqt4_str(filename))
+            queue = XmlDecoder.XmlDecoderQueue(filename)
             for callback in queue:
-                dialog.setLabelText(pyqt4_str(self.tr("{0}...")).format(queue.message().capitalize()))
+                dialog.setLabelText(self.tr("{}...").format(queue.message().capitalize()))
                 logging.debug("processing: %s...", queue.message())
                 QtWidgets.QApplication.sendPostedEvents(dialog, 0)
                 QtWidgets.QApplication.processEvents()
                 callback()
                 dialog.setValue(queue.progress())
                 QtWidgets.QApplication.processEvents()
-        except XmlDecoder.XmlDecoderError, e:
+        except XmlDecoder.XmlDecoderError as e:
             dialog.close() # make sure to close the progress dialog
             raise
         except Exception:
@@ -130,7 +128,7 @@ class ImportDialog(QtWidgets.QDialog):
             logging.warning("imported scale set \"%s\" does not match with current scale set \"%s\"", scaleSet, baseScaleSet)
             QtWidgets.QMessageBox.warning(self,
                 self.tr("Different scale sets"),
-                pyqt4_str(self.tr("Imported scale set <em>{0}</em> does not match with current scale set <em>{1}</em>, but might be compatible.")).format(scaleSet, baseScaleSet),
+                self.tr("Imported scale set <em>{0}</em> does not match with current scale set <em>{1}</em>, but might be compatible.").format(scaleSet, baseScaleSet),
             )
 
     def importSelected(self):
@@ -140,7 +138,7 @@ class ImportDialog(QtWidgets.QDialog):
         if not selectedIndexes:
             QtWidgets.QMessageBox.warning(self,
                 self.tr("Empty selection"),
-                pyqt4_str(self.tr("No algorithms are selected to import.")),
+                self.tr("No algorithms are selected to import."),
             )
             return
         for index in selectedIndexes:

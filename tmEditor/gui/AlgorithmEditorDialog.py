@@ -39,10 +39,7 @@ from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextCutsPreview
 from tmEditor.gui.CommonWidgets import createIcon
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5 import pyqt4_toPyObject
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import webbrowser
 import sys, os
@@ -83,7 +80,7 @@ def findFunction(text, pos):
 def currentData(widget):
     rows = widget.selectionModel().selectedRows()
     if rows:
-        return pyqt4_toPyObject(rows[0].data())
+        return rows[0].data()
     return
 
 # -----------------------------------------------------------------------------
@@ -577,9 +574,9 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
             self.validator.validate(self.expression())
         except AlgorithmSyntaxError as e:
             if e.token:
-                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("{0} near {1}").format(e, e.token))
+                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("{} near {}").format(e, e.token))
             else:
-                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("{0}").format(e))
+                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), format(e))
 
     def updateFreeIndices(self, ignore=None):
         # Get list of free indices.
@@ -680,10 +677,10 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
                 if algorithm is self.loadedAlgorithm:
                     continue
                 if int(algorithm.index) == int(self.index()):
-                    QtWidgets.QMessageBox.warning(self, self.tr("Index used"), self.tr("Algorithm index {0} already used. Please select a different index.").format(algorithm.index))
+                    QtWidgets.QMessageBox.warning(self, self.tr("Index used"), self.tr("Algorithm index {} already used. Please select a different index.").format(algorithm.index))
                     return
                 if algorithm.name == self.name():
-                    QtWidgets.QMessageBox.warning(self, self.tr("Name used"), self.tr("Algorithm name {0} already used (by index {1})").format(algorithm.name, algorithm.index))
+                    QtWidgets.QMessageBox.warning(self, self.tr("Name used"), self.tr("Algorithm name {} already used (by index {})").format(algorithm.name, algorithm.index))
                     return
                 # Check existance of cuts and external signals.
                 #
@@ -725,7 +722,7 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
             self.editor.setExpression(self.editor.expression()) # normalize expression
             self.editor.textEdit.moveCursor(QtGui.QTextCursor.Start)
             self.editor.textEdit.find(token)
-            QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("Found invalid expression near:<br/>{0}").format(token))
+            QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("Found invalid expression near:<br/>{}").format(token))
             return False
         return True
 
@@ -747,7 +744,7 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
             mbox.setIcon(QtWidgets.QMessageBox.Question)
             mbox.setWindowTitle(self.tr("Close algorithm editor"))
             mbox.setText(self.tr(
-                "The algorithm \"{0}\" has been modified.\n" \
+                "The algorithm \"{}\" has been modified.\n" \
                 "Do you want to apply your changes or discard them?").format(self.name()))
             mbox.addButton(QtWidgets.QMessageBox.Cancel)
             mbox.addButton(QtWidgets.QMessageBox.Apply)

@@ -29,28 +29,28 @@ def main():
 
     menu, scale, extSignal = load_xml(args.filename)
 
-    print "-" * 80
-    print "menu.name:", menu.menu['name']
-    print "menu.is_valid:", menu.menu['is_valid']
-    print "-" * 80
-    print "scale.isValid:", scale.isValid()
-    print "scale.scaleSet.scale_set_id:", scale.scaleSet['scale_set_id']
-    print "scale.scaleSet.name:", scale.scaleSet['name']
-    print "scale.scaleSet.is_valid:", scale.scaleSet['is_valid']
-    print "-" * 80
-    print "scales (", len(scale.scales), ")"
+    print("-" * 80)
+    print("menu.name:", menu.menu['name'])
+    print("menu.is_valid:", menu.menu['is_valid'])
+    print("-" * 80)
+    print("scale.isValid:", scale.isValid())
+    print("scale.scaleSet.scale_set_id:", scale.scaleSet['scale_set_id'])
+    print("scale.scaleSet.name:", scale.scaleSet['name'])
+    print("scale.scaleSet.is_valid:", scale.scaleSet['is_valid'])
+    print("-" * 80)
+    print("scales (", len(scale.scales), ")")
     for row in scale.scales:
-        print row['object'], row['type'], "{ n_bits:", row['n_bits'], "}"
+        print(row['object'], row['type'], "{ n_bits:", row['n_bits'], "}")
     # for row in scale.scales:
-    #     print "::"
-    #     print "  scale_id:", row['scale_id']
-    #     print "  type:", row['type']
-    #     print "  object:", row['object']
-    #     print "  step:", row['step']
-    #     print "  n_bins:", row['n_bins']
-    #     print "  n_bits:", row['n_bits']
-    #     print "  minimum:", row['minimum']
-    #     print "  maximum:", row['maximum']
+    #     print("::"
+    #     print("  scale_id:", row['scale_id']
+    #     print("  type:", row['type']
+    #     print("  object:", row['object']
+    #     print("  step:", row['step']
+    #     print("  n_bins:", row['n_bins']
+    #     print("  n_bits:", row['n_bits']
+    #     print("  minimum:", row['minimum']
+    #     print("  maximum:", row['maximum']
 
     return 0
 

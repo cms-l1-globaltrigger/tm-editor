@@ -18,9 +18,7 @@ from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextCutsPreview
 from tmEditor.gui.CommonWidgets import createIcon
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import re
 
@@ -219,12 +217,12 @@ class BottomWidget(QtWidgets.QWidget):
         self.reset()
         # Format expression
         content = []
-        content.append(pyqt4_str(self.tr("<h2><span>{0}</span> {1}</h2>")).format(algorithm.index, algorithm.name))
-        content.append(pyqt4_str(self.tr("<p><strong>Expression:</strong></p>")))
-        content.append(pyqt4_str(self.tr("<p><code>{0}</code></p>")).format(highlight(algorithm.expression)))
+        content.append(self.tr("<h2><span>{}</span> {}</h2>").format(algorithm.index, algorithm.name))
+        content.append(self.tr("<p><strong>Expression:</strong></p>"))
+        content.append(self.tr("<p><code>{}</code></p>").format(highlight(algorithm.expression)))
         if algorithm.comment:
-            content.append(pyqt4_str(self.tr("<p><strong>Comment:</strong></p>")))
-            content.append(pyqt4_str(self.tr("<p><code>{0}</code></p>")).format(algorithm.comment))
+            content.append(self.tr("<p><strong>Comment:</strong></p>"))
+            content.append(self.tr("<p><code>{}</code></p>").format(algorithm.comment))
         content.append(richTextObjectsPreview(algorithm, self))
         content.append(richTextSignalsPreview(algorithm, self))
         content.append(richTextExtSignalsPreview(algorithm, self))
@@ -234,9 +232,9 @@ class BottomWidget(QtWidgets.QWidget):
     def loadCut(self, cut):
         self.reset()
         content = []
-        content.append(pyqt4_str(self.tr("<h2>{0}</h2>")).format(cut.name))
+        content.append(self.tr("<h2>{}</h2>").format(cut.name))
         if cut.type not in FunctionCutTypes:
-            content.append(pyqt4_str(self.tr("<p><strong>Object:</strong> {0}</p>")).format(cut.object))
+            content.append(self.tr("<p><strong>Object:</strong> {}</p>").format(cut.object))
         if cut.data:
             datalist = []
             # TODO HACK transitional backward compatibility
@@ -245,30 +243,30 @@ class BottomWidget(QtWidgets.QWidget):
                     cut.minimum = float(cut.data.split(",")[0].strip())
                     cut.maximum = float(cut.data.split(",")[-1].strip())
                 if cut.minimum == cut.maximum:
-                    data = "[{0}]".format(int(cut.minimum))
+                    data = "[{}]".format(int(cut.minimum))
                 else:
-                    data = "[{0}-{1}]".format(int(cut.minimum), int(cut.maximum))
-                content.append(pyqt4_str(self.tr("<p><strong>Range:</strong> {0}</p>".format(data))))
+                    data = "[{}-{}]".format(int(cut.minimum), int(cut.maximum))
+                content.append(self.tr("<p><strong>Range:</strong> {}</p>".format(data)))
             else:
-                content.append(pyqt4_str(self.tr("<p><strong>Options:</strong></p>")))
+                content.append(self.tr("<p><strong>Options:</strong></p>"))
                 if cut.type == tmGrammar.CHGCOR: # HACK
                     data_ = CutSpecs.query(type=cut.type)[0].data # TODO
                 else:
                     data_ = CutSpecs.query(type=cut.type, object=cut.object)[0].data # TODO
                 for key in cut.data.split(','):
                     if cut.type == tmGrammar.ISO:
-                        datalist.append(pyqt4_str(self.tr("<li>[0b{0:02b}] {1}</li>")).format(int(key), data_[key]))
+                        datalist.append(self.tr("<li>[0b{0:02b}] {1}</li>").format(int(key), data_[key]))
                     else:
-                        datalist.append(pyqt4_str(self.tr("<li>[{0}] {1}</li>")).format(key, data_[key]))
-                content.append(pyqt4_str(self.tr("<p><ul>{0}</ul></p>")).format("".join(datalist)))
+                        datalist.append(self.tr("<li>[{}] {}</li>").format(key, data_[key]))
+                content.append(self.tr("<p><ul>{}</ul></p>").format("".join(datalist)))
         elif cut.type == tmGrammar.TBPT:
-            content.append(pyqt4_str(self.tr("<p><strong>Threshold:</strong> {0}</p>")).format(formatter.fCutValue(cut.minimum)))
+            content.append(self.tr("<p><strong>Threshold:</strong> {}</p>").format(formatter.fCutValue(cut.minimum)))
         else:
-            content.append(pyqt4_str(self.tr("<p><strong>Minimum:</strong> {0}</p>")).format(formatter.fCutValue(cut.minimum)))
-            content.append(pyqt4_str(self.tr("<p><strong>Maximum:</strong> {0}</p>")).format(formatter.fCutValue(cut.maximum)))
+            content.append(self.tr("<p><strong>Minimum:</strong> {}</p>").format(formatter.fCutValue(cut.minimum)))
+            content.append(self.tr("<p><strong>Maximum:</strong> {}</p>").format(formatter.fCutValue(cut.maximum)))
         if cut.comment:
-            content.append(pyqt4_str(self.tr("<p><strong>Comment:</strong></p>")))
-            content.append(pyqt4_str(self.tr("<p><code>{0}</code></p>")).format(cut.comment))
+            content.append(self.tr("<p><strong>Comment:</strong></p>"))
+            content.append(self.tr("<p><code>{}</code></p>").format(cut.comment))
         self.setText("".join(content))
         # Show charts if available.
         if cut.type == tmGrammar.ETA:
@@ -279,66 +277,66 @@ class BottomWidget(QtWidgets.QWidget):
     def loadObject(self, obj):
         self.reset()
         content = []
-        content.append(pyqt4_str(self.tr("<h2>{0}</h2>")).format(obj.name))
-        content.append(pyqt4_str(self.tr("<p><strong>Type:</strong> {0}</p>")).format(obj.type))
+        content.append(self.tr("<h2>{}</h2>").format(obj.name))
+        content.append(self.tr("<p><strong>Type:</strong> {}</p>").format(obj.type))
         if obj.type in CountObjectTypes:
-            content.append(pyqt4_str(self.tr("<p><strong>Threshold:</strong> {0} {1}</p>")).format(formatter.fComparison(obj.comparison_operator), formatter.fCounts(obj.threshold)))
+            content.append(self.tr("<p><strong>Threshold:</strong> {} {}</p>").format(formatter.fComparison(obj.comparison_operator), formatter.fCounts(obj.threshold)))
         else:
-            content.append(pyqt4_str(self.tr("<p><strong>Threshold:</strong> {0} {1}</p>")).format(formatter.fComparison(obj.comparison_operator), formatter.fThreshold(obj.threshold)))
-        content.append(pyqt4_str(self.tr("<p><strong>BX offset:</strong> {0}</p>")).format(formatter.fBxOffset(obj.bx_offset)))
+            content.append(self.tr("<p><strong>Threshold:</strong> {} {}</p>").format(formatter.fComparison(obj.comparison_operator), formatter.fThreshold(obj.threshold)))
+        content.append(self.tr("<p><strong>BX offset:</strong> {}</p>").format(formatter.fBxOffset(obj.bx_offset)))
         if obj.comment:
-            content.append(pyqt4_str(self.tr("<p><strong>Comment:</strong></p>")))
-            content.append(pyqt4_str(self.tr("<p><code>{0}</code></p>")).format(obj.comment))
+            content.append(self.tr("<p><strong>Comment:</strong></p>"))
+            content.append(self.tr("<p><code>{}</code></p>").format(obj.comment))
         self.setText("".join(content))
 
     def loadExternal(self, menu, external):
         self.reset()
         content = []
-        content.append(pyqt4_str(self.tr("<h2>{0}</h2>")).format(external.name))
-        content.append(pyqt4_str(self.tr("<p><strong>BX offset:</strong> {0}</p>")).format(formatter.fBxOffset(external.bx_offset)))
+        content.append(self.tr("<h2>{}</h2>").format(external.name))
+        content.append(self.tr("<p><strong>BX offset:</strong> {}</p>").format(formatter.fBxOffset(external.bx_offset)))
         data = list(filter(lambda item: item[kName] == external.signal_name, menu.extSignals.extSignals))[0]
-        content.append(pyqt4_str(self.tr("<p><strong>System:</strong> {0}</p>")).format(data[kSystem]))
+        content.append(self.tr("<p><strong>System:</strong> {}</p>").format(data[kSystem]))
         if kLabel in data.keys():
-            content.append(pyqt4_str(self.tr("<p><strong>Label:</strong> {0}</p>")).format(data[kLabel]))
-        content.append(pyqt4_str(self.tr("<p><strong>Cable:</strong> {0}</p>")).format(data[kCable]))
-        content.append(pyqt4_str(self.tr("<p><strong>Channel:</strong> {0}</p>")).format(data[kChannel]))
+            content.append(self.tr("<p><strong>Label:</strong> {}</p>").format(data[kLabel]))
+        content.append(self.tr("<p><strong>Cable:</strong> {}</p>").format(data[kCable]))
+        content.append(self.tr("<p><strong>Channel:</strong> {}</p>").format(data[kChannel]))
         if kDescription in data.keys():
-            content.append(pyqt4_str(self.tr("<p><strong>Description:</strong> {0}</p>")).format(data[kDescription]))
+            content.append(self.tr("<p><strong>Description:</strong> {}</p>").format(data[kDescription]))
         if external.comment:
-            content.append(pyqt4_str(self.tr("<p><strong>Comment:</strong></p>")))
-            content.append(pyqt4_str(self.tr("<p><code>{0}</code></p>")).format(external.comment))
+            content.append(self.tr("<p><strong>Comment:</strong></p>"))
+            content.append(self.tr("<p><code>{}</code></p>").format(external.comment))
         self.setText("".join(content))
 
     def loadScale(self, data): # TODO
         self.reset()
         content = []
-        content.append(pyqt4_str(self.tr("<p><strong>Object:</strong> {0}</p>")).format(data[kObject]))
-        content.append(pyqt4_str(self.tr("<p><strong>Type:</strong> {0}</p>")).format(fPatchType(data)))
-        content.append(pyqt4_str(self.tr("<p><strong>Minimum:</strong> {0}</p>")).format(formatter.fCutValue(data[kMinimum])))
-        content.append(pyqt4_str(self.tr("<p><strong>Maximum:</strong> {0}</p>")).format(formatter.fCutValue(data[kMaximum])))
-        content.append(pyqt4_str(self.tr("<p><strong>Step:</strong> {0}</p>")).format(formatter.fCutValue(data[kStep])))
-        content.append(pyqt4_str(self.tr("<p><strong>Bitwidth:</strong> {0}</p>")).format(data[kNBits]))
+        content.append(self.tr("<p><strong>Object:</strong> {}</p>").format(data[kObject]))
+        content.append(self.tr("<p><strong>Type:</strong> {}</p>").format(fPatchType(data)))
+        content.append(self.tr("<p><strong>Minimum:</strong> {}</p>").format(formatter.fCutValue(data[kMinimum])))
+        content.append(self.tr("<p><strong>Maximum:</strong> {}</p>").format(formatter.fCutValue(data[kMaximum])))
+        content.append(self.tr("<p><strong>Step:</strong> {}</p>").format(formatter.fCutValue(data[kStep])))
+        content.append(self.tr("<p><strong>Bitwidth:</strong> {}</p>").format(data[kNBits]))
         self.setText("".join(content))
 
     def loadScaleType(self, name, data): # TODO
         self.reset()
         content = []
-        content.append(pyqt4_str(self.tr("<h2>Scale {0}</h2>")).format(name))
-        content.append(pyqt4_str(self.tr("<p><strong>Number:</strong> {0}</p>")).format(data[kNumber]))
-        content.append(pyqt4_str(self.tr("<p><strong>Minimum:</strong> {0}</p>")).format(formatter.fCutValue(data[kMinimum])))
-        content.append(pyqt4_str(self.tr("<p><strong>Maximum:</strong> {0}</p>")).format(formatter.fCutValue(data[kMaximum])))
+        content.append(self.tr("<h2>Scale {}</h2>").format(name))
+        content.append(self.tr("<p><strong>Number:</strong> {}</p>").format(data[kNumber]))
+        content.append(self.tr("<p><strong>Minimum:</strong> {}</p>").format(formatter.fCutValue(data[kMinimum])))
+        content.append(self.tr("<p><strong>Maximum:</strong> {}</p>").format(formatter.fCutValue(data[kMaximum])))
         self.setText("".join(content))
 
     def loadSignal(self, data): # TODO
         self.reset()
         content = []
-        content.append(pyqt4_str(self.tr("<h2>{0}</h2>")).format(data[kName]))
-        content.append(pyqt4_str(self.tr("<p><strong>System:</strong> {0}</p>")).format(data[kSystem]))
-        content.append(pyqt4_str(self.tr("<p><strong>Name:</strong> {0}</p>")).format(data[kName]))
+        content.append(self.tr("<h2>{}</h2>").format(data[kName]))
+        content.append(self.tr("<p><strong>System:</strong> {}</p>").format(data[kSystem]))
+        content.append(self.tr("<p><strong>Name:</strong> {}</p>").format(data[kName]))
         if kLabel in data.keys():
-            content.append(pyqt4_str(self.tr("<p><strong>Label:</strong> {0}</p>")).format(data[kLabel]))
-        content.append(pyqt4_str(self.tr("<p><strong>Cable:</strong> {0}</p>")).format(data[kCable]))
-        content.append(pyqt4_str(self.tr("<p><strong>Channel:</strong> {0}</p>")).format(data[kChannel]))
+            content.append(self.tr("<p><strong>Label:</strong> {}</p>").format(data[kLabel]))
+        content.append(self.tr("<p><strong>Cable:</strong> {}</p>").format(data[kCable]))
+        content.append(self.tr("<p><strong>Channel:</strong> {}</p>").format(data[kChannel]))
         if kDescription in data.keys():
-            content.append(pyqt4_str(self.tr("<p><strong>Description:</strong> {0}</p>")).format(data[kDescription]))
+            content.append(self.tr("<p><strong>Description:</strong> {}</p>").format(data[kDescription]))
         self.setText("".join(content))

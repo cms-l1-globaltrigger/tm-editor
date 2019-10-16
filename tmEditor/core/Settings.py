@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 
-from tmEditor.core.toolbox import CutSpecificationPool, CutSpecification
+from .toolbox import CutSpecificationPool, CutSpecification
 
 import tmGrammar
 import sys, os

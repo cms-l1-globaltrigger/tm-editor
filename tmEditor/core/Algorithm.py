@@ -1,18 +1,16 @@
-# -*- coding: utf-8 -*-
-
 """Algorithm container.
 
 """
 
-import tmGrammar
-
-from tmEditor.core.types import ObjectTypes, SignalTypes, ExternalObjectTypes, FunctionCutTypes
-from tmEditor.core.Settings import MaxAlgorithms
-from tmEditor.core.AlgorithmHelper import decode_threshold, encode_threshold
-
 import re, math
 import sys, os
 import logging
+
+import tmGrammar
+
+from .types import ObjectTypes, SignalTypes, ExternalObjectTypes, FunctionCutTypes
+from .Settings import MaxAlgorithms
+from .AlgorithmHelper import decode_threshold, encode_threshold
 
 __all__ = ['Algorithm', ]
 
