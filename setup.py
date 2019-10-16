@@ -15,6 +15,7 @@ setup(
         'tm-table>=0.7.3',
         'tm-grammar>=0.7.3',
         'tm-eventsetup>=0.7.3',
+        'Markdown=>3.1',
         'PyQt5>=5.13'
     ],
     entry_points={

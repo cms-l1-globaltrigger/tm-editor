@@ -1,7 +1,12 @@
-# -*- coding: utf-8 -*-
-
 """Document widget.
 """
+
+import math
+import logging
+import copy
+import sys, os
+
+from PyQt5 import QtCore, QtWidgets
 
 # Trigger menu modules
 import tmGrammar
@@ -39,14 +44,6 @@ from tmEditor.core.formatter import fHex
 from tmEditor.core.formatter import fThreshold
 from tmEditor.core.formatter import fComparison
 from tmEditor.core.formatter import fBxOffset
-
-# Qt4 python bindings
-from PyQt5 import QtCore, QtWidgets
-
-import math
-import logging
-import copy
-import sys, os
 
 __all__ = ['Document', ]
 

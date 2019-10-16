@@ -1,13 +1,13 @@
 """About dialog.
 """
+import sys, os
+import markdown
+
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from tmEditor import __version__
 from tmEditor.core import toolbox
 from tmEditor import tmeditor_rc
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-import sys, os
 
 __all__ = ['AboutDialog', ]
 
@@ -28,6 +28,7 @@ class AboutDialog(QtWidgets.QDialog):
         self.setWindowTitle(self.tr("About {}").format(title))
         self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
         self.icon = QtWidgets.QLabel(self)
+        self.icon.setFixedSize(32, 32)
         self.icon.setPixmap(QtGui.QPixmap(QtGui.QIcon(':icons/tm-editor.svg').pixmap(QtCore.QSize(32, 32))))
         self.titleLabel = QtWidgets.QLabel(self)
         self.aboutTextEdit = QtWidgets.QTextEdit(self)
@@ -56,12 +57,12 @@ class AboutDialog(QtWidgets.QDialog):
         # Initialize
         self.titleLabel.setText('<span style="font:bold 16px">{}</span><br />{}'.format(
             title,
-            self.tr("Graphical editor for L1-Trigger Menus for the CERN CMS L1-Global Trigger."))
+            self.tr("Editor for CERN CMS Level-1 Trigger Menus."))
         )
-        pythonVersion = "Python version {}.{}.{}-{}{}".format(*sys.version_info)
-        pyqtVersion = "PyQt5 version {}".format(QtCore.QT_VERSION_STR)
-        self.aboutTextEdit.setText(self.tr("{}<br /><br />Version <strong>{}</strong>").format(title, __version__))
-        self.changelogTextEdit.setText(self._readfile(":changelog"))
+        about = markdown.markdown("{}\n\nVersion **{}**".format(title, __version__))
+        self.aboutTextEdit.setText(about)
+        changelog = markdown.markdown(self._readfile(":changelog"))
+        self.changelogTextEdit.setText(changelog)
         self.authorsTextEdit.setText(self._userlist(L1ApplicationAuthors))
         self.thanksTextEdit.setText(self._userlist(L1ApplicationContributors))
 
