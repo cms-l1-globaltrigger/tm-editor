@@ -75,6 +75,14 @@ def fScale(scale):
         return "MU-PT"
     return scale
 
+# HACK
+def updateModel(model, context):
+    """Workaround while fixing table models..."""
+    source = model.sourceModel()
+    model.setSourceModel(source.__class__(context.menu(), context))
+    source.setParent(None)
+    source.deleteLater()
+
 # ------------------------------------------------------------------------------
 #  Document widget
 # ------------------------------------------------------------------------------
@@ -504,7 +512,8 @@ class Document(BaseDocument):
             if not self.menu().cutByName(cut.name):
                 cut.modified = True
                 self.menu().addCut(cut)
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.cutsPage.top.model(), self)
 
     def importAlgorithms(self, algorithms):
         """Import algorithms from another menu."""
@@ -533,7 +542,8 @@ class Document(BaseDocument):
             algorithm.modified = True
             self.menu().addAlgorithm(algorithm)
             self.menu().extendReferenced(algorithm)
-        self.algorithmsPage.top.model().setSourceModel(self.algorithmsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.algorithmsPage.top.model(), self)
         self.algorithmsPage.top.resizeColumnsToContents()
 
     def addItem(self):
@@ -557,8 +567,8 @@ class Document(BaseDocument):
         dialog.setName(self.getUniqueAlgorithmName(self.tr("L1_Unnamed")))
         dialog.editor.setModified(False)
         dialog.exec_()
-        # Update crated cuts... ugh, ugly
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.cutsPage.top.model(), self)
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         self.setModified(True)
@@ -574,7 +584,8 @@ class Document(BaseDocument):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
         self.menu().addAlgorithm(algorithm)
         self.menu().extendReferenced(self.menu().algorithmByName(algorithm.name)) # IMPORTANT: add/update new objects!
-        item.top.model().setSourceModel(item.top.model().sourceModel())
+        # HACK
+        updateModel(item.top.model(), self)
         self.algorithmsPage.top.resizeColumnsToContents()
         # REBUILD INDEX
         self.updateBottom()
@@ -596,7 +607,8 @@ class Document(BaseDocument):
             return
         cut = dialog.newCut()
         self.menu().addCut(cut)
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.cutsPage.top.model(), self)
         self.updateBottom()
         self.setModified(True)
         self.modified.emit()
@@ -630,8 +642,8 @@ class Document(BaseDocument):
         dialog.loadAlgorithm(algorithm)
         dialog.editor.setModified(False)
         dialog.exec_()
-        # Update crated cuts... ugh, ugly
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.cutsPage.top.model(), self)
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         self.setModified(True)
@@ -679,8 +691,8 @@ class Document(BaseDocument):
         dialog.setExpression(algorithm.expression)
         dialog.editor.setModified(False)
         dialog.exec_()
-        # Update crated cuts... ugh, ugly
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel( self.cutsPage.top.model(), self)
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         algorithm.expression = dialog.expression()
@@ -694,7 +706,8 @@ class Document(BaseDocument):
             if not list(filter(lambda item: item.name == name, self.menu().externals)):
                 raise RuntimeError("NO SUCH EXTERNAL AVAILABLE") # TODO
         self.menu().algorithms.append(algorithm)
-        item.top.model().setSourceModel(item.top.model().sourceModel())
+        # HACK
+        updateModel(item.top.model(), self)
         # REBUILD INDEX
         self.updateBottom()
         self.modified.emit()
@@ -723,7 +736,8 @@ class Document(BaseDocument):
             return
         cut = dialog.newCut()
         self.menu().addCut(cut)
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.cutsPage.top.model(), self)
         self.updateBottom()
         self.setModified(True)
         self.modified.emit()
