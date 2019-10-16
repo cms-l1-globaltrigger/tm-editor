@@ -35,12 +35,12 @@ def test_dialog():
     app.exec_()
 
     cut = window.newCut()
-    print "name    :", cut.name
-    print "object  :", cut.object
-    print "type    :", cut.type
-    print "minimum :", format(cut.minimum, '+23.16E')
-    print "maximum :", format(cut.maximum, '+23.16E')
-    print "data    :", cut.data
+    print("name    :", cut.name)
+    print("object  :", cut.object)
+    print("type    :", cut.type)
+    print("minimum :", format(cut.minimum, '+23.16E'))
+    print("maximum :", format(cut.maximum, '+23.16E'))
+    print("data    :", cut.data)
 
 if __name__ == '__main__':
     test_dialog()
