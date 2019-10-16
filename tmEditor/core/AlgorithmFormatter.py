@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 """Algorithm expression formatter.
 
@@ -23,7 +17,7 @@ Cascade an algorithm expression to increase human readability:
 
 import tmGrammar
 
-from tmEditor.core.types import FunctionTypes
+from .types import FunctionTypes
 
 __all__ = ['AlgorithmFormatter', ]
 

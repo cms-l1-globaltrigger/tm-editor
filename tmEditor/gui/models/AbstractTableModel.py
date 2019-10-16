@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 from tmEditor.core.toolbox import *
 
-from tmEditor.PyQt5Proxy import QtCore
+from PyQt5 import QtCore
 
 from collections import namedtuple
 

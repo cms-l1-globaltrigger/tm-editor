@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 """Open from URL dialog.
 
@@ -17,9 +11,7 @@ Example usage:
 >>> print dialog.url()
 """
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_toPyObject, pyqt4_str
+from PyQt5 import QtCore, QtWidgets
 
 __all__ = ['OpenUrlDialog', ]
 
@@ -67,11 +59,11 @@ class OpenUrlDialog(QtWidgets.QDialog):
 
     def url(self):
         """Returns current entered URL from combo box."""
-        return pyqt4_str(self.urlComboBox.currentText())
+        return self.urlComboBox.currentText()
 
     def loadRecentUrls(self):
         """Load recent URLs from application settings."""
-        urls = pyqt4_toPyObject(QtCore.QSettings().value("recent/urls"))
+        urls = QtCore.QSettings().value("recent/urls")
         self.urlComboBox.addItems(urls or [])
 
     def storeRecentUrls(self):

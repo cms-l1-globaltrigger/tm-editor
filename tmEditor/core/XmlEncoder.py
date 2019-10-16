@@ -1,22 +1,16 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 import tmTable
 import tmGrammar
 
 from tmEditor.core import toolbox
 
-from tmEditor.core.toolbox import safe_str
-from tmEditor.core.TableHelper import TableHelper
-from tmEditor.core.Queue import Queue
-from tmEditor.core.Settings import MaxAlgorithms
-from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
-from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
+from .toolbox import safe_str
+from .TableHelper import TableHelper
+from .Queue import Queue
+from .Settings import MaxAlgorithms
+from .AlgorithmFormatter import AlgorithmFormatter
+from .AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 
 from distutils.version import StrictVersion
 

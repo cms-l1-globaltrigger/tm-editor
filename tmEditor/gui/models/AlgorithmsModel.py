@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from .AbstractTableModel import AbstractTableModel
 
-from tmEditor.PyQt5Proxy import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 
 __all__ = ['AlgorithmsModel', ]
 

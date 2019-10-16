@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 """Code editor widget derived from:
 http://doc.qt.io/qt-4.8/qt-widgets-codeeditor-example.html
@@ -14,9 +8,9 @@ http://stackoverflow.com/questions/6571035/qplaintextedit-change-shiftreturn-beh
 http://www.jjoe64.com/2011/08/qplaintextedit-change-shiftreturn.html
 """
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
-from tmEditor.PyQt5Proxy import QtWidgets
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 import string
 

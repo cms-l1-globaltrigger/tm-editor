@@ -10,9 +10,7 @@ from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 # Common widgets
 from tmEditor.gui.CommonWidgets import PrefixedSpinBox, createIcon, miniIcon
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_toPyObject, pyqt4_str
+from PyQt5 import QtCore, QtWidgets
 
 import sys, os
 import re
@@ -81,7 +79,7 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
 
     def name(self):
         """Returns external signal name."""
-        return pyqt4_str(self.signalComboBox.currentText())
+        return self.signalComboBox.currentText()
 
     def bxOffset(self):
         return self.offsetSpinBox.value()

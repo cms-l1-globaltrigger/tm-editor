@@ -19,12 +19,7 @@ from tmEditor.gui.CommonWidgets import (
     PhiCutChart
 )
 
-from tmEditor.PyQt5Proxy import (
-    QtCore,
-    QtWidgets,
-    pyqt4_str,
-    pyqt4_toPyObject
-)
+from PyQt5 import QtCore, QtWidgets
 
 import math
 import logging
@@ -165,7 +160,7 @@ class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
 
     def valueFromText(self, text):
         """Re-implementation of valueFromText(), it returns only the nearest."""
-        results = RegExFloatingPoint.findall(pyqt4_str(text))
+        results = RegExFloatingPoint.findall(text)
         if results:
             return self.nearest(float(results[0]))
 
@@ -674,7 +669,7 @@ class MultipleJoiceWidget(InputWidget):
 
     def sortedItems(self):
         """Returns data items, sorted by keys."""
-        items = self.specification.data.iteritems()
+        items = self.specification.data.items()
         return sorted(items, key=lambda items: toolbox.natural_sort_key(items[0]))
 
     def loadCut(self, cut):
@@ -747,7 +742,7 @@ class SingleJoiceWidget(InputWidget):
 
     def sortedItems(self):
         """Returns data items, sorted by keys."""
-        items = self.specification.data.iteritems()
+        items = self.specification.data.items()
         return sorted(items, key=lambda items: toolbox.natural_sort_key(items[0]))
 
     def loadCut(self, cut):
@@ -760,7 +755,7 @@ class SingleJoiceWidget(InputWidget):
     def updateCut(self, cut):
         """Update existing cut from inputs."""
         token = None
-        for key, button in self.options.iteritems():
+        for key, button in self.options.items():
             if button.isChecked():
                 token = key
                 break
@@ -938,9 +933,9 @@ class CutEditorDialog(QtWidgets.QDialog):
         if self.copyMode:
             self.suffixLineEdit.setEnabled(True) # HACK overrule on copy
         if cut.isFunctionCut: # TODO not efficient
-            result = filter(lambda item: item.spec.type==cut.type, self._items)
+            result = list(filter(lambda item: item.spec.type==cut.type, self._items))
         else:
-            result = filter(lambda item: item.spec.object==cut.object and item.spec.type==cut.type, self._items)
+            result = list(filter(lambda item: item.spec.object==cut.object and item.spec.type==cut.type, self._items))
         if result:
             logging.debug("result %s", result)
             self.treeWidget.setCurrentItem(result[0])
@@ -956,14 +951,14 @@ class CutEditorDialog(QtWidgets.QDialog):
         item = self.currentTreeItem()
         if not item: # No cut type selected (eg. parent nodes)
             raise CutEditorError(
-                pyqt4_str(self.tr("No cut type selected."))
+                self.tr("No cut type selected.")
             )
         item.widget.updateCut(cut)
         cut.object = item.widget.specification.object
         cut.type = item.widget.specification.type
-        suffix = pyqt4_str(self.suffixLineEdit.text())
+        suffix = self.suffixLineEdit.text()
         cut.name = "{0}_{1}".format(cut.typename, suffix)
-        cut.comment = pyqt4_str(self.commentTextEdit.toPlainText())
+        cut.comment = self.commentTextEdit.toPlainText()
         cut.modified = True
 
     def newCut(self):
@@ -975,9 +970,9 @@ class CutEditorDialog(QtWidgets.QDialog):
     def validateSuffix(self, cut):
         """Validate suffix, check for empty or duplicated name, raises a ValidationException on error."""
         # Empty suffix?
-        if not len(pyqt4_str(self.suffixLineEdit.text())):
+        if not len(self.suffixLineEdit.text()):
             raise CutEditorError(
-                pyqt4_str(self.tr("No suffix is given. It must be at least one character in length."))
+                self.tr("No suffix is given. It must be at least one character in length.")
             )
         # Name already used?
         if cut.name in [cut_.name for cut_ in self.menu.cuts]:
@@ -985,7 +980,7 @@ class CutEditorDialog(QtWidgets.QDialog):
             isConflict = (self.loadedCut and self.loadedCut in duplicates)
             if (self.copyMode and isConflict) or (not isConflict): # wired...
                 raise CutEditorError(
-                    pyqt4_str(self.tr("Suffix \"{0}\" is already used with a cut of type \"{1}\".")).format(cut.suffix, cut.type)
+                    self.tr("Suffix \"{0}\" is already used with a cut of type \"{1}\".").format(cut.suffix, cut.type)
                 )
 
     def validate(self):

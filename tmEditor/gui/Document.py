@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
-
 """Document widget.
 """
+
+import math
+import logging
+import copy
+import sys, os
+
+from PyQt5 import QtCore, QtWidgets
 
 # Trigger menu modules
 import tmGrammar
@@ -46,16 +45,6 @@ from tmEditor.core.formatter import fThreshold
 from tmEditor.core.formatter import fComparison
 from tmEditor.core.formatter import fBxOffset
 
-# Qt4 python bindings
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_toPyObject, pyqt4_str
-
-import math
-import logging
-import copy
-import sys, os
-
 __all__ = ['Document', ]
 
 # ------------------------------------------------------------------------------
@@ -86,6 +75,14 @@ def fScale(scale):
         return "MU-PT"
     return scale
 
+# HACK
+def updateModel(model, context):
+    """Workaround while fixing table models..."""
+    source = model.sourceModel()
+    model.setSourceModel(source.__class__(context.menu(), context))
+    source.setParent(None)
+    source.deleteLater()
+
 # ------------------------------------------------------------------------------
 #  Document widget
 # ------------------------------------------------------------------------------
@@ -111,7 +108,7 @@ class BaseDocument(QtWidgets.QWidget):
         return self.__filename
 
     def setFilename(self, filename):
-        self.__filename = os.path.abspath(pyqt4_str(filename))
+        self.__filename = os.path.abspath(filename)
 
     def isModified(self):
         return self.__modified
@@ -282,7 +279,6 @@ class Document(BaseDocument):
     def loadMenu(self, filename):
         """Load menu from filename, setup new document."""
         self.setFilename(filename)
-        filename = pyqt4_str(filename)
         self.setName(os.path.basename(self.filename()))
         dialog = QtWidgets.QProgressDialog(self)
         dialog.setWindowTitle(self.tr("Loading..."))
@@ -295,14 +291,14 @@ class Document(BaseDocument):
         queue = XmlDecoder.XmlDecoderQueue(self.filename())
         try:
             for callback in queue:
-                dialog.setLabelText(pyqt4_str(self.tr("{0}...")).format(queue.message().capitalize()))
+                dialog.setLabelText(self.tr("{0}...").format(queue.message().capitalize()))
                 logging.debug("processing: %s...", queue.message())
                 QtWidgets.QApplication.sendPostedEvents(dialog, 0)
                 QtWidgets.QApplication.processEvents()
                 callback()
                 dialog.setValue(queue.progress())
                 QtWidgets.QApplication.processEvents()
-        except XmlDecoderError, e:
+        except XmlDecoderError as e:
             dialog.close()
             raise
         self._menu = queue.menu
@@ -342,17 +338,17 @@ class Document(BaseDocument):
         if len(orphans) > 1:
             QtWidgets.QMessageBox.information(self,
                 self.tr("Found orphaned cuts"),
-                pyqt4_str(self.tr("There are {0} orphaned cuts (<em>{1}</em>, ...) that will be lost as they can't be saved to the XML file!")).format(len(orphans), orphans[0])
+                self.tr("There are {0} orphaned cuts (<em>{1}</em>, ...) that will be lost as they can't be saved to the XML file!").format(len(orphans), orphans[0])
             )
         elif len(orphans):
             QtWidgets.QMessageBox.information(self,
                 self.tr("Found orphaned cut"),
-                pyqt4_str(self.tr("There is one orphaned cut (<em>{0}</em>) that will be lost as it can't be saved to the XML file!")).format(orphans[0])
+                self.tr("There is one orphaned cut (<em>{0}</em>) that will be lost as it can't be saved to the XML file!").format(orphans[0])
             )
-        filename = pyqt4_str(filename or self.filename())
+        filename = filename or self.filename()
         # Update meta information
-        self._menu.menu.name = pyqt4_str(self.menuPage.top.nameLineEdit.text())
-        self._menu.menu.comment = pyqt4_str(self.menuPage.top.commentTextEdit.toPlainText())
+        self._menu.menu.name = self.menuPage.top.nameLineEdit.text()
+        self._menu.menu.comment = self.menuPage.top.commentTextEdit.toPlainText()
         # Process dialog
         dialog = QtWidgets.QProgressDialog(self)
         dialog.setWindowTitle(self.tr("Saving..."))
@@ -365,7 +361,7 @@ class Document(BaseDocument):
         queue = XmlEncoder.XmlEncoderQueue(self._menu, filename)
         try:
             for callback in queue:
-                dialog.setLabelText(pyqt4_str(self.tr("{0}...")).format(queue.message().capitalize()))
+                dialog.setLabelText(self.tr("{0}...").format(queue.message().capitalize()))
                 logging.debug("processing: %s...", queue.message())
                 QtWidgets.QApplication.sendPostedEvents(dialog, 0)
                 QtWidgets.QApplication.processEvents()
@@ -443,10 +439,10 @@ class Document(BaseDocument):
             item.bottom.toolbar.moveButton.hide()
         if item is self.menuPage:
             lines = []
-            lines.append(pyqt4_str(self.tr("<p><strong>Scale Set:</strong> {0}</p>")).format(self.menu().scales.scaleSet[kName]))
-            lines.append(pyqt4_str(self.tr("<p><strong>External Signal Set:</strong> {0}</p>")).format(self.menu().extSignals.extSignalSet[kName]))
-            lines.append(pyqt4_str(self.tr("<p><strong>Menu UUID:</strong> {0}</p>")).format(self.menu().menu.uuid_menu))
-            lines.append(pyqt4_str(self.tr("<p><strong>Grammar Version:</strong> {0}</p>")).format(self.menu().menu.grammar_version))
+            lines.append(self.tr("<p><strong>Scale Set:</strong> {}</p>").format(self.menu().scales.scaleSet[kName]))
+            lines.append(self.tr("<p><strong>External Signal Set:</strong> {}</p>").format(self.menu().extSignals.extSignalSet[kName]))
+            lines.append(self.tr("<p><strong>Menu UUID:</strong> {}</p>").format(self.menu().menu.uuid_menu))
+            lines.append(self.tr("<p><strong>Grammar Version:</strong> {}</p>").format(self.menu().menu.grammar_version))
             item.bottom.setText("".join(lines))
             item.bottom.toolbar.setButtonsEnabled(False)
         elif index and item and isinstance(item.top, TableView): # ignores menu view
@@ -464,27 +460,27 @@ class Document(BaseDocument):
 
             if item is self.algorithmsPage:
                 if 1 < rows:
-                    item.bottom.setText(pyqt4_str(self.tr("<p>Selected {0} algorithms.</p>")).format(rows))
+                    item.bottom.setText(self.tr("<p>Selected {} algorithms.</p>").format(rows))
                 else:
                     item.bottom.loadAlgorithm(data, self.menu())
             elif item is self.cutsPage:
                 if 1 < rows:
-                    item.bottom.setText(pyqt4_str(self.tr("<p>Selected {0} cuts.</p>")).format(rows))
+                    item.bottom.setText(self.tr("<p>Selected {} cuts.</p>").format(rows))
                 else:
                     item.bottom.loadCut(data)
             elif item is self.scalesPage:
                 if 1 < rows:
-                    item.bottom.setText(pyqt4_str(self.tr("<p>Selected {0} scale sets.</p>")).format(rows))
+                    item.bottom.setText(self.tr("<p>Selected {} scale sets.</p>").format(rows))
                 else:
                     item.bottom.loadScale(data)
             elif item in self.scalesTypePages.values():
                 if 1 < rows:
-                    item.bottom.setText(pyqt4_str(self.tr("<p>Selected {0} scale bins.</p>")).format(rows))
+                    item.bottom.setText(self.tr("<p>Selected {} scale bins.</p>").format(rows))
                 else:
                     item.bottom.loadScaleType(item.name, data)
             elif item is self.extSignalsPage:
                 if 1 < rows:
-                    item.bottom.setText(pyqt4_str(self.tr("<p>Selected {0} external signals.</p>")).format(rows))
+                    item.bottom.setText(self.tr("<p>Selected {} external signals.</p>").format(rows))
                 else:
                     item.bottom.loadSignal(data)
         else:
@@ -516,14 +512,15 @@ class Document(BaseDocument):
             if not self.menu().cutByName(cut.name):
                 cut.modified = True
                 self.menu().addCut(cut)
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.cutsPage.top.model(), self)
 
     def importAlgorithms(self, algorithms):
         """Import algorithms from another menu."""
         for algorithm in algorithms:
             for cut in algorithm.cuts():
                 if not self.menu().cutByName(cut):
-                    raise RuntimeError(pyqt4_str(self.tr("Missing cut {0}, unable to to import algorithm {1}")).format(cut, algorithm.name))
+                    raise RuntimeError(self.tr("Missing cut {}, unable to to import algorithm {}").format(cut, algorithm.name))
             import_index = 0
             original_name = algorithm.name
             while self.menu().algorithmByName(algorithm.name):
@@ -533,19 +530,20 @@ class Document(BaseDocument):
             if import_index:
                 QtWidgets.QMessageBox.information(self,
                     self.tr("Renamed algorithm"),
-                    pyqt4_str(self.tr("Renamed algorithm <em>{0}</em> to <em>{1}</em> as the name is already used.")).format(original_name, algorithm.name)
+                    self.tr("Renamed algorithm <em>{}</em> to <em>{}</em> as the name is already used.").format(original_name, algorithm.name)
                 )
             if self.menu().algorithmByIndex(algorithm.index):
                 index = self.getUnusedAlgorithmIndices()[0]
                 QtWidgets.QMessageBox.information(self,
                     self.tr("Relocating algorithm"),
-                    pyqt4_str(self.tr("Moving algorithm <em>{0}</em> from already used index {1} to free index {2}.")).format(algorithm.name, algorithm.index, index)
+                    self.tr("Moving algorithm <em>{}</em> from already used index {} to free index {}.").format(algorithm.name, algorithm.index, index)
                 )
                 algorithm.index = int(index)
             algorithm.modified = True
             self.menu().addAlgorithm(algorithm)
             self.menu().extendReferenced(algorithm)
-        self.algorithmsPage.top.model().setSourceModel(self.algorithmsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.algorithmsPage.top.model(), self)
         self.algorithmsPage.top.resizeColumnsToContents()
 
     def addItem(self):
@@ -569,8 +567,8 @@ class Document(BaseDocument):
         dialog.setName(self.getUniqueAlgorithmName(self.tr("L1_Unnamed")))
         dialog.editor.setModified(False)
         dialog.exec_()
-        # Update crated cuts... ugh, ugly
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.cutsPage.top.model(), self)
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         self.setModified(True)
@@ -586,7 +584,8 @@ class Document(BaseDocument):
                 raise RuntimeError("NO SUCH CUT AVAILABLE")
         self.menu().addAlgorithm(algorithm)
         self.menu().extendReferenced(self.menu().algorithmByName(algorithm.name)) # IMPORTANT: add/update new objects!
-        item.top.model().setSourceModel(item.top.model().sourceModel())
+        # HACK
+        updateModel(item.top.model(), self)
         self.algorithmsPage.top.resizeColumnsToContents()
         # REBUILD INDEX
         self.updateBottom()
@@ -595,7 +594,7 @@ class Document(BaseDocument):
         proxy = item.top.model()
         for row in range(proxy.rowCount()):
             index = proxy.index(row, 1)
-            if pyqt4_toPyObject(index.data()) == algorithm.name:
+            if index.data() == algorithm.name:
                 item.top.setCurrentIndex(index)
                 break
 
@@ -608,7 +607,8 @@ class Document(BaseDocument):
             return
         cut = dialog.newCut()
         self.menu().addCut(cut)
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.cutsPage.top.model(), self)
         self.updateBottom()
         self.setModified(True)
         self.modified.emit()
@@ -616,7 +616,7 @@ class Document(BaseDocument):
         proxy = item.top.model()
         for row in range(proxy.rowCount()):
             index = proxy.index(row, 0)
-            if pyqt4_toPyObject(index.data()) == cut.name:
+            if index.data() == cut.name:
                 item.top.setCurrentIndex(index)
                 break
 
@@ -642,8 +642,8 @@ class Document(BaseDocument):
         dialog.loadAlgorithm(algorithm)
         dialog.editor.setModified(False)
         dialog.exec_()
-        # Update crated cuts... ugh, ugly
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.cutsPage.top.model(), self)
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         self.setModified(True)
@@ -691,8 +691,8 @@ class Document(BaseDocument):
         dialog.setExpression(algorithm.expression)
         dialog.editor.setModified(False)
         dialog.exec_()
-        # Update crated cuts... ugh, ugly
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel( self.cutsPage.top.model(), self)
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         algorithm.expression = dialog.expression()
@@ -706,7 +706,8 @@ class Document(BaseDocument):
             if not list(filter(lambda item: item.name == name, self.menu().externals)):
                 raise RuntimeError("NO SUCH EXTERNAL AVAILABLE") # TODO
         self.menu().algorithms.append(algorithm)
-        item.top.model().setSourceModel(item.top.model().sourceModel())
+        # HACK
+        updateModel(item.top.model(), self)
         # REBUILD INDEX
         self.updateBottom()
         self.modified.emit()
@@ -718,7 +719,7 @@ class Document(BaseDocument):
         proxy = item.top.model()
         for row in range(proxy.rowCount()):
             index = proxy.index(row, 1)
-            if pyqt4_toPyObject(index.data()) == algorithm.name:
+            if index.data() == algorithm.name:
                 item.top.setCurrentIndex(index)
                 break
 
@@ -728,14 +729,15 @@ class Document(BaseDocument):
         dialog.setupCuts(Settings.CutSpecs)
         dialog.setModal(True)
         dialog.loadCut(self.menu().cuts[index.row()])
-        suffix = "{0}{1}".format(pyqt4_str(dialog.suffixLineEdit.text()), pyqt4_str(self.tr("_copy")))
+        suffix = "{0}{1}".format(dialog.suffixLineEdit.text(), self.tr("_copy"))
         dialog.suffixLineEdit.setText(suffix)
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         cut = dialog.newCut()
         self.menu().addCut(cut)
-        self.cutsPage.top.model().setSourceModel(self.cutsPage.top.model().sourceModel())
+        # HACK
+        updateModel(self.cutsPage.top.model(), self)
         self.updateBottom()
         self.setModified(True)
         self.modified.emit()
@@ -743,7 +745,7 @@ class Document(BaseDocument):
         proxy = item.top.model()
         for row in range(proxy.rowCount()):
             index = proxy.index(row, 0)
-            if pyqt4_toPyObject(index.data()) == cut.name:
+            if index.data() == cut.name:
                 item.top.setCurrentIndex(index)
                 break
 
@@ -758,7 +760,7 @@ class Document(BaseDocument):
                 algorithm = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
                 if confirm:
                     result = QtWidgets.QMessageBox.question(self, self.tr("Remove algorithm"),
-                        pyqt4_str(self.tr("Do you want to remove algorithm <strong>{0}, {1}</strong> from the menu?")).format(algorithm.name, algorithm.index),
+                        self.tr("Do you want to remove algorithm <strong>{0}, {1}</strong> from the menu?").format(algorithm.name, algorithm.index),
                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.YesToAll | QtWidgets.QMessageBox.Abort if len(rows) > 1 else QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Abort)
                     if result == QtWidgets.QMessageBox.Abort:
                         break
@@ -786,12 +788,12 @@ class Document(BaseDocument):
                 for algorithm in self.menu().algorithms:
                     if cut.name in algorithm.cuts():
                         QtWidgets.QMessageBox.warning(self, self.tr("Cut is used"),
-                            pyqt4_str(self.tr("Cut {0} is used by algorithm {1} an can not be removed. Remove the corresponding algorithm first.")).format(cut.name, algorithm.name)
+                            self.tr("Cut {0} is used by algorithm {1} an can not be removed. Remove the corresponding algorithm first.").format(cut.name, algorithm.name)
                         )
                         return
                 if confirm:
                     result = QtWidgets.QMessageBox.question(self, self.tr("Remove cut"),
-                        pyqt4_str(self.tr("Do you want to remove cut <strong>{0}</strong> from the menu?")).format(cut.name),
+                        self.tr("Do you want to remove cut <strong>{0}</strong> from the menu?").format(cut.name),
                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.YesToAll | QtWidgets.QMessageBox.Abort if len(rows) > 1 else QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Abort)
                     if result == QtWidgets.QMessageBox.Abort:
                         break
@@ -819,7 +821,7 @@ class Document(BaseDocument):
         dialog.setModal(True)
         if dialog.exec_() == QtWidgets.QDialog.Accepted:
             logging.debug("moving algorithms:")
-            for k, v in dialog.mapping.iteritems():
+            for k, v in dialog.mapping.items():
                 algorithm = self.menu().algorithmByIndex(k)
                 logging.debug("%s => %s", algorithm.index, v)
                 assert algorithm.index == k

@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 from tmEditor.core.formatter import fHex, fCutValue
 from tmEditor.core.types import ThresholdCutNames
 from .AbstractTableModel import AbstractTableModel
 
-from tmEditor.PyQt5Proxy import QtCore
+from PyQt5 import QtCore
 
 __all__ = ['BinsModel', ]
 

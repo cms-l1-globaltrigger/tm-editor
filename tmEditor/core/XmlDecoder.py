@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 import tmGrammar
 
@@ -12,17 +6,17 @@ from tmEditor.core import Menu, toolbox
 from tmEditor.core import Algorithm
 from tmEditor.core import types
 
-from tmEditor.core.toolbox import safe_str
-from tmEditor.core.Queue import Queue
-from tmEditor.core.TableHelper import TableHelper
-from tmEditor.core.Settings import MaxAlgorithms
-from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
-from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
+from .toolbox import safe_str
+from .Queue import Queue
+from .TableHelper import TableHelper
+from .Settings import MaxAlgorithms
+from .AlgorithmFormatter import AlgorithmFormatter
+from .AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 
 from distutils.version import StrictVersion
 from collections import namedtuple
 
-from XmlEncoder import chdir
+from .XmlEncoder import chdir
 
 import logging
 import sys, os
@@ -136,7 +130,6 @@ class XmlDecoderQueue(Queue):
             logging.error(message)
             raise XmlDecoderError(message)
 
-    @chdir(toolbox.getXsdDir())
     def run_load_xml(self):
         logging.debug("Reading XML file from `%s'", self.filename)
         self.tables = TableHelper()

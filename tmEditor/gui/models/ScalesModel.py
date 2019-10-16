@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 import tmGrammar
 
@@ -15,8 +9,8 @@ tmGrammar.PT = "PT"
 from tmEditor.core.formatter import fCutValue
 from .AbstractTableModel import AbstractTableModel
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 __all__ = ['ScalesModel', ]
 

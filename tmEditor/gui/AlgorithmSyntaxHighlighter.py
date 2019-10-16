@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 """Algorithm syntax highlighter derived from QtGui.QSyntaxHighlighter class,
  to be attached to an QtGui.QTextDocument instance.
@@ -23,8 +17,8 @@ import tmGrammar
 
 from tmEditor.core.types import FunctionTypes
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from collections import namedtuple
 

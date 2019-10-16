@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 """Simple helper class for retrieving remote version information."""
 
-from tmEditor.core import Settings
+from . import Settings
 from distutils.version import StrictVersion
 import logging
 import json

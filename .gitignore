@@ -4,6 +4,4 @@ __pycache__/
 *$py.class
 
 # Resource files
-tmEditor/tmeditor_rc.py
 resource/share/tm-editor/changelog
-resource/share/tm-editor/copyright

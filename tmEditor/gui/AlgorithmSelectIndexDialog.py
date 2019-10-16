@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 """Algorithm select index dialog.
 
@@ -19,9 +13,7 @@ from tmEditor.core.Settings import MaxAlgorithms
 # Common widgets
 from tmEditor.gui.CommonWidgets import IconLabel, createIcon
 
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_str
+from PyQt5 import QtCore, QtWidgets
 
 import sys, os
 
@@ -141,7 +133,7 @@ class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
         """Get new index from the button."""
         diff = self.selected[0] - self.sender().index
         self.index = self.sender().index
-        for k, v in self.mapping.iteritems():
+        for k, v in self.mapping.items():
             if diff > 0:
                 self.mapping[k] = v - abs(diff)
             else:

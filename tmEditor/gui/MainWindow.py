@@ -1,46 +1,31 @@
-# -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
-
 """Main window class holding a MDI area.
 """
-
-from tmEditor.core.formatter import fFileSize
-from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxError
-from tmEditor.core.toolbox import DownloadHelper
-from tmEditor.core.Settings import ContentsURL
-from tmEditor.core.XmlEncoder import XmlEncoderError
-from tmEditor.core.XmlDecoder import XmlDecoderError
-
-from tmEditor.gui.AboutDialog import AboutDialog
-from tmEditor.gui.PreferencesDialog import PreferencesDialog
-from tmEditor.gui.OpenUrlDialog import OpenUrlDialog
-from tmEditor.gui.ImportDialog import ImportDialog
-from tmEditor.gui.CommonWidgets import createIcon
-
-from tmEditor.gui.Document import Document
-from tmEditor.gui.MdiArea import MdiArea
-
-from tmEditor.PyQt5Proxy import QtCore
-from tmEditor.PyQt5Proxy import QtGui
-from tmEditor.PyQt5Proxy import QtWidgets
-from tmEditor.PyQt5Proxy import pyqt4_str
-from tmEditor.PyQt5Proxy import pyqt4_toPyObject
-
-try:
-    from urllib.error import HTTPError, URLError
-except ImportError:
-    from urllib2 import HTTPError, URLError
 
 import random
 import tempfile
 import webbrowser
 import logging
 import sys, os, re
+
+from urllib.error import HTTPError, URLError
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+from ..core.formatter import fFileSize
+from ..core.AlgorithmSyntaxValidator import AlgorithmSyntaxError
+from ..core.toolbox import DownloadHelper
+from ..core.Settings import ContentsURL
+from ..core.XmlEncoder import XmlEncoderError
+from ..core.XmlDecoder import XmlDecoderError
+
+from .AboutDialog import AboutDialog
+from .PreferencesDialog import PreferencesDialog
+from .OpenUrlDialog import OpenUrlDialog
+from .ImportDialog import ImportDialog
+from .CommonWidgets import createIcon
+
+from .Document import Document
+from .MdiArea import MdiArea
 
 __all__ = ['MainWindow', ]
 
@@ -138,6 +123,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.contentsAct.setStatusTip(self.tr("Open L1 Trigger Menu online manual"))
         self.contentsAct.setIcon(createIcon("help-about"))
         self.contentsAct.triggered.connect(self.onShowContents)
+        # Action to raise about Qt dialog.
+        self.aboutQtAct = QtWidgets.QAction(self.tr("About &Qt"), self)
+        self.aboutQtAct.setStatusTip(self.tr("About Qt framework"))
+        self.aboutQtAct.triggered.connect(self.onShowAboutQt)
         # Action to raise about dialog.
         self.aboutAct = QtWidgets.QAction(self.tr("&About"), self)
         self.aboutAct.setStatusTip(self.tr("About this application"))
@@ -165,6 +154,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Help menu
         self.helpMenu = self.menuBar().addMenu(self.tr("&Help"))
         self.helpMenu.addAction(self.contentsAct)
+        self.helpMenu.addAction(self.aboutQtAct)
         self.helpMenu.addAction(self.aboutAct)
 
     def createToolbar(self):
@@ -199,8 +189,8 @@ class MainWindow(QtWidgets.QMainWindow):
         document = self.mdiArea.currentDocument()
         algorithms = len(document.menu().algorithms) if document else self.tr("--")
         cuts = len(document.menu().cuts) if document else self.tr("--")
-        self.statusAlgorithms.setText(pyqt4_str(self.tr("Algorithms: {0}")).format(algorithms))
-        self.statusCuts.setText(pyqt4_str(self.tr("Cuts: {0}")).format(cuts))
+        self.statusAlgorithms.setText(self.tr("Algorithms: {0}").format(algorithms))
+        self.statusCuts.setText(self.tr("Cuts: {0}").format(cuts))
 
     @QtCore.pyqtSlot()
     def syncActions(self):
@@ -217,12 +207,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadRecentFiles(self):
         """Returns recent files from application settings."""
-        filenames = pyqt4_toPyObject(QtCore.QSettings().value("recent/files")) or []
-        return [pyqt4_str(filename) for filename in filenames]
+        return QtCore.QSettings().value("recent/files") or []
 
     def storeRecentFiles(self, filenames):
         """Store recent files to application settings."""
-        QtCore.QSettings().setValue("recent/files", filenames)
+        QtCore.QSettings().setValue("recent/files", filenames or [])
 
     def insertRecentFile(self, filename, limit=5):
         """Insert file to recent files history, remove duplicated entries from
@@ -268,7 +257,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             def callback():
                 """Callback for updating the progress dialog."""
-                dialog.setLabelText(pyqt4_str(self.tr("Downloading {0}...")).format(fFileSize(helper.receivedSize)))
+                dialog.setLabelText(self.tr("Downloading {0}...").format(fFileSize(helper.receivedSize)))
                 dialog.setValue(helper.receivedSize)
                 QtWidgets.QApplication.processEvents()
                 if dialog.wasCanceled():
@@ -301,7 +290,7 @@ class MainWindow(QtWidgets.QMainWindow):
             logging.error("Failed to download remote XML menu %s, %s", url, format(e))
             QtWidgets.QMessageBox.critical(self,
                 self.tr("Failed to download remote XML menu"),
-                pyqt4_str(self.tr("HTTP error, failed to download from {0}, {1}")).format(url, format(e))
+                self.tr("HTTP error, failed to download from {0}, {1}").format(url, format(e))
             )
             return
         except URLError as e:
@@ -309,7 +298,7 @@ class MainWindow(QtWidgets.QMainWindow):
             logging.error("Failed to download remote XML menu %s, %s", url, format(e))
             QtWidgets.QMessageBox.critical(self,
                 self.tr("Failed to download remote XML menu"),
-                pyqt4_str(self.tr("URL error, failed to download from {0}, {1}")).format(url, format(e))
+                self.tr("URL error, failed to download from {0}, {1}").format(url, format(e))
             )
             return
 
@@ -354,10 +343,10 @@ class MainWindow(QtWidgets.QMainWindow):
             path = os.path.dirname(self.mdiArea.currentDocument().filename())
         filenames, filter_ = QtWidgets.QFileDialog.getOpenFileNames(
             self, self.tr("Open files..."), path,
-            pyqt4_str(self.tr("L1-Trigger Menus (*{0})")).format(XmlFileExtension)
+            self.tr("L1-Trigger Menus (*{0})").format(XmlFileExtension)
         )
         for filename in filenames:
-            self.loadDocument(pyqt4_str(filename))
+            self.loadDocument(filename)
 
     def onOpenUrl(self):
         """Select an URL to read XML file from."""
@@ -367,7 +356,7 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
-        self.loadDocument(pyqt4_str(dialog.url()))
+        self.loadDocument(dialog.url())
         dialog.storeRecentUrls()
 
     def onOpenRecentFile(self):
@@ -375,8 +364,7 @@ class MainWindow(QtWidgets.QMainWindow):
         file menu action."""
         action = self.sender()
         if action:
-            filename = pyqt4_str(pyqt4_toPyObject(action.data()))
-            self.loadDocument(filename)
+            self.loadDocument(action.data())
 
     def onImport(self):
         """Import algorithms from another XML file."""
@@ -384,17 +372,17 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.mdiArea.currentDocument():
             path = os.path.dirname(self.mdiArea.currentDocument().filename())
             filenameAndFilter = QtWidgets.QFileDialog.getOpenFileName(self, self.tr("Import file..."), path,
-                pyqt4_str(self.tr("L1-Trigger Menus (*{0})")).format(XmlFileExtension)
+                self.tr("L1-Trigger Menus (*{0})").format(XmlFileExtension)
             )
-            filename = pyqt4_str(filenameAndFilter[0])
+            filename = filenameAndFilter[0]
             if filename:
                 try:
                     dialog = ImportDialog(filename, self.mdiArea.currentDocument().menu(), self)
                 except AlgorithmSyntaxError as e:
-                    QtWidgets.QMessageBox.critical(self, self.tr("Import error"), pyqt4_str(e))
+                    QtWidgets.QMessageBox.critical(self, self.tr("Import error"), format(e))
                     return
                 except (XmlDecoderError, RuntimeError, ValueError) as e:
-                    QtWidgets.QMessageBox.critical(self, self.tr("Import error"), pyqt4_str(e))
+                    QtWidgets.QMessageBox.critical(self, self.tr("Import error"), format(e))
                     return
                 dialog.setModal(True)
                 dialog.exec_()
@@ -406,7 +394,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     document.importCuts(dialog.cuts)
                     document.importAlgorithms(dialog.algorithms)
                 except (RuntimeError, ValueError) as e:
-                    QtWidgets.QMessageBox.critical(self, self.tr("Import error"), pyqt4_str(e))
+                    QtWidgets.QMessageBox.critical(self, self.tr("Import error"), format(e))
 
     def onSave(self):
         document = self.mdiArea.currentDocument()
@@ -420,11 +408,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def onSaveAs(self):
         path = self.mdiArea.currentDocument().filename()
         if not path.endswith(XmlFileExtension):
-            path = os.path.join(pyqt4_str(QtCore.QDir.homePath()), ''.join((os.path.basename(path), XmlFileExtension)))
+            path = os.path.join(QtCore.QDir.homePath(), ''.join((os.path.basename(path), XmlFileExtension)))
         filename, filter_ = QtWidgets.QFileDialog.getSaveFileName(self, self.tr("Save as..."), path,
-            pyqt4_str(self.tr("L1-Trigger Menus (*{0})")).format(XmlFileExtension)
+            self.tr("L1-Trigger Menus (*{0})").format(XmlFileExtension)
         )
-        filename = pyqt4_str(filename)
         if filename:
             if not filename.endswith(XmlFileExtension):
                 filename = ''.join((filename, XmlFileExtension))
@@ -456,6 +443,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # In case history was cleared
         self.updateRecentFilesMenu()
 
+    def onShowAboutQt(self):
+        """Raise about Qt dialog."""
+        QtWidgets.QMessageBox.aboutQt(self)
+
     def onShowAbout(self):
         """Raise about this application dialog."""
         dialog = AboutDialog(self.windowTitle(), self)
@@ -468,23 +459,3 @@ class MainWindow(QtWidgets.QMainWindow):
                 event.ignore()
                 return
         event.accept()
-
-# ------------------------------------------------------------------------------
-#  Main application loop
-# ------------------------------------------------------------------------------
-
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    app.setOrganizationName("HEPHY");
-    app.setApplicationName("Trigger Menu Editor");
-    window = MainWindow()
-    window.show()
-
-    return app.exec_()
-
-# -----------------------------------------------------------------------------
-#  Application execution
-# -----------------------------------------------------------------------------
-
-if __name__ == '__main__':
-    sys.exit(main())

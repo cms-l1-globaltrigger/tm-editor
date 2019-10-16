@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 """Algorithm syntax validator class.
 
@@ -18,11 +12,11 @@ Usage example
 
 import tmGrammar
 
-from tmEditor.core.Settings import CutSpecs
-from tmEditor.core.types import SignalTypes, ObjectScaleMap, FunctionTypes
-from tmEditor.core.Algorithm import isOperator, isObject, isExternal, isFunction
-from tmEditor.core.Algorithm import toObject, toExternal
-from tmEditor.core.Algorithm import functionObjects, functionCuts, functionObjectsCuts, objectCuts
+from .Settings import CutSpecs
+from .types import SignalTypes, ObjectScaleMap, FunctionTypes
+from .Algorithm import isOperator, isObject, isExternal, isFunction
+from .Algorithm import toObject, toExternal
+from .Algorithm import functionObjects, functionCuts, functionObjectsCuts, objectCuts
 
 import re
 import logging
@@ -327,7 +321,7 @@ class CutCount(SyntaxRule):
 
     def checkCutCount(self, token, counts):
         """Counts has to be a dictionary of format returned by countCuts()."""
-        for key, count in counts.iteritems():
+        for key, count in counts.items():
             object_, type_ = key
             spec = (CutSpecs.query(enabled=True, object=object_, type=type_) or [None])[0]
             if spec:

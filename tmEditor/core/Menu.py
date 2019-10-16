@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 """Menu container.
 
@@ -12,12 +6,12 @@
 
 import tmGrammar
 
-from tmEditor.core.types import ObjectTypes
-from tmEditor.core.Settings import MaxAlgorithms
-from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
-from tmEditor.core.Algorithm import toObject, toExternal
-from tmEditor.core.Algorithm import Algorithm
-from tmEditor.core.Algorithm import Cut, Object, External
+from .types import ObjectTypes
+from .Settings import MaxAlgorithms
+from .AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
+from .Algorithm import toObject, toExternal
+from .Algorithm import Algorithm
+from .Algorithm import Cut, Object, External
 
 from distutils.version import StrictVersion
 

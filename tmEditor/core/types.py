@@ -1,12 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
-#
-#
 
 """This module contains type tuples and mappings derived from tmGrammar.
 """

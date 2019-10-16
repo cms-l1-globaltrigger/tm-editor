@@ -1,18 +1,12 @@
 # -*- coding: utf-8 -*-
-#
-# Repository path   : $HeadURL:  $
-# Last committed    : $Revision:  $
-# Last changed by   : $Author:  $
-# Last changed date : $Date: $
-#
 
 """Various specialized string formatting functions.
 """
 
-from tmEditor.core.toolbox import listcompress
-from tmEditor.core.Settings import CutSpecs
-from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
-from tmEditor.core.types import FunctionCutTypes
+from .toolbox import listcompress
+from .Settings import CutSpecs
+from .AlgorithmFormatter import AlgorithmFormatter
+from .types import FunctionCutTypes
 
 import tmGrammar
 
