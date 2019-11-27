@@ -1,5 +1,7 @@
-include Makefile
+include changelog
+include LICENSE
 include README.md
+include requirements.txt
 include resource/*.qrc
 include resource/share/applications/*.desktop
 include resource/share/icons/hicolor/scalable/apps/*.svg
