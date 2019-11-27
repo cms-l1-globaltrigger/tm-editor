@@ -7,9 +7,9 @@
     <file alias="icons/wizard-object.svg">share/tm-editor/icons/24x24/wizard-object.svg</file>
     <file alias="icons/wizard-ext-signal.svg">share/tm-editor/icons/24x24/wizard-ext-signal.svg</file>
     <file alias="icons/wizard-function.svg">share/tm-editor/icons/24x24/wizard-function.svg</file>
-    <file alias="icons/edit-object.svg">share/tm-editor/icons/24x24/edit-object.svg</file>
-    <file alias="icons/edit-ext-signal.svg">share/tm-editor/icons/24x24/edit-ext-signal.svg</file>
-    <file alias="icons/edit-function.svg">share/tm-editor/icons/24x24/edit-function.svg</file>
+    <file alias="icons/wizard-edit-object.svg">share/tm-editor/icons/24x24/edit-object.svg</file>
+    <file alias="icons/wizard-edit-ext-signal.svg">share/tm-editor/icons/24x24/edit-ext-signal.svg</file>
+    <file alias="icons/wizard-edit-function.svg">share/tm-editor/icons/24x24/edit-function.svg</file>
     <file alias="icons/mu.svg">share/tm-editor/icons/13x13/mu.svg</file>
     <file alias="icons/eg.svg">share/tm-editor/icons/13x13/eg.svg</file>
     <file alias="icons/jet.svg">share/tm-editor/icons/13x13/jet.svg</file>

@@ -112,15 +112,10 @@ def richTextCutsPreview(menu, algorithm, parent):
 
 def createIcon(name):
     """Factory function, creates a multi resolution gnome theme icon."""
-    if hasattr(QtGui.QIcon, "fromTheme"):
-        icon = QtGui.QIcon.fromTheme(name)
-        if not icon.isNull():
-            return icon
+    icon = QtGui.QIcon.fromTheme(name)
+    if not icon.isNull():
+        return icon
     icon = QtGui.QIcon()
-    for root, dirs, files in os.walk("/usr/share/icons/gnome"):
-        for file in files:
-            if name == os.path.splitext(os.path.basename(file))[0]:
-                icon.addFile(os.path.join(root, file))
     if not len(icon.availableSizes()):
         filename = ":/icons/{name}.svg".format(**locals())
         if QtCore.QFile.exists(filename):

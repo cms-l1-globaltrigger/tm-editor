@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Support for up to 5 eta cuts.
 
+### Fixed
+- Issues with LinuxMint default icon themes
+
 ## [0.10.0] - 2019-10-14
 ### Added
 - Valid python package structure.
