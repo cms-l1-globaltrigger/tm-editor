@@ -34,7 +34,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.ETA),
         object=tmGrammar.MU,
         type=tmGrammar.ETA,
-        count=2,
+        count=5,
         title="Muon eta",
         description="Restricts valid eta range for muon object requirement."
     ),
@@ -110,7 +110,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.EG, tmGrammar.ETA),
         object=tmGrammar.EG,
         type=tmGrammar.ETA,
-        count=2,
+        count=5,
         title="Electron/gamma eta",
         description=""
     ),
@@ -173,7 +173,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.JET, tmGrammar.ETA),
         object=tmGrammar.JET,
         type=tmGrammar.ETA,
-        count=2,
+        count=5,
         title="Jet eta",
         description=""
     ),
@@ -223,7 +223,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.TAU, tmGrammar.ETA),
         object=tmGrammar.TAU,
         type=tmGrammar.ETA,
-        count=2,
+        count=5,
         title="Tau eta",
         description=""
     ),
