@@ -36,10 +36,6 @@ RegExUrl = re.compile(r'(\w+)\://(.+)')
 Returned groups are protocol and path.
 """
 
-# NOTE: Bugfix for PyQt4.6
-if not hasattr(QtGui.QKeySequence, 'Quit'):
-    QtGui.QKeySequence.Quit = QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_Q)
-
 # -----------------------------------------------------------------------------
 #  Main window class
 # -----------------------------------------------------------------------------

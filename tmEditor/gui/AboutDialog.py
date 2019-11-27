@@ -27,6 +27,7 @@ class AboutDialog(QtWidgets.QDialog):
         super(AboutDialog, self).__init__(parent)
         self.setWindowTitle(self.tr("About {}").format(title))
         self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
+        self.setMinimumSize(420, 320)
         self.icon = QtWidgets.QLabel(self)
         self.icon.setFixedSize(32, 32)
         self.icon.setPixmap(QtGui.QPixmap(QtGui.QIcon(':icons/tm-editor.svg').pixmap(QtCore.QSize(32, 32))))
