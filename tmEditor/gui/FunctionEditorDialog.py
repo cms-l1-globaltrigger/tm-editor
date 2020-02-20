@@ -107,9 +107,13 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             helper.types = ObjectTypes
             helper.setEnabled(True)
             # Disable helpers if not needed
-            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv) and helper.index >= 2:
+            #if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv) and helper.index >= 2:
+                #helper.setEnabled(False)
+            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_trv) and helper.index >= 2:
                 helper.setEnabled(False)
-            if self.functionType() in (tmGrammar.dist_orm, tmGrammar.mass_inv_orm) and helper.index >= 3:
+            #if self.functionType() in (tmGrammar.dist_orm, tmGrammar.mass_inv_orm) and helper.index >= 3:
+                #helper.setEnabled(False)
+            if self.functionType() in (tmGrammar.dist_orm, tmGrammar.mass_inv, tmGrammar.mass_inv_orm) and helper.index >= 3:
                 helper.setEnabled(False)
             if self.functionType() == tmGrammar.comb and helper.index >= 4:
                 helper.setEnabled(False)
