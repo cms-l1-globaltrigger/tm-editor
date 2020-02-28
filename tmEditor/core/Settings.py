@@ -379,7 +379,7 @@ CutSpecs = CutSpecificationPool(
                     "M<sub>(trv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (1 - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
                     "<strong>Example:</strong> <pre>mass{MU20, MU20}[MASS_Z]</pre>"
                     "Calculation of invariant mass with 3 objects:<br/><br/>" \
-                    "M<sub>(inv_3_obj)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;summary of all (2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;)))&nbsp;</span><br/><br/>" \
+                    "M<sub>(inv_3_obj)</sub> = summary of all 3 objects combination of &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
     ),
     CutSpecification(
         name=tmGrammar.TBPT,
