@@ -61,6 +61,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.functionComboBox.addItem(self.tr("{} (correlation + overlap removal)").format(tmGrammar.dist_orm), tmGrammar.dist_orm)
         self.functionComboBox.addItem(self.tr("{} (invariant mass + overlap removal)").format(tmGrammar.mass_inv_orm), tmGrammar.mass_inv_orm)
         self.functionComboBox.addItem(self.tr("{} (invariant mass three objects)").format(tmGrammar.mass_inv_3_obj), tmGrammar.mass_inv_3_obj)
+        self.functionComboBox.addItem(self.tr("{} (invariant mass divided by deltaR)").format(tmGrammar.mass_inv_div_dr), tmGrammar.mass_inv_div_dr)
         self.functionComboBox.currentIndexChanged.connect(self.onUpdateObjectHelpers)
         self.objectHelpers = [FunctionReqHelper(i, self) for i in range(self.ObjectReqs)]
         self.cutListView = QtWidgets.QListView(self)
@@ -108,7 +109,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             helper.types = ObjectTypes
             helper.setEnabled(True)
             # Disable helpers if not needed
-            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv) and helper.index >= 2:
+            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv, tmGrammar.mass_inv_div_dr) and helper.index >= 2:
                 helper.setEnabled(False)
             if self.functionType() in (tmGrammar.dist_orm, tmGrammar.mass_inv_3_obj, tmGrammar.mass_inv_orm) and helper.index >= 3:
                 helper.setEnabled(False)
@@ -171,6 +172,8 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             text.append('<p>Invariant mass correlation of two object requirements.</p>')
         elif functionType == tmGrammar.mass_inv_3_obj:
             text.append('<p>Invariant mass correlation of three object requirements.</p>')
+        elif functionType == tmGrammar.mass_inv_div_dr:
+            text.append('<p>Invariant mass correlation divided by deltaR of two object requirements.</p>')
         elif functionType == tmGrammar.mass_inv_orm:
             text.append('<p>Invariant mass correlation of two object requirements with overlap removal.</p>')
         elif functionType == tmGrammar.mass_trv:
@@ -275,7 +278,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
                 )
                 return
         # Check required cuts
-        if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_inv_3_obj, tmGrammar.mass_trv):
+        if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_inv_3_obj, tmGrammar.mass_inv_div_dr, tmGrammar.mass_trv):
             if len(self.selectedCuts()) < 1:
                 QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
                     self.tr("Function {0}{{...}} requires at least one function cut.").format(self.functionType())

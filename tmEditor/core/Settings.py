@@ -367,7 +367,7 @@ CutSpecs = CutSpecificationPool(
         object=Empty,
         type=tmGrammar.MASS,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF],
-        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_3_obj, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
+        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_3_obj, tmGrammar.mass_inv_div_dr, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
         range_precision=1,
         range_step=0.2,
         range_unit="GeV",
@@ -380,6 +380,8 @@ CutSpecs = CutSpecificationPool(
                     "<strong>Example:</strong> <pre>mass{MU20, MU20}[MASS_Z]</pre>"
                     "Calculation of invariant mass with 3 objects:<br/><br/>" \
                     "M<sub>(inv_3_obj)</sub> = summary of all 3 objects combination of &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "Calculation of invariant mass divided by deltaR with 2 objects:<br/><br/>" \
+                    "M<sub>(inv_div_dr)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;)) / (&Delta;&eta;&sup2; + &Delta;&phi;&sup2) &nbsp;</span><br/><br/>" \
     ),
     CutSpecification(
         name=tmGrammar.TBPT,

@@ -129,6 +129,7 @@ FunctionTypes = (
     tmGrammar.dist_orm,
     tmGrammar.mass_inv_orm,
     tmGrammar.mass_inv_3_obj,
+    tmGrammar.mass_inv_div_dr,
 )
 """Ordered list of functions."""
 
@@ -168,5 +169,6 @@ FunctionCutsMap = {
     tmGrammar.dist_orm: [tmGrammar.ORMDETA, tmGrammar.ORMDPHI, tmGrammar.ORMDR, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
     tmGrammar.mass_inv_orm: [tmGrammar.MASS, tmGrammar.ORMDETA, tmGrammar.ORMDPHI, tmGrammar.ORMDR, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
     tmGrammar.mass_inv_3_obj: [tmGrammar.MASS],
+    tmGrammar.mass_inv_div_dr: [tmGrammar.MASS],
 }
 """Mapping function to cuts."""
