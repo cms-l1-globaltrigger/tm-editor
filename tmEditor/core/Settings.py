@@ -314,7 +314,7 @@ CutSpecs = CutSpecificationPool(
         object=Empty,
         type=tmGrammar.CHGCOR,
         objects=[tmGrammar.MU],
-        functions=[tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_3_obj],
+        functions=[tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_3_obj, tmGrammar.mass_inv_div_dr],
         title="Charge correlation",
         description="Applies charge correlation restriction to combinations of two or more muon objects. It can be applied to functions comb, dist, mass_inv, mass_inv_3_obj and mass_trv.<br/><br/>" \
                     "<strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre>",
@@ -371,17 +371,20 @@ CutSpecs = CutSpecificationPool(
         range_precision=1,
         range_step=0.2,
         range_unit="GeV",
-        title="Invariant or Transverse mass or Invariant mass with 3 objects",
-        description="Applies invariant or transverse mass restriction to combination of two objects depending on the used function. In addition: applies invariant mass with 3 objects restriction to combination of 3 objects depending on the used function.<br/><br/>" \
+        title="Invariant mass or Transverse mass  or Invariant mass divided by deltaR or Invariant mass with 3 objects",
+        description="Applies invariant or transverse mass or invariant mass divided by deltaR restriction to combination of two objects depending on the used function. In addition: applies invariant mass with 3 objects restriction to combination of 3 objects depending on the used function.<br/><br/>" \
                     "Calculation of invariant mass:<br/><br/>" \
                     "M<sub>(inv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "<strong>Example:</strong> <pre>mass_inv{MU20, MU20}[MASS_Z]</pre>"
                     "Calculation of transverse mass:<br/><br/>" \
                     "M<sub>(trv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (1 - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
-                    "<strong>Example:</strong> <pre>mass{MU20, MU20}[MASS_Z]</pre>"
+                    "<strong>Example:</strong> <pre>mass_trv{MU20, MU20}[MASS_Z]</pre>"
+                    "Calculation of invariant mass divided by deltaR:<br/><br/>" \
+                    "M<sub>(inv_div_dr)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span> / (&Delta;&eta;&sup2; + &Delta;&phi;&sup2;)<br/><br/>" \
+                    "<strong>Example:</strong> <pre>mass_inv_div_dr{MU20, MU20}[MASS_Z]</pre>"
                     "Calculation of invariant mass with 3 objects:<br/><br/>" \
                     "M<sub>(inv_3_obj)</sub> = summary of all 3 objects combination of &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
-                    "Calculation of invariant mass divided by deltaR with 2 objects:<br/><br/>" \
-                    "M<sub>(inv_div_dr)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;)) / (&Delta;&eta;&sup2; + &Delta;&phi;&sup2) &nbsp;</span><br/><br/>" \
+                    "<strong>Example:</strong> <pre>mass_inv_3_obj{MU20, MU20, MU20}[MASS_Z]</pre>"
     ),
     CutSpecification(
         name=tmGrammar.TBPT,
