@@ -17,6 +17,7 @@ from tmEditor.gui.CommonWidgets import (
     RestrictedPlainTextEdit,
     EtaCutChart,
     PhiCutChart
+    UnconstraintPtCutChart
 )
 
 from PyQt5 import QtCore, QtWidgets
@@ -264,6 +265,8 @@ class ScaleWidget(InputWidget):
         self.etaCutChart.hide()
         self.phiCutChart = PhiCutChart(self)
         self.phiCutChart.hide()
+        self.phiCutChart = UnconstraintPtCutChart(self)
+        self.phiCutChart.hide()
         # Create layout
         layout = QtWidgets.QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -273,6 +276,7 @@ class ScaleWidget(InputWidget):
         layout.addWidget(self.maximumSpinBox, 1, 1)
         layout.addWidget(self.etaCutChart, 2, 1, 1, 2)
         layout.addWidget(self.phiCutChart, 3, 1, 1, 2)
+        layout.addWidget(self.UnconstraintPtCutChart, 2, 1, 1, 2)
         layout.addItem(createVerticalSpacerItem())
         self.setLayout(layout)
         self.minimumSpinBox.valueChanged.connect(self.updateCharts)
@@ -305,6 +309,10 @@ class ScaleWidget(InputWidget):
             self.etaCutChart.update()
             self.etaCutChart.show()
         elif self.specification.type == tmGrammar.PHI:
+            self.phiCutChart.setRange(self.minimumSpinBox.value(), self.maximumSpinBox.value())
+            self.phiCutChart.update()
+            self.phiCutChart.show()
+        elif self.specification.type == tmGrammar.UPT:
             self.phiCutChart.setRange(self.minimumSpinBox.value(), self.maximumSpinBox.value())
             self.phiCutChart.update()
             self.phiCutChart.show()
@@ -703,6 +711,17 @@ class MultipleJoiceIsoWidget(MultipleJoiceWidget):
         index = int(key)
         return "[0b{index:02b}] {value}".format(**locals())
 
+class MultipleJoiceIpWidget(MultipleJoiceWidget):
+    """Provides a multiple joice entry for isolation."""
+
+    def __init__(self, specification, scales, parent=None):
+        super(MultipleJoiceIpWidget, self).__init__(specification, scales, parent)
+
+    def format_label(self, key, value):
+        """Check box label formatter provided for overlaoding."""
+        index = int(key)
+        return "[0b{index:02b}] {value}".format(**locals())
+
 class SingleJoiceWidget(InputWidget):
     """Provides a single joice entry."""
 
@@ -806,6 +825,8 @@ class CutEditorDialog(QtWidgets.QDialog):
     InputWidgetFactory = {
         tmGrammar.ETA: ScaleWidget,
         tmGrammar.PHI: ScaleWidget,
+        tmGrammar.UPT: ScaleWidget,
+        tmGrammar.IP: MultipleJoiceIpWidget,
         tmGrammar.ISO: MultipleJoiceIsoWidget,
         tmGrammar.QLTY: MultipleJoiceWidget,
         tmGrammar.CHG: SingleJoiceWidget,
