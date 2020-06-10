@@ -86,6 +86,26 @@ CutSpecs = CutSpecificationPool(
         }
     ),
     CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.UPT),
+        object=tmGrammar.MU,
+        type=tmGrammar.UPT,
+        title="Muon unconstraint pt",
+        description="Restricts valid unconstraint pt range for muon object requirement."
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.IP),
+        object=tmGrammar.MU,
+        type=tmGrammar.IP,
+        title="Muon impact parameter",
+        description="Two bits for impact parameter (LUT).",
+        data={
+          "0": "n/a",
+          "1": "n/a",
+          "2": "n/a",
+          "3": "n/a"
+        }
+    ),
+    CutSpecification(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.CHG),
         object=tmGrammar.MU,
         type=tmGrammar.CHG,
