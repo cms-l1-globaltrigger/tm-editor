@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 #
-#
 
 from .toolbox import CutSpecificationPool, CutSpecification
 
@@ -84,6 +83,26 @@ CutSpecs = CutSpecificationPool(
           "1": "isolated",
           "2": "n/a",
           "3": "n/a+isolated"
+        }
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.UPT),
+        object=tmGrammar.MU,
+        type=tmGrammar.UPT,
+        title="Muon unconstraint pt",
+        description="Restricts valid unconstraint pt range for muon object requirement."
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.IP),
+        object=tmGrammar.MU,
+        type=tmGrammar.IP,
+        title="Muon impact parameter",
+        description="Two bits for impact parameter (LUT).",
+        data={
+          "0": "n/a",
+          "1": "n/a",
+          "2": "n/a",
+          "3": "n/a"
         }
     ),
     CutSpecification(
@@ -315,7 +334,7 @@ CutSpecs = CutSpecificationPool(
         object=Empty,
         type=tmGrammar.CHGCOR,
         objects=[tmGrammar.MU],
-        functions=[tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_3_obj, tmGrammar.mass_inv_div_dr],
+        functions=[tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_upt, tmGrammar.mass_inv_3_obj, tmGrammar.mass_inv_div_dr],
         title="Charge correlation",
         description="Applies charge correlation restriction to combinations of two or more muon objects. It can be applied to functions comb, dist, mass_inv, mass_inv_3_obj and mass_trv.<br/><br/>" \
                     "<strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre>",
@@ -368,11 +387,11 @@ CutSpecs = CutSpecificationPool(
         object=Empty,
         type=tmGrammar.MASS,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF],
-        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_3_obj, tmGrammar.mass_inv_div_dr, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
+        functions=[tmGrammar.mass, tmGrammar.mass_inv,  tmGrammar.mass_inv_upt, tmGrammar.mass_inv_3_obj, tmGrammar.mass_inv_div_dr, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
         range_precision=1,
         range_step=0.2,
         range_unit="GeV",
-        title="Invariant mass or Transverse mass  or Invariant mass divided by deltaR or Invariant mass with 3 objects",
+        title="Invariant mass or Transverse mass or Invariant mass divided by deltaR or Invariant mass with 3 objects or Invariant mass with upt",
         description="Applies invariant or transverse mass or invariant mass divided by deltaR restriction to combination of two objects depending on the used function. In addition: applies invariant mass with 3 objects restriction to combination of 3 objects depending on the used function.<br/><br/>" \
                     "Calculation of invariant mass:<br/><br/>" \
                     "M<sub>(inv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \

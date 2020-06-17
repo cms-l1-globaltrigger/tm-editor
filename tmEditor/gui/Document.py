@@ -35,7 +35,7 @@ from tmEditor.gui.CommonWidgets import SelectableLabel
 from tmEditor.gui.CommonWidgets import TextFilterWidget
 from tmEditor.gui.CommonWidgets import ReadOnlyLineEdit
 from tmEditor.gui.CommonWidgets import RestrictedLineEdit
-from tmEditor.gui.CommonWidgets import EtaCutChart, PhiCutChart
+from tmEditor.gui.CommonWidgets import EtaCutChart, PhiCutChart, UnconstraintPtCutChart
 from tmEditor.gui.CommonWidgets import createIcon
 
 # Formatting
