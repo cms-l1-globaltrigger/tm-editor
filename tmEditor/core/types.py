@@ -79,6 +79,8 @@ ObjectCutTypes = (
     tmGrammar.PHI,
     tmGrammar.ISO,
     tmGrammar.QLTY,
+    tmGrammar.UPT,
+    tmGrammar.IP,
     tmGrammar.CHG,
     tmGrammar.SLICE,
 )
@@ -124,6 +126,7 @@ FunctionTypes = (
     tmGrammar.comb,
     tmGrammar.dist,
     tmGrammar.mass_inv,
+    tmGrammar.mass_inv_upt,
     tmGrammar.mass_trv,
     tmGrammar.comb_orm,
     tmGrammar.dist_orm,
@@ -160,9 +163,10 @@ ObjectScaleMap = {
 """Mapping of threshold/count scale types for objects."""
 
 FunctionCutsMap = {
-    tmGrammar.comb: [tmGrammar.CHGCOR, tmGrammar.TBPT],
+    tmGrammar.comb: [tmGrammar.CHGCOR, tmGrammar.TBPT, tmGrammar.UPT, tmGrammar.IP],
     tmGrammar.dist: [tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
     tmGrammar.mass_inv: [tmGrammar.MASS, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
+    tmGrammar.mass_inv_upt: [tmGrammar.MASS, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR],
     tmGrammar.mass_trv: [tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
     tmGrammar.comb_orm: [tmGrammar.ORMDETA, tmGrammar.ORMDPHI, tmGrammar.ORMDR, tmGrammar.TBPT],
     tmGrammar.dist_orm: [tmGrammar.ORMDETA, tmGrammar.ORMDPHI, tmGrammar.ORMDR, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],

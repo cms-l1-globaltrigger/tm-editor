@@ -86,6 +86,26 @@ CutSpecs = CutSpecificationPool(
         }
     ),
     CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.UPT),
+        object=tmGrammar.MU,
+        type=tmGrammar.UPT,
+        title="Muon unconstraint pt",
+        description="Restricts valid unconstraint pt range for muon object requirement."
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.IP),
+        object=tmGrammar.MU,
+        type=tmGrammar.IP,
+        title="Muon impact parameter",
+        description="Two bits for impact parameter (LUT).",
+        data={
+          "0": "n/a",
+          "1": "n/a",
+          "2": "n/a",
+          "3": "n/a"
+        }
+    ),
+    CutSpecification(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.CHG),
         object=tmGrammar.MU,
         type=tmGrammar.CHG,
@@ -367,12 +387,12 @@ CutSpecs = CutSpecificationPool(
         object=Empty,
         type=tmGrammar.MASS,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF],
-        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_3_obj, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
+        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_3_obj, tmGrammar.mass_inv_upt, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
         range_precision=1,
         range_step=0.2,
         range_unit="GeV",
-        title="Invariant or Transverse mass or Invariant mass with 3 objects",
-        description="Applies invariant or transverse mass restriction to combination of two objects depending on the used function. In addition: applies invariant mass with 3 objects restriction to combination of 3 objects depending on the used function.<br/><br/>" \
+        title="Invariant mass or Invariant mass with 3 objects or Invariant mass upt or Transverse mass",
+        description="Applies invariant mass or invariant mass with unconstraint pt or transverse mass restriction to combination of two objects depending on the used function.<br/><br/>" \
                     "Calculation of invariant mass:<br/><br/>" \
                     "M<sub>(inv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
                     "Calculation of transverse mass:<br/><br/>" \
