@@ -17,6 +17,7 @@
 
  * EtaCutChart
  * PhiCutChart
+ * UnconstraintPtCutChart
 """
 
 import tmGrammar
@@ -36,7 +37,7 @@ __all__ = [
     'ColorIcon', 'ColorLabel', 'IconLabel', 'SelectableLabel',
     'PrefixedSpinBox', 'ReadOnlyLineEdit', 'FilterLineEdit',
     'ComboBoxPlus', 'RestrictedLineEdit', 'RestrictedPlainTextEdit',
-    'ListSpinBox', 'EtaCutChart', 'PhiCutChart'
+    'ListSpinBox', 'EtaCutChart', 'PhiCutChart', 'UnconstraintPtCutChart'
 ]
 
 # -----------------------------------------------------------------------------
@@ -551,6 +552,51 @@ class PhiCutChart(QtWidgets.QWidget):
         """Constructur, takes optional reference to parent widget."""
         super(PhiCutChart, self).__init__(parent)
         self.setRange(0, 360 * 16)
+        self.setFixedSize((self.Margin + self.Radius) * 2, (self.Margin + self.Radius) * 2)
+
+    def setRange(self, lower, upper):
+        """Set lower and upper bounding of range."""
+        self.lower = lower
+        self.upper = upper
+
+    def range(self):
+        """Returns tuple containing lower and upper bounding of range."""
+        return self.lower, self.upper
+
+    def paintEvent(self, event):
+        """Paint PHI cut graph on windget."""
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        rectangle = QtCore.QRect(self.Margin, self.Margin, self.Radius * 2, self.Radius * 2)
+        painter.setPen(QtGui.QPen(QtCore.Qt.transparent))
+        painter.setBrush(QtCore.Qt.white)
+        painter.drawPie(rectangle, 0, 360 * 16)
+        painter.setBrush(QtCore.Qt.red)
+        lower, upper = self.range()
+        lower = math.degrees(lower)
+        upper = math.degrees(upper)
+        if (lower < upper):
+            painter.drawPie(rectangle, lower * 16, (upper-lower) * 16)
+        else:
+            painter.drawPie(rectangle, lower * 16, (360 - lower + upper) * 16)
+        painter.setPen(QtGui.QPen(QtCore.Qt.black))
+        painter.setBrush(QtCore.Qt.transparent)
+        painter.drawArc(rectangle, 0, 360 * 16)
+        painter.setFont(QtGui.QFont('Sans', self.FontSize))
+        painter.drawText(QtCore.QPoint(self.Radius * 2 + self.Margin + 2, (self.Margin + self.Radius) + self.FontSize / 2), u"0")
+        painter.drawText(QtCore.QPoint(0, (self.Margin + self.Radius) + self.FontSize / 2), u"π")
+
+class UnconstraintPtCutChart(QtWidgets.QWidget):
+    """Graphical PHI cut representation."""
+
+    Margin = 8
+    Radius = 30
+    FontSize = 7
+
+    def __init__(self, parent = None):
+        """Constructur, takes optional reference to parent widget."""
+        super(UnconstraintPtCutChart, self).__init__(parent)
+        self.setRange(0, 255)
         self.setFixedSize((self.Margin + self.Radius) * 2, (self.Margin + self.Radius) * 2)
 
     def setRange(self, lower, upper):

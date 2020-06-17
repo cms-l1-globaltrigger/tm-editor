@@ -12,6 +12,7 @@ from tmEditor.core.types import FunctionTypes, CountObjectTypes, FunctionCutType
 from tmEditor.gui.CommonWidgets import IconLabel
 from tmEditor.gui.CommonWidgets import EtaCutChart
 from tmEditor.gui.CommonWidgets import PhiCutChart
+from tmEditor.gui.CommonWidgets import UnconstraintPtCutChart
 from tmEditor.gui.CommonWidgets import richTextObjectsPreview
 from tmEditor.gui.CommonWidgets import richTextSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
@@ -168,6 +169,25 @@ class BottomWidget(QtWidgets.QWidget):
         layout.addWidget(groupBox)
         self.phiCutWidget.setLayout(layout)
 
+        self.unconstraintPtCutChart = UnconstraintPtCutChart(self)
+        # MacOS workaround, need to wrap group box to avoid layout glitch
+        self.unconstraintPtCutWidget = QtWidgets.QWidget(self)
+        self.unconstraintPtCutWidget.setObjectName("unconstraintPtCutWidget")
+        self.unconstraintPtCutWidget.setStyleSheet("""
+        #unconstraintPtCutWidget {
+            background-color: #eee;
+        }""")
+        # Group box
+        groupBox = QtWidgets.QGroupBox(self.tr("unconstraintPt preview"), self)
+        box = QtWidgets.QVBoxLayout()
+        box.addWidget(self.unconstraintPtCutChart)
+        groupBox.setLayout(box)
+        groupBox.setAlignment(QtCore.Qt.AlignBottom)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.addWidget(groupBox)
+        self.unconstraintPtCutWidget.setLayout(layout)
+
         layout = QtWidgets.QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -176,6 +196,7 @@ class BottomWidget(QtWidgets.QWidget):
         layout.addWidget(self.textEdit, 2, 0)
         layout.addWidget(self.etaCutWidget, 2, 1)
         layout.addWidget(self.phiCutWidget, 2, 2)
+        layout.addWidget(self.unconstraintPtCutWidget, 2, 1)
         self.setLayout(layout)
         self.reset()
 
@@ -183,6 +204,7 @@ class BottomWidget(QtWidgets.QWidget):
         self.clearNotice()
         self.etaCutWidget.hide()
         self.phiCutWidget.hide()
+        self.unconstraintPtCutWidget.hide()
         self.clearNotice()
 
     def setNotice(self, text, icon=None):
@@ -207,6 +229,10 @@ class BottomWidget(QtWidgets.QWidget):
     def setPhiCutChart(self, lower, upper):
         self.phiCutChart.setRange(lower, upper)
         self.phiCutWidget.show()
+
+    def setUnconstraintPtCutChart(self, lower, upper):
+        self.unconstraintPtCutChart.setRange(lower, upper)
+        self.unconstraintPtCutWidget.show()
 
     def setText(self, message):
         self.textEdit.setText(message)

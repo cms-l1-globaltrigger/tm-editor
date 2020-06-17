@@ -16,7 +16,7 @@ from tmEditor.gui.CommonWidgets import (
     RestrictedLineEdit,
     RestrictedPlainTextEdit,
     EtaCutChart,
-    PhiCutChart
+    PhiCutChart,
     UnconstraintPtCutChart
 )
 
@@ -265,8 +265,8 @@ class ScaleWidget(InputWidget):
         self.etaCutChart.hide()
         self.phiCutChart = PhiCutChart(self)
         self.phiCutChart.hide()
-        self.phiCutChart = UnconstraintPtCutChart(self)
-        self.phiCutChart.hide()
+        self.unconstraintPtCutChart = UnconstraintPtCutChart(self)
+        self.unconstraintPtCutChart.hide()
         # Create layout
         layout = QtWidgets.QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -276,7 +276,7 @@ class ScaleWidget(InputWidget):
         layout.addWidget(self.maximumSpinBox, 1, 1)
         layout.addWidget(self.etaCutChart, 2, 1, 1, 2)
         layout.addWidget(self.phiCutChart, 3, 1, 1, 2)
-        layout.addWidget(self.UnconstraintPtCutChart, 2, 1, 1, 2)
+        layout.addWidget(self.unconstraintPtCutChart, 2, 1, 1, 2)
         layout.addItem(createVerticalSpacerItem())
         self.setLayout(layout)
         self.minimumSpinBox.valueChanged.connect(self.updateCharts)

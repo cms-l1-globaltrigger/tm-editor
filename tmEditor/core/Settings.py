@@ -387,12 +387,12 @@ CutSpecs = CutSpecificationPool(
         object=Empty,
         type=tmGrammar.MASS,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF],
-        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
+        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_upt, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
         range_precision=1,
         range_step=0.2,
         range_unit="GeV",
-        title="Invariant or Transverse mass",
-        description="Applies invariant or transverse mass restriction to combination of two objects depending on the used function.<br/><br/>" \
+        title="Invariant mass or Invariant mass upt or Transverse mass",
+        description="Applies invariant mass or invariant mass with unconstraint pt or transverse mass restriction to combination of two objects depending on the used function.<br/><br/>" \
                     "Calculation of invariant mass:<br/><br/>" \
                     "M<sub>(inv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
                     "Calculation of transverse mass:<br/><br/>" \

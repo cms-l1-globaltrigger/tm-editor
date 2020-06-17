@@ -56,6 +56,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.functionComboBox.addItem(self.tr("{} (combination)").format(tmGrammar.comb), tmGrammar.comb)
         self.functionComboBox.addItem(self.tr("{} (correlation)").format(tmGrammar.dist), tmGrammar.dist)
         self.functionComboBox.addItem(self.tr("{} (invariant mass)").format(tmGrammar.mass_inv), tmGrammar.mass_inv)
+        self.functionComboBox.addItem(self.tr("{} (invariant mass_upt)").format(tmGrammar.mass_inv_upt), tmGrammar.mass_inv_upt)
         self.functionComboBox.addItem(self.tr("{} (transverse mass)").format(tmGrammar.mass_trv), tmGrammar.mass_trv)
         self.functionComboBox.addItem(self.tr("{} (combination + overlap removal)").format(tmGrammar.comb_orm), tmGrammar.comb_orm)
         self.functionComboBox.addItem(self.tr("{} (correlation + overlap removal)").format(tmGrammar.dist_orm), tmGrammar.dist_orm)
@@ -107,7 +108,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             helper.types = ObjectTypes
             helper.setEnabled(True)
             # Disable helpers if not needed
-            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv) and helper.index >= 2:
+            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_inv_upt, tmGrammar.mass_trv) and helper.index >= 2:
                 helper.setEnabled(False)
             if self.functionType() in (tmGrammar.dist_orm, tmGrammar.mass_inv_orm) and helper.index >= 3:
                 helper.setEnabled(False)
@@ -168,11 +169,13 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             text.append('<p>Topological distance (correlation) of two object requirements with overlap removal.</p>')
         elif functionType == tmGrammar.mass_inv:
             text.append('<p>Invariant mass correlation of two object requirements.</p>')
+        elif functionType == tmGrammar.mass_inv_upt:
+            text.append('<p>Invariant mass correlation with unconstraint pt of two object requirements.</p>')
         elif functionType == tmGrammar.mass_inv_orm:
             text.append('<p>Invariant mass correlation of two object requirements with overlap removal.</p>')
-        elif functionType == tmGrammar.mass_inv:
+        elif functionType == tmGrammar.mass_trv:
             text.append('<p>Transverse mass correlation of two object requirements (at least on without eta component).</p>')
-        elif functionType == tmGrammar.mass_inv_orm:
+        elif functionType == tmGrammar.mass_trv_orm:
             text.append('<p>Transverse mass correlation of two object requirements (at least on without eta component) with overlap removal.</p>')
         if functionType in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_inv_orm):
             text.append('<p>The <em>last</em> object requirement must be of a diffrent type, applying the overlap removal on the <em>preceding</em> object requirement(s).</p>')
