@@ -22,7 +22,7 @@ import sys, os
 
 __all__ = ['Menu', 'GrammarVersion']
 
-GrammarVersion = StrictVersion('0.9')
+GrammarVersion = StrictVersion('0.10')
 """Supported grammar version."""
 
 # ------------------------------------------------------------------------------
