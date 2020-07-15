@@ -19,6 +19,8 @@ import unittest
 import tempfile
 import logging
 
+UTM_VERSION = '0.7.5'
+
 class MenuTests(unittest.TestCase):
 
     def setUp(self):
@@ -124,6 +126,10 @@ class MenuTests(unittest.TestCase):
         logging.info("algorithms: %s", menu.algorithms)
         logging.info("cuts: %s", menu.cuts)
         logging.info("objects: %s", menu.objects)
+
+    def test_version(self):
+        self.assertEqual(tmGrammar.__version__, UTM_VERSION)
+        self.assertEqual(tmTable.__version__, UTM_VERSION)
 
 if __name__ == '__main__':
     unittest.main()

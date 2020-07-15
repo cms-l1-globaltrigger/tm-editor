@@ -14,7 +14,7 @@ setup(
     install_requires=[
         'tm-python @ git+https://github.com/cms-l1-globaltrigger/tm-python@0.7.5',
         'Markdown>=3.1',
-        'PyQt5>=5.13'
+        'PyQt5>=5.13.2'
     ],
     entry_points={
         'console_scripts': [
