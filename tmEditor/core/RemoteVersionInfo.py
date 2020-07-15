@@ -1,23 +1,16 @@
-# -*- coding: utf-8 -*-
-
 """Simple helper class for retrieving remote version information."""
 
-from . import Settings
-from distutils.version import StrictVersion
 import logging
 import json
 import os
 
-try:
-    # Python 2
-    from urllib2 import urlopen
-    from urllib2 import URLError, HTTPError
-    from urlparse import urljoin
-except ImportError:
-    # Python 3
-    from urllib.request import urlopen
-    from urllib.error import URLError, HTTPError
-    from urllib.parse import urljoin
+from distutils.version import StrictVersion
+
+from . import Settings
+
+from urllib.request import urlopen
+from urllib.error import URLError, HTTPError
+from urllib.parse import urljoin
 
 kName = 'name'
 kVersion = 'version'
@@ -26,7 +19,7 @@ kUri = 'uri'
 kScaleSet = 'scale_set'
 kExtSignalSet = 'ext_signal_set'
 
-class RemoteVersionInfo(object):
+class RemoteVersionInfo:
     """Helper class for retrieving remote server side version info."""
 
     def __init__(self, url=None):

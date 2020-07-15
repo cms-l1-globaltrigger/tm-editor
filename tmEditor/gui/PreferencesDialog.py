@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
-"""Preferences dialog.
-"""
+"""Preferences dialog."""
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -17,7 +14,7 @@ class PreferencesDialog(QtWidgets.QDialog):
     """Preferences dialog providing settings for the application."""
 
     def __init__(self, parent=None):
-        super(PreferencesDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi()
 
     def setupUi(self):

@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-#
+"""Settings module."""
 
 from .toolbox import CutSpecificationPool, CutSpecification
 
 import tmGrammar
-import sys, os
 
 __all__ = ['MaxAlgorithms', 'CutSpecs', ]
 
@@ -54,22 +52,22 @@ CutSpecs = CutSpecificationPool(
         title="Muon quality",
         description="Applies quality filter for muon object requirement.",
         data={
-          "0": "quality level 0",
-          "1": "quality level 1",
-          "2": "quality level 2",
-          "3": "quality level 3",
-          "4": "quality level 4",
-          "5": "quality level 5",
-          "6": "quality level 6",
-          "7": "quality level 7",
-          "8": "quality level 8",
-          "9": "quality level 9",
-          "10": "quality level 10",
-          "11": "quality level 11",
-          "12": "quality level 12",
-          "13": "quality level 13",
-          "14": "quality level 14",
-          "15": "quality level 15"
+            "0": "quality level 0",
+            "1": "quality level 1",
+            "2": "quality level 2",
+            "3": "quality level 3",
+            "4": "quality level 4",
+            "5": "quality level 5",
+            "6": "quality level 6",
+            "7": "quality level 7",
+            "8": "quality level 8",
+            "9": "quality level 9",
+            "10": "quality level 10",
+            "11": "quality level 11",
+            "12": "quality level 12",
+            "13": "quality level 13",
+            "14": "quality level 14",
+            "15": "quality level 15"
         }
     ),
     CutSpecification(
@@ -79,10 +77,10 @@ CutSpecs = CutSpecificationPool(
         title="Muon isolation",
         description="Two bits for isolation, bit 0 represents isolation, meaning of bit 1 is currently not defined.",
         data={
-          "0": "non-isolated",
-          "1": "isolated",
-          "2": "n/a",
-          "3": "n/a+isolated"
+            "0": "non-isolated",
+            "1": "isolated",
+            "2": "n/a",
+            "3": "n/a+isolated"
         }
     ),
     CutSpecification(
@@ -93,8 +91,8 @@ CutSpecs = CutSpecificationPool(
         description="<strong>Example:</strong> <pre>MU20[MU-CHG_NEG]</pre>",
         data_exclusive=True,
         data={
-          "positive": "positive",
-          "negative": "negative"
+            "positive": "positive",
+            "negative": "negative"
         }
     ),
     CutSpecification(
@@ -131,22 +129,22 @@ CutSpecs = CutSpecificationPool(
         title="Electron/gamma quality",
         description="",
         data={
-          "0": "quality level 0",
-          "1": "quality level 1",
-          "2": "quality level 2",
-          "3": "quality level 3",
-          "4": "quality level 4",
-          "5": "quality level 5",
-          "6": "quality level 6",
-          "7": "quality level 7",
-          "8": "quality level 8",
-          "9": "quality level 9",
-          "10": "quality level 10",
-          "11": "quality level 11",
-          "12": "quality level 12",
-          "13": "quality level 13",
-          "14": "quality level 14",
-          "15": "quality level 15"
+            "0": "quality level 0",
+            "1": "quality level 1",
+            "2": "quality level 2",
+            "3": "quality level 3",
+            "4": "quality level 4",
+            "5": "quality level 5",
+            "6": "quality level 6",
+            "7": "quality level 7",
+            "8": "quality level 8",
+            "9": "quality level 9",
+            "10": "quality level 10",
+            "11": "quality level 11",
+            "12": "quality level 12",
+            "13": "quality level 13",
+            "14": "quality level 14",
+            "15": "quality level 15"
         }
     ),
     CutSpecification(
@@ -156,10 +154,10 @@ CutSpecs = CutSpecificationPool(
         title="Electron/gamma isolation",
         description="Two bits for isolation, bit 0 represents isolation, meaning of bit 1 is currently not defined.",
         data={
-          "0": "non-isolated",
-          "1": "isolated",
-          "2": "n/a",
-          "3": "n/a+isolated"
+            "0": "non-isolated",
+            "1": "isolated",
+            "2": "n/a",
+            "3": "n/a+isolated"
         }
     ),
     CutSpecification(
@@ -194,22 +192,22 @@ CutSpecs = CutSpecificationPool(
         title="Jet quality",
         description="",
         data={
-          "0": "quality level 0",
-          "1": "quality level 1",
-          "2": "quality level 2",
-          "3": "quality level 3",
-          "4": "quality level 4",
-          "5": "quality level 5",
-          "6": "quality level 6",
-          "7": "quality level 7",
-          "8": "quality level 8",
-          "9": "quality level 9",
-          "10": "quality level 10",
-          "11": "quality level 11",
-          "12": "quality level 12",
-          "13": "quality level 13",
-          "14": "quality level 14",
-          "15": "quality level 15"
+            "0": "quality level 0",
+            "1": "quality level 1",
+            "2": "quality level 2",
+            "3": "quality level 3",
+            "4": "quality level 4",
+            "5": "quality level 5",
+            "6": "quality level 6",
+            "7": "quality level 7",
+            "8": "quality level 8",
+            "9": "quality level 9",
+            "10": "quality level 10",
+            "11": "quality level 11",
+            "12": "quality level 12",
+            "13": "quality level 13",
+            "14": "quality level 14",
+            "15": "quality level 15"
         }
     ),
     CutSpecification(
@@ -244,22 +242,22 @@ CutSpecs = CutSpecificationPool(
         title="Tau quality",
         description="",
         data={
-          "0": "quality level 0",
-          "1": "quality level 1",
-          "2": "quality level 2",
-          "3": "quality level 3",
-          "4": "quality level 4",
-          "5": "quality level 5",
-          "6": "quality level 6",
-          "7": "quality level 7",
-          "8": "quality level 8",
-          "9": "quality level 9",
-          "10": "quality level 10",
-          "11": "quality level 11",
-          "12": "quality level 12",
-          "13": "quality level 13",
-          "14": "quality level 14",
-          "15": "quality level 15"
+            "0": "quality level 0",
+            "1": "quality level 1",
+            "2": "quality level 2",
+            "3": "quality level 3",
+            "4": "quality level 4",
+            "5": "quality level 5",
+            "6": "quality level 6",
+            "7": "quality level 7",
+            "8": "quality level 8",
+            "9": "quality level 9",
+            "10": "quality level 10",
+            "11": "quality level 11",
+            "12": "quality level 12",
+            "13": "quality level 13",
+            "14": "quality level 14",
+            "15": "quality level 15"
         }
     ),
     CutSpecification(
@@ -269,10 +267,10 @@ CutSpecs = CutSpecificationPool(
         title="Tau isolation",
         description="Two bits for isolation, bit 0 represents isolation, meaning of bit 1 is currently not defined.",
         data={
-          "0": "non-isolated",
-          "1": "isolated",
-          "2": "n/a",
-          "3": "n/a+isolated"
+            "0": "non-isolated",
+            "1": "isolated",
+            "2": "n/a",
+            "3": "n/a+isolated"
         }
     ),
     CutSpecification(
@@ -320,8 +318,8 @@ CutSpecs = CutSpecificationPool(
                     "<strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre>",
         data_exclusive=True,
         data={
-          "ls": "like sign",
-          "os": "opposite sign"
+            "ls": "like sign",
+            "os": "opposite sign"
         }
     ),
     CutSpecification(

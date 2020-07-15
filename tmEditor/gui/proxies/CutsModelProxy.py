@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""Cuts proxy model."""
 
 from PyQt5 import QtCore
 
@@ -14,8 +14,8 @@ class CutsModelProxy(QtCore.QSortFilterProxyModel):
     MinimumColumn = 3
     MaximumColumn = 4
 
-    def __init__(self, parent = None):
-        super(CutsModelProxy, self).__init__(parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
     def lessThan(self, left, right):
         """Custom cut sorting."""
@@ -24,7 +24,7 @@ class CutsModelProxy(QtCore.QSortFilterProxyModel):
                 return self.__toFloat(left) < self.__toFloat(right)
             except ValueError:
                 pass
-        return super(CutsModelProxy, self).lessThan(left, right)
+        return super().lessThan(left, right)
 
     def __toFloat(self, index):
         return float(self.sourceModel().data(index, QtCore.Qt.DisplayRole))

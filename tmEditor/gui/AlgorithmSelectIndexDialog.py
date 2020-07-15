@@ -1,21 +1,15 @@
-# -*- coding: utf-8 -*-
-
 """Algorithm select index dialog.
 
 class AlgorithmSelectIndexDialog
 """
 
-import tmGrammar
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
-from tmEditor.core import toolbox
 from tmEditor.core.Settings import MaxAlgorithms
 
 # Common widgets
 from tmEditor.gui.CommonWidgets import IconLabel, createIcon
-
-from PyQt5 import QtCore, QtWidgets
-
-import sys, os
 
 __all__ = ['AlgorithmSelectIndexDialog', ]
 
@@ -45,10 +39,10 @@ class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
     """
     # Define size of the index grid.
     ColumnCount = 8
-    RowCount    = MaxAlgorithms // ColumnCount
+    RowCount = MaxAlgorithms // ColumnCount
 
     def __init__(self, parent=None):
-        super(AlgorithmSelectIndexDialog, self).__init__(parent)
+        super().__init__(parent)
         # Setup window
         self.setWindowTitle(self.tr("Select Index"))
         self.resize(480, 300)
@@ -74,7 +68,7 @@ class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
                 button.setCheckable(True)
                 button.setMaximumWidth(50)
                 #self._setButtonStyle(button, self.Green)
-                button.clicked[bool].connect(self._updateIndex)
+                button.clicked.connect(self._updateIndex)
                 self.buttons.append(button)
                 gridLayout.addWidget(button, row, column)
                 # Increment index.
@@ -139,21 +133,3 @@ class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
             else:
                 self.mapping[k] = v + abs(diff)
         self.accept()
-
-# -----------------------------------------------------------------------------
-#  Unit test
-# -----------------------------------------------------------------------------
-
-if __name__ == '__main__':
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-
-    occupied = [0,2,3,4,5,16,17,18,21,26,46,47,49,50,51,101,510,511]
-
-    selected = [16,18]
-
-
-    window = AlgorithmSelectIndexDialog()
-    window.setup(occupied, selected)
-    window.show()
-    sys.exit(app.exec_())

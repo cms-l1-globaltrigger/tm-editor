@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
+"""Multi Document Interface (MDI) area."""
 
-"""Multi Document Interface (MDI) area.
-"""
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
 from tmEditor.gui.CommonWidgets import createIcon
-
-from PyQt5 import QtCore, QtWidgets
-
-import sys, os
 
 __all__ = ['MdiArea', ]
 
@@ -18,8 +14,8 @@ __all__ = ['MdiArea', ]
 class MdiArea(QtWidgets.QTabWidget):
     """A tab widget based MDI area widget."""
 
-    def __init__(self, parent = None):
-        super(MdiArea, self).__init__(parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setTabsClosable(True)
         self.setMovable(True)
         self.setDocumentMode(True)
@@ -36,6 +32,7 @@ class MdiArea(QtWidgets.QTabWidget):
         result = list(filter(lambda document: document.filename() == filename, self.documents()))
         if result:
             return result[0]
+        return None
 
     @QtCore.pyqtSlot(str)
     def addDocument(self, document):
@@ -62,11 +59,14 @@ class MdiArea(QtWidgets.QTabWidget):
             return False
         document = self.widget(index)
         if document.isModified():
-            reply = QtWidgets.QMessageBox.warning(self, "Close document",
+            reply = QtWidgets.QMessageBox.warning(
+                self,
+                "Close document",
                 self.tr("The document \"{}\" has been modified.\n" \
                         "Do you want to save your changes or discard them?").format(document.name()),
                 QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Save,
-                QtWidgets.QMessageBox.Cancel)
+                QtWidgets.QMessageBox.Cancel
+            )
             if reply == QtWidgets.QMessageBox.Cancel:
                 return False
             if reply == QtWidgets.QMessageBox.Save:

@@ -1,26 +1,21 @@
-# -*- coding: utf-8 -*-
+"""XML decoder."""
+
+import logging
+import os
+import re
+
+from distutils.version import StrictVersion
+from collections import namedtuple
 
 import tmGrammar
 
-from tmEditor.core import Menu, toolbox
+from tmEditor.core import Menu
 from tmEditor.core import Algorithm
 from tmEditor.core import types
 
 from .toolbox import safe_str
 from .Queue import Queue
 from .TableHelper import TableHelper
-from .Settings import MaxAlgorithms
-from .AlgorithmFormatter import AlgorithmFormatter
-from .AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
-
-from distutils.version import StrictVersion
-from collections import namedtuple
-
-from .XmlEncoder import chdir
-
-import logging
-import sys, os
-import re
 
 # -----------------------------------------------------------------------------
 #  Keys
@@ -73,6 +68,7 @@ def mirgrate_chgcor_cut(cut):
             cut.data = chgcor_mapping[data]
             logging.info("migrated cut %s: '%s' => '%s'", cut.name, data, cut.data)
             return MirgrationResult(cut, 'data', data, cut.data)
+    return None
 
 def mirgrate_cut_object(cut):
     """Migrate obsolete object entries for function cuts."""
@@ -83,6 +79,7 @@ def mirgrate_cut_object(cut):
             cut.object = "" # clear
             logging.info("migrated function cut object type %s: '%s' => '%s'", cut.name, object_, cut.object)
             return MirgrationResult(cut, 'object', object_, cut.object)
+    return None
 
 def mirgrate_mass_function(algorithm):
     """Migrates old mass functions to newer mass_inv:
@@ -94,6 +91,7 @@ def mirgrate_mass_function(algorithm):
         algorithm.expression = expression
         logging.info("migrated function '%s' => '%s' in algorithm %s: %s", tmGrammar.mass, tmGrammar.mass_inv, algorithm.name, expression)
         return MirgrationResult(algorithm, 'expression', tmGrammar.mass, tmGrammar.mass_inv)
+    return None
 
 # -----------------------------------------------------------------------------
 #  Decoder classes
@@ -102,12 +100,12 @@ def mirgrate_mass_function(algorithm):
 class XmlDecoderError(Exception):
     """Exeption for XML decoder errors."""
     def __init__(self, message):
-        super(XmlDecoderError, self).__init__(message)
+        super().__init__(message)
 
 class XmlDecoderQueue(Queue):
 
     def __init__(self, filename):
-        super(XmlDecoderQueue, self).__init__()
+        super().__init__()
         self.filename = os.path.abspath(filename)
         self.applied_mirgrations = []
         self.menu = None
@@ -225,7 +223,8 @@ class XmlDecoderQueue(Queue):
                 bx_offset = int(row[kBxOffset])
                 comment = row.get(kComment, "")
                 obj = Algorithm.Object(name, type, threshold, comparison_operator, bx_offset, comment)
-                if obj.type not in (types.ObjectTypes + types.SignalTypes):
+                all_types = types.ObjectTypes + types.SignalTypes
+                if obj.type not in all_types:
                     message = "Unsupported object type {0} (grammar version <= {1})".format(obj.type, Menu.GrammarVersion)
                     logging.error(message)
                     raise XmlDecoderError(message)

@@ -1,9 +1,16 @@
+"""Cut editor dialog."""
+
+import math
+import logging
+import re
+
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
+
 import tmGrammar
 
-from tmEditor.core.types import ObjectCutTypes, FunctionCutTypes
-from tmEditor.core.Menu import Menu
+from tmEditor.core.types import FunctionCutTypes
 from tmEditor.core.Algorithm import Cut
-from tmEditor.core import XmlDecoder
 from tmEditor.core import toolbox
 
 from tmEditor.core.Algorithm import (
@@ -18,12 +25,6 @@ from tmEditor.gui.CommonWidgets import (
     EtaCutChart,
     PhiCutChart
 )
-
-from PyQt5 import QtCore, QtWidgets
-
-import math
-import logging
-import re
 
 __all__ = ["CutEditorDialog"]
 
@@ -70,9 +71,9 @@ def calculateRange(specification, scales):
     # Delta eta
     if specification.type in (tmGrammar.DETA, tmGrammar.ORMDETA):
         def isMuEta(scale): # filter
-            return scale[kObject]==tmGrammar.MU and scale[kType]==tmGrammar.ETA
+            return scale[kObject] == tmGrammar.MU and scale[kType] == tmGrammar.ETA
         def isJetEta(scale): # filter
-            return scale[kObject]==tmGrammar.JET and scale[kType]==tmGrammar.ETA
+            return scale[kObject] == tmGrammar.JET and scale[kType] == tmGrammar.ETA
         scaleMu = list(filter(isMuEta, scales.scales))[0]
         scaleCalo = list(filter(isJetEta, scales.scales))[0]
         scale = scaleMu if scaleMu[kMaximum] > scaleCalo[kMaximum] else scaleCalo
@@ -117,7 +118,7 @@ class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
     EmptyScale = [{kNumber: 0, kMinimum: .0, kMaximum: .0}]
 
     def __init__(self, mode=MinimumMode, parent=None):
-        super(ScaleSpinBox, self).__init__(parent)
+        super().__init__(parent)
         self.setMode(mode)
         self.setScale(self.EmptyScale)
 
@@ -132,7 +133,7 @@ class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
         *minimum* and *maximum* keys. *mode* specifies if the upper or lower bin
          limit is used."""
         # Important: sort the scale set by minimum or maximum - not by numbers (encoded in two's complement).
-        self.scale = sorted(scale, key = lambda bin: float(bin[self.mode]))
+        self.scale = sorted(scale, key=lambda bin: float(bin[self.mode]))
         self.index = 0
         self.setDecimals(prec)
         minimum = min([float(value[self.mode]) for value in self.scale] or [0.])
@@ -145,7 +146,8 @@ class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
 
     def value(self, index=None):
         """Returns floating point value by bin index (upper or lower depending on mode)."""
-        if index == None: index = self.index
+        if index == None:
+            index = self.index
         return float(self.scale[index][self.mode])
 
     def minimum(self):
@@ -156,13 +158,14 @@ class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
 
     def setValue(self, value):
         value = self.nearest(value)
-        super(ScaleSpinBox, self).setValue(value)
+        super().setValue(value)
 
     def valueFromText(self, text):
         """Re-implementation of valueFromText(), it returns only the nearest."""
         results = RegExFloatingPoint.findall(text)
         if results:
             return self.nearest(float(results[0]))
+        return None
 
     def nearest(self, value):
         """Returns nearest neighbor of value in range."""
@@ -180,16 +183,16 @@ class RangeSpinBox(QtWidgets.QDoubleSpinBox):
     """Custom spin box for fixed stepped ranges."""
 
     def __init__(self, parent=None):
-        super(RangeSpinBox, self).__init__(parent)
+        super().__init__(parent)
 
     def setMinimum(self, minimum):
-        super(RangeSpinBox, self).setMinimum(self.nearest(minimum))
+        super().setMinimum(self.nearest(minimum))
 
     def setMaximum(self, maximum):
-        super(RangeSpinBox, self).setMaxnimum(self.nearest(maximum))
+        super().setMaxnimum(self.nearest(maximum))
 
     def setRange(self, minimum, maximum):
-        super(RangeSpinBox, self).setRange(self.nearest(minimum), self.nearest(maximum))
+        super().setRange(self.nearest(minimum), self.nearest(maximum))
 
     def valueFromText(self, text):
         """Re-implementation of valueFromText(), it returns only the nearest."""
@@ -213,7 +216,7 @@ class InputWidget(QtWidgets.QWidget):
     """
 
     def __init__(self, specification, scales, parent=None):
-        super(InputWidget, self).__init__(parent)
+        super().__init__(parent)
         self.specification = specification
         self.scales = scales
 
@@ -229,7 +232,7 @@ class ScaleWidget(InputWidget):
     """Provides scales range entries."""
 
     def __init__(self, specification, scales, parent=None):
-        super(ScaleWidget, self).__init__(specification, scales, parent)
+        super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
 
@@ -243,8 +246,8 @@ class ScaleWidget(InputWidget):
         self.minimumSpinBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
         self.minimumSpinBox.setObjectName("minimumSpinBox")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1);
-        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.minimumSpinBox.sizePolicy().hasHeightForWidth())
         self.minimumSpinBox.setSizePolicy(sizePolicy)
         if self.specification.range_unit:
@@ -253,8 +256,8 @@ class ScaleWidget(InputWidget):
         self.maximumSpinBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
         self.maximumSpinBox.setObjectName("maximumSpinBox")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1);
-        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maximumSpinBox.sizePolicy().hasHeightForWidth())
         self.maximumSpinBox.setSizePolicy(sizePolicy)
         if self.specification.range_unit:
@@ -313,7 +316,7 @@ class RangeWidget(InputWidget):
     """Provides range entries."""
 
     def __init__(self, specification, scales, parent=None):
-        super(RangeWidget, self).__init__(specification, scales, parent)
+        super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
 
@@ -327,8 +330,8 @@ class RangeWidget(InputWidget):
         self.minimumSpinBox = RangeSpinBox(self)
         self.minimumSpinBox.setObjectName("minimumSpinBox")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1);
-        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.minimumSpinBox.sizePolicy().hasHeightForWidth())
         self.minimumSpinBox.setSizePolicy(sizePolicy)
         self.minimumSpinBox.setSingleStep(self.specification.range_step)
@@ -339,8 +342,8 @@ class RangeWidget(InputWidget):
         self.maximumSpinBox = RangeSpinBox(self)
         self.maximumSpinBox.setObjectName("maximumSpinBox")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1);
-        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maximumSpinBox.sizePolicy().hasHeightForWidth())
         self.maximumSpinBox.setSizePolicy(sizePolicy)
         self.maximumSpinBox.setSingleStep(self.specification.range_step)
@@ -382,7 +385,7 @@ class InfiniteRangeWidget(InputWidget):
     """Provides range entries with infinity option."""
 
     def __init__(self, specification, scales, parent=None):
-        super(InfiniteRangeWidget, self).__init__(specification, scales, parent)
+        super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
 
@@ -396,8 +399,8 @@ class InfiniteRangeWidget(InputWidget):
         self.minimumSpinBox = RangeSpinBox(self)
         self.minimumSpinBox.setObjectName("minimumSpinBox")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1);
-        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.minimumSpinBox.sizePolicy().hasHeightForWidth())
         self.minimumSpinBox.setSizePolicy(sizePolicy)
         self.minimumSpinBox.setSingleStep(self.specification.range_step)
@@ -407,8 +410,8 @@ class InfiniteRangeWidget(InputWidget):
         self.maximumSpinBox = RangeSpinBox(self)
         self.maximumSpinBox.setObjectName("maximumSpinBox")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1);
-        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maximumSpinBox.sizePolicy().hasHeightForWidth())
         self.maximumSpinBox.setSizePolicy(sizePolicy)
         self.maximumSpinBox.setSingleStep(self.specification.range_step)
@@ -419,8 +422,8 @@ class InfiniteRangeWidget(InputWidget):
         self.infiniteCheckBox.setObjectName("infiniteCheckBox")
         self.infiniteCheckBox.setChecked(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1);
-        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.infiniteCheckBox.sizePolicy().hasHeightForWidth())
         # Create layout
         layout = QtWidgets.QGridLayout()
@@ -471,7 +474,7 @@ class SliceWidget(InputWidget):
     """Provides slice selection entries, using cut minimum/maximum."""
 
     def __init__(self, specification, scales, parent=None):
-        super(SliceWidget, self).__init__(specification, scales, parent)
+        super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
 
@@ -484,15 +487,15 @@ class SliceWidget(InputWidget):
         self.beginSpinBox = QtWidgets.QSpinBox(self)
         self.beginSpinBox.setObjectName("beginSpinBox")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1);
-        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.beginSpinBox.sizePolicy().hasHeightForWidth())
         self.beginSpinBox.setSizePolicy(sizePolicy)
         self.endSpinBox = QtWidgets.QSpinBox(self)
         self.endSpinBox.setObjectName("endSpinBox")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1);
-        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.endSpinBox.sizePolicy().hasHeightForWidth())
         self.endSpinBox.setSizePolicy(sizePolicy)
         # Create layout
@@ -534,7 +537,7 @@ class ThresholdWidget(InputWidget):
     """Provides a single threshold entry, using only cut minimum."""
 
     def __init__(self, specification, scales, parent=None):
-        super(ThresholdWidget, self).__init__(specification, scales, parent)
+        super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
 
@@ -546,8 +549,8 @@ class ThresholdWidget(InputWidget):
         self.thresholdSpinBox = RangeSpinBox(self)
         self.thresholdSpinBox.setObjectName("thresholdSpinBox")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1);
-        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.thresholdSpinBox.sizePolicy().hasHeightForWidth())
         self.thresholdSpinBox.setSizePolicy(sizePolicy)
         self.thresholdSpinBox.setSingleStep(self.specification.range_step)
@@ -582,7 +585,7 @@ class MaximumWidget(InputWidget):
     """Provides a maximum only entriy."""
 
     def __init__(self, specification, scales, parent=None):
-        super(MaximumWidget, self).__init__(specification, scales, parent)
+        super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
 
@@ -594,8 +597,8 @@ class MaximumWidget(InputWidget):
         self.maximumSpinBox = RangeSpinBox(self)
         self.maximumSpinBox.setObjectName("maximumSpinBox")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1);
-        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maximumSpinBox.sizePolicy().hasHeightForWidth())
         self.maximumSpinBox.setSizePolicy(sizePolicy)
         self.maximumSpinBox.setSingleStep(self.specification.range_step)
@@ -630,7 +633,7 @@ class MultipleJoiceWidget(InputWidget):
     """Provides a multiple joice entry."""
 
     def __init__(self, specification, scales, parent=None):
-        super(MultipleJoiceWidget, self).__init__(specification, scales, parent)
+        super().__init__(specification, scales, parent)
         self.setupUi()
 
     def setupUi(self):
@@ -696,18 +699,18 @@ class MultipleJoiceIsoWidget(MultipleJoiceWidget):
     """Provides a multiple joice entry for isolation."""
 
     def __init__(self, specification, scales, parent=None):
-        super(MultipleJoiceIsoWidget, self).__init__(specification, scales, parent)
+        super().__init__(specification, scales, parent)
 
     def format_label(self, key, value):
         """Check box label formatter provided for overlaoding."""
         index = int(key)
-        return "[0b{index:02b}] {value}".format(**locals())
+        return f"[0b{index:02b}] {value}"
 
 class SingleJoiceWidget(InputWidget):
     """Provides a single joice entry."""
 
     def __init__(self, specification, scales, parent=None):
-        super(SingleJoiceWidget, self).__init__(specification, scales, parent)
+        super().__init__(specification, scales, parent)
         self.setupUi()
 
     def setupUi(self):
@@ -773,7 +776,7 @@ class CutTreeWidget(QtWidgets.QTreeWidget):
     """Tree widget displaying cut types hierarchical."""
 
     def __init__(self, parent=None):
-        super(CutTreeWidget, self).__init__(parent)
+        super().__init__(parent)
 
     def loadCutSpecs(self, specs):
         """Initialize tree widget using a list of cut specifications."""
@@ -824,7 +827,7 @@ class CutEditorDialog(QtWidgets.QDialog):
 
     def __init__(self, menu, parent=None):
         """Create new dialog window."""
-        super(CutEditorDialog, self).__init__(parent)
+        super().__init__(parent)
         self.menu = menu
         self.copyMode = False
         self.loadedCut = None
@@ -933,9 +936,9 @@ class CutEditorDialog(QtWidgets.QDialog):
         if self.copyMode:
             self.suffixLineEdit.setEnabled(True) # HACK overrule on copy
         if cut.isFunctionCut: # TODO not efficient
-            result = list(filter(lambda item: item.spec.type==cut.type, self._items))
+            result = list(filter(lambda item: item.spec.type == cut.type, self._items))
         else:
-            result = list(filter(lambda item: item.spec.object==cut.object and item.spec.type==cut.type, self._items))
+            result = list(filter(lambda item: item.spec.object == cut.object and item.spec.type == cut.type, self._items))
         if result:
             logging.debug("result %s", result)
             self.treeWidget.setCurrentItem(result[0])
@@ -1036,30 +1039,9 @@ class CutEditorDialog(QtWidgets.QDialog):
             logging.warning(format(e))
             QtWidgets.QMessageBox.warning(self, "Validation error", format(e))
         else:
-            super(CutEditorDialog, self).accept()
+            super().accept()
 
     @QtCore.pyqtSlot()
     def reject(self):
         """Overloaded slot for reject()."""
-        super(CutEditorDialog, self).reject()
-
-
-if __name__ == '__main__':
-    import sys
-    from tmEditor.core.Settings import CutSpecs
-    logging.getLogger().setLevel(logging.DEBUG)
-    app = QtWidgets.QApplication(sys.argv)
-    menu = XmlDecoder.load('/home/arnold/xml/L1Menu_test_overlap_removal.xml')
-    dialog = CutEditorDialog(menu)
-    dialog.setupCuts(CutSpecs)
-    from tmEditor.core.Algorithm import Cut
-    cut = Cut(
-        name="JET-SLICE_2to3",
-        object=tmGrammar.JET,
-        type=tmGrammar.SLICE,
-        data="2,3",
-        comment="NO one expects the spanish inquisition!"
-    )
-    # dialog.loadCut(cut)
-    dialog.show()
-    sys.exit(app.exec_())
+        super().reject()

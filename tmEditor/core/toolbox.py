@@ -1,19 +1,27 @@
-# -*- coding: utf-8 -*-
+"""Toolbox containing various helpers."""
 
-"""Toolbox containing various helpers.
-"""
-
-import re
 import logging
-import sys, os
-import json
+import os
 import platform
+import re
 import ssl
 
 from urllib.request import urlopen
-from urllib.error import URLError, HTTPError
 
 import tmTable
+
+__all__ = [
+    'getenv',
+    'getXsdDir',
+    'query',
+    'natural_sort_key',
+    'safe_str',
+    'listextent',
+    'listcompress',
+    'CutSpecificationPool',
+    'CutSpecification',
+    'DownloadHelper'
+]
 
 # -----------------------------------------------------------------------------
 #  Low level helper functions
@@ -23,7 +31,7 @@ def getenv(name):
     """Get environment variable. Raises a RuntimeError exception if variable not set."""
     value = os.getenv(name)
     if value is None:
-        raise RuntimeError("`{name}' environment not set".format(**locals()))
+        raise RuntimeError(f"`{name}' environment not set")
     return value
 
 def getXsdDir():
@@ -67,7 +75,7 @@ def listextent(values):
 
 def listcompress(values):
     """Returns compressed ranges for sortel list."""
-    ranges=[]
+    ranges = []
     for value in values:
         if not ranges: ranges.append([value])
         elif value - ranges[-1][-1] > 1:
@@ -80,7 +88,7 @@ def listcompress(values):
 #  Cut settings class
 # -----------------------------------------------------------------------------
 
-class CutSpecificationPool(object):
+class CutSpecificationPool:
     """Cut specification pool."""
     def __init__(self, *args):
         self.specs = args
@@ -101,7 +109,7 @@ class CutSpecificationPool(object):
             results = list(filter(lambda spec: hasattr(spec, key) and getattr(spec, key) == value, results))
         return results
 
-class CutSpecification(object):
+class CutSpecification:
     """Cut specific settings.
     name               full cut name (eg. "MU-QLTY_OPEN")
     object             cut object (eg. "MU") or function type (eg. "dist")
@@ -152,7 +160,7 @@ class CutSpecification(object):
 #  Remote file downloader
 # -----------------------------------------------------------------------------
 
-class DownloadHelper(object):
+class DownloadHelper:
     """Simple download helper class, utilized to fetch remote XML files."""
 
     def __init__(self):
@@ -167,27 +175,13 @@ class DownloadHelper(object):
         if platform.system() == 'Darwin':
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
-            ctx.verify_mode =ssl.CERT_NONE
+            ctx.verify_mode = ssl.CERT_NONE
             kwargs['context'] = ctx
         # Open remote URL
         self.url = urlopen(url, **kwargs)
         # Get byte size of remote content, either integer string or empty if not available.
         self.contentLength = int(self.url.info().get('Content-Length', 0)) or 0
         self.charset = self.url.info().get('charset', 'utf-8')
-
-    def handleSSLVerificationError(self, e):
-        """Workaround for MacOS SSL verification bug (affects python from homebrew and macport).
-        Returns a SSL context on OS X and MacOS in case of an SSL verification error.
-        """
-        if "[SSL: CERTIFICATE_VERIFY_FAILED]" in e.reason:
-            if platform.system() == 'Darwin':
-                logging.warning("SSL verification failed for url: %s", url)
-                logging.warning("This is a known bug on OS X and MacOS.")
-                ctx = ssl.create_default_context()
-                ctx.check_hostname = False
-                ctx.verify_mode =ssl.CERT_NONE
-                return ctx
-        raise
 
     def get(self, fp, callback=None):
         """Use callback to update status while doenloading or return False to stop.

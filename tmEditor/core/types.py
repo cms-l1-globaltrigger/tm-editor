@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
-"""This module contains type tuples and mappings derived from tmGrammar.
-"""
+"""This module contains type tuples and mappings derived from tmGrammar."""
 
 import tmGrammar
 

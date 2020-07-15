@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Code editor widget derived from:
 http://doc.qt.io/qt-4.8/qt-widgets-codeeditor-example.html
 
@@ -8,11 +6,11 @@ http://stackoverflow.com/questions/6571035/qplaintextedit-change-shiftreturn-beh
 http://www.jjoe64.com/2011/08/qplaintextedit-change-shiftreturn.html
 """
 
+import string
+
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
-
-import string
 
 __all__ = ['CodeEditor', ]
 
@@ -23,11 +21,11 @@ __all__ = ['CodeEditor', ]
 class CodeEditor(QtWidgets.QPlainTextEdit):
     """Source code editor widget."""
 
-    def __init__(self, parent = None):
-        super(CodeEditor, self).__init__(parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.lineNumberArea = LineNumberArea(self)
-        self.blockCountChanged[int].connect(self.updateLineNumberAreaWidth)
-        self.updateRequest[QtCore.QRect, int].connect(self.updateLineNumberArea)
+        self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
+        self.updateRequest.connect(self.updateLineNumberArea)
         self.cursorPositionChanged.connect(self.highlightCurrentLine)
         self.updateLineNumberAreaWidth()
         self.highlightCurrentLine()
@@ -37,7 +35,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.setFont(font)
         # self.document().setDocumentMargin(0)
 
-    def lineNumberAreaPaintEvent(self, event):
+    def lineNumberAreaPaintEvent(self, event: QtGui.QPaintEvent):
         painter = QtGui.QPainter(self.lineNumberArea)
         painter.fillRect(event.rect(), QtCore.Qt.lightGray)
         block = self.firstVisibleBlock()
@@ -65,10 +63,10 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             maximum /= 10
             digits += 1
         space = 8 + max([self.fontMetrics().width(c) for c in string.digits]) * digits
-        return space;
+        return space
 
-    def resizeEvent(self, event):
-        super(CodeEditor, self).resizeEvent(event)
+    def resizeEvent(self, event: QtGui.QResizeEvent):
+        super().resizeEvent(event)
         cr = self.contentsRect()
         self.lineNumberArea.setGeometry(QtCore.QRect(cr.left(), cr.top(), self.lineNumberAreaWidth(), cr.height()))
 
@@ -87,7 +85,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             extraSelections.append(selection)
         self.setExtraSelections(extraSelections)
 
-    def updateLineNumberArea(self, rect, dy):
+    def updateLineNumberArea(self, rect: QtCore.QRect, dy: int):
         if dy:
             self.lineNumberArea.scroll(0, dy)
         else:
@@ -95,7 +93,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         if rect.contains(self.viewport().rect()):
             self.updateLineNumberAreaWidth()
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event: QtGui.QKeyEvent):
         """Bugfix, disables SHIFT+RETURN misbehaviour."""
         if (event.key() == QtCore.Qt.Key_Enter or event.key() == 16777220) and \
            ((event.modifiers() & QtCore.Qt.ShiftModifier) == QtCore.Qt.ShiftModifier):
@@ -105,7 +103,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                 event.type(), event.key(),
                 event.modifiers() & QtCore.Qt.MetaModifier & QtCore.Qt.KeypadModifier,
                 event.text(), event.isAutoRepeat(), event.count())
-        super(CodeEditor, self).keyPressEvent(event)
+        super().keyPressEvent(event)
 
 # ------------------------------------------------------------------------------
 #  Line number area, helper class
@@ -115,22 +113,11 @@ class LineNumberArea(QtWidgets.QWidget):
     """Line number widget for code editor."""
 
     def __init__(self, editor):
-        super(LineNumberArea, self).__init__(editor)
+        super().__init__(editor)
         self.codeEditor = editor
 
     def sizeHint(self):
         return QtCore.QSize(self.codeEditor.lineNumberAreaWidth(), 0)
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QtGui.QPaintEvent):
         self.codeEditor.lineNumberAreaPaintEvent(event)
-
-# ------------------------------------------------------------------------------
-#  Unit test
-# ------------------------------------------------------------------------------
-
-if __name__ == '__main__':
-    import sys, os
-    app = QtWidgets.QApplication(sys.argv)
-    editor = CodeEditor()
-    editor.show();
-    sys.exit(app.exec_())

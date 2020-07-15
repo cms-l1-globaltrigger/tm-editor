@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
-"""Various specialized string formatting functions.
-"""
+"""Various specialized string formatting functions."""
 
 from .toolbox import listcompress
 from .Settings import CutSpecs
-from .AlgorithmFormatter import AlgorithmFormatter
 from .types import FunctionCutTypes
 
 import tmGrammar
@@ -110,14 +106,14 @@ def fThreshold(value, suffix=" GeV"):
     '2.5 GeV'
     """
     value = format(value).replace('p', '.') # Replace 'p' by comma.
-    return "{0:.1f}{1}".format(float(value), suffix)
+    return "{:.1f}{}".format(float(value), suffix)
 
 def fCounts(value, suffix=" counts"):
     """Retruns formatted object requirement count.
     >>> fCounts("42")
     '42 counts'
     """
-    return "{0:.0f} counts".format(float(value), suffix)
+    return "{:.0f}{}".format(float(value), suffix)
 
 def fComparison(value):
     """Retruns formatted thresold comparisons signs.

@@ -1,23 +1,17 @@
-# -*- coding: utf-8 -*-
+"""XML encoder."""
+
+import functools
+import logging
+import os
 
 import tmTable
-import tmGrammar
 
 from tmEditor.core import toolbox
 
 from .toolbox import safe_str
 from .TableHelper import TableHelper
 from .Queue import Queue
-from .Settings import MaxAlgorithms
 from .AlgorithmFormatter import AlgorithmFormatter
-from .AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
-
-from distutils.version import StrictVersion
-
-import functools
-import logging
-import uuid
-import sys, os
 
 # -----------------------------------------------------------------------------
 #  Keys
@@ -98,12 +92,12 @@ def chdir(directory):
 class XmlEncoderError(Exception):
     """Exeption for XML encoder errors."""
     def __init__(self, message):
-        super(XmlEncoderError, self).__init__(message)
+        super().__init__(message)
 
 class XmlEncoderQueue(Queue):
 
     def __init__(self, menu, filename):
-        super(XmlEncoderQueue, self).__init__()
+        super().__init__()
         self.menu = menu
         self.filename = os.path.abspath(filename)
         self.add_callback(self.run_prepare, "preparing writing to file")

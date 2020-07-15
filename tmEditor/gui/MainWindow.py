@@ -1,15 +1,16 @@
-"""Main window class holding a MDI area.
-"""
+"""Main window class holding a MDI area."""
 
-import random
 import tempfile
 import webbrowser
 import logging
-import sys, os, re
+import os
+import re
 
 from urllib.error import HTTPError, URLError
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from ..core.formatter import fFileSize
 from ..core.AlgorithmSyntaxValidator import AlgorithmSyntaxError
@@ -43,7 +44,7 @@ Returned groups are protocol and path.
 class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
+        super().__init__(parent)
         # Setup window.
         self.setWindowIcon(QtGui.QIcon(":icons/tm-editor.svg"))
         self.setWindowTitle(self.tr("L1-Trigger Menu Editor"))
@@ -273,8 +274,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     document = Document(fp.name, self)
                 except (RuntimeError, OSError) as e:
                     logging.error("Failed to open XML menu: %s", e)
-                    QtWidgets.QMessageBox.critical(self,
-                        self.tr("Failed to open XML menu"), format(e),
+                    QtWidgets.QMessageBox.critical(
+                        self,
+                        self.tr("Failed to open XML menu"),
+                        format(e),
                     )
                     return
                 else:
@@ -284,7 +287,8 @@ class MainWindow(QtWidgets.QMainWindow):
         except HTTPError as e:
             dialog.close()
             logging.error("Failed to download remote XML menu %s, %s", url, format(e))
-            QtWidgets.QMessageBox.critical(self,
+            QtWidgets.QMessageBox.critical(
+                self,
                 self.tr("Failed to download remote XML menu"),
                 self.tr("HTTP error, failed to download from {0}, {1}").format(url, format(e))
             )
@@ -292,7 +296,8 @@ class MainWindow(QtWidgets.QMainWindow):
         except URLError as e:
             dialog.close()
             logging.error("Failed to download remote XML menu %s, %s", url, format(e))
-            QtWidgets.QMessageBox.critical(self,
+            QtWidgets.QMessageBox.critical(
+                self,
                 self.tr("Failed to download remote XML menu"),
                 self.tr("URL error, failed to download from {0}, {1}").format(url, format(e))
             )
@@ -318,13 +323,18 @@ class MainWindow(QtWidgets.QMainWindow):
                     document = Document(filename, self)
                 except Exception as e:
                     logging.error("Failed to load XML menu: %s", e)
-                    QtWidgets.QMessageBox.critical(self,
-                        self.tr("Failed to load XML menu"), format(e))
+                    QtWidgets.QMessageBox.critical(
+                        self,
+                        self.tr("Failed to load XML menu"),
+                        format(e)
+                    )
                     raise
         except (RuntimeError, OSError) as e:
             logging.error("Failed to open XML menu: %s", e)
-            QtWidgets.QMessageBox.critical(self,
-                self.tr("Failed to open XML menu"), format(e),
+            QtWidgets.QMessageBox.critical(
+                self,
+                self.tr("Failed to open XML menu"),
+                format(e)
             )
         else:
             index = self.mdiArea.addDocument(document)
@@ -338,7 +348,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.mdiArea.currentDocument():
             path = os.path.dirname(self.mdiArea.currentDocument().filename())
         filenames, filter_ = QtWidgets.QFileDialog.getOpenFileNames(
-            self, self.tr("Open files..."), path,
+            self,
+            self.tr("Open files..."),
+            path,
             self.tr("L1-Trigger Menus (*{0})").format(XmlFileExtension)
         )
         for filename in filenames:
@@ -367,7 +379,9 @@ class MainWindow(QtWidgets.QMainWindow):
         path = os.getcwd() # Default is user home dir on desktop environments.
         if self.mdiArea.currentDocument():
             path = os.path.dirname(self.mdiArea.currentDocument().filename())
-            filenameAndFilter = QtWidgets.QFileDialog.getOpenFileName(self, self.tr("Import file..."), path,
+            filenameAndFilter = QtWidgets.QFileDialog.getOpenFileName(
+                self,
+                self.tr("Import file..."), path,
                 self.tr("L1-Trigger Menus (*{0})").format(XmlFileExtension)
             )
             filename = filenameAndFilter[0]
@@ -375,10 +389,18 @@ class MainWindow(QtWidgets.QMainWindow):
                 try:
                     dialog = ImportDialog(filename, self.mdiArea.currentDocument().menu(), self)
                 except AlgorithmSyntaxError as e:
-                    QtWidgets.QMessageBox.critical(self, self.tr("Import error"), format(e))
+                    QtWidgets.QMessageBox.critical(
+                        self,
+                        self.tr("Import error"),
+                        format(e)
+                    )
                     return
                 except (XmlDecoderError, RuntimeError, ValueError) as e:
-                    QtWidgets.QMessageBox.critical(self, self.tr("Import error"), format(e))
+                    QtWidgets.QMessageBox.critical(
+                        self,
+                        self.tr("Import error"),
+                        format(e)
+                    )
                     return
                 dialog.setModal(True)
                 dialog.exec_()
@@ -390,7 +412,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     document.importCuts(dialog.cuts)
                     document.importAlgorithms(dialog.algorithms)
                 except (RuntimeError, ValueError) as e:
-                    QtWidgets.QMessageBox.critical(self, self.tr("Import error"), format(e))
+                    QtWidgets.QMessageBox.critical(
+                        self,
+                        self.tr("Import error"),
+                        format(e)
+                    )
 
     def onSave(self):
         document = self.mdiArea.currentDocument()
@@ -398,14 +424,19 @@ class MainWindow(QtWidgets.QMainWindow):
             document.saveMenu()
             self.mdiArea.setTabText(self.mdiArea.currentIndex(), document.name())
         except (XmlEncoderError, RuntimeError, ValueError, IOError) as e:
-            QtWidgets.QMessageBox.critical(self,
-                self.tr("Failed to write XML menu"), format(e))
+            QtWidgets.QMessageBox.critical(
+                self,
+                self.tr("Failed to write XML menu"),
+                format(e)
+            )
 
     def onSaveAs(self):
         path = self.mdiArea.currentDocument().filename()
         if not path.endswith(XmlFileExtension):
             path = os.path.join(QtCore.QDir.homePath(), ''.join((os.path.basename(path), XmlFileExtension)))
-        filename, filter_ = QtWidgets.QFileDialog.getSaveFileName(self, self.tr("Save as..."), path,
+        filename, filter_ = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            self.tr("Save as..."), path,
             self.tr("L1-Trigger Menus (*{0})").format(XmlFileExtension)
         )
         if filename:
@@ -418,8 +449,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.mdiArea.setTabText(self.mdiArea.currentIndex(), document.name())
                 self.insertRecentFile(os.path.realpath(document.filename()))
             except (XmlEncoderError, RuntimeError, ValueError, IOError) as e:
-                QtWidgets.QMessageBox.critical(self,
-                    self.tr("Failed to write XML menu"), format(e))
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    self.tr("Failed to write XML menu"),
+                    format(e)
+                )
         self.syncActions()
         self.updateRecentFilesMenu()
 

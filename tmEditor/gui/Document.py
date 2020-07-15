@@ -1,20 +1,16 @@
-"""Document widget.
-"""
+"""Document widget."""
 
-import math
 import logging
 import copy
-import sys, os
+import os
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
-# Trigger menu modules
-import tmGrammar
-
-from tmEditor.core import toolbox, Settings
+from tmEditor.core import Settings
 from tmEditor.core.Settings import MaxAlgorithms
 from tmEditor.core import Menu
-from tmEditor.core.Menu import Algorithm, Cut, Object, External, toObject
+from tmEditor.core.Algorithm import Algorithm, Cut, toObject
 from tmEditor.core import XmlDecoder, XmlEncoder
 from tmEditor.core.XmlEncoder import XmlEncoderError
 from tmEditor.core.XmlDecoder import XmlDecoderError
@@ -30,20 +26,9 @@ from tmEditor.gui.AlgorithmSelectIndexDialog import AlgorithmSelectIndexDialog
 from tmEditor.gui.BottomWidget import BottomWidget
 
 # Common widgets
-from tmEditor.gui.CommonWidgets import IconLabel
-from tmEditor.gui.CommonWidgets import SelectableLabel
 from tmEditor.gui.CommonWidgets import TextFilterWidget
-from tmEditor.gui.CommonWidgets import ReadOnlyLineEdit
 from tmEditor.gui.CommonWidgets import RestrictedLineEdit
-from tmEditor.gui.CommonWidgets import EtaCutChart, PhiCutChart
 from tmEditor.gui.CommonWidgets import createIcon
-
-# Formatting
-from tmEditor.core.formatter import fCutValue
-from tmEditor.core.formatter import fHex
-from tmEditor.core.formatter import fThreshold
-from tmEditor.core.formatter import fComparison
-from tmEditor.core.formatter import fBxOffset
 
 __all__ = ['Document', ]
 
@@ -94,7 +79,7 @@ class BaseDocument(QtWidgets.QWidget):
     """This signal is emitted whenever the content of the document changes."""
 
     def __init__(self, filename, parent=None):
-        super(BaseDocument, self).__init__(parent)
+        super().__init__(parent)
         self.setFilename(filename)
         self.setModified(False)
 
@@ -140,7 +125,7 @@ class Document(BaseDocument):
     """
 
     def __init__(self, filename, parent=None):
-        super(Document, self).__init__(filename, parent)
+        super().__init__(filename, parent)
         # Attributes
         self.loadMenu(filename)
         # Layout
@@ -238,7 +223,7 @@ class Document(BaseDocument):
         self.scalesTypePages = {}
         for scale in self.menu().scales.bins.keys():
             model = BinsModel(self.menu(), scale, self)
-            tableView = self.newProxyTableView("{scale}TableView".format(**locals()), model)
+            tableView = self.newProxyTableView(f"{scale}TableView", model)
             self.scalesTypePages[scale] = self.addPage(fScale(scale), tableView, self.scalesPage)
 
     def newProxyTableView(self, name, model, proxyclass=QtCore.QSortFilterProxyModel):
@@ -307,23 +292,23 @@ class Document(BaseDocument):
             msgBox = QtWidgets.QMessageBox(self)
             msgBox.setIcon(QtWidgets.QMessageBox.Information)
             msgBox.setWindowTitle(self.tr("Migration report"))
-            msgBox.setText(self.tr("The loaded XML document has been migrated to the most recent grammar <strong>version {0}</strong>".format(Menu.GrammarVersion)))
+            msgBox.setText(self.tr(f"The loaded XML document has been migrated to the most recent grammar <strong>version {Menu.GrammarVersion}</strong>"))
             messages = [
-                "in file '{filename}'".format(**locals())
+                f"in file '{filename}'"
             ]
             for migration in queue.applied_mirgrations:
                 if isinstance(migration.subject, Cut):
                     if migration.param == 'object':
-                        message = "in cut '{migration.subject.name}':\n" \
-                                  "  in attribute '{migration.param}': removed obsolete entry '{migration.before}'".format(**locals())
+                        message = f"in cut '{migration.subject.name}':\n" \
+                                  f"  in attribute '{migration.param}': removed obsolete entry '{migration.before}'"
                         messages.append(message)
                     else:
-                        message = "in cut '{migration.subject.name}':\n" \
-                                  "  in attribute '{migration.param}': '{migration.before}' => '{migration.after}'".format(**locals())
+                        message = f"in cut '{migration.subject.name}':\n" \
+                                  f"  in attribute '{migration.param}': '{migration.before}' => '{migration.after}'"
                         messages.append(message)
                 elif isinstance(migration.subject, Algorithm):
-                    message = "in algorithm '{migration.subject.name}':\n  " \
-                              "  in attribute '{migration.param}': '{migration.before}' => '{migration.after}'".format(**locals())
+                    message = f"in algorithm '{migration.subject.name}':\n  " \
+                              f"  in attribute '{migration.param}': '{migration.before}' => '{migration.after}'"
                     messages.append(message)
             msgBox.setDetailedText("\n\n".join(messages))
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -336,12 +321,14 @@ class Document(BaseDocument):
         # Warn before loosing cuts
         orphans = self._menu.orphanedCuts()
         if len(orphans) > 1:
-            QtWidgets.QMessageBox.information(self,
+            QtWidgets.QMessageBox.information(
+                self,
                 self.tr("Found orphaned cuts"),
                 self.tr("There are {0} orphaned cuts (<em>{1}</em>, ...) that will be lost as they can't be saved to the XML file!").format(len(orphans), orphans[0])
             )
         elif len(orphans):
-            QtWidgets.QMessageBox.information(self,
+            QtWidgets.QMessageBox.information(
+                self,
                 self.tr("Found orphaned cut"),
                 self.tr("There is one orphaned cut (<em>{0}</em>) that will be lost as it can't be saved to the XML file!").format(orphans[0])
             )
@@ -520,21 +507,23 @@ class Document(BaseDocument):
         for algorithm in algorithms:
             for cut in algorithm.cuts():
                 if not self.menu().cutByName(cut):
-                    raise RuntimeError(self.tr("Missing cut {}, unable to to import algorithm {}").format(cut, algorithm.name))
+                    raise RuntimeError(self.tr(f"Missing cut {cut}, unable to to import algorithm {algorithm.name}"))
             import_index = 0
             original_name = algorithm.name
             while self.menu().algorithmByName(algorithm.name):
-                name = "{original_name}_import{import_index}".format(**locals())
+                name = f"{original_name}_import{import_index}"
                 algorithm.name = name
                 import_index += 1
             if import_index:
-                QtWidgets.QMessageBox.information(self,
+                QtWidgets.QMessageBox.information(
+                    self,
                     self.tr("Renamed algorithm"),
                     self.tr("Renamed algorithm <em>{}</em> to <em>{}</em> as the name is already used.").format(original_name, algorithm.name)
                 )
             if self.menu().algorithmByIndex(algorithm.index):
                 index = self.getUnusedAlgorithmIndices()[0]
-                QtWidgets.QMessageBox.information(self,
+                QtWidgets.QMessageBox.information(
+                    self,
                     self.tr("Relocating algorithm"),
                     self.tr("Moving algorithm <em>{}</em> from already used index {} to free index {}.").format(algorithm.name, algorithm.index, index)
                 )
@@ -692,7 +681,7 @@ class Document(BaseDocument):
         dialog.editor.setModified(False)
         dialog.exec_()
         # HACK
-        updateModel( self.cutsPage.top.model(), self)
+        updateModel(self.cutsPage.top.model(), self)
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         algorithm.expression = dialog.expression()
@@ -759,9 +748,12 @@ class Document(BaseDocument):
                 row = rows[0]
                 algorithm = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
                 if confirm:
-                    result = QtWidgets.QMessageBox.question(self, self.tr("Remove algorithm"),
+                    result = QtWidgets.QMessageBox.question(
+                        self,
+                        self.tr("Remove algorithm"),
                         self.tr("Do you want to remove algorithm <strong>{0}, {1}</strong> from the menu?").format(algorithm.name, algorithm.index),
-                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.YesToAll | QtWidgets.QMessageBox.Abort if len(rows) > 1 else QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Abort)
+                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.YesToAll | QtWidgets.QMessageBox.Abort if len(rows) > 1 else QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Abort
+                    )
                     if result == QtWidgets.QMessageBox.Abort:
                         break
                     elif result == QtWidgets.QMessageBox.YesToAll:
@@ -787,14 +779,19 @@ class Document(BaseDocument):
                 cut = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
                 for algorithm in self.menu().algorithms:
                     if cut.name in algorithm.cuts():
-                        QtWidgets.QMessageBox.warning(self, self.tr("Cut is used"),
+                        QtWidgets.QMessageBox.warning(
+                            self,
+                            self.tr("Cut is used"),
                             self.tr("Cut {0} is used by algorithm {1} an can not be removed. Remove the corresponding algorithm first.").format(cut.name, algorithm.name)
                         )
                         return
                 if confirm:
-                    result = QtWidgets.QMessageBox.question(self, self.tr("Remove cut"),
+                    result = QtWidgets.QMessageBox.question(
+                        self,
+                        self.tr("Remove cut"),
                         self.tr("Do you want to remove cut <strong>{0}</strong> from the menu?").format(cut.name),
-                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.YesToAll | QtWidgets.QMessageBox.Abort if len(rows) > 1 else QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Abort)
+                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.YesToAll | QtWidgets.QMessageBox.Abort if len(rows) > 1 else QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Abort
+                    )
                     if result == QtWidgets.QMessageBox.Abort:
                         break
                     elif result == QtWidgets.QMessageBox.YesToAll:
@@ -843,7 +840,7 @@ class SlimSplitter(QtWidgets.QSplitter):
     """Slim splitter with a decent narrow splitter handle."""
 
     def __init__(self, orientation, parent=None):
-        super(SlimSplitter, self).__init__(orientation, parent)
+        super().__init__(orientation, parent)
         self.setHandleWidth(1)
         self.setContentsMargins(0, 0, 0, 0)
 
@@ -854,7 +851,7 @@ class SlimSplitterHandle(QtWidgets.QSplitterHandle):
     """Custom splitter handle for the slim splitter."""
 
     def __init__(self, orientation, parent=None):
-        super(SlimSplitterHandle, self).__init__(orientation, parent)
+        super().__init__(orientation, parent)
 
     def paintEvent(self, event):
         pass
@@ -867,7 +864,7 @@ class PageItem(QtWidgets.QTreeWidgetItem):
     """Custom QTreeWidgetItem holding references to top and bottom widgets."""
 
     def __init__(self, name, top=None, bottom=None, parent=None):
-        super(PageItem, self).__init__(parent, [name])
+        super().__init__(parent, [name])
         self.name = name
         self.top = top
         self.bottom = bottom
@@ -888,7 +885,7 @@ class MenuWidget(QtWidgets.QScrollArea):
     modified = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
-        super(MenuWidget, self).__init__(parent)
+        super().__init__(parent)
         self.nameLineEdit = RestrictedLineEdit(self)
         self.nameLineEdit.setPrefix("L1Menu_")
         self.nameLineEdit.setRegexPattern("L1Menu_[a-zA-Z0-9_]+")

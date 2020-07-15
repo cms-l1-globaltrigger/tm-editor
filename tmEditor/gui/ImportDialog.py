@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Import XML dialog.
 
 This dialog provides an dialog to import algorithms from another XML file.
@@ -11,9 +9,12 @@ Example usage:
 >>> print dialog.cuts
 """
 
+import logging
+
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
+
 from tmEditor.core import XmlDecoder
-from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxError
-from tmEditor.core.Settings import MaxAlgorithms
 
 from tmEditor.gui.models import AlgorithmsModel
 from tmEditor.gui.Document import TableView
@@ -21,10 +22,6 @@ from tmEditor.gui.Document import TableView
 # Common widgets
 from tmEditor.gui.CommonWidgets import IconLabel, createIcon
 from tmEditor.gui.CommonWidgets import TextFilterWidget
-
-from PyQt5 import QtCore, QtWidgets
-
-import logging
 
 __all__ = ['ImportDialog', ]
 
@@ -42,7 +39,7 @@ class ImportDialog(QtWidgets.QDialog):
     """Dialog providing importing of algorithms from another XML file."""
 
     def __init__(self, filename, menu, parent=None):
-        super(ImportDialog, self).__init__(parent)
+        super().__init__(parent)
         # Algorithm selection
         self.algorithms = []
         self.cuts = []
@@ -126,7 +123,8 @@ class ImportDialog(QtWidgets.QDialog):
         # Perform more checks
         if scaleSet != baseScaleSet:
             logging.warning("imported scale set \"%s\" does not match with current scale set \"%s\"", scaleSet, baseScaleSet)
-            QtWidgets.QMessageBox.warning(self,
+            QtWidgets.QMessageBox.warning(
+                self,
                 self.tr("Different scale sets"),
                 self.tr("Imported scale set <em>{0}</em> does not match with current scale set <em>{1}</em>, but might be compatible.").format(scaleSet, baseScaleSet),
             )
@@ -136,7 +134,8 @@ class ImportDialog(QtWidgets.QDialog):
         selectedIndexes = self.tableView.selectedIndexes()
         # Make sure something is selected.
         if not selectedIndexes:
-            QtWidgets.QMessageBox.warning(self,
+            QtWidgets.QMessageBox.warning(
+                self,
                 self.tr("Empty selection"),
                 self.tr("No algorithms are selected to import."),
             )

@@ -1,12 +1,13 @@
-"""About dialog.
-"""
-import sys, os
+"""About dialog."""
+
+import os
 import markdown
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from tmEditor import __version__
-from tmEditor.core import toolbox
 from tmEditor import tmeditor_rc
 
 from tmGrammar import __version__ as utm_version
@@ -26,7 +27,7 @@ class AboutDialog(QtWidgets.QDialog):
 
     def __init__(self, title, parent=None):
         """Param title is the applciation name."""
-        super(AboutDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setWindowTitle(self.tr("About {}").format(title))
         self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
         self.setMinimumSize(420, 320)
@@ -40,7 +41,7 @@ class AboutDialog(QtWidgets.QDialog):
         self.changelogTextEdit.setReadOnly(True)
         self.authorsTextEdit = QtWidgets.QTextEdit(self)
         self.authorsTextEdit.setReadOnly(True)
-        self.thanksTextEdit  = QtWidgets.QTextEdit(self)
+        self.thanksTextEdit = QtWidgets.QTextEdit(self)
         self.thanksTextEdit.setReadOnly(True)
         self.tabs = QtWidgets.QTabWidget(self)
         self.tabs.addTab(self.aboutTextEdit, self.tr("&About"))
@@ -60,8 +61,8 @@ class AboutDialog(QtWidgets.QDialog):
         # Initialize
         self.titleLabel.setText('<span style="font:bold 16px">{}</span><br />{}'.format(
             title,
-            self.tr("Editor for CERN CMS Level-1 Trigger Menus."))
-        )
+            self.tr("Editor for CERN CMS Level-1 Trigger Menus.")
+        ))
         about = markdown.markdown("{}\n\nVersion **{}** (utm version {})".format(title, __version__, utm_version))
         self.aboutTextEdit.setText(about)
         changelog = markdown.markdown(self._readfile(":changelog"))
@@ -69,7 +70,7 @@ class AboutDialog(QtWidgets.QDialog):
         self.authorsTextEdit.setText(self._userlist(L1ApplicationAuthors))
         self.thanksTextEdit.setText(self._userlist(L1ApplicationContributors))
 
-    def _userlist(self, userlist, separator = "<br />"):
+    def _userlist(self, userlist, separator="<br />"):
         """Return HTML containing full name and email address of a user list tuple."""
         return separator.join(["{} &lt;{}&gt;".format(name, email) for name, email in userlist])
 

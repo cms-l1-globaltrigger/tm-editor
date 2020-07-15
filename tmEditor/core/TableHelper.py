@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Helper class for tmTable module."""
 
 import tmTable

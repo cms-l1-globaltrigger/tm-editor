@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""Scales proxy model."""
 
 from PyQt5 import QtCore
 
@@ -16,8 +16,8 @@ class ScalesModelProxy(QtCore.QSortFilterProxyModel):
     StepColumn = 4
     BitsColumn = 5
 
-    def __init__(self, parent = None):
-        super(ScalesModelProxy, self).__init__(parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
     def lessThan(self, left, right):
         """Custom range sorting."""
@@ -26,7 +26,7 @@ class ScalesModelProxy(QtCore.QSortFilterProxyModel):
                 return self.__toFloat(left) < self.__toFloat(right)
             except ValueError:
                 pass
-        return super(ScalesModelProxy, self).lessThan(left, right)
+        return super().lessThan(left, right)
 
     def __toFloat(self, index):
         return float(self.sourceModel().data(index, QtCore.Qt.DisplayRole))

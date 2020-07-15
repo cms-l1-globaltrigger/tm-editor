@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from .AlgorithmsModel import AlgorithmsModel
 from .CutsModel import CutsModel
 from .ScalesModel import ScalesModel

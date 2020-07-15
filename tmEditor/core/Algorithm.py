@@ -1,9 +1,6 @@
-"""Algorithm container.
-
-"""
+"""Algorithm container."""
 
 import re, math
-import sys, os
 import logging
 
 import tmGrammar
@@ -85,7 +82,7 @@ def toObject(token):
 def toExternal(token):
     """Returns an external's dict."""
     # Test if external signal ends with bunch crossign offset.
-    result = re.match('.*(\+\d+|\-\d+)$', token)
+    result = re.match(r'.*(\+\d+|\-\d+)$', token)
     bx_offset = result.group(1) if result else '+0'
     return External(
         name=token,
@@ -175,7 +172,7 @@ def calculateTwoBodyPtRange():
 #  Algorithm's container class.
 # ------------------------------------------------------------------------------
 
-class Algorithm(object):
+class Algorithm:
 
     RegExAlgorithmName = re.compile(r'^(L1_)([a-zA-Z\d_]+)$')
 
@@ -247,12 +244,12 @@ class Algorithm(object):
         """Optional argument validate is a function to validate the algorithm expression."""
 
         if self.index >= MaxAlgorithms:
-            message = "algorithm index out of range: {self.index} : {self.name}".format(**locals())
+            message = f"algorithm index out of range: {self.index} : {self.name}"
             logging.error(message)
             raise ValueError(message)
 
         if not self.RegExAlgorithmName.match(self.name):
-            message = "invalid algorithm name: {self.index} : {self.name}".format(**locals())
+            message = f"invalid algorithm name: {self.index} : {self.name}"
             logging.error(message)
             raise ValueError(message)
 
@@ -260,7 +257,7 @@ class Algorithm(object):
 #  Cut's container class.
 # ------------------------------------------------------------------------------
 
-class Cut(object):
+class Cut:
 
     RegExCutName = re.compile(r'^([A-Z\-]+_)([a-zA-Z\d_]+)$')
 
@@ -299,10 +296,11 @@ class Cut(object):
     def scale(self, scale):
         if self.typename in scale.bins.keys():
             return scale.bins[self.typename]
+        return None
 
     def validate(self):
         if not self.RegExCutName.match(self.name):
-            message = "invalid cut name: {self.name}".format(**locals())
+            message = f"invalid cut name: {self.name}"
             logging.error(message)
             raise ValueError(message)
 
@@ -310,7 +308,7 @@ class Cut(object):
 #  Object's container class.
 # ------------------------------------------------------------------------------
 
-class Object(object):
+class Object:
 
     def __init__(self, name, type, threshold, comparison_operator=None, bx_offset=None, comment=None):
         self.name = name
@@ -356,7 +354,7 @@ class Object(object):
 #  External's container class.
 # ------------------------------------------------------------------------------
 
-class External(object):
+class External:
 
     RegExSignalName = re.compile(r"^(EXT_)([a-zA-Z\d\._]+)([+-]\d+)?$")
 
@@ -391,6 +389,6 @@ class External(object):
 
     def validate(self):
         if not self.RegExSignalName.match(self.name):
-            message = "invalid external signal name: {self.name}".format(**locals())
+            message = f"invalid external signal name: {self.name}"
             logging.error(message)
             raise ValueError(message)

@@ -1,9 +1,13 @@
+"""Application main module."""
+
 import argparse
 import logging
 import signal
-import sys, os
+import sys
+import os
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
 from .gui.MainWindow import MainWindow
 from . import __version__
@@ -11,25 +15,31 @@ from . import __version__
 def parse_args():
     """Command line argument parser."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('filenames',
-        metavar = '<file>',
-        nargs = '*',
-        help = "trigger menu XML file",
+    parser.add_argument(
+        'filenames',
+        metavar='<file>',
+        nargs='*',
+        help="trigger menu XML file",
     )
-    parser.add_argument('--timeout',
-        metavar = '<sec>',
-        type = int,
-        default = 10,
-        help = "timeout for remote connections in seconds (default 10)",
+    parser.add_argument(
+        '--timeout',
+        metavar='<sec>',
+        type=int,
+        default=10,
+        help="timeout for remote connections in seconds (default 10)",
     )
-    parser.add_argument('-v', '--verbose',
-        action = 'count',
-        help = "increase output verbosity",
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        action='count',
+        help="increase output verbosity",
     )
-    parser.add_argument('-V', '--version',
-        action = 'version',
-        version = "%(prog)s {}".format(__version__),
-        help = "show the application's version",
+    parser.add_argument(
+        '-V',
+        '--version',
+        action='version',
+        version=f"%(prog)s {__version__}",
+        help="show the application's version",
     )
     return parser.parse_args()
 
