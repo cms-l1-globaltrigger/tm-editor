@@ -9,6 +9,8 @@ from tmEditor import __version__
 from tmEditor.core import toolbox
 from tmEditor import tmeditor_rc
 
+from tmGrammar import __version__ as utm_version
+
 __all__ = ['AboutDialog', ]
 
 L1ApplicationAuthors = (
@@ -60,7 +62,7 @@ class AboutDialog(QtWidgets.QDialog):
             title,
             self.tr("Editor for CERN CMS Level-1 Trigger Menus."))
         )
-        about = markdown.markdown("{}\n\nVersion **{}**".format(title, __version__))
+        about = markdown.markdown("{}\n\nVersion **{}** (utm version {})".format(title, __version__, utm_version))
         self.aboutTextEdit.setText(about)
         changelog = markdown.markdown(self._readfile(":changelog"))
         self.changelogTextEdit.setText(changelog)
