@@ -51,6 +51,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.functionComboBox.addItem(self.tr("{} (combination)").format(tmGrammar.comb), tmGrammar.comb)
         self.functionComboBox.addItem(self.tr("{} (correlation)").format(tmGrammar.dist), tmGrammar.dist)
         self.functionComboBox.addItem(self.tr("{} (invariant mass)").format(tmGrammar.mass_inv), tmGrammar.mass_inv)
+        self.functionComboBox.addItem(self.tr("{} (invariant mass of 3 particles)").format(tmGrammar.mass_inv_3), tmGrammar.mass_inv_3)
         self.functionComboBox.addItem(self.tr("{} (transverse mass)").format(tmGrammar.mass_trv), tmGrammar.mass_trv)
         self.functionComboBox.addItem(self.tr("{} (combination + overlap removal)").format(tmGrammar.comb_orm), tmGrammar.comb_orm)
         self.functionComboBox.addItem(self.tr("{} (correlation + overlap removal)").format(tmGrammar.dist_orm), tmGrammar.dist_orm)
@@ -104,7 +105,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             # Disable helpers if not needed
             if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv) and helper.index >= 2:
                 helper.setEnabled(False)
-            if self.functionType() in (tmGrammar.dist_orm, tmGrammar.mass_inv_orm) and helper.index >= 3:
+            if self.functionType() in (tmGrammar.mass_inv_3, tmGrammar.dist_orm, tmGrammar.mass_inv_orm) and helper.index >= 3:
                 helper.setEnabled(False)
             if self.functionType() == tmGrammar.comb and helper.index >= 4:
                 helper.setEnabled(False)
@@ -162,10 +163,12 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         elif functionType == tmGrammar.dist_orm:
             text.append(f'<p>Topological distance (correlation) of two object requirements with overlap removal.</p>')
         elif functionType == tmGrammar.mass_inv:
-            text.append(f'<p>Invariant mass correlation of two object requirements.</p>')
+            text.append(f'<p>Invariant mass of two object requirements.</p>')
+        elif functionType == tmGrammar.mass_inv_3:
+            text.append(f'<p>Invariant mass of three object requirements.</p>')
         elif functionType == tmGrammar.mass_inv_orm:
             text.append(f'<p>Invariant mass correlation of two object requirements with overlap removal.</p>')
-        elif functionType == tmGrammar.mass_inv:
+        elif functionType == tmGrammar.mass_trv:
             text.append(f'<p>Transverse mass correlation of two object requirements (at least on without eta component).</p>')
         elif functionType == tmGrammar.mass_inv_orm:
             text.append(f'<p>Transverse mass correlation of two object requirements (at least on without eta component) with overlap removal.</p>')
@@ -252,13 +255,22 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         # Get object requirements
         helpers = [helper for helper in self.objectHelpers if helper.isValid()]
         # Check minimum required objects
-        if len(helpers) < 2:
-            QtWidgets.QMessageBox.warning(
-                self,
-                self.tr("Invalid expression"),
-                self.tr("Function {0}{{...}} requires at least two object requirements.").format(self.functionType())
-            )
-            return
+        if self.functionType() == tmGrammar.mass_inv_3:
+            if len(helpers) < 3:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    self.tr("Invalid expression"),
+                    self.tr("Function {0}{{...}} requires at three object requirements.").format(self.functionType())
+                )
+                return
+        else:
+            if len(helpers) < 2:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    self.tr("Invalid expression"),
+                    self.tr("Function {0}{{...}} requires at least two object requirements.").format(self.functionType())
+                )
+                return
         # Validate object requirements.
         for helper in helpers:
             try:
@@ -271,7 +283,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
                 )
                 return
         # Check required cuts
-        if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv):
+        if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_inv_3, tmGrammar.mass_trv):
             if len(self.selectedCuts()) < 1:
                 QtWidgets.QMessageBox.warning(
                     self,

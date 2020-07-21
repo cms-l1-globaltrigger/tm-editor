@@ -68,6 +68,14 @@ def createVerticalSpacerItem(width=0, height=0):
 
 def calculateRange(specification, scales):
     """Returns calcualted range for linear cut."""
+    # Unconstrained pt
+    if specification.type == tmGrammar.UPT:
+        def isMuUpt(scale): # filter
+            return scale[kObject] == tmGrammar.MU and scale[kType] == tmGrammar.UPT
+        scale = list(filter(isMuUpt, scales.scales))[0]
+        minimum = float(scale[kMinimum])
+        maximum = float(scale[kMaximum])
+        return minimum, maximum
     # Delta eta
     if specification.type in (tmGrammar.DETA, tmGrammar.ORMDETA):
         def isMuEta(scale): # filter
@@ -807,11 +815,13 @@ class CutEditorDialog(QtWidgets.QDialog):
     """Cut editor dialog."""
 
     InputWidgetFactory = {
+        tmGrammar.UPT: InfiniteRangeWidget,
         tmGrammar.ETA: ScaleWidget,
         tmGrammar.PHI: ScaleWidget,
         tmGrammar.ISO: MultipleJoiceIsoWidget,
         tmGrammar.QLTY: MultipleJoiceWidget,
         tmGrammar.CHG: SingleJoiceWidget,
+        tmGrammar.IP: MultipleJoiceWidget,
         tmGrammar.SLICE: SliceWidget,
         tmGrammar.CHGCOR: SingleJoiceWidget,
         tmGrammar.DETA: RangeWidget,

@@ -12,7 +12,7 @@ setup(
     url = "http://globaltrigger.hephy.at/upgrade/tme",
     packages = find_packages(),
     install_requires=[
-        'tm-python @ git+https://github.com/cms-l1-globaltrigger/tm-python@0.7.5',
+        'tm-python @ git+https://github.com/cms-l1-globaltrigger/tm-python@0.8.0',
         'Markdown>=3.1',
         'PyQt5>=5.13.2'
     ],

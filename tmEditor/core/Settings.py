@@ -29,6 +29,14 @@ Empty = ""
 
 CutSpecs = CutSpecificationPool(
     CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.UPT),
+        object=tmGrammar.MU,
+        type=tmGrammar.UPT,
+        range_step=1.0,
+        title="Muon unconstrained pt",
+        description="Threshold for unconstrained pt."
+    ),
+    CutSpecification(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.ETA),
         object=tmGrammar.MU,
         type=tmGrammar.ETA,
@@ -93,6 +101,19 @@ CutSpecs = CutSpecificationPool(
         data={
             "positive": "positive",
             "negative": "negative"
+        }
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.IP),
+        object=tmGrammar.MU,
+        type=tmGrammar.IP,
+        title="Muon impact parameter",
+        description="Two bits for impact parameter.",
+        data={
+            "0": "impact parameter 0",
+            "1": "impact parameter 1",
+            "2": "impact parameter 2",
+            "3": "impact parameter 3"
         }
     ),
     CutSpecification(
@@ -365,12 +386,12 @@ CutSpecs = CutSpecificationPool(
         object=Empty,
         type=tmGrammar.MASS,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF],
-        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
+        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_3, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
         range_precision=1,
         range_step=0.2,
         range_unit="GeV",
         title="Invariant or Transverse mass",
-        description="Applies invariant or transverse mass restriction to combination of two objects depending on the used function.<br/><br/>" \
+        description="Applies invariant or transverse mass restriction to combination of two (or three) objects depending on the applied function.<br/><br/>" \
                     "Calculation of invariant mass:<br/><br/>" \
                     "M<sub>(inv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
                     "Calculation of transverse mass:<br/><br/>" \
