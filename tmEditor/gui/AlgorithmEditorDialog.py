@@ -321,7 +321,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         dock.setWidget(widget)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
         # Item preview text browser
-        dock = QtWidgets.QDockWidget(self.tr("Preview"), self)
+        dock = QtWidgets.QDockWidget(self.tr("Used Items"), self)
         dock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)
         dock.setWidget(self.previewTextBrowser)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)

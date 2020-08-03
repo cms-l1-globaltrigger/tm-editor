@@ -51,11 +51,11 @@ __all__ = [
 
 def richTextObjectsPreview(algorithm, parent):
     content = []
-    if algorithm.objects():
-        content.append(parent.tr("<p><strong>Used objects:</strong></p>"))
+    objects = [toObject(obj) for obj in algorithm.objects()]
+    objects = [obj for obj in objects if obj.type in ObjectTypes]
+    if objects:
+        content.append(parent.tr("<p><strong>Objects:</strong></p>"))
         content.append(parent.tr("<p>"))
-        objects = [toObject(obj) for obj in algorithm.objects()]
-        objects = [obj for obj in objects if obj.type in ObjectTypes]
         objects.sort()
         for obj in objects:
             comparison = formatter.fComparison(obj.comparison_operator)
@@ -70,11 +70,11 @@ def richTextObjectsPreview(algorithm, parent):
 
 def richTextSignalsPreview(algorithm, parent):
     content = []
-    if algorithm.objects():
-        content.append(parent.tr("<p><strong>Used objects:</strong></p>"))
+    signals = [toObject(obj) for obj in algorithm.objects()]
+    signals = [obj for obj in signals if obj.type in SignalTypes]
+    if signals:
+        content.append(parent.tr("<p><strong>Signals:</strong></p>"))
         content.append(parent.tr("<p>"))
-        signals = [toObject(obj) for obj in algorithm.objects()]
-        signals = [sig for sig in signals if sig.type in SignalTypes]
         signals.sort()
         for sig in signals:
             bxOffset = formatter.fBxOffset(sig.bx_offset)
@@ -84,10 +84,10 @@ def richTextSignalsPreview(algorithm, parent):
 
 def richTextExtSignalsPreview(algorithm, parent):
     content = []
-    if algorithm.externals():
-        content.append(parent.tr("<p><strong>Used externals:</strong></p>"))
+    externals = [toExternal(ext) for ext in algorithm.externals()]
+    if externals:
+        content.append(parent.tr("<p><strong>Externals:</strong></p>"))
         content.append(parent.tr("<p>"))
-        externals = [toExternal(ext) for ext in algorithm.externals()]
         externals.sort()
         for ext in externals:
             content.append(parent.tr("<img src=\":/icons/ext.svg\"> {0}<br/>").format(ext.name))
@@ -98,7 +98,7 @@ def richTextCutsPreview(menu, algorithm, parent):
     # List used cuts.
     content = []
     if algorithm.cuts():
-        content.append(parent.tr("<p><strong>Used cuts:</strong></p>"))
+        content.append(parent.tr("<p><strong>Cuts:</strong></p>"))
         content.append(parent.tr("<p>"))
         cuts = []
         for name in algorithm.cuts():
