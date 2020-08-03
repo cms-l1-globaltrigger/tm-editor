@@ -329,7 +329,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         format(e)
                     )
                     raise
-        except (RuntimeError, OSError) as e:
+        except (XmlDecoderError, RuntimeError, OSError) as e:
             logging.error("Failed to open XML menu: %s", e)
             QtWidgets.QMessageBox.critical(
                 self,
