@@ -314,22 +314,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
             # Else it is a local filesystem path.
             else:
-                try:
-                    # Do no re-open a document, just raise its tab.
-                    duplicate = self.mdiArea.findDocument(filename)
-                    if duplicate:
-                        self.mdiArea.setCurrentWidget(duplicate)
-                        return
-                    document = Document(filename, self)
-                except Exception as e:
-                    logging.error("Failed to load XML menu: %s", e)
-                    QtWidgets.QMessageBox.critical(
-                        self,
-                        self.tr("Failed to load XML menu"),
-                        format(e)
-                    )
-                    raise
-        except (XmlDecoderError, RuntimeError, OSError) as e:
+                # Do no re-open a document, just raise its tab.
+                duplicate = self.mdiArea.findDocument(filename)
+                if duplicate:
+                    self.mdiArea.setCurrentWidget(duplicate)
+                    return
+                document = Document(filename, self)
+        except Exception as e:
             logging.error("Failed to open XML menu: %s", e)
             QtWidgets.QMessageBox.critical(
                 self,

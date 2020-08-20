@@ -3,6 +3,7 @@
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 
+from tmEditor.core.toolbox import encode_labels
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from .AbstractTableModel import AbstractTableModel
 
@@ -20,6 +21,7 @@ class AlgorithmsModel(AbstractTableModel):
         self.addColumnSpec("Index", lambda item: item.index, int, self.AlignRight)
         self.addColumnSpec("Name", lambda item: item.name)
         self.addColumnSpec("Expression", lambda item: item.expression, AlgorithmFormatter.normalize)
+        self.addColumnSpec("Labels", lambda item: encode_labels(item.labels, pretty=True))
 
     def data(self, index, role):
         """Overloaded for experimental decoration."""

@@ -8,7 +8,7 @@ import tmTable
 
 from tmEditor.core import toolbox
 
-from .toolbox import safe_str
+from .toolbox import safe_str, encode_labels
 from .TableHelper import TableHelper
 from .Queue import Queue
 from .AlgorithmFormatter import AlgorithmFormatter
@@ -31,7 +31,7 @@ kGrammarVersion = 'grammar_version'
 kIndex = 'index'
 kIsObsolete = 'is_obsolete'
 kIsValid = 'is_valid'
-kLabel = 'label'
+kLabels = 'labels'
 kMaximum = 'maximum'
 kMinimum = 'minimum'
 kModuleId = 'module_id'
@@ -163,6 +163,7 @@ class XmlEncoderQueue(Queue):
             row[kName] = safe_str(algorithm.name, "algorithm name")
             row[kExpression] = AlgorithmFormatter.compress(algorithm.expression)
             row[kComment] = algorithm.comment
+            row[kLabels] = encode_labels(algorithm.labels)
             # Validate algorithm row
             if not tmTable.isAlgorithm(row):
                 message = "invalid algorithm ({algorithm.index}): {algorithm.name}".format(algorithm=algorithm)

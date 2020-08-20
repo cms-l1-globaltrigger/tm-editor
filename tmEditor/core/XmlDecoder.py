@@ -13,7 +13,7 @@ from tmEditor.core import Menu
 from tmEditor.core import Algorithm
 from tmEditor.core import types
 
-from .toolbox import safe_str
+from .toolbox import safe_str, decode_labels
 from .Queue import Queue
 from .TableHelper import TableHelper
 
@@ -31,7 +31,7 @@ kDescription = 'description'
 kExpression = 'expression'
 kGrammarVersion = 'grammar_version'
 kIndex = 'index'
-kLabel = 'label'
+kLabels = 'labels'
 kMaximum = 'maximum'
 kMinimum = 'minimum'
 kModuleId = 'module_id'
@@ -177,7 +177,8 @@ class XmlDecoderQueue(Queue):
             name = safe_str(row[kName], "algorithm name")
             expression = row[kExpression]
             comment = row.get(kComment, "")
-            algorithm = Algorithm.Algorithm(index, name, expression, comment)
+            labels = decode_labels(row.get(kLabels, ""))
+            algorithm = Algorithm.Algorithm(index, name, expression, comment, labels)
             # Patch outdated expressions
             result = mirgrate_mass_function(algorithm)
             if result:

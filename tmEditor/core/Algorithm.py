@@ -176,11 +176,12 @@ class Algorithm:
 
     RegExAlgorithmName = re.compile(r'^(L1_)([a-zA-Z\d_]+)$')
 
-    def __init__(self, index, name, expression, comment=None):
+    def __init__(self, index, name, expression, comment=None, labels=None):
         self.index = index
         self.name = name
         self.expression = expression
         self.comment = comment or ""
+        self.labels = labels or []
         self.modified = False
 
     def __eq__(self, item):

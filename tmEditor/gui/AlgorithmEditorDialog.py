@@ -22,6 +22,7 @@ from tmEditor.core.Algorithm import RegExObject, RegExExtSignal, RegExFunction
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 from tmEditor.core.XmlDecoder import mirgrate_mass_function # HACK
+from tmEditor.core.toolbox import encode_labels, decode_labels
 
 from tmEditor.gui.AlgorithmSyntaxHighlighter import AlgorithmSyntaxHighlighter
 from tmEditor.gui.CodeEditor import CodeEditor
@@ -198,6 +199,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         self.setName(self.tr("L1_Unnamed"))
         self.setExpression("")
         self.setComment("")
+        self.setLabels([])
         self.textEdit.textChanged.connect(self.onTextChanged)
         self.indexSpinBox.valueChanged.connect(self.onIndexChanged)
         # Call slots
@@ -331,6 +333,12 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         self.commentEdit = QtWidgets.QPlainTextEdit(self)
         dock.setWidget(self.commentEdit)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
+        # Labels text edit
+        dock = QtWidgets.QDockWidget(self.tr("Labels"), self)
+        dock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)
+        self.labelsEdit = QtWidgets.QLineEdit(self)
+        dock.setWidget(self.labelsEdit)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
 
     def index(self):
         return int(self.indexSpinBox.value())
@@ -357,6 +365,12 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
 
     def setComment(self, comment):
         self.commentEdit.setPlainText(comment)
+
+    def labels(self):
+        return decode_labels(self.labelsEdit.text())
+
+    def setLabels(self, labels):
+        self.labelsEdit.setText(encode_labels(labels, pretty=True))
 
     def isModified(self):
         return self._isModified
@@ -645,12 +659,21 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
         """Provided for convenience."""
         self.editor.setComment(comment)
 
+    def labels(self):
+        """Provided for convenience."""
+        return self.editor.labels()
+
+    def setLabels(self, comment):
+        """Provided for convenience."""
+        self.editor.setLabels(comment)
+
     def loadAlgorithm(self, algorithm):
         self.loadedAlgorithm = algorithm
         self.setIndex(algorithm.index)
         self.setName(algorithm.name)
         self.setExpression(algorithm.expression)
         self.setComment(algorithm.comment)
+        self.setLabels(algorithm.labels)
         self.editor.updateFreeIndices(int(algorithm.index)) # brrr
         self.editor.loadedIndex = int(algorithm.index)
 
@@ -659,6 +682,7 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
         algorithm.name = self.name()
         algorithm.expression = self.expression()
         algorithm.comment = self.comment()
+        algorithm.labels = self.labels()
         # Patch algorithm expression HACK
         mirgrate_mass_function(algorithm)
 
@@ -688,7 +712,7 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
                 #
             # TODO
             # Temporary limited conistency check.
-            algorithm = Algorithm(self.index(), self.name(), self.expression(), self.comment())
+            algorithm = Algorithm(self.index(), self.name(), self.expression(), self.comment(), self.labels())
             algorithm.objects()
             for name in algorithm.objects():
                 pass

@@ -18,6 +18,8 @@ __all__ = [
     'safe_str',
     'listextent',
     'listcompress',
+    'decode_labels',
+    'encode_labels',
     'CutSpecificationPool',
     'CutSpecification',
     'DownloadHelper'
@@ -83,6 +85,14 @@ def listcompress(values):
         else:
             ranges[-1].append(value)
     return [listextent(values) for values in ranges]
+
+def decode_labels(s):
+    """String to labels."""
+    return sorted({label.strip() for label in s.split(',') if label.strip()})
+
+def encode_labels(labels, pretty=False):
+    sep = ', ' if pretty else ','
+    return sep.join(sorted({label.strip() for label in labels if label.strip()}))
 
 # -----------------------------------------------------------------------------
 #  Cut settings class
