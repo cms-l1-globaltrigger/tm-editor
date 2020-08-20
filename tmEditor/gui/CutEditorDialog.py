@@ -99,6 +99,12 @@ def calculateRange(specification, scales):
     # Invariant mass
     if specification.type == tmGrammar.MASS:
         return calculateInvMassRange()
+    # Invariant mass for unconstained pt
+    if specification.type == tmGrammar.MASSUPT:
+        return calculateInvMassRange()
+    # Invariant mass/delta-R
+    if specification.type == tmGrammar.MASSDR:
+        return 0E0, 1E8
     # Two body pt
     if specification.type == tmGrammar.TBPT:
         return calculateTwoBodyPtRange()
@@ -828,6 +834,8 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.DPHI: RangeWidget,
         tmGrammar.DR: InfiniteRangeWidget,
         tmGrammar.MASS: InfiniteRangeWidget,
+        tmGrammar.MASSUPT: InfiniteRangeWidget,
+        tmGrammar.MASSDR: ThresholdWidget,
         tmGrammar.TBPT: ThresholdWidget,
         tmGrammar.ORMDETA: MaximumWidget,
         tmGrammar.ORMDPHI: MaximumWidget,

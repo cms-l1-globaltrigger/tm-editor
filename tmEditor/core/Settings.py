@@ -393,10 +393,40 @@ CutSpecs = CutSpecificationPool(
         title="Invariant or Transverse mass",
         description="Applies invariant or transverse mass restriction to combination of two (or three) objects depending on the applied function.<br/><br/>" \
                     "Calculation of invariant mass:<br/><br/>" \
-                    "M<sub>(inv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "M<sub>0</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
                     "Calculation of transverse mass:<br/><br/>" \
-                    "M<sub>(trv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (1 - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
-                    "<strong>Example:</strong> <pre>mass{MU20, MU20}[MASS_Z]</pre>"
+                    "M<sub>T</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (1 - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "<strong>Example:</strong> <pre>mass_inv{MU20, MU20}[MASS_Z]</pre>"
+    ),
+    CutSpecification(
+        name=tmGrammar.MASSUPT,
+        object=Empty,
+        type=tmGrammar.MASSUPT,
+        objects=[tmGrammar.MU],
+        functions=[tmGrammar.mass_inv_upt],
+        range_precision=1,
+        range_step=0.2,
+        range_unit="GeV",
+        title="Invariant mass for muon unconstrained pt",
+        description="Applies invariant mass restriction to combination of two objects.<br/><br/>" \
+                    "Calculation of invariant mass:<br/><br/>" \
+                    "M<sub>0</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>upt1</em> <em>upt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "<strong>Example:</strong> <pre>mass_inv_upt{MU20, MU20}[MASSUPT_Z]</pre>"
+    ),
+    CutSpecification(
+        name=tmGrammar.MASSDR,
+        object=Empty,
+        type=tmGrammar.MASSDR,
+        objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
+        functions=[tmGrammar.mass_inv_dr],
+        range_precision=1,
+        range_step=0.2,
+        range_unit="m/dR",
+        title="Invariant mass divided by delta-R",
+        description="Applies invariant mass divided by delta-R restriction of two objects.<br/><br/>" \
+                    "Calculation of invariant mass/delta-R:<br/><br/>" \
+                    "M<sub>0</sub>/&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>upt1</em> <em>upt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))</span>/&Delta;R<br/><br/>" \
+                    "<strong>Example:</strong> <pre>mass_inv_dr{MU20, MU20}[MASSDR_X]</pre>"
     ),
     CutSpecification(
         name=tmGrammar.TBPT,

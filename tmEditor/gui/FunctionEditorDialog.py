@@ -51,6 +51,8 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.functionComboBox.addItem(self.tr("{} (combination)").format(tmGrammar.comb), tmGrammar.comb)
         self.functionComboBox.addItem(self.tr("{} (correlation)").format(tmGrammar.dist), tmGrammar.dist)
         self.functionComboBox.addItem(self.tr("{} (invariant mass)").format(tmGrammar.mass_inv), tmGrammar.mass_inv)
+        self.functionComboBox.addItem(self.tr("{} (invariant mass unconstrained pt)").format(tmGrammar.mass_inv_upt), tmGrammar.mass_inv_upt)
+        self.functionComboBox.addItem(self.tr("{} (invariant mass/delta-R)").format(tmGrammar.mass_inv_dr), tmGrammar.mass_inv_dr)
         self.functionComboBox.addItem(self.tr("{} (invariant mass of 3 particles)").format(tmGrammar.mass_inv_3), tmGrammar.mass_inv_3)
         self.functionComboBox.addItem(self.tr("{} (transverse mass)").format(tmGrammar.mass_trv), tmGrammar.mass_trv)
         self.functionComboBox.addItem(self.tr("{} (combination + overlap removal)").format(tmGrammar.comb_orm), tmGrammar.comb_orm)
@@ -103,7 +105,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             helper.types = ObjectTypes
             helper.setEnabled(True)
             # Disable helpers if not needed
-            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv) and helper.index >= 2:
+            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_inv_upt, tmGrammar.mass_inv_dr, tmGrammar.mass_trv) and helper.index >= 2:
                 helper.setEnabled(False)
             if self.functionType() in (tmGrammar.mass_inv_3, tmGrammar.dist_orm, tmGrammar.mass_inv_orm) and helper.index >= 3:
                 helper.setEnabled(False)
@@ -164,6 +166,10 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             text.append(f'<p>Topological distance (correlation) of two object requirements with overlap removal.</p>')
         elif functionType == tmGrammar.mass_inv:
             text.append(f'<p>Invariant mass of two object requirements.</p>')
+        elif functionType == tmGrammar.mass_inv_upt:
+            text.append(f'<p>Invariant mass for unconstained pt of two muon requirements.</p>')
+        elif functionType == tmGrammar.mass_inv_dr:
+            text.append(f'<p>Invariant mass/delta-R of two object requirements.</p>')
         elif functionType == tmGrammar.mass_inv_3:
             text.append(f'<p>Invariant mass of three object requirements.</p>')
         elif functionType == tmGrammar.mass_inv_orm:

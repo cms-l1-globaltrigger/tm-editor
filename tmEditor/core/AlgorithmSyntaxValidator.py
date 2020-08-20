@@ -114,6 +114,7 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
         self.addRule(DistNrObjects)
         self.addRule(DistDeltaRange)
         self.addRule(CutCount)
+        self.addRule(InvarientMass3)
         self.addRule(TransverseMass)
         self.addRule(TwoBodyPtNrObjects)
 
@@ -342,6 +343,23 @@ class TransverseMass(SyntaxRule):
                     nonEtaCount += 1
             if nonEtaCount < 1:
                 message = f"Transverse mass functions require at least one object requirement without an eta component (ETM, ETMHF, HTM).\n" \
+                          f"Invalid expression near `{token}`"
+                raise AlgorithmSyntaxError(message, token)
+
+class InvarientMass3(SyntaxRule):
+    """Validates invariant mass of three objects requirements."""
+
+    def validate(self, tokens):
+        for token in tokens:
+            if not isFunction(token):
+                continue
+            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            if not name == tmGrammar.mass_inv_3:
+                continue
+            objects = functionObjects(token)
+            types = {object.type for object in objects}
+            if len(types) != 1:
+                message = f"Invarient mass for three objects functions require only muons or only calorimeter objects.\n" \
                           f"Invalid expression near `{token}`"
                 raise AlgorithmSyntaxError(message, token)
 
