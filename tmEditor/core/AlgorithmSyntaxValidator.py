@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Algorithm syntax validator class.
 
 Usage example
@@ -18,9 +16,6 @@ from .Algorithm import isOperator, isObject, isExternal, isFunction
 from .Algorithm import toObject, toExternal
 from .Algorithm import functionObjects, functionCuts, functionObjectsCuts, objectCuts
 
-import re
-import logging
-
 __all__ = ['AlgorithmSyntaxValidator', 'AlgorithmSyntaxError']
 
 # -----------------------------------------------------------------------------
@@ -38,7 +33,7 @@ kType = 'type'
 #  Base classes
 # -----------------------------------------------------------------------------
 
-class SyntaxValidator(object):
+class SyntaxValidator:
     """Base class to be inherited by custom syntax validator classes."""
 
     def __init__(self, menu):
@@ -63,11 +58,11 @@ class SyntaxValidator(object):
             message = "Empty expression"
             raise AlgorithmSyntaxError(message)
         if not tmGrammar.Algorithm_parser(expression):
-            message = "Invalid expression `{expression}'".format(**locals())
+            message = f"Invalid expression `{expression}'"
             raise AlgorithmSyntaxError(message)
         return tmGrammar.Algorithm_Logic.getTokens()
 
-class SyntaxRule(object):
+class SyntaxRule:
     """Base class to be inherited by custom syntax rule classes."""
 
     def __init__(self, validator):
@@ -76,21 +71,21 @@ class SyntaxRule(object):
     def toObjectItem(self, token):
         item = tmGrammar.Object_Item()
         if not tmGrammar.Object_parser(token, item):
-            message = "Invalid object statement `{item.message}`".format(**locals())
+            message = f"Invalid object statement `{item.message}`"
             raise AlgorithmSyntaxError(message, token)
         return item
 
     def toFunctionItem(self, token):
         item = tmGrammar.Function_Item()
         if not tmGrammar.Function_parser(token, item):
-            message = "Invalid function statement `{item.message}`".format(**locals())
+            message = f"Invalid function statement `{item.message}`"
             raise AlgorithmSyntaxError(message, token)
         return item
 
     def toCutItem(self, token):
         item = tmGrammar.Cut_Item()
         if not tmGrammar.Cut_parser(token, item):
-            message = "Invalid cut statement `{item.message}` at object {token}".format(**locals())
+            message = f"Invalid cut statement `{item.message}` at object {token}"
             raise AlgorithmSyntaxError(message, token)
         return item
 
@@ -104,14 +99,14 @@ class SyntaxRule(object):
 class AlgorithmSyntaxError(Exception):
     """Exeption for algoithm syntax errors thrown by class AlgorithmSyntaxValidator."""
     def __init__(self, message, token=None):
-        super(AlgorithmSyntaxError, self).__init__(message)
+        super().__init__(message)
         self.token = token
 
 class AlgorithmSyntaxValidator(SyntaxValidator):
     """Algorithm syntax validator class."""
 
     def __init__(self, menu):
-        super(AlgorithmSyntaxValidator, self).__init__(menu)
+        super().__init__(menu)
         self.addRule(BasicSyntax)
         self.addRule(CombBxOffset)
         self.addRule(ChargeCorrelation)
@@ -119,6 +114,7 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
         self.addRule(DistNrObjects)
         self.addRule(DistDeltaRange)
         self.addRule(CutCount)
+        self.addRule(InvarientMass3)
         self.addRule(TransverseMass)
         self.addRule(TwoBodyPtNrObjects)
 
@@ -145,10 +141,10 @@ class BasicSyntax(SyntaxRule):
             elif isExternal(token):
                 external = toExternal(token)
                 if external.signal_name not in ext_signal_names:
-                    message = "Invalid external signal `{token}`".format(**locals())
+                    message = f"Invalid external signal `{token}`"
                     raise AlgorithmSyntaxError(message, token)
             else:
-                message = "Invalid expression `{token}`".format(**locals())
+                message = f"Invalid expression `{token}`"
                 raise AlgorithmSyntaxError(message, token)
 
 class ObjectThresholds(SyntaxRule):
@@ -178,13 +174,13 @@ class ObjectThresholds(SyntaxRule):
         maximum = float(scale[kMaximum])
         step = float(scale[kStep])
         # Check range
-        if not (minimum <= threshold <= maximum):
-            message = "Object threshold exceeding scale limits ({minimum:.1f}..{maximum:.1f}) near `{token}`".format(**locals())
+        if not minimum <= threshold <= maximum:
+            message = f"Object threshold exceeding scale limits ({minimum:.1f}..{maximum:.1f}) near `{token}`"
             raise AlgorithmSyntaxError(message, token)
         # Check step
         bins = menu.scaleBins(object, ObjectScaleMap[object.type])
-        if not list(filter(lambda bin: float(bin[kMinimum])==threshold or float(bin[kMaximum])==threshold, bins)):
-            message = "Invalid threshold `{object.threshold}` at object `{token}`".format(**locals())
+        if not list(filter(lambda bin: float(bin[kMinimum]) == threshold or float(bin[kMaximum]) == threshold, bins)):
+            message = f"Invalid threshold `{object.threshold}` at object `{token}`"
             raise AlgorithmSyntaxError(message, token)
 
 class CombBxOffset(SyntaxRule):
@@ -206,8 +202,8 @@ class CombBxOffset(SyntaxRule):
                 sameBxRange -= 1 # exclude last object
             for i in range(sameBxRange):
                 if int(objects[i].bx_offset) != int(objects[0].bx_offset):
-                    message = "All object requirements of function {name}{{...}} must be of same bunch crossing offset.\n" \
-                              "Invalid expression near `{token}`".format(**locals()) # TODO differentiate!
+                    message = f"All object requirements of function {name}{{...}} must be of same bunch crossing offset.\n" \
+                              f"Invalid expression near `{token}`" # TODO differentiate!
                     raise AlgorithmSyntaxError(message, token)
 
 class ChargeCorrelation(SyntaxRule):
@@ -227,8 +223,8 @@ class ChargeCorrelation(SyntaxRule):
             for i in range(len(objects)):
                 if objects[i].type != tmGrammar.MU:
                     name = token.split('{')[0] # TODO: get function name
-                    message = "All object requirements of function {0}{{...}} must be of type `{1}` when applying a `{2}` cut.\n" \
-                              "Invalid expression near `{3}`".format(name, tmGrammar.MU, tmGrammar.CHGCOR, token)
+                    message = f"All object requirements of function {name}{{...}} must be of type `{tmGrammar.MU}` when applying a `{tmGrammar.CHGCOR}` cut.\n" \
+                              f"Invalid expression near `{token}`"
                     raise AlgorithmSyntaxError(message, token)
 
 class DistNrObjects(SyntaxRule):
@@ -246,8 +242,8 @@ class DistNrObjects(SyntaxRule):
                 raise AlgorithmSyntaxError(f.message)
             objects = functionObjects(token)
             if name == tmGrammar.dist and len(objects) != 2:
-                message = "Function {name}{{...}} requires excactly two object requirements.\n" \
-                          "Invalid expression near `{token}`".format(**locals())
+                message = f"Function {name}{{...}} requires excactly two object requirements.\n" \
+                          f"Invalid expression near `{token}`"
                 raise AlgorithmSyntaxError(message)
 
 class DistDeltaRange(SyntaxRule):
@@ -265,25 +261,25 @@ class DistDeltaRange(SyntaxRule):
                 cut = menu.cutByName(name)
                 if cut.type == tmGrammar.DETA:
                     for object in functionObjects(token):
-                        scale = list(filter(lambda scale: scale[kObject]==object.type and scale[kType]==tmGrammar.ETA, menu.scales.scales))[0]
+                        scale = list(filter(lambda scale: scale[kObject] == object.type and scale[kType] == tmGrammar.ETA, menu.scales.scales))[0]
                         minimum = 0
                         maximum = abs(float(scale[kMinimum])) + float(scale[kMaximum])
-                        if not (minimum <= float(cut.minimum) <= maximum):
-                            message = "Cut `{name}` minimum limit of {cut.minimum} exceed valid object DETA range of {minimum}".format(**locals())
+                        if not minimum <= float(cut.minimum) <= maximum:
+                            message = f"Cut `{name}` minimum limit of {cut.minimum} exceed valid object DETA range of {minimum}"
                             raise AlgorithmSyntaxError(message)
-                        if not (minimum <= float(cut.maximum) <= maximum):
-                            message = "Cut `{name}` maximum limit of {cut.maximum} exceed valid object DETA range of {maximum}".format(**locals())
+                        if not minimum <= float(cut.maximum) <= maximum:
+                            message = f"Cut `{name}` maximum limit of {cut.maximum} exceed valid object DETA range of {maximum}"
                             raise AlgorithmSyntaxError(message)
                 if cut.type == tmGrammar.DPHI:
                     for object in functionObjects(token):
-                        scale = list(filter(lambda scale: scale[kObject]==object.type and scale[kType]==tmGrammar.PHI, menu.scales.scales))[0]
+                        scale = list(filter(lambda scale: scale[kObject] == object.type and scale[kType] == tmGrammar.PHI, menu.scales.scales))[0]
                         minimum = 0
                         maximum = float(format(float(scale[kMaximum]), '.3f'))
-                        if not (minimum <= float(cut.minimum) <= maximum):
-                            message = "Cut `{name}` minimum limit of {cut.minimum} exceed valid object DPHI range of {minimum}".format(**locals())
+                        if not minimum <= float(cut.minimum) <= maximum:
+                            message = f"Cut `{name}` minimum limit of {cut.minimum} exceed valid object DPHI range of {minimum}"
                             raise AlgorithmSyntaxError(message)
-                        if not (minimum <= float(cut.maximum) <= maximum):
-                            message = "Cut `{name}` maximum limit of {cut.maximum} exceed valid object DPHI range of {maximum}".format(**locals())
+                        if not minimum <= float(cut.maximum) <= maximum:
+                            message = f"Cut `{name}` maximum limit of {cut.maximum} exceed valid object DPHI range of {maximum}"
                             raise AlgorithmSyntaxError(message)
                 if cut.type == tmGrammar.DR:
                     pass # TODO
@@ -327,7 +323,7 @@ class CutCount(SyntaxRule):
             if spec:
                 if count > spec.count:
                     name = key[1] if key[0] in FunctionTypes else '-'.join(key)
-                    message = "In `{token}`, too many cuts of type `{name}` assigned, only {spec.count} allowed.".format(**locals())
+                    message = f"In `{token}`, too many cuts of type `{name}` assigned, only {spec.count} allowed."
                     raise AlgorithmSyntaxError(message)
 
 class TransverseMass(SyntaxRule):
@@ -346,8 +342,25 @@ class TransverseMass(SyntaxRule):
                 if obj.type in (tmGrammar.ETM, tmGrammar.ETMHF, tmGrammar.HTM):
                     nonEtaCount += 1
             if nonEtaCount < 1:
-                message = "Transverse mass functions require at least one object requirement without an eta component (ETM, ETMHF, HTM).\n" \
-                          "Invalid expression near `{token}`".format(**locals())
+                message = f"Transverse mass functions require at least one object requirement without an eta component (ETM, ETMHF, HTM).\n" \
+                          f"Invalid expression near `{token}`"
+                raise AlgorithmSyntaxError(message, token)
+
+class InvarientMass3(SyntaxRule):
+    """Validates invariant mass of three objects requirements."""
+
+    def validate(self, tokens):
+        for token in tokens:
+            if not isFunction(token):
+                continue
+            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            if not name == tmGrammar.mass_inv_3:
+                continue
+            objects = functionObjects(token)
+            types = {object.type for object in objects}
+            if len(types) != 1:
+                message = f"Invarient mass for three objects functions require only muons or only calorimeter objects.\n" \
+                          f"Invalid expression near `{token}`"
                 raise AlgorithmSyntaxError(message, token)
 
 class TwoBodyPtNrObjects(SyntaxRule):
@@ -367,6 +380,6 @@ class TwoBodyPtNrObjects(SyntaxRule):
                 cut = menu.cutByName(cutname)
                 if cut.type == tmGrammar.TBPT:
                     if not requiredObjects[0] <= len(objects) <= requiredObjects[1]:
-                        message = "Two body Pt cut requires exactly two base object requirements to be applied on.\n" \
-                          "Invalid expression in function `{name}` with cut `{cutname}` near `{token}`".format(**locals())
+                        message = f"Two body Pt cut requires exactly two base object requirements to be applied on.\n" \
+                                  f"Invalid expression in function `{name}` with cut `{cutname}` near `{token}`"
                         raise AlgorithmSyntaxError(message, token)

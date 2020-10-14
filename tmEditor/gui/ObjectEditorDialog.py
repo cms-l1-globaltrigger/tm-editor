@@ -1,5 +1,8 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
+"""Object editor dialog."""
+
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 import tmGrammar
 
@@ -7,11 +10,10 @@ from tmEditor.core.Settings import CutSpecs
 from tmEditor.core.formatter import fCutLabel
 from tmEditor.core.types import ThresholdObjectTypes
 from tmEditor.core.types import CountObjectTypes
-from tmEditor.core.types import ObjectCutTypes
 from tmEditor.core.types import ObjectTypes
 
 from tmEditor.core.Algorithm import toObject, objectCuts
-from tmEditor.core.AlgorithmHelper import AlgorithmHelper, decode_threshold
+from tmEditor.core.AlgorithmHelper import AlgorithmHelper
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 
 # Common widgets
@@ -21,11 +23,6 @@ from tmEditor.gui.CommonWidgets import ComboBoxPlus
 from tmEditor.gui.CommonWidgets import createIcon, miniIcon
 
 from tmEditor.gui.CutEditorDialog import CutEditorDialog
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-import sys, os
-import re
 
 __all__ = ['ObjectEditorDialog', ]
 
@@ -49,7 +46,7 @@ class CutItem(QtGui.QStandardItem):
     """A checkable cut standard item, to be inserted to a list model."""
 
     def __init__(self, text, checked=False):
-        super(CutItem, self).__init__(text)
+        super().__init__(text)
         self.setEditable(False)
         self.setCheckable(True)
         if checked:
@@ -66,7 +63,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         """Constructor, takes a reference to a menu and an optional parent.
         Optionally a custom list of objects can be assigned to the dialog.
         """
-        super(ObjectEditorDialog, self).__init__(parent)
+        super().__init__(parent)
         self.menu = menu
         self.setupUi()
         self.objectTypes = objects or ObjectTypes
@@ -140,7 +137,8 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         scale = self.getScale(objectType)
         # Just to make sure...
         if scale is None:
-            QtWidgets.QMessageBox.critical(self,
+            QtWidgets.QMessageBox.critical(
+                self,
                 self.tr("Failed to load scales"),
                 self.tr("Missing scales for object of type {0}").format(objectType),
             )
@@ -219,11 +217,11 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         """Returns object expression selected by the inputs."""
         expression = AlgorithmHelper()
         expression.addObject(
-            type = self.objectType(),
-            comparison_operator = self.comparisonOperator(),
-            threshold = self.threshold(),
-            bx_offset = self.bxOffset(),
-            cuts = self.selectedCuts(),
+            type=self.objectType(),
+            comparison_operator=self.comparisonOperator(),
+            threshold=self.threshold(),
+            bx_offset=self.bxOffset(),
+            cuts=self.selectedCuts(),
         )
         return AlgorithmFormatter.normalize(expression.serialize())
 
@@ -236,14 +234,14 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         step = float(scale[kStep])
         expression = self.expression()
         text = []
-        text.append('<h3>{objectType} Object Requirement</h3>')
+        text.append(f'<h3>{objectType} Object Requirement</h3>')
         if objectType in ThresholdObjectTypes:
-            text.append('<p>Valid threshold: {minThreshold:.1f} GeV - {maxThreshold:.1f} GeV ({step:.1f} GeV steps)</p>')
+            text.append(f'<p>Valid threshold: {minThreshold:.1f} GeV - {maxThreshold:.1f} GeV ({step:.1f} GeV steps)</p>')
         elif objectType in CountObjectTypes:
-            text.append('<p>Valid count: {minThreshold:.0f} - {maxThreshold:.0f}</p>')
-        text.append('<h4>Preview</h4>')
-        text.append('<p><pre>{expression}</pre></p>')
-        self.infoTextEdit.setText(''.join(text).format(**locals()))
+            text.append(f'<p>Valid count: {minThreshold:.0f} - {maxThreshold:.0f}</p>')
+        text.append(f'<h4>Preview</h4>')
+        text.append(f'<p><pre>{expression}</pre></p>')
+        self.infoTextEdit.setText(''.join(text))
 
     def loadObject(self, token):
         """Load dialog by values from object. Will raise a ValueError if string

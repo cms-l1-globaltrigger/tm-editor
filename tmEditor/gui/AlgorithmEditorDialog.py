@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Algorithm editor main window and dialog.
 
 class ExpressionCodeEditor
@@ -8,16 +6,23 @@ class AlgorithmEditorDialog
 class MessageBarWidget
 """
 
+import logging
+import re
+import webbrowser
+
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
+
 import tmGrammar
 
-from tmEditor.core import toolbox
-from tmEditor.core.Algorithm import Algorithm, External, toObject, toExternal
+from tmEditor.core.Algorithm import Algorithm, External
 from tmEditor.core.Settings import MaxAlgorithms
-from tmEditor.core.types import ObjectTypes, CountObjectTypes
 from tmEditor.core.Algorithm import RegExObject, RegExExtSignal, RegExFunction
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 from tmEditor.core.XmlDecoder import mirgrate_mass_function # HACK
+from tmEditor.core.toolbox import encode_labels, decode_labels
 
 from tmEditor.gui.AlgorithmSyntaxHighlighter import AlgorithmSyntaxHighlighter
 from tmEditor.gui.CodeEditor import CodeEditor
@@ -27,24 +32,14 @@ from tmEditor.gui.ExtSignalEditorDialog import ExtSignalEditorDialog
 from tmEditor.gui.FunctionEditorDialog import FunctionEditorDialog
 from tmEditor.gui.AlgorithmSelectIndexDialog import AlgorithmSelectIndexDialog
 
-
 # Common widgets
-from tmEditor.gui.CommonWidgets import TextFilterWidget
 from tmEditor.gui.CommonWidgets import RestrictedLineEdit
 from tmEditor.gui.CommonWidgets import ListSpinBox
-from tmEditor.gui.CommonWidgets import IconLabel
 from tmEditor.gui.CommonWidgets import richTextObjectsPreview
 from tmEditor.gui.CommonWidgets import richTextSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextCutsPreview
 from tmEditor.gui.CommonWidgets import createIcon
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-import webbrowser
-import sys, os
-import logging
-import re
 
 __all__ = ['AlgorithmEditorDialog', ]
 
@@ -64,24 +59,27 @@ def findObject(text, pos):
         if result.start() <= pos < result.end():
             if not result.group(0).startswith(tmGrammar.EXT): # Exclude EXT signals
                 return result.group(0), result.start(), result.end()
+    return None
 
 def findExtSignal(text, pos):
     """Returns external signal at position *pos* or None if nothing found."""
     for result in RegExExtSignal.finditer(text):
         if result.start() <= pos < result.end():
             return result.group(0), result.start(), result.end()
+    return None
 
 def findFunction(text, pos):
     """Returns function expression at position *pos* or None if nothing found."""
     for result in RegExFunction.finditer(text):
         if result.start() <= pos < result.end():
             return result.group(0), result.start(), result.end()
+    return None
 
 def currentData(widget):
     rows = widget.selectionModel().selectedRows()
     if rows:
         return rows[0].data()
-    return
+    return None
 
 # -----------------------------------------------------------------------------
 #  Expression code editor
@@ -100,7 +98,7 @@ class ExpressionCodeEditor(CodeEditor):
     """Signal raised on edit function expression request (custom context menu)."""
 
     def __init__(self, parent=None):
-        super(ExpressionCodeEditor, self).__init__(parent)
+        super().__init__(parent)
 
     def contextMenuEvent(self, event):
         """Custom ciontext menu providing actions to edit object and function
@@ -130,18 +128,15 @@ class ExpressionCodeEditor(CodeEditor):
             # Enable requirement menu on success
             if objToken:
                 objAct.setEnabled(True)
-                def call(): self.editObject.emit(objToken)
-                objAct.triggered.connect(call)
+                objAct.triggered.connect(lambda: self.editObject.emit(objToken))
             # Enable external signal menu on success
             if extToken:
                 extAct.setEnabled(True)
-                def call(): self.editExtSignal.emit(extToken)
-                extAct.triggered.connect(call)
+                extAct.triggered.connect(lambda: self.editExtSignal.emit(extToken))
             # Enable function menu on success
             if funcToken:
                 funcAct.setEnabled(True)
-                def call(): self.editFunction.emit(funcToken)
-                funcAct.triggered.connect(call)
+                funcAct.triggered.connect(lambda: self.editFunction.emit(funcToken))
         # Show context menu
         menu.exec_(event.globalPos())
 
@@ -152,8 +147,8 @@ class ExpressionCodeEditor(CodeEditor):
 class AlgorithmEditor(QtWidgets.QMainWindow):
     """Algorithm editor class."""
 
-    def __init__(self, menu, parent = None):
-        super(AlgorithmEditor, self).__init__(parent)
+    def __init__(self, menu, parent=None):
+        super().__init__(parent)
         # Setup window
         self.setWindowTitle(self.tr("Algorithm Editor"))
         self.resize(800, 500)
@@ -204,6 +199,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         self.setName(self.tr("L1_Unnamed"))
         self.setExpression("")
         self.setComment("")
+        self.setLabels([])
         self.textEdit.textChanged.connect(self.onTextChanged)
         self.indexSpinBox.valueChanged.connect(self.onIndexChanged)
         # Call slots
@@ -327,7 +323,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         dock.setWidget(widget)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
         # Item preview text browser
-        dock = QtWidgets.QDockWidget(self.tr("Preview"), self)
+        dock = QtWidgets.QDockWidget(self.tr("Used Items"), self)
         dock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)
         dock.setWidget(self.previewTextBrowser)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
@@ -336,6 +332,12 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         dock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)
         self.commentEdit = QtWidgets.QPlainTextEdit(self)
         dock.setWidget(self.commentEdit)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
+        # Labels text edit
+        dock = QtWidgets.QDockWidget(self.tr("Labels"), self)
+        dock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)
+        self.labelsEdit = QtWidgets.QLineEdit(self)
+        dock.setWidget(self.labelsEdit)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
 
     def index(self):
@@ -364,6 +366,12 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
     def setComment(self, comment):
         self.commentEdit.setPlainText(comment)
 
+    def labels(self):
+        return decode_labels(self.labelsEdit.text())
+
+    def setLabels(self, labels):
+        self.labelsEdit.setText(encode_labels(labels, pretty=True))
+
     def isModified(self):
         return self._isModified
 
@@ -373,7 +381,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
     def replacePlainText(self, expression):
         cursor = self.textEdit.textCursor()
         cursor.clearSelection()
-        cursor.movePosition(QtGui.QTextCursor.Start);
+        cursor.movePosition(QtGui.QTextCursor.Start)
         cursor.movePosition(QtGui.QTextCursor.End, QtGui.QTextCursor.KeepAnchor)
         cursor.insertText(expression)
 
@@ -599,8 +607,8 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
 class AlgorithmEditorDialog(QtWidgets.QDialog):
     """Algorithm editor dialog class."""
 
-    def __init__(self, menu, parent = None):
-        super(AlgorithmEditorDialog, self).__init__(parent)
+    def __init__(self, menu, parent=None):
+        super().__init__(parent)
         self.editor = AlgorithmEditor(menu)
         self.loadedAlgorithm = None
         self.setWindowTitle(self.editor.windowTitle())
@@ -651,12 +659,21 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
         """Provided for convenience."""
         self.editor.setComment(comment)
 
+    def labels(self):
+        """Provided for convenience."""
+        return self.editor.labels()
+
+    def setLabels(self, comment):
+        """Provided for convenience."""
+        self.editor.setLabels(comment)
+
     def loadAlgorithm(self, algorithm):
         self.loadedAlgorithm = algorithm
         self.setIndex(algorithm.index)
         self.setName(algorithm.name)
         self.setExpression(algorithm.expression)
         self.setComment(algorithm.comment)
+        self.setLabels(algorithm.labels)
         self.editor.updateFreeIndices(int(algorithm.index)) # brrr
         self.editor.loadedIndex = int(algorithm.index)
 
@@ -665,6 +682,7 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
         algorithm.name = self.name()
         algorithm.expression = self.expression()
         algorithm.comment = self.comment()
+        algorithm.labels = self.labels()
         # Patch algorithm expression HACK
         mirgrate_mass_function(algorithm)
 
@@ -677,29 +695,37 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
                 if algorithm is self.loadedAlgorithm:
                     continue
                 if int(algorithm.index) == int(self.index()):
-                    QtWidgets.QMessageBox.warning(self, self.tr("Index used"), self.tr("Algorithm index {} already used. Please select a different index.").format(algorithm.index))
-                    return
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        self.tr("Index used"),
+                        self.tr("Algorithm index {} already used. Please select a different index.").format(algorithm.index)
+                    )
+                    return False
                 if algorithm.name == self.name():
-                    QtWidgets.QMessageBox.warning(self, self.tr("Name used"), self.tr("Algorithm name {} already used (by index {})").format(algorithm.name, algorithm.index))
-                    return
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        self.tr("Name used"),
+                        self.tr("Algorithm name {} already used (by index {})").format(algorithm.name, algorithm.index)
+                    )
+                    return False
                 # Check existance of cuts and external signals.
                 #
             # TODO
             # Temporary limited conistency check.
-            algorithm = Algorithm(self.index(), self.name(), self.expression(), self.comment())
+            algorithm = Algorithm(self.index(), self.name(), self.expression(), self.comment(), self.labels())
             algorithm.objects()
             for name in algorithm.objects():
                 pass
             algorithm.cuts()
             for name in algorithm.cuts():
                 if not list(filter(lambda item: item.name == name, self.editor.menu.cuts)):
-                    raise AlgorithmSyntaxError("Undefined cut `{name}`.".format(**locals()), name)
+                    raise AlgorithmSyntaxError(f"Undefined cut `{name}`.", name)
             for name in algorithm.externals():
                 def signal_name(name): return External(name, 0).signal_name
                 if not list(filter(lambda item: item[kName] == signal_name(name), self.editor.menu.extSignals.extSignals)):
                     name = signal_name(name)
                     signalSet = self.editor.menu.extSignals.extSignalSet[kName]
-                    raise AlgorithmSyntaxError("Undefined external signal `{name}` in current signal set `{signalSet}`.".format(**locals()), name)
+                    raise AlgorithmSyntaxError(f"Undefined external signal `{name}` in current signal set `{signalSet}`.", name)
         except AlgorithmSyntaxError as e:
             if e.token:
                 # Make sure to highlight the errornous part in the text editor.
@@ -712,7 +738,7 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
             # TODO the tmGrammar parser errors are not user friendly.
             #       think about how to translate the messages in a user readable way.
             token = format(e).strip()
-            c = re.compile("\w+\:\:\w+\s*\'([^\']*)\'")
+            c = re.compile(r"\w+\:\:\w+\s*\'([^\']*)\'")
             result = c.match(token)
             if result:
                 token = result.group(1)
@@ -728,7 +754,7 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
 
     def accept(self):
         if self.parse():
-            super(AlgorithmEditorDialog, self).accept()
+            super().accept()
 
     def reject(self):
         self.close() # Will call closeEvent
@@ -773,8 +799,8 @@ class MessageBarWidget(QtWidgets.QWidget):
 
     showMore = QtCore.pyqtSignal()
 
-    def __init__(self, parent = None):
-        super(MessageBarWidget, self).__init__(parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setMaximumHeight(31)
         self.icon = QtWidgets.QLabel(self)
         self.icon.setPixmap(createIcon("dialog-warning").pixmap(16, 16))

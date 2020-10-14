@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Simple callback queue class executing a chain of callbacks by iteration.
 
 Setup a callbalc queue.
@@ -20,13 +18,13 @@ processing data ... 33 %
 saving data ... 66 %
 """
 
-class Callback(object):
+class Callback:
 
     def __init__(self, callback, message=None):
         self.callback = callback
         self.message = message or ""
 
-class Queue(object):
+class Queue:
 
     def __init__(self):
         self.__callbacks = []

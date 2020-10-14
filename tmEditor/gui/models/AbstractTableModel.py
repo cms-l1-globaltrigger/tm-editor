@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
-from tmEditor.core.toolbox import *
-
-from PyQt5 import QtCore
+"""Abstract table model."""
 
 from collections import namedtuple
+
+from PyQt5 import QtCore
 
 __all__ = ['AbstractTableModel', ]
 
@@ -23,8 +21,8 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
                                           'decoration, headerToolTip, headerDecoration, ' \
                                           'headerSizeHint, headerTextAlignment')
 
-    def __init__(self, values, parent = None):
-        super(AbstractTableModel, self).__init__(parent)
+    def __init__(self, values, parent=None):
+        super().__init__(parent)
         self.values = values
         self.columnSpecs = []
 

@@ -1,23 +1,17 @@
-# -*- coding: utf-8 -*-
-
-import tmTable
-import tmGrammar
-
-from tmEditor.core import toolbox
-
-from .toolbox import safe_str
-from .TableHelper import TableHelper
-from .Queue import Queue
-from .Settings import MaxAlgorithms
-from .AlgorithmFormatter import AlgorithmFormatter
-from .AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
-
-from distutils.version import StrictVersion
+"""XML encoder."""
 
 import functools
 import logging
-import uuid
-import sys, os
+import os
+
+import tmTable
+
+from tmEditor.core import toolbox
+
+from .toolbox import safe_str, encode_labels
+from .TableHelper import TableHelper
+from .Queue import Queue
+from .AlgorithmFormatter import AlgorithmFormatter
 
 # -----------------------------------------------------------------------------
 #  Keys
@@ -37,7 +31,7 @@ kGrammarVersion = 'grammar_version'
 kIndex = 'index'
 kIsObsolete = 'is_obsolete'
 kIsValid = 'is_valid'
-kLabel = 'label'
+kLabels = 'labels'
 kMaximum = 'maximum'
 kMinimum = 'minimum'
 kModuleId = 'module_id'
@@ -98,12 +92,12 @@ def chdir(directory):
 class XmlEncoderError(Exception):
     """Exeption for XML encoder errors."""
     def __init__(self, message):
-        super(XmlEncoderError, self).__init__(message)
+        super().__init__(message)
 
 class XmlEncoderQueue(Queue):
 
     def __init__(self, menu, filename):
-        super(XmlEncoderQueue, self).__init__()
+        super().__init__()
         self.menu = menu
         self.filename = os.path.abspath(filename)
         self.add_callback(self.run_prepare, "preparing writing to file")
@@ -169,6 +163,7 @@ class XmlEncoderQueue(Queue):
             row[kName] = safe_str(algorithm.name, "algorithm name")
             row[kExpression] = AlgorithmFormatter.compress(algorithm.expression)
             row[kComment] = algorithm.comment
+            row[kLabels] = encode_labels(algorithm.labels)
             # Validate algorithm row
             if not tmTable.isAlgorithm(row):
                 message = "invalid algorithm ({algorithm.index}): {algorithm.name}".format(algorithm=algorithm)

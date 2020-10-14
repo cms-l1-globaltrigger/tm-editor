@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-#
+"""Settings module."""
 
 from .toolbox import CutSpecificationPool, CutSpecification
 
 import tmGrammar
-import sys, os
 
 __all__ = ['MaxAlgorithms', 'CutSpecs', ]
 
@@ -31,6 +29,14 @@ Empty = ""
 
 CutSpecs = CutSpecificationPool(
     CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.UPT),
+        object=tmGrammar.MU,
+        type=tmGrammar.UPT,
+        range_step=1.0,
+        title="Muon unconstrained pt",
+        description="Threshold for unconstrained pt."
+    ),
+    CutSpecification(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.ETA),
         object=tmGrammar.MU,
         type=tmGrammar.ETA,
@@ -54,22 +60,22 @@ CutSpecs = CutSpecificationPool(
         title="Muon quality",
         description="Applies quality filter for muon object requirement.",
         data={
-          "0": "quality level 0",
-          "1": "quality level 1",
-          "2": "quality level 2",
-          "3": "quality level 3",
-          "4": "quality level 4",
-          "5": "quality level 5",
-          "6": "quality level 6",
-          "7": "quality level 7",
-          "8": "quality level 8",
-          "9": "quality level 9",
-          "10": "quality level 10",
-          "11": "quality level 11",
-          "12": "quality level 12",
-          "13": "quality level 13",
-          "14": "quality level 14",
-          "15": "quality level 15"
+            "0": "quality level 0",
+            "1": "quality level 1",
+            "2": "quality level 2",
+            "3": "quality level 3",
+            "4": "quality level 4",
+            "5": "quality level 5",
+            "6": "quality level 6",
+            "7": "quality level 7",
+            "8": "quality level 8",
+            "9": "quality level 9",
+            "10": "quality level 10",
+            "11": "quality level 11",
+            "12": "quality level 12",
+            "13": "quality level 13",
+            "14": "quality level 14",
+            "15": "quality level 15"
         }
     ),
     CutSpecification(
@@ -79,10 +85,10 @@ CutSpecs = CutSpecificationPool(
         title="Muon isolation",
         description="Two bits for isolation, bit 0 represents isolation, meaning of bit 1 is currently not defined.",
         data={
-          "0": "non-isolated",
-          "1": "isolated",
-          "2": "n/a",
-          "3": "n/a+isolated"
+            "0": "non-isolated",
+            "1": "isolated",
+            "2": "n/a",
+            "3": "n/a+isolated"
         }
     ),
     CutSpecification(
@@ -93,8 +99,21 @@ CutSpecs = CutSpecificationPool(
         description="<strong>Example:</strong> <pre>MU20[MU-CHG_NEG]</pre>",
         data_exclusive=True,
         data={
-          "positive": "positive",
-          "negative": "negative"
+            "positive": "positive",
+            "negative": "negative"
+        }
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.IP),
+        object=tmGrammar.MU,
+        type=tmGrammar.IP,
+        title="Muon impact parameter",
+        description="Two bits for impact parameter.",
+        data={
+            "0": "impact parameter 0",
+            "1": "impact parameter 1",
+            "2": "impact parameter 2",
+            "3": "impact parameter 3"
         }
     ),
     CutSpecification(
@@ -131,22 +150,22 @@ CutSpecs = CutSpecificationPool(
         title="Electron/gamma quality",
         description="",
         data={
-          "0": "quality level 0",
-          "1": "quality level 1",
-          "2": "quality level 2",
-          "3": "quality level 3",
-          "4": "quality level 4",
-          "5": "quality level 5",
-          "6": "quality level 6",
-          "7": "quality level 7",
-          "8": "quality level 8",
-          "9": "quality level 9",
-          "10": "quality level 10",
-          "11": "quality level 11",
-          "12": "quality level 12",
-          "13": "quality level 13",
-          "14": "quality level 14",
-          "15": "quality level 15"
+            "0": "quality level 0",
+            "1": "quality level 1",
+            "2": "quality level 2",
+            "3": "quality level 3",
+            "4": "quality level 4",
+            "5": "quality level 5",
+            "6": "quality level 6",
+            "7": "quality level 7",
+            "8": "quality level 8",
+            "9": "quality level 9",
+            "10": "quality level 10",
+            "11": "quality level 11",
+            "12": "quality level 12",
+            "13": "quality level 13",
+            "14": "quality level 14",
+            "15": "quality level 15"
         }
     ),
     CutSpecification(
@@ -156,10 +175,10 @@ CutSpecs = CutSpecificationPool(
         title="Electron/gamma isolation",
         description="Two bits for isolation, bit 0 represents isolation, meaning of bit 1 is currently not defined.",
         data={
-          "0": "non-isolated",
-          "1": "isolated",
-          "2": "n/a",
-          "3": "n/a+isolated"
+            "0": "non-isolated",
+            "1": "isolated",
+            "2": "n/a",
+            "3": "n/a+isolated"
         }
     ),
     CutSpecification(
@@ -194,22 +213,22 @@ CutSpecs = CutSpecificationPool(
         title="Jet quality",
         description="",
         data={
-          "0": "quality level 0",
-          "1": "quality level 1",
-          "2": "quality level 2",
-          "3": "quality level 3",
-          "4": "quality level 4",
-          "5": "quality level 5",
-          "6": "quality level 6",
-          "7": "quality level 7",
-          "8": "quality level 8",
-          "9": "quality level 9",
-          "10": "quality level 10",
-          "11": "quality level 11",
-          "12": "quality level 12",
-          "13": "quality level 13",
-          "14": "quality level 14",
-          "15": "quality level 15"
+            "0": "quality level 0",
+            "1": "quality level 1",
+            "2": "quality level 2",
+            "3": "quality level 3",
+            "4": "quality level 4",
+            "5": "quality level 5",
+            "6": "quality level 6",
+            "7": "quality level 7",
+            "8": "quality level 8",
+            "9": "quality level 9",
+            "10": "quality level 10",
+            "11": "quality level 11",
+            "12": "quality level 12",
+            "13": "quality level 13",
+            "14": "quality level 14",
+            "15": "quality level 15"
         }
     ),
     CutSpecification(
@@ -244,22 +263,22 @@ CutSpecs = CutSpecificationPool(
         title="Tau quality",
         description="",
         data={
-          "0": "quality level 0",
-          "1": "quality level 1",
-          "2": "quality level 2",
-          "3": "quality level 3",
-          "4": "quality level 4",
-          "5": "quality level 5",
-          "6": "quality level 6",
-          "7": "quality level 7",
-          "8": "quality level 8",
-          "9": "quality level 9",
-          "10": "quality level 10",
-          "11": "quality level 11",
-          "12": "quality level 12",
-          "13": "quality level 13",
-          "14": "quality level 14",
-          "15": "quality level 15"
+            "0": "quality level 0",
+            "1": "quality level 1",
+            "2": "quality level 2",
+            "3": "quality level 3",
+            "4": "quality level 4",
+            "5": "quality level 5",
+            "6": "quality level 6",
+            "7": "quality level 7",
+            "8": "quality level 8",
+            "9": "quality level 9",
+            "10": "quality level 10",
+            "11": "quality level 11",
+            "12": "quality level 12",
+            "13": "quality level 13",
+            "14": "quality level 14",
+            "15": "quality level 15"
         }
     ),
     CutSpecification(
@@ -269,10 +288,10 @@ CutSpecs = CutSpecificationPool(
         title="Tau isolation",
         description="Two bits for isolation, bit 0 represents isolation, meaning of bit 1 is currently not defined.",
         data={
-          "0": "non-isolated",
-          "1": "isolated",
-          "2": "n/a",
-          "3": "n/a+isolated"
+            "0": "non-isolated",
+            "1": "isolated",
+            "2": "n/a",
+            "3": "n/a+isolated"
         }
     ),
     CutSpecification(
@@ -320,8 +339,8 @@ CutSpecs = CutSpecificationPool(
                     "<strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre>",
         data_exclusive=True,
         data={
-          "ls": "like sign",
-          "os": "opposite sign"
+            "ls": "like sign",
+            "os": "opposite sign"
         }
     ),
     CutSpecification(
@@ -367,17 +386,47 @@ CutSpecs = CutSpecificationPool(
         object=Empty,
         type=tmGrammar.MASS,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF],
-        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
+        functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_3, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
         range_precision=1,
         range_step=0.2,
         range_unit="GeV",
         title="Invariant or Transverse mass",
-        description="Applies invariant or transverse mass restriction to combination of two objects depending on the used function.<br/><br/>" \
+        description="Applies invariant or transverse mass restriction to combination of two (or three) objects depending on the applied function.<br/><br/>" \
                     "Calculation of invariant mass:<br/><br/>" \
-                    "M<sub>(inv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "M<sub>0</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
                     "Calculation of transverse mass:<br/><br/>" \
-                    "M<sub>(trv)</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (1 - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
-                    "<strong>Example:</strong> <pre>mass{MU20, MU20}[MASS_Z]</pre>"
+                    "M<sub>T</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (1 - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "<strong>Example:</strong> <pre>mass_inv{MU20, MU20}[MASS_Z]</pre>"
+    ),
+    CutSpecification(
+        name=tmGrammar.MASSUPT,
+        object=Empty,
+        type=tmGrammar.MASSUPT,
+        objects=[tmGrammar.MU],
+        functions=[tmGrammar.mass_inv_upt],
+        range_precision=1,
+        range_step=0.2,
+        range_unit="GeV",
+        title="Invariant mass for muon unconstrained pt",
+        description="Applies invariant mass restriction to combination of two objects.<br/><br/>" \
+                    "Calculation of invariant mass:<br/><br/>" \
+                    "M<sub>0</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>upt1</em> <em>upt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
+                    "<strong>Example:</strong> <pre>mass_inv_upt{MU20, MU20}[MASSUPT_Z]</pre>"
+    ),
+    CutSpecification(
+        name=tmGrammar.MASSDR,
+        object=Empty,
+        type=tmGrammar.MASSDR,
+        objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
+        functions=[tmGrammar.mass_inv_dr],
+        range_precision=1,
+        range_step=0.2,
+        range_unit="m/dR",
+        title="Invariant mass divided by delta-R",
+        description="Applies invariant mass divided by delta-R restriction of two objects.<br/><br/>" \
+                    "Calculation of invariant mass/delta-R:<br/><br/>" \
+                    "M<sub>0</sub>/&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>upt1</em> <em>upt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))</span>/&Delta;R<br/><br/>" \
+                    "<strong>Example:</strong> <pre>mass_inv_dr{MU20, MU20}[MASSDR_X]</pre>"
     ),
     CutSpecification(
         name=tmGrammar.TBPT,

@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
+"""Bins model."""
 
 from tmEditor.core.formatter import fHex, fCutValue
 from tmEditor.core.types import ThresholdCutNames
 from .AbstractTableModel import AbstractTableModel
-
-from PyQt5 import QtCore
 
 __all__ = ['BinsModel', ]
 
@@ -19,8 +17,8 @@ kMaximum = 'maximum'
 class BinsModel(AbstractTableModel):
     """Default scale bins table model."""
 
-    def __init__(self, menu, name, parent = None):
-        super(BinsModel, self).__init__(menu.scales.bins[name], parent)
+    def __init__(self, menu, name, parent=None):
+        super().__init__(menu.scales.bins[name], parent)
         self.name = name
         self.addColumnSpec("Number dec", lambda item: item[kNumber], int, self.AlignRight)
         self.addColumnSpec("Number hex", lambda item: item[kNumber], fHex, self.AlignRight)

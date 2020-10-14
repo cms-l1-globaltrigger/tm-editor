@@ -1,7 +1,21 @@
-# -*- coding: utf-8 -*-
+"""Algorithm helper."""
+
+import re
 
 import tmGrammar
-import re
+
+__all__ = [
+    'join',
+    'encode_comparison_operator',
+    'encode_threshold',
+    'decode_threshold',
+    'encode_bx_offset',
+    'encode_cuts',
+    'ObjectHelper',
+    'ExtSignalHelper',
+    'FunctionHelper',
+    'AlgorithmHelper'
+]
 
 def join(items, separator=""):
     """Joins string representation of list items.
@@ -36,7 +50,7 @@ def encode_cuts(items):
     if not items: return ""
     return "[{0}]".format(join(items, ","))
 
-class AtomicHelper(object):
+class Helper:
 
     def serialize(self):
         raise NotImplementedError()
@@ -44,7 +58,7 @@ class AtomicHelper(object):
     def __str__(self):
         return self.serialize()
 
-class ObjectHelper(AtomicHelper):
+class ObjectHelper(Helper):
 
     def __init__(self, type, threshold, bx_offset=0, comparison_operator=tmGrammar.GE, cuts=None):
         self.type = type
@@ -62,9 +76,9 @@ class ObjectHelper(AtomicHelper):
         threshold = encode_threshold(self.threshold)
         bx_offset = encode_bx_offset(self.bx_offset)
         cuts = encode_cuts(self.cuts)
-        return "{self.type}{comparison_operator}{threshold}{bx_offset}{cuts}".format(**locals())
+        return f"{self.type}{comparison_operator}{threshold}{bx_offset}{cuts}"
 
-class ExtSignalHelper(AtomicHelper):
+class ExtSignalHelper(Helper):
 
     def __init__(self, name, bx_offset=0):
         self.name = name
@@ -74,9 +88,9 @@ class ExtSignalHelper(AtomicHelper):
 
     def serialize(self):
         bx_offset = encode_bx_offset(self.bx_offset)
-        return "{self.name}{bx_offset}".format(**locals())
+        return f"{self.name}{bx_offset}"
 
-class FunctionHelper(AtomicHelper):
+class FunctionHelper(Helper):
 
     def __init__(self, name, objects=None, cuts=None):
         self.name = name
@@ -95,9 +109,9 @@ class FunctionHelper(AtomicHelper):
     def serialize(self):
         objects = join(self.objects, ',')
         cuts = encode_cuts(self.cuts)
-        return "{self.name}{{{objects}}}{cuts}".format(**locals())
+        return f"{self.name}{{{objects}}}{cuts}"
 
-class AlgorithmHelper(AtomicHelper):
+class AlgorithmHelper(Helper):
 
     def __init__(self, expression=None):
         self.expression = expression or []
@@ -123,13 +137,3 @@ class AlgorithmHelper(AtomicHelper):
 
     def serialize(self):
         return join(self.expression, " ")
-
-if __name__ == '__main__':
-    expr = AlgorithmHelper()
-    expr.addObject(tmGrammar.EG, 42., +2).addCut('EG-PHI_2p4').addCut('EG-ETA_1p23')
-    expr.addOperator(tmGrammar.AND)
-    f = expr.addFunction(tmGrammar.mass)
-    f.addObject(tmGrammar.MU, 10.5).addCut('MU-QLTY_HQ')
-    f.addObject(tmGrammar.JET, 10.5).addCut('JET-ETA_2p4')
-    f.addCut('MASS_Z')
-    print(expr)

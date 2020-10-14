@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Algorithm syntax highlighter derived from QtGui.QSyntaxHighlighter class,
  to be attached to an QtGui.QTextDocument instance.
 
@@ -13,14 +11,14 @@ Attaching a syntax hilighter to an text document is quite simple:
 
 """
 
-import tmGrammar
-
-from tmEditor.core.types import FunctionTypes
+from collections import namedtuple
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 
-from collections import namedtuple
+import tmGrammar
+
+from tmEditor.core.types import FunctionTypes
 
 __all__ = ['AlgorithmSyntaxHighlighter', ]
 
@@ -45,7 +43,7 @@ class AlgorithmSyntaxHighlighter(QtGui.QSyntaxHighlighter):
         """Attribute *document* requires a text document instance or a text
         edit widget instance to apply syntax highlighting on.
         """
-        super(AlgorithmSyntaxHighlighter, self).__init__(document)
+        super().__init__(document)
         self.highlightingRules = []
         # Keywords: AND, OR, XOR, NOT
         keywordFormat = QtGui.QTextCharFormat()
@@ -64,8 +62,11 @@ class AlgorithmSyntaxHighlighter(QtGui.QSyntaxHighlighter):
         functionFormat = QtGui.QTextCharFormat()
         functionFormat.setForeground(QtCore.Qt.blue)
         functionFormat.setFontWeight(QtGui.QFont.Bold)
-        rule = self.HighlightingRule(functionFormat,
-            QtCore.QRegExp("\\b{tokens}+(?=\\{{)".format(tokens="|".join(FunctionTypes))))
+        tokens = "|".join(FunctionTypes)
+        rule = self.HighlightingRule(
+            functionFormat,
+            QtCore.QRegExp("\\b{tokens}+(?=\\{{)".format(tokens=tokens))
+        )
         self.highlightingRules.append(rule)
 
     def highlightBlock(self, text):

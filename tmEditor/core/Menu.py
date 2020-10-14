@@ -1,28 +1,18 @@
-# -*- coding: utf-8 -*-
-
-"""Menu container.
-
-"""
-
-import tmGrammar
-
-from .types import ObjectTypes
-from .Settings import MaxAlgorithms
-from .AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
-from .Algorithm import toObject, toExternal
-from .Algorithm import Algorithm
-from .Algorithm import Cut, Object, External
-
-from distutils.version import StrictVersion
+"""Menu container."""
 
 import logging
 import uuid
 import re
-import sys, os
+
+from distutils.version import StrictVersion
+
+from .Settings import MaxAlgorithms
+from .AlgorithmSyntaxValidator import AlgorithmSyntaxValidator
+from .Algorithm import toObject, toExternal
 
 __all__ = ['Menu', 'GrammarVersion']
 
-GrammarVersion = StrictVersion('0.7')
+GrammarVersion = StrictVersion('0.8')
 """Supported grammar version."""
 
 # ------------------------------------------------------------------------------
@@ -36,7 +26,7 @@ kType = 'type'
 #  Menu container class
 # ------------------------------------------------------------------------------
 
-class Menu(object):
+class Menu:
     """L1-Trigger Menu container class. Provides methods to read and write XML
     menu files and adding and removing contents.
     """
@@ -111,11 +101,11 @@ class Menu(object):
 
     def scaleMeta(self, object, scaleType):
         """Returns scale information for *object* by *scaleType*."""
-        return (list(filter(lambda item: item[kObject]==object.type and item[kType]==scaleType, self.scales.scales)) or [None])[0]
+        return (list(filter(lambda item: item[kObject] == object.type and item[kType] == scaleType, self.scales.scales)) or [None])[0]
 
     def scaleBins(self, object, scaleType):
         """Returns bins for *object* by *scaleType*."""
-        key = '{object.type}-{scaleType}'.format(**locals())
+        key = f'{object.type}-{scaleType}'
         return self.scales.bins[key] if key in self.scales.bins else None
 
     def orphanedObjects(self):
@@ -152,7 +142,7 @@ class Menu(object):
         count = len(self.algorithms)
         if count > MaxAlgorithms:
             maximum = MaxAlgorithms
-            message = "exceeding maximum number of supported algorithms: {count} (maximum {maximum})".format(**locals())
+            message = f"exceeding maximum number of supported algorithms: {count} (maximum {maximum})"
             logging.error(message)
             raise ValueError(message)
 
@@ -179,7 +169,7 @@ class Menu(object):
 #  Menu information container class.
 # ------------------------------------------------------------------------------
 
-class MenuInfo(object):
+class MenuInfo:
 
     RegExMenuName = re.compile(r'^(L1Menu_)([a-zA-Z0-9_]*)$')
 
@@ -197,6 +187,6 @@ class MenuInfo(object):
     def validate(self):
         """Run consistency checks."""
         if not self.RegExMenuName.match(self.name):
-            message = "invalid menu name: `{self.name}' (must start with `L1Menu_' followed only by characters, numbers or underscores)".format(**locals())
+            message = f"invalid menu name: `{self.name}' (must start with `L1Menu_' followed only by characters, numbers or underscores)"
             logging.error(message)
             raise ValueError(message)

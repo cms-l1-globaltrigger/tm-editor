@@ -1,10 +1,15 @@
-# -*- coding: utf-8 -*-
+"""Bottom widget."""
+
+import re
+
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 import tmGrammar
 
 from tmEditor.core import formatter
 from tmEditor.core.Settings import CutSpecs
-from tmEditor.core.Algorithm import toObject
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.core.types import FunctionTypes, CountObjectTypes, FunctionCutTypes
 
@@ -18,13 +23,13 @@ from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextCutsPreview
 from tmEditor.gui.CommonWidgets import createIcon
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-import re
-
 from tmEditor import tmeditor_rc
 
 __all__ = ['BottomWidget', ]
+
+# HACK: overload with missing attributes.
+tmGrammar.ET = "ET"
+tmGrammar.PT = "PT"
 
 kCable = 'cable'
 kChannel = 'channel'
@@ -81,7 +86,7 @@ class ToolbarWidget(QtWidgets.QWidget):
     moveTriggered = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
-        super(ToolbarWidget, self).__init__(parent)
+        super().__init__(parent)
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
         self.addButton = QtWidgets.QPushButton(createIcon("list-add"), self.tr("Add..."), self)
@@ -117,7 +122,7 @@ class BottomWidget(QtWidgets.QWidget):
     """Widget displayed below table view showing previews of selected items."""
 
     def __init__(self, parent=None):
-        super(BottomWidget, self).__init__(parent)
+        super().__init__(parent)
         self.toolbar = ToolbarWidget(self)
         self.notice = IconLabel(QtGui.QIcon(), "", self)
         self.notice.setAutoFillBackground(True)

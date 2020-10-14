@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
-"""This module contains type tuples and mappings derived from tmGrammar.
-"""
+"""This module contains type tuples and mappings derived from tmGrammar."""
 
 import tmGrammar
 
@@ -75,11 +72,13 @@ ExternalObjectTypes = (
 """Ordered list of supported external signal types."""
 
 ObjectCutTypes = (
+    tmGrammar.UPT,
     tmGrammar.ETA,
     tmGrammar.PHI,
     tmGrammar.ISO,
     tmGrammar.QLTY,
     tmGrammar.CHG,
+    tmGrammar.IP,
     tmGrammar.SLICE,
 )
 """Orderd list of object cut type names."""
@@ -90,6 +89,8 @@ FunctionCutTypes = (
     tmGrammar.DPHI,
     tmGrammar.DR,
     tmGrammar.MASS,
+    tmGrammar.MASSUPT,
+    tmGrammar.MASSDR,
     tmGrammar.TBPT,
     tmGrammar.ORMDETA,
     tmGrammar.ORMDPHI,
@@ -124,6 +125,9 @@ FunctionTypes = (
     tmGrammar.comb,
     tmGrammar.dist,
     tmGrammar.mass_inv,
+    tmGrammar.mass_inv_upt,
+    tmGrammar.mass_inv_dr,
+    tmGrammar.mass_inv_3,
     tmGrammar.mass_trv,
     tmGrammar.comb_orm,
     tmGrammar.dist_orm,
@@ -162,6 +166,9 @@ FunctionCutsMap = {
     tmGrammar.comb: [tmGrammar.CHGCOR, tmGrammar.TBPT],
     tmGrammar.dist: [tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
     tmGrammar.mass_inv: [tmGrammar.MASS, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
+    tmGrammar.mass_inv_upt: [tmGrammar.MASSUPT, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
+    tmGrammar.mass_inv_dr: [tmGrammar.MASSDR, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
+    tmGrammar.mass_inv_3: [tmGrammar.MASS],
     tmGrammar.mass_trv: [tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],
     tmGrammar.comb_orm: [tmGrammar.ORMDETA, tmGrammar.ORMDPHI, tmGrammar.ORMDR, tmGrammar.TBPT],
     tmGrammar.dist_orm: [tmGrammar.ORMDETA, tmGrammar.ORMDPHI, tmGrammar.ORMDR, tmGrammar.DETA, tmGrammar.DPHI, tmGrammar.DR, tmGrammar.TBPT],

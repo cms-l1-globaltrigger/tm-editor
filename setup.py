@@ -4,7 +4,7 @@ long_description = open('README.md').read()
 
 setup(
     name='tm-editor',
-    version='0.11.2',
+    version='0.12.0',
     description="CMS Level-1 Trigger Menu Editor",
     long_description=long_description,
     author = "Bernhard Arnold",
@@ -12,7 +12,7 @@ setup(
     url = "http://globaltrigger.hephy.at/upgrade/tme",
     packages = find_packages(),
     install_requires=[
-        'tm-python @ git+https://github.com/cms-l1-globaltrigger/tm-python@0.7.5',
+        'tm-python @ git+https://github.com/cms-l1-globaltrigger/tm-python@0.8.1',
         'Markdown>=3.1',
         'PyQt5>=5.13.2'
     ],

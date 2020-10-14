@@ -1,30 +1,25 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
+"""Function editor dialog."""
+
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 import tmGrammar
 
 from tmEditor.core.formatter import fCutLabel
 from tmEditor.core.Settings import CutSpecs
-from tmEditor.core.types import FunctionCutsMap, ObjectTypes
+from tmEditor.core.types import ObjectTypes
 
 from tmEditor.core.AlgorithmHelper import AlgorithmHelper
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 
 # Common widgets
-from tmEditor.gui.CommonWidgets import PrefixedSpinBox
 from tmEditor.gui.CommonWidgets import TextFilterWidget
-from tmEditor.gui.CommonWidgets import ComboBoxPlus
 from tmEditor.gui.CommonWidgets import createIcon
 
 from tmEditor.gui.CutEditorDialog import CutEditorDialog
 from tmEditor.gui.ObjectEditorDialog import ObjectEditorDialog, CutItem
-
-# Qt4 python bindings
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-import sys, os
-import re
 
 __all__ = ['FunctionEditorDialog', ]
 
@@ -36,7 +31,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
     ObjectReqs = 5
 
     def __init__(self, menu, parent=None):
-        super(FunctionEditorDialog, self).__init__(parent)
+        super().__init__(parent)
         self.menu = menu
         self.validator = AlgorithmSyntaxValidator(menu)
         self.setupUi()
@@ -56,6 +51,9 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.functionComboBox.addItem(self.tr("{} (combination)").format(tmGrammar.comb), tmGrammar.comb)
         self.functionComboBox.addItem(self.tr("{} (correlation)").format(tmGrammar.dist), tmGrammar.dist)
         self.functionComboBox.addItem(self.tr("{} (invariant mass)").format(tmGrammar.mass_inv), tmGrammar.mass_inv)
+        self.functionComboBox.addItem(self.tr("{} (invariant mass unconstrained pt)").format(tmGrammar.mass_inv_upt), tmGrammar.mass_inv_upt)
+        self.functionComboBox.addItem(self.tr("{} (invariant mass/delta-R)").format(tmGrammar.mass_inv_dr), tmGrammar.mass_inv_dr)
+        self.functionComboBox.addItem(self.tr("{} (invariant mass of 3 particles)").format(tmGrammar.mass_inv_3), tmGrammar.mass_inv_3)
         self.functionComboBox.addItem(self.tr("{} (transverse mass)").format(tmGrammar.mass_trv), tmGrammar.mass_trv)
         self.functionComboBox.addItem(self.tr("{} (combination + overlap removal)").format(tmGrammar.comb_orm), tmGrammar.comb_orm)
         self.functionComboBox.addItem(self.tr("{} (correlation + overlap removal)").format(tmGrammar.dist_orm), tmGrammar.dist_orm)
@@ -107,9 +105,9 @@ class FunctionEditorDialog(QtWidgets.QDialog):
             helper.types = ObjectTypes
             helper.setEnabled(True)
             # Disable helpers if not needed
-            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv) and helper.index >= 2:
+            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_inv_upt, tmGrammar.mass_inv_dr, tmGrammar.mass_trv) and helper.index >= 2:
                 helper.setEnabled(False)
-            if self.functionType() in (tmGrammar.dist_orm, tmGrammar.mass_inv_orm) and helper.index >= 3:
+            if self.functionType() in (tmGrammar.mass_inv_3, tmGrammar.dist_orm, tmGrammar.mass_inv_orm) and helper.index >= 3:
                 helper.setEnabled(False)
             if self.functionType() == tmGrammar.comb and helper.index >= 4:
                 helper.setEnabled(False)
@@ -157,28 +155,34 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         functionType = self.functionType()
         expression = AlgorithmFormatter.expand(self.expression())
         text = []
-        text.append('<h3>{functionType} Function</h3>')
+        text.append(f'<h3>{functionType} Function</h3>')
         if functionType == tmGrammar.comb:
-            text.append('<p>Object combinations (di- tri- quad- objects).</p>')
+            text.append(f'<p>Object combinations (di- tri- quad- objects).</p>')
         elif functionType == tmGrammar.comb_orm:
-            text.append('<p>Object combinations with overlap removal.</p>')
+            text.append(f'<p>Object combinations with overlap removal.</p>')
         elif functionType == tmGrammar.dist:
-            text.append('<p>Topological distance (correlation) of two object requirements.</p>')
+            text.append(f'<p>Topological distance (correlation) of two object requirements.</p>')
         elif functionType == tmGrammar.dist_orm:
-            text.append('<p>Topological distance (correlation) of two object requirements with overlap removal.</p>')
+            text.append(f'<p>Topological distance (correlation) of two object requirements with overlap removal.</p>')
         elif functionType == tmGrammar.mass_inv:
-            text.append('<p>Invariant mass correlation of two object requirements.</p>')
+            text.append(f'<p>Invariant mass of two object requirements.</p>')
+        elif functionType == tmGrammar.mass_inv_upt:
+            text.append(f'<p>Invariant mass for unconstained pt of two muon requirements.</p>')
+        elif functionType == tmGrammar.mass_inv_dr:
+            text.append(f'<p>Invariant mass/delta-R of two object requirements.</p>')
+        elif functionType == tmGrammar.mass_inv_3:
+            text.append(f'<p>Invariant mass of three object requirements.</p>')
         elif functionType == tmGrammar.mass_inv_orm:
-            text.append('<p>Invariant mass correlation of two object requirements with overlap removal.</p>')
-        elif functionType == tmGrammar.mass_inv:
-            text.append('<p>Transverse mass correlation of two object requirements (at least on without eta component).</p>')
+            text.append(f'<p>Invariant mass correlation of two object requirements with overlap removal.</p>')
+        elif functionType == tmGrammar.mass_trv:
+            text.append(f'<p>Transverse mass correlation of two object requirements (at least on without eta component).</p>')
         elif functionType == tmGrammar.mass_inv_orm:
-            text.append('<p>Transverse mass correlation of two object requirements (at least on without eta component) with overlap removal.</p>')
+            text.append(f'<p>Transverse mass correlation of two object requirements (at least on without eta component) with overlap removal.</p>')
         if functionType in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_inv_orm):
-            text.append('<p>The <em>last</em> object requirement must be of a diffrent type, applying the overlap removal on the <em>preceding</em> object requirement(s).</p>')
-        text.append('<h4>Preview</h4>')
-        text.append('<p><pre>{expression}</pre></p>')
-        self.infoTextEdit.setText(''.join(text).format(**locals()))
+            text.append(f'<p>The <em>last</em> object requirement must be of a diffrent type, applying the overlap removal on the <em>preceding</em> object requirement(s).</p>')
+        text.append(f'<h4>Preview</h4>')
+        text.append(f'<p><pre>{expression}</pre></p>')
+        self.infoTextEdit.setText(''.join(text))
 
     def expression(self):
         """Returns expression selected by the inputs."""
@@ -257,24 +261,39 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         # Get object requirements
         helpers = [helper for helper in self.objectHelpers if helper.isValid()]
         # Check minimum required objects
-        if len(helpers) < 2:
-            QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
-                self.tr("Function {0}{{...}} requires at least two object requirements.").format(self.functionType())
-            )
-            return
+        if self.functionType() == tmGrammar.mass_inv_3:
+            if len(helpers) < 3:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    self.tr("Invalid expression"),
+                    self.tr("Function {0}{{...}} requires at three object requirements.").format(self.functionType())
+                )
+                return
+        else:
+            if len(helpers) < 2:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    self.tr("Invalid expression"),
+                    self.tr("Function {0}{{...}} requires at least two object requirements.").format(self.functionType())
+                )
+                return
         # Validate object requirements.
         for helper in helpers:
             try:
                 self.validator.validate(AlgorithmFormatter.compress(helper.text()))
             except AlgorithmSyntaxError as e:
-                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    self.tr("Invalid expression"),
                     self.tr("Invalid object requirement {0}: {1},<br /><br />Reason: {2}").format(helper.index+1, helper.text(), format(e))
                 )
                 return
         # Check required cuts
-        if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_trv):
+        if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_inv_3, tmGrammar.mass_trv):
             if len(self.selectedCuts()) < 1:
-                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    self.tr("Invalid expression"),
                     self.tr("Function {0}{{...}} requires at least one function cut.").format(self.functionType())
                 )
                 return
@@ -282,17 +301,19 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         try:
             self.validator.validate(AlgorithmFormatter.compress(self.expression()))
         except AlgorithmSyntaxError as e:
-            QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"),
+            QtWidgets.QMessageBox.warning(
+                self,
+                self.tr("Invalid expression"),
                 self.tr("Invalid expression: {0}").format(format(e) or e.token),
             )
             return
-        super(FunctionEditorDialog, self).accept()
+        super().accept()
 
 # -----------------------------------------------------------------------------
 #  Function requirement helper class
 # -----------------------------------------------------------------------------
 
-class FunctionReqHelper(object):
+class FunctionReqHelper:
 
     def __init__(self, index, parent):
         self.index = index
@@ -324,22 +345,11 @@ class FunctionReqHelper(object):
             try:
                 dialog.loadObject(token)
             except ValueError as e:
-                QtWidgets.QMessageBox.warning(self.parent, self.parent.tr("Invalid expression"),
+                QtWidgets.QMessageBox.warning(
+                    self.parent,
+                    self.parent.tr("Invalid expression"),
                     self.parent.tr("Invalid object expression: {0}").format(e),
                 )
         dialog.exec_()
         if dialog.result() == QtWidgets.QDialog.Accepted:
             self.lineEdit.setText(dialog.expression())
-
-# -----------------------------------------------------------------------------
-#  Unit test
-# -----------------------------------------------------------------------------
-
-if __name__ == '__main__':
-    import sys
-    from tmEditor import Menu
-    app = QtWidgets.QApplication(sys.argv)
-    menu = Menu(sys.argv[1])
-    window = FunctionEditor(menu)
-    window.show()
-    sys.exit(app.exec_())

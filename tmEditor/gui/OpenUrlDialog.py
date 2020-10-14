@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Open from URL dialog.
 
 This dialog provides an URL entry to download an XML file from a remote location
@@ -11,7 +9,8 @@ Example usage:
 >>> print dialog.url()
 """
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
 __all__ = ['OpenUrlDialog', ]
 
@@ -22,8 +21,8 @@ __all__ = ['OpenUrlDialog', ]
 class OpenUrlDialog(QtWidgets.QDialog):
     """Dialog providing an URL input field."""
 
-    def __init__(self, parent = None):
-        super(OpenUrlDialog, self).__init__(parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
         # Dialog appeareance
         self.setWindowTitle(self.tr("Open URL"))
         self.setMinimumWidth(500)

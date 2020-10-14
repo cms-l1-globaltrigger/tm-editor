@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""Scales model."""
 
 import tmGrammar
 
@@ -8,9 +8,6 @@ tmGrammar.PT = "PT"
 
 from tmEditor.core.formatter import fCutValue
 from .AbstractTableModel import AbstractTableModel
-
-from PyQt5 import QtCore
-from PyQt5 import QtGui
 
 __all__ = ['ScalesModel', ]
 
@@ -39,8 +36,8 @@ def fPatchType(item):
 class ScalesModel(AbstractTableModel):
     """Default scales table model."""
 
-    def __init__(self, menu, parent = None):
-        super(ScalesModel, self).__init__(menu.scales.scales, parent)
+    def __init__(self, menu, parent=None):
+        super().__init__(menu.scales.scales, parent)
         self.addColumnSpec("Object", lambda item: item[kObject])
         self.addColumnSpec("Type", fPatchType)
         self.addColumnSpec("Minimum", lambda item: item[kMinimum], fCutValue, self.AlignRight)

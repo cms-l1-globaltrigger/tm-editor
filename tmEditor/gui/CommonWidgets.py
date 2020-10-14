@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Commonly used helper widgets.
 
  * ColorIcon
@@ -9,7 +7,6 @@
 
  * PrefixedSpinBox
  * ReadOnlyLineEdit
- * FilterLineEdit
  * ComboBoxPlus
  * RestrictedLineEdit
  * RestrictedPlainTextEdit
@@ -19,24 +16,33 @@
  * PhiCutChart
 """
 
-import tmGrammar
+import math
+
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from tmEditor.core import formatter
 from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.types import CountObjectTypes, ObjectTypes, SignalTypes
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-import math
-import os
-
 __all__ = [
-    'richTextObjectsPreview', 'richTextSignalsPreview',
-    'richTextExtSignalsPreview', 'richTextCutsPreview',
-    'ColorIcon', 'ColorLabel', 'IconLabel', 'SelectableLabel',
-    'PrefixedSpinBox', 'ReadOnlyLineEdit', 'FilterLineEdit',
-    'ComboBoxPlus', 'RestrictedLineEdit', 'RestrictedPlainTextEdit',
-    'ListSpinBox', 'EtaCutChart', 'PhiCutChart'
+    'richTextObjectsPreview',
+    'richTextSignalsPreview',
+    'richTextExtSignalsPreview',
+    'richTextCutsPreview',
+    'ColorIcon',
+    'ColorLabel',
+    'IconLabel',
+    'SelectableLabel',
+    'PrefixedSpinBox',
+    'ReadOnlyLineEdit',
+    'ComboBoxPlus',
+    'RestrictedLineEdit',
+    'RestrictedPlainTextEdit',
+    'ListSpinBox',
+    'EtaCutChart',
+    'PhiCutChart'
 ]
 
 # -----------------------------------------------------------------------------
@@ -45,11 +51,11 @@ __all__ = [
 
 def richTextObjectsPreview(algorithm, parent):
     content = []
-    if algorithm.objects():
-        content.append(parent.tr("<p><strong>Used objects:</strong></p>"))
+    objects = [toObject(obj) for obj in algorithm.objects()]
+    objects = [obj for obj in objects if obj.type in ObjectTypes]
+    if objects:
+        content.append(parent.tr("<p><strong>Objects:</strong></p>"))
         content.append(parent.tr("<p>"))
-        objects = [toObject(obj) for obj in algorithm.objects()]
-        objects = [obj for obj in objects if obj.type in ObjectTypes]
         objects.sort()
         for obj in objects:
             comparison = formatter.fComparison(obj.comparison_operator)
@@ -64,11 +70,11 @@ def richTextObjectsPreview(algorithm, parent):
 
 def richTextSignalsPreview(algorithm, parent):
     content = []
-    if algorithm.objects():
-        content.append(parent.tr("<p><strong>Used objects:</strong></p>"))
+    signals = [toObject(obj) for obj in algorithm.objects()]
+    signals = [obj for obj in signals if obj.type in SignalTypes]
+    if signals:
+        content.append(parent.tr("<p><strong>Signals:</strong></p>"))
         content.append(parent.tr("<p>"))
-        signals = [toObject(obj) for obj in algorithm.objects()]
-        signals = [sig for sig in signals if sig.type in SignalTypes]
         signals.sort()
         for sig in signals:
             bxOffset = formatter.fBxOffset(sig.bx_offset)
@@ -78,10 +84,10 @@ def richTextSignalsPreview(algorithm, parent):
 
 def richTextExtSignalsPreview(algorithm, parent):
     content = []
-    if algorithm.externals():
-        content.append(parent.tr("<p><strong>Used externals:</strong></p>"))
+    externals = [toExternal(ext) for ext in algorithm.externals()]
+    if externals:
+        content.append(parent.tr("<p><strong>Externals:</strong></p>"))
         content.append(parent.tr("<p>"))
-        externals = [toExternal(ext) for ext in algorithm.externals()]
         externals.sort()
         for ext in externals:
             content.append(parent.tr("<img src=\":/icons/ext.svg\"> {0}<br/>").format(ext.name))
@@ -92,7 +98,7 @@ def richTextCutsPreview(menu, algorithm, parent):
     # List used cuts.
     content = []
     if algorithm.cuts():
-        content.append(parent.tr("<p><strong>Used cuts:</strong></p>"))
+        content.append(parent.tr("<p><strong>Cuts:</strong></p>"))
         content.append(parent.tr("<p>"))
         cuts = []
         for name in algorithm.cuts():
@@ -117,20 +123,20 @@ def createIcon(name):
         return icon
     icon = QtGui.QIcon()
     if not len(icon.availableSizes()):
-        filename = ":/icons/{name}.svg".format(**locals())
+        filename = f':/icons/{name}.svg'
         if QtCore.QFile.exists(filename):
             icon.addFile(filename)
-        filename = ":/icons/16/{name}.svg".format(**locals())
+        filename = f':/icons/16/{name}.svg'
         if QtCore.QFile.exists(filename):
             icon.addPixmap(QtGui.QPixmap(filename))
-        filename = ":/icons/24/{name}.svg".format(**locals())
+        filename = f':/icons/24/{name}.svg'
         if QtCore.QFile.exists(filename):
             icon.addPixmap(QtGui.QPixmap(filename))
     return icon
 
 def miniIcon(name, size=13):
     """Returns mini icon to be used for items in list and tree views."""
-    return QtGui.QIcon(QtGui.QIcon(":/icons/{name}.svg".format(name=name)).pixmap(size, size))
+    return QtGui.QIcon(QtGui.QIcon(f':/icons/{name}.svg').pixmap(size, size))
 
 # -----------------------------------------------------------------------------
 #  A framed color icon box.
@@ -142,7 +148,7 @@ class ColorIcon(QtWidgets.QFrame):
     The default square size is 12 pixel.
     """
     def __init__(self, color, parent=None, size=12):
-        super(ColorIcon, self).__init__(parent)
+        super().__init__(parent)
         # Fix the icon size.
         self.setFixedSize(size, size)
         # Draw a border around the icon.
@@ -174,7 +180,7 @@ class ColorLabel(QtWidgets.QWidget):
     """Color legend with icon and text label on the left."""
 
     def __init__(self, color, text, parent=None):
-        super(ColorLabel, self).__init__(parent)
+        super().__init__(parent)
         # Create the icon and the text label.
         self.icon = ColorIcon(color, self)
         self.label = QtWidgets.QLabel(text, self)
@@ -199,7 +205,7 @@ class IconLabel(QtWidgets.QWidget):
 
     def __init__(self, icon, text, parent=None):
         """Set icon of type QIcon and a text message."""
-        super(IconLabel, self).__init__(parent)
+        super().__init__(parent)
         # Create the icon and the text label.
         self.icon = QtWidgets.QLabel(self)
         self.icon.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
@@ -226,7 +232,7 @@ class IconLabel(QtWidgets.QWidget):
 
 class SelectableLabel(QtWidgets.QLabel):
     def __init__(self, parent=None):
-        super(SelectableLabel, self).__init__(parent)
+        super().__init__(parent)
         self.setWordWrap(True)
         self.setTextInteractionFlags(
             QtCore.Qt.LinksAccessibleByMouse |
@@ -244,7 +250,7 @@ class PrefixedSpinBox(QtWidgets.QSpinBox):
     """
     def __init__(self, parent=None):
         """Constructur, takes optional reference to parent widget."""
-        super(PrefixedSpinBox, self).__init__(parent)
+        super().__init__(parent)
 
     def textFromValue(self, value):
         return format(value, '+d') # prefix integers also with plus sign
@@ -261,45 +267,12 @@ class ReadOnlyLineEdit(QtWidgets.QLineEdit):
         @param text the initial text to display.
         @param parent optional parent widget.
         """
-        super(ReadOnlyLineEdit, self).__init__(text, parent)
+        super().__init__(text, parent)
         self.setReadOnly(True)
         # Set background to parent widget background.
         palette = self.palette()
         palette.setColor(QtGui.QPalette.Base, palette.color(QtGui.QPalette.Window))
         self.setPalette(palette)
-
-# -----------------------------------------------------------------------------
-#  Filter line edit widget.
-# -----------------------------------------------------------------------------
-
-class FilterLineEdit(QtWidgets.QLineEdit):
-    """Line edit with a clear button on the right side.
-    Used for filter and search inputs.
-    """
-    def __init__(self, parent = None):
-        """Constructur, takes optional reference to parent widget."""
-        super(FilterLineEdit, self).__init__(parent)
-        self._clearButton = QtWidgets.QToolButton(self)
-        self._clearButton.setIcon(createIcon('edit-clear'))
-        self._clearButton.setCursor(QtCore.Qt.ArrowCursor)
-        self._clearButton.setStyleSheet("QToolButton { border: none; padding: 0; }")
-        self._clearButton.hide()
-        self._clearButton.clicked.connect(self.clear)
-        self.textChanged.connect(self._updateClearButton)
-        frameWidth = self.style().pixelMetric(QtWidgets.QStyle.PM_DefaultFrameWidth)
-        self.setStyleSheet("QLineEdit {{ padding-right: {0}px; }} ".format(self._clearButton.sizeHint().width() + frameWidth + 1))
-        msz = self.minimumSizeHint()
-        self.setMinimumSize(max(msz.width(), self._clearButton.sizeHint().height() + frameWidth - 2),
-                            max(msz.height(), self._clearButton.sizeHint().height() + frameWidth - 2))
-    def resizeEvent(self, event):
-        """Takes care of drawing the clear button on the right side."""
-        sz = self._clearButton.sizeHint()
-        frameWidth = self.style().pixelMetric(QtWidgets.QStyle.PM_DefaultFrameWidth)
-        self._clearButton.move(self.rect().right() - frameWidth - sz.width(),
-                              (self.rect().bottom() + 2 - sz.height()) / 2)
-    def _updateClearButton(self, text):
-        """Hide clear button when line edit contains no text."""
-        self._clearButton.setVisible(len(text))
 
 # ------------------------------------------------------------------------------
 #  Text filter widget
@@ -312,18 +285,23 @@ class TextFilterWidget(QtWidgets.QWidget):
     textChanged = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None, spacer=False):
-        super(TextFilterWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setAutoFillBackground(True)
         self.filterLabel = QtWidgets.QLabel(self.tr("Filter"), self)
-        self.filterLineEdit = FilterLineEdit(self)
+        self.filterLineEdit = QtWidgets.QLineEdit(self)
+        self.filterLineEdit.setClearButtonEnabled(True)
         self.filterLineEdit.textChanged.connect(lambda text: self.textChanged.emit(text))
         hbox = QtWidgets.QHBoxLayout()
-        hbox.setContentsMargins(10, 1, 1, 1)
         if spacer:
             hbox.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum))
         hbox.addWidget(self.filterLabel)
         hbox.addWidget(self.filterLineEdit)
         self.setLayout(hbox)
+        # Tweak layout margins
+        margins = hbox.contentsMargins()
+        margins.setTop(1)
+        margins.setBottom(1)
+        hbox.setContentsMargins(margins)
 
 # -----------------------------------------------------------------------------
 #  Extended combo box widget.
@@ -337,7 +315,7 @@ class ComboBoxPlus(QtWidgets.QComboBox):
     """
 
     def __init__(self, *args, **kwargs):
-        super(ComboBoxPlus, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def setItemEnabled(self, index, enabled):
         """Enables or disables item at *index*."""
@@ -365,7 +343,7 @@ class RestrictedLineEdit(QtWidgets.QLineEdit):
 
         @param parent optional parent widget.
         """
-        super(RestrictedLineEdit, self).__init__(parent)
+        super().__init__(parent)
         # Optional prefix.
         self._prefix = None
         # Optional regular expression pattern.
@@ -402,7 +380,7 @@ class RestrictedPlainTextEdit(QtWidgets.QPlainTextEdit):
     """Restricted plain text edit widget. Maximum length can be specified.
     """
     def __init__(self, parent=None):
-        super(RestrictedPlainTextEdit, self).__init__(parent)
+        super().__init__(parent)
         self._maxLength = None
         self.textChanged.connect(self.validate)
         self.setTabChangesFocus(True)
@@ -429,7 +407,7 @@ class ListSpinBox(QtWidgets.QSpinBox):
     """Custom spin box for a list of integers."""
 
     def __init__(self, values, parent=None):
-        super(ListSpinBox, self).__init__(parent)
+        super().__init__(parent)
         self.setValues(values)
 
     def setValues(self, values):
@@ -456,7 +434,7 @@ class ListSpinBox(QtWidgets.QSpinBox):
 
     def setValue(self, value):
         value = self.nearest(value)
-        super(ListSpinBox, self).setValue(value)
+        super().setValue(value)
 
     def valueFromText(self, text):
         """Re-implementation of valueFromText(), it returns only the nearest."""
@@ -482,9 +460,9 @@ class EtaCutChart(QtWidgets.QWidget):
     Length = 100
     FontSize = 7
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         """Constructur, takes optional reference to parent widget."""
-        super(EtaCutChart, self).__init__(parent)
+        super().__init__(parent)
         self.setRange(-5, 5)
         self.setFixedSize(self.Margin * 2 + self.Length, self.Margin * 2 + self.Radius)
 
@@ -547,9 +525,9 @@ class PhiCutChart(QtWidgets.QWidget):
     Radius = 30
     FontSize = 7
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         """Constructur, takes optional reference to parent widget."""
-        super(PhiCutChart, self).__init__(parent)
+        super().__init__(parent)
         self.setRange(0, 360 * 16)
         self.setFixedSize((self.Margin + self.Radius) * 2, (self.Margin + self.Radius) * 2)
 
@@ -574,7 +552,7 @@ class PhiCutChart(QtWidgets.QWidget):
         lower, upper = self.range()
         lower = math.degrees(lower)
         upper = math.degrees(upper)
-        if (lower < upper):
+        if lower < upper:
             painter.drawPie(rectangle, lower * 16, (upper-lower) * 16)
         else:
             painter.drawPie(rectangle, lower * 16, (360 - lower + upper) * 16)

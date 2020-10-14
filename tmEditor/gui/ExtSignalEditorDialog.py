@@ -1,19 +1,13 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
+"""External signal editor dialog."""
 
-import tmGrammar
+from PyQt5 import QtWidgets
 
 from tmEditor.core.Algorithm import toExternal
-from tmEditor.core.AlgorithmHelper import AlgorithmHelper, decode_threshold
+from tmEditor.core.AlgorithmHelper import AlgorithmHelper
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 
 # Common widgets
 from tmEditor.gui.CommonWidgets import PrefixedSpinBox, createIcon, miniIcon
-
-from PyQt5 import QtCore, QtWidgets
-
-import sys, os
-import re
 
 __all__ = ['ExtSignalEditorDialog', ]
 
@@ -37,7 +31,7 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
 
     def __init__(self, menu, parent=None):
         """Constructor, takes a reference to a menu and an optional parent."""
-        super(ExtSignalEditorDialog, self).__init__(parent)
+        super().__init__(parent)
         self.menu = menu
         self.setupUi()
         # Connect signals
@@ -88,8 +82,8 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
         """Returns object expression selected by the inputs."""
         expression = AlgorithmHelper()
         expression.addExtSignal(
-            name = self.name(),
-            bx_offset = self.bxOffset(),
+            name=self.name(),
+            bx_offset=self.bxOffset(),
         )
         return AlgorithmFormatter.normalize(expression.serialize())
 
@@ -103,15 +97,15 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
         label = signal[kLabel] if kLabel in signal else ""
         expression = self.expression()
         text = []
-        text.append('<h3>External Signal Requirement</h3>')
-        text.append('<p>System: {system}</p>')
-        text.append('<p>Cable: {cable}</p>')
-        text.append('<p>Channel: {channel}</p>')
+        text.append(f'<h3>External Signal Requirement</h3>')
+        text.append(f'<p>System: {system}</p>')
+        text.append(f'<p>Cable: {cable}</p>')
+        text.append(f'<p>Channel: {channel}</p>')
         if label:
-            text.append('<p>Label: {label}</p>')
-        text.append('<h4>Preview</h4>')
-        text.append('<p><pre>{expression}</pre></p>')
-        self.infoTextEdit.setText(''.join(text).format(**locals()))
+            text.append(f'<p>Label: {label}</p>')
+        text.append(f'<h4>Preview</h4>')
+        text.append(f'<p><pre>{expression}</pre></p>')
+        self.infoTextEdit.setText(''.join(text))
 
     def loadExtSignal(self, token):
         """Load dialog by values from external signal. Will raise a ValueError if string
@@ -120,10 +114,3 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
         signal = toExternal(token)
         self.signalComboBox.setCurrentIndex(self.signalComboBox.findText(signal.basename))
         self.offsetSpinBox.setValue(signal.bx_offset)
-
-# -----------------------------------------------------------------------------
-#  Unit test
-# -----------------------------------------------------------------------------
-
-if __name__ == '__main__':
-    pass

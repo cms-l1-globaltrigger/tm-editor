@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Algorithm expression formatter.
 
 Compress an algorithm expression before assining it to tmGrammar functions:
@@ -21,7 +19,7 @@ from .types import FunctionTypes
 
 __all__ = ['AlgorithmFormatter', ]
 
-class AlgorithmFormatter(object):
+class AlgorithmFormatter:
     """Formatter class used to format user input to the (currently very)
     restrictive algorithm equation syntax.
     """
@@ -80,7 +78,7 @@ class AlgorithmFormatter(object):
         ['MU10', 'AND', 'comb', '{', 'JET20', ',', 'JET10', '}']
         """
         tokens = []
-        for i, token in enumerate(AlgorithmFormatter.tokenize(expression)):
+        for token in AlgorithmFormatter.tokenize(expression):
             # Make sure operators are upper case.
             if token.upper() in AlgorithmFormatter.Operators:
                 token = token.upper()
@@ -106,7 +104,7 @@ class AlgorithmFormatter(object):
         'comb{MU40,MU30,MU20,MU10}'
         """
         tokens = []
-        for i, token in enumerate(AlgorithmFormatter.sanitize(expression)):
+        for token in AlgorithmFormatter.sanitize(expression):
             if token in AlgorithmFormatter.Operators:
                 token = " {token} ".format(token=token)
             tokens.append(token)
@@ -139,7 +137,8 @@ class AlgorithmFormatter(object):
         """
         level = 0
         # Returns indent according to current
-        def indent(): return ws * tabwidth * level
+        def indent():
+            return ws * tabwidth * level
         result = []
         previous = None
         # Track paranthesis levels.
@@ -149,7 +148,6 @@ class AlgorithmFormatter(object):
         negator = tmGrammar.NOT
         lpars = (AlgorithmFormatter.LeftPar, AlgorithmFormatter.LeftFunctionPar, )
         rpars = (AlgorithmFormatter.RightPar, AlgorithmFormatter.RightFunctionPar, )
-        pars = lpars + rpars
 
         for token in AlgorithmFormatter.sanitize(expression):
             # Update states

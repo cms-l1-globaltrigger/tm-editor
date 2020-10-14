@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
+"""Table view."""
 
-from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
 # ------------------------------------------------------------------------------
@@ -13,7 +12,7 @@ class TableView(QtWidgets.QTableView):
     def __init__(self, parent=None):
         """@param parent optional parent widget.
         """
-        super(TableView, self).__init__(parent)
+        super().__init__(parent)
         # Setup table view.
         self.setShowGrid(False)
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -23,17 +22,11 @@ class TableView(QtWidgets.QTableView):
         # Setup horizontal column appearance.
         horizontalHeader = self.horizontalHeader()
         horizontalHeader.setHighlightSections(False)
-        if hasattr(horizontalHeader, 'setSectionResizeMode'): # PyQt5
-            horizontalHeader.setSectionResizeMode(QtWidgets.QHeaderView.Interactive)
-        else: # PyQt4
-            horizontalHeader.setResizeMode(QtWidgets.QHeaderView.Interactive)
+        horizontalHeader.setSectionResizeMode(QtWidgets.QHeaderView.Interactive)
         horizontalHeader.setStretchLastSection(True)
         # Setup vertical row appearance.
         verticalHeader = self.verticalHeader()
-        if hasattr(verticalHeader, 'setSectionResizeMode'): # PyQt5
-            verticalHeader.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
-        else: # PyQt4
-            verticalHeader.setResizeMode(QtWidgets.QHeaderView.Fixed)
+        verticalHeader.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
         verticalHeader.setDefaultSectionSize(20)
         verticalHeader.hide()
         self.setSortingEnabled(True)
@@ -45,3 +38,4 @@ class TableView(QtWidgets.QTableView):
         if index:
             # Use the assigned proxy model to map the index.
             return self.model().mapToSource(index[0])
+        return None
