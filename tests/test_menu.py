@@ -19,7 +19,7 @@ import unittest
 import tempfile
 import logging
 
-UTM_VERSION = '0.8.0'
+UTM_VERSION = '0.8.1'
 
 class MenuTests(unittest.TestCase):
 

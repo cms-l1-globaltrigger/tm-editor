@@ -72,22 +72,24 @@ def calculateRange(specification, scales):
     if specification.type == tmGrammar.UPT:
         def isMuUpt(scale): # filter
             return scale[kObject] == tmGrammar.MU and scale[kType] == tmGrammar.UPT
-        scale = list(filter(isMuUpt, scales.scales))[0]
-        minimum = float(scale[kMinimum])
-        maximum = float(scale[kMaximum])
-        return minimum, maximum
+        for scale in filter(isMuUpt, scales.scales):
+            minimum = float(scale[kMinimum])
+            maximum = float(scale[kMaximum])
+            return minimum, maximum
+        return 0, 0
     # Delta eta
     if specification.type in (tmGrammar.DETA, tmGrammar.ORMDETA):
         def isMuEta(scale): # filter
             return scale[kObject] == tmGrammar.MU and scale[kType] == tmGrammar.ETA
         def isJetEta(scale): # filter
             return scale[kObject] == tmGrammar.JET and scale[kType] == tmGrammar.ETA
-        scaleMu = list(filter(isMuEta, scales.scales))[0]
-        scaleCalo = list(filter(isJetEta, scales.scales))[0]
-        scale = scaleMu if scaleMu[kMaximum] > scaleCalo[kMaximum] else scaleCalo
-        minimum = 0.
-        maximum = float(scale[kMaximum]) * 2.
-        return minimum, maximum
+        for scaleMu in filter(isMuEta, scales.scales):
+            for scaleCalo in filter(isJetEta, scales.scales):
+                scale = scaleMu if scaleMu[kMaximum] > scaleCalo[kMaximum] else scaleCalo
+                minimum = 0.
+                maximum = float(scale[kMaximum]) * 2.
+                return minimum, maximum
+            return 0, 0
     # Delta phi
     if specification.type in (tmGrammar.DPHI, tmGrammar.ORMDPHI):
         minimum = 0.
@@ -111,7 +113,7 @@ def calculateRange(specification, scales):
     # Slices
     if specification.type == tmGrammar.SLICE:
         return ObjectCollectionRanges[specification.object]
-    raise RuntimeError("invalid cut type")
+    raise RuntimeError(f"Invalid cut type: {specification.type}")
 
 # -----------------------------------------------------------------------------
 #  Exception classes
@@ -933,7 +935,7 @@ class CutEditorDialog(QtWidgets.QDialog):
                 rootItems[key] = self.treeWidget.addRootItem(key, widget)
             root = rootItems[key]
             # On missing scale (editing outdated XML?)
-            if spec.type in (tmGrammar.ETA, tmGrammar.PHI):
+            if spec.type in (tmGrammar.ETA, tmGrammar.PHI, tmGrammar.UPT):
                 if spec.name not in scales.bins:
                     widget = self.stackWidget.widget(0)
                     item = self.treeWidget.addCutItem(root, spec, widget) # TODO
@@ -970,7 +972,7 @@ class CutEditorDialog(QtWidgets.QDialog):
     def updateCut(self, cut):
         """Update existing cut from dialog inputs."""
         item = self.currentTreeItem()
-        if not item: # No cut type selected (eg. parent nodes)
+        if not item or not item.spec: # No cut type selected (eg. parent nodes)
             raise CutEditorError(
                 self.tr("No cut type selected.")
             )

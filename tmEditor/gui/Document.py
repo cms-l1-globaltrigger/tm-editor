@@ -68,6 +68,19 @@ def updateModel(model, context):
     source.setParent(None)
     source.deleteLater()
 
+def handleException(method):
+    """Method decorator, show message box on exception."""
+    def handleException(self, *args, **kwargs):
+        try:
+            return method(self, *args, **kwargs)
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                self.tr("Exception occured"),
+                format(e)
+            )
+    return handleException
+
 # ------------------------------------------------------------------------------
 #  Document widget
 # ------------------------------------------------------------------------------
@@ -261,6 +274,7 @@ class Document(BaseDocument):
     def menu(self):
         return self._menu
 
+    @handleException
     def loadMenu(self, filename):
         """Load menu from filename, setup new document."""
         self.setFilename(filename)
@@ -316,6 +330,7 @@ class Document(BaseDocument):
             msgBox.exec_()
         self.setModified(False)
 
+    @handleException
     def saveMenu(self, filename=None):
         """Save menu to filename."""
         # Warn before loosing cuts
@@ -646,6 +661,7 @@ class Document(BaseDocument):
         self.modified.emit()
         self.menu().extendReferenced(algorithm)
 
+    @handleException
     def editCut(self, index, item):
         cut = self.menu().cuts[index.row()]
         dialog = CutEditorDialog(self.menu(), self)
@@ -660,6 +676,7 @@ class Document(BaseDocument):
         self.updateBottom()
         self.modified.emit()
 
+    @handleException
     def copyItem(self):
         index, item = self.getSelection()
         if item is self.algorithmsPage:
@@ -671,6 +688,7 @@ class Document(BaseDocument):
         if selectedeRows:
             item.top.scrollTo(selectedeRows[0])
 
+    @handleException
     def copyAlgorithm(self, index, item):
         algorithm = copy.deepcopy(self.menu().algorithms[index.row()])
         dialog = AlgorithmEditorDialog(self.menu(), self)
@@ -712,6 +730,7 @@ class Document(BaseDocument):
                 item.top.setCurrentIndex(index)
                 break
 
+    @handleException
     def copyCut(self, index, item):
         dialog = CutEditorDialog(self.menu(), self)
         dialog.copyMode = True # TODO TODO TODO
@@ -738,6 +757,7 @@ class Document(BaseDocument):
                 item.top.setCurrentIndex(index)
                 break
 
+    @handleException
     def removeItem(self):
         index, item = self.getSelection()
         # Removing algorithm item
@@ -804,6 +824,7 @@ class Document(BaseDocument):
             self.modified.emit()
             self.setModified(True)
 
+    @handleException
     def moveItems(self):
         item = self.algorithmsPage
         indices = []
