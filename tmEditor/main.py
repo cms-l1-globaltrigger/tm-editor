@@ -49,8 +49,8 @@ def main():
     args = parse_args()
 
     # Setup console logging and debug level.
-    loggingLevel = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=loggingLevel)
+    level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=level)
 
     # As things are getting serious let's start logging to file.
     if args.verbose:
@@ -58,7 +58,7 @@ def main():
         if os.access(filename, os.W_OK): # is writable?
             handler = logging.FileHandler(filename, mode='a')
             handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
-            handler.setLevel(loggingLevel)
+            handler.setLevel(level)
             logging.getLogger().addHandler(handler)
 
     # Diagnostic output.
@@ -67,9 +67,10 @@ def main():
     app = QtWidgets.QApplication(sys.argv)
 
     # Create/Load application settings.
+    app.setApplicationName("Trigger Menu Editor")
+    app.setApplicationVersion(__version__)
     app.setOrganizationName("HEPHY")
     app.setOrganizationDomain("hephy.at")
-    app.setApplicationName("Trigger Menu Editor")
 
     # Init global settings.
     QtCore.QSettings()
@@ -79,12 +80,6 @@ def main():
     window.setRemoteTimeout(args.timeout)
     window.show()
 
-    # Load documents from command line (optional).
-    for filename in args.filenames:
-        logging.debug("loading file %s", filename)
-        window.loadDocument(filename)
-        app.processEvents()
-
     # Terminate application on SIG_INT signal.
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -92,6 +87,13 @@ def main():
     timer = QtCore.QTimer()
     timer.start(500)
     timer.timeout.connect(lambda: None)
+
+    # Load documents from command line (optional).
+    def loadDocuments():
+        for filename in args.filenames:
+            logging.debug("loading file %s", filename)
+            window.loadDocument(filename)
+    QtCore.QTimer().singleShot(100, loadDocuments)
 
     return app.exec_()
 
