@@ -66,7 +66,7 @@ class AboutDialog(QtWidgets.QDialog):
         about = markdown.markdown("{}\n\nVersion **{}** (utm version {})".format(title, __version__, utm_version))
         self.aboutTextEdit.setText(about)
         changelog = markdown.markdown(self._readfile(":changelog"))
-        self.changelogTextEdit.setText(changelog)
+        self.changelogTextEdit.setHtml(changelog)
         self.authorsTextEdit.setText(self._userlist(L1ApplicationAuthors))
         self.thanksTextEdit.setText(self._userlist(L1ApplicationContributors))
 
