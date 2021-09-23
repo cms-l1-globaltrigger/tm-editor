@@ -425,7 +425,7 @@ CutSpecs = CutSpecificationPool(
         title="Invariant mass divided by delta-R",
         description="Applies invariant mass divided by delta-R restriction of two objects.<br/><br/>" \
                     "Calculation of invariant mass/delta-R:<br/><br/>" \
-                    "M<sub>0</sub>/&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>upt1</em> <em>upt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))</span>/&Delta;R<br/><br/>" \
+                    "M<sub>0</sub>/&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))</span>/&Delta;R<br/><br/>" \
                     "<strong>Example:</strong> <pre>mass_inv_dr{MU20, MU20}[MASSDR_X]</pre>"
     ),
     CutSpecification(
