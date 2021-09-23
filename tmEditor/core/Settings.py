@@ -18,10 +18,10 @@ DefaultScaleSetUri = "scales/L1Menu_{scale_set}.xml"
 DefaultExtSignalSetUri = "cabling/L1Menu_{ext_signal_set}.xml"
 """Default URI format string for server side external signal set XML files."""
 
-DownloadSite = "http://globaltrigger.hephy.at/upgrade/tme/downloads"
+DownloadSite = "https://cern.ch/globaltrigger/upgrade/tme/downloads"
 """Web URL providing download information."""
 
-ContentsURL = "http://globaltrigger.hephy.at/upgrade/tme/userguide"
+ContentsURL = "https://cern.ch/globaltrigger/upgrade/tme/userguide"
 """Web URL hosting the user guide."""
 
 Empty = ""
