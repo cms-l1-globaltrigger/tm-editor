@@ -37,6 +37,10 @@
     <file alias="icons/cent5.svg">share/tm-editor/icons/13x13/signal.svg</file>
     <file alias="icons/cent6.svg">share/tm-editor/icons/13x13/signal.svg</file>
     <file alias="icons/cent7.svg">share/tm-editor/icons/13x13/signal.svg</file>
+    <file alias="icons/mus0.svg">share/tm-editor/icons/13x13/signal.svg</file>
+    <file alias="icons/mus1.svg">share/tm-editor/icons/13x13/signal.svg</file>
+    <file alias="icons/musoot0.svg">share/tm-editor/icons/13x13/signal.svg</file>
+    <file alias="icons/musoot1.svg">share/tm-editor/icons/13x13/signal.svg</file>
     <file alias="icons/ext.svg">share/tm-editor/icons/13x13/ext.svg</file>
     <file alias="icons/default.svg">share/tm-editor/icons/13x13/default.svg</file>
     <file alias="icons/eta.svg">share/tm-editor/icons/13x13/eta.svg</file>

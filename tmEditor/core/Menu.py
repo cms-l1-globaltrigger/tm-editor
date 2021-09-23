@@ -12,7 +12,7 @@ from .Algorithm import toObject, toExternal
 
 __all__ = ['Menu', 'GrammarVersion']
 
-GrammarVersion = StrictVersion('0.8')
+GrammarVersion = StrictVersion('0.9')
 """Supported grammar version."""
 
 # ------------------------------------------------------------------------------

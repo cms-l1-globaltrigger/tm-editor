@@ -11,6 +11,7 @@ from tmEditor.core.formatter import fCutLabel
 from tmEditor.core.types import ThresholdObjectTypes
 from tmEditor.core.types import CountObjectTypes
 from tmEditor.core.types import ObjectTypes
+from tmEditor.core.types import SignalTypes
 
 from tmEditor.core.Algorithm import toObject, objectCuts
 from tmEditor.core.AlgorithmHelper import AlgorithmHelper
@@ -37,6 +38,34 @@ kStep = 'step'
 kType = 'type'
 kET = 'ET'
 kCOUNT = 'COUNT'
+
+# -----------------------------------------------------------------------------
+#  Object capabilites
+# -----------------------------------------------------------------------------
+
+ThresholdType = 'threshold'
+CounterType = 'counter'
+SignalType = 'signal'
+
+ObjectCapabilities = {
+    ThresholdType: {'scales': True, 'threshold': True},
+    CounterType: {'scales': True, 'threshold': False},
+    SignalType: {'scales': False, 'threshold': False},
+}
+
+ExtendedTypes = ObjectTypes + SignalTypes
+
+def getObjectType(objectType):
+    if objectType in ThresholdObjectTypes:
+        return ThresholdType
+    if objectType in CountObjectTypes:
+        return ThresholdType
+    if objectType in SignalTypes:
+        return SignalType
+    return None
+
+def getObjectCapabilities(objectType):
+    return ObjectCapabilities.get(getObjectType(objectType))
 
 # -----------------------------------------------------------------------------
 #  Cut item class
@@ -66,7 +95,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self.menu = menu
         self.setupUi()
-        self.objectTypes = objects or ObjectTypes
+        self.objectTypes = objects or ExtendedTypes
         self.initObjectList(self.objectTypes)
         self.initCuts()
         self.updateObjectType()
@@ -127,24 +156,37 @@ class ObjectEditorDialog(QtWidgets.QDialog):
 
     def updateObjectType(self):
         """Update inputs according to selected object type."""
+
+        import logging
+
         objectType = self.objectType()
+        objectCapabilities = getObjectCapabilities(objectType)
+        if objectCapabilities.get('threshold'):
+            self.compareComboBox.setVisible(True)
+            self.thresholdSpinBox.setVisible(True)
+        else:
+            self.compareComboBox.setVisible(False)
+            self.thresholdSpinBox.setVisible(False)
+        if objectCapabilities.get('scales'):
+            scale = self.getScale(objectType)
+            # Just to make sure...
+            if scale is None:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    self.tr("Failed to load scales"),
+                    self.tr("Missing scales for object of type {0}").format(objectType),
+                )
+                return
+            self.thresholdSpinBox.setRange(float(scale[kMinimum]), float(scale[kMaximum]))
+            self.thresholdSpinBox.setSingleStep(float(scale[kStep]))
+        else:
+            self.thresholdSpinBox.setRange(0, 0)
         if objectType in ThresholdObjectTypes:
             self.thresholdSpinBox.setSuffix(" GeV")
             self.thresholdSpinBox.setDecimals(1)
         elif objectType in CountObjectTypes:
             self.thresholdSpinBox.setDecimals(0)
             self.thresholdSpinBox.setSuffix("")
-        scale = self.getScale(objectType)
-        # Just to make sure...
-        if scale is None:
-            QtWidgets.QMessageBox.critical(
-                self,
-                self.tr("Failed to load scales"),
-                self.tr("Missing scales for object of type {0}").format(objectType),
-            )
-            return
-        self.thresholdSpinBox.setRange(float(scale[kMinimum]), float(scale[kMaximum]))
-        self.thresholdSpinBox.setSingleStep(float(scale[kStep]))
         self.updateInfoText()
         self.initCuts()
         # Toggle cut creation button (disable if no cuts available for object type).
@@ -153,12 +195,13 @@ class ObjectEditorDialog(QtWidgets.QDialog):
 
     def initObjectList(self, objects):
         """Initialize list of available objects. Ignores objects with no scales."""
-        for index, name in enumerate(ObjectTypes):
+        for index, name in enumerate(ExtendedTypes):
             if name not in objects:
                 continue # ignore if not in init list
             self.typeComboBox.addItem(miniIcon(name.lower()), name)
-            if not self.getScale(name): # on missing scale (editing outdated XML?)
-                self.typeComboBox.setItemEnabled(index, False)
+            if name in ObjectTypes:
+                if not self.getScale(name): # on missing scale (editing outdated XML?)
+                    self.typeComboBox.setItemEnabled(index, False)
 
     def initCuts(self):
         """Initialize list of checkable cuts."""
@@ -216,29 +259,37 @@ class ObjectEditorDialog(QtWidgets.QDialog):
     def expression(self):
         """Returns object expression selected by the inputs."""
         expression = AlgorithmHelper()
-        expression.addObject(
-            type=self.objectType(),
-            comparison_operator=self.comparisonOperator(),
-            threshold=self.threshold(),
-            bx_offset=self.bxOffset(),
-            cuts=self.selectedCuts(),
-        )
+        if self.objectType() in SignalTypes:
+            expression.addSignal(
+                type=self.objectType(),
+                bx_offset=self.bxOffset()
+            )
+        else:
+            expression.addObject(
+                type=self.objectType(),
+                comparison_operator=self.comparisonOperator(),
+                threshold=self.threshold(),
+                bx_offset=self.bxOffset(),
+                cuts=self.selectedCuts()
+            )
         return AlgorithmFormatter.normalize(expression.serialize())
 
     def updateInfoText(self):
         """Update info box text."""
         objectType = self.objectType()
-        scale = self.getScale(objectType)
-        minThreshold = float(scale[kMinimum])
-        maxThreshold = float(scale[kMaximum])
-        step = float(scale[kStep])
-        expression = self.expression()
+        objectCapabilities = getObjectCapabilities(objectType)
         text = []
         text.append(f'<h3>{objectType} Object Requirement</h3>')
-        if objectType in ThresholdObjectTypes:
-            text.append(f'<p>Valid threshold: {minThreshold:.1f} GeV - {maxThreshold:.1f} GeV ({step:.1f} GeV steps)</p>')
-        elif objectType in CountObjectTypes:
-            text.append(f'<p>Valid count: {minThreshold:.0f} - {maxThreshold:.0f}</p>')
+        if objectCapabilities.get('scales'):
+            scale = self.getScale(objectType)
+            minimum = float(scale[kMinimum])
+            maximum = float(scale[kMaximum])
+            step = float(scale[kStep])
+            if objectType in ThresholdObjectTypes:
+                text.append(f'<p>Valid threshold: {minimum:.1f} GeV - {maximum:.1f} GeV ({step:.1f} GeV steps)</p>')
+            elif objectType in CountObjectTypes:
+                text.append(f'<p>Valid count: {minimum:.0f} - {maximum:.0f}</p>')
+        expression = self.expression()
         text.append(f'<h4>Preview</h4>')
         text.append(f'<p><pre>{expression}</pre></p>')
         self.infoTextEdit.setText(''.join(text))
