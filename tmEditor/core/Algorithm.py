@@ -138,7 +138,7 @@ def calculateDRRange():
     dR = sqrt( dEta^2 + dPhi^2 )
     """
     dEta = 10.
-    dPhi = math.pi * 2
+    dPhi = math.pi
     minimum = 0.
     maximum = math.sqrt(math.pow(dEta, 2) + math.pow(dPhi, 2))
     return (minimum, maximum)

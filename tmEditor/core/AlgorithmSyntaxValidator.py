@@ -124,6 +124,7 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
         self.addRule(TransverseMass)
         self.addRule(TwoBodyPtNrObjects)
         self.addRule(ImpactPrameter)
+        self.addRule(OverlapRemoval)
 
 
 class BasicSyntax(SyntaxRule):
@@ -392,7 +393,7 @@ class TwoBodyPtNrObjects(SyntaxRule):
                 continue
             name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
             requiredObjects = (2, 2)
-            if name in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm):
+            if name in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_trv_orm):
                 requiredObjects = (2, 3) # for overlap removal add the reference
             objects = functionObjects(token)
             for cutname in functionCuts(token):
@@ -435,3 +436,20 @@ class ImpactPrameter(SyntaxRule):
                 message: str = "Impact Parameter cut requires an Unconstrained Pt cut.\n" \
                                f"Invalid expression near `{token}`"
                 raise AlgorithmSyntaxError(message, token)
+
+
+class OverlapRemoval(SyntaxRule):
+    """Validates only calorimeter objects are used with overlap removal functions."""
+
+    def validate(self, tokens):
+        for token in tokens:
+            if not isFunction(token):
+                continue
+            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            if name not in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_trv_orm):
+                continue
+            objects = functionObjects(token)
+            for object_ in objects:
+                if object_.type not in (tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU):
+                    message = "Overlap removal function supports only calorimeter type objects."
+                    raise AlgorithmSyntaxError(message, token)
