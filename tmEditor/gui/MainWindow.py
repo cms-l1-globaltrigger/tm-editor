@@ -30,6 +30,8 @@ from .MdiArea import MdiArea
 
 __all__ = ['MainWindow', ]
 
+logger = logging.getLogger(__name__)
+
 XmlFileExtension = '.xml'
 
 RegExUrl = re.compile(r'(\w+)\://(.+)')
@@ -248,7 +250,7 @@ class MainWindow(QtWidgets.QMainWindow):
             helper = DownloadHelper()
             helper.urlopen(url, timeout=self.remoteTimeout)
 
-            logging.info("fetching %s bytes from %s", helper.contentLength or "<unknown>", url)
+            logger.info("fetching %s bytes from %s", helper.contentLength or "<unknown>", url)
             dialog.setLabelText(self.tr("Receiving data..."))
             dialog.setMaximum(helper.contentLength)
 
@@ -273,7 +275,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     # Create document by reading temporary file.
                     document = Document(fp.name, self)
                 except (RuntimeError, OSError) as e:
-                    logging.error("Failed to open XML menu: %s", e)
+                    logger.error("Failed to open XML menu: %s", e)
                     QtWidgets.QMessageBox.critical(
                         self,
                         self.tr("Failed to open XML menu"),
@@ -286,7 +288,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     return
         except HTTPError as e:
             dialog.close()
-            logging.error("Failed to download remote XML menu %s, %s", url, format(e))
+            logger.error("Failed to download remote XML menu %s, %s", url, format(e))
             QtWidgets.QMessageBox.critical(
                 self,
                 self.tr("Failed to download remote XML menu"),
@@ -295,7 +297,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         except URLError as e:
             dialog.close()
-            logging.error("Failed to download remote XML menu %s, %s", url, format(e))
+            logger.error("Failed to download remote XML menu %s, %s", url, format(e))
             QtWidgets.QMessageBox.critical(
                 self,
                 self.tr("Failed to download remote XML menu"),
@@ -320,12 +322,13 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.mdiArea.setCurrentWidget(duplicate)
                     return
                 document = Document(filename, self)
-        except Exception as e:
-            logging.error("Failed to open XML menu: %s", e)
+        except Exception as exc:
+            logger.exception(exc)
+            logger.error("Failed to open XML menu: %s", filename)
             QtWidgets.QMessageBox.critical(
                 self,
                 self.tr("Failed to open XML menu"),
-                format(e)
+                format(exc)
             )
         else:
             index = self.mdiArea.addDocument(document)
@@ -414,7 +417,8 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             document.saveMenu()
             self.mdiArea.setTabText(self.mdiArea.currentIndex(), document.name())
-        except (XmlEncoderError, RuntimeError, ValueError, IOError) as e:
+        except Exception as exc:
+            logger.exception(exc)
             QtWidgets.QMessageBox.critical(
                 self,
                 self.tr("Failed to write XML menu"),

@@ -274,34 +274,35 @@ class Document(BaseDocument):
     def menu(self):
         return self._menu
 
-    @handleException
     def loadMenu(self, filename):
         """Load menu from filename, setup new document."""
         self.setFilename(filename)
         self.setName(os.path.basename(self.filename()))
-        dialog = QtWidgets.QProgressDialog(self)
-        dialog.setWindowTitle(self.tr("Loading..."))
-        dialog.setCancelButton(None)
-        dialog.setWindowModality(QtCore.Qt.WindowModal)
-        dialog.resize(260, dialog.height())
-        dialog.show()
-        QtWidgets.QApplication.processEvents()
-        # Create XML decoder and run
-        queue = XmlDecoder.XmlDecoderQueue(self.filename())
         try:
-            for callback in queue:
-                dialog.setLabelText(self.tr("{0}...").format(queue.message().capitalize()))
-                logging.debug("processing: %s...", queue.message())
-                QtWidgets.QApplication.sendPostedEvents(dialog, 0)
-                QtWidgets.QApplication.processEvents()
-                callback()
-                dialog.setValue(queue.progress())
-                QtWidgets.QApplication.processEvents()
-        except XmlDecoderError as e:
+            dialog = QtWidgets.QProgressDialog(self)
+            dialog.setWindowTitle(self.tr("Loading..."))
+            dialog.setCancelButton(None)
+            dialog.setWindowModality(QtCore.Qt.WindowModal)
+            dialog.resize(260, dialog.height())
+            dialog.show()
+            QtWidgets.QApplication.processEvents()
+            # Create XML decoder and run
+            queue = XmlDecoder.XmlDecoderQueue(self.filename())
+            try:
+                for callback in queue:
+                    dialog.setLabelText(self.tr("{0}...").format(queue.message().capitalize()))
+                    logging.debug("processing: %s...", queue.message())
+                    QtWidgets.QApplication.sendPostedEvents(dialog, 0)
+                    QtWidgets.QApplication.processEvents()
+                    callback()
+                    dialog.setValue(queue.progress())
+                    QtWidgets.QApplication.processEvents()
+            except XmlDecoderError as exc:
+                raise
+        except Exception:
             dialog.close()
             raise
         self._menu = queue.menu
-        dialog.close()
         if queue.applied_mirgrations:
             msgBox = QtWidgets.QMessageBox(self)
             msgBox.setIcon(QtWidgets.QMessageBox.Information)
@@ -330,7 +331,6 @@ class Document(BaseDocument):
             msgBox.exec_()
         self.setModified(False)
 
-    @handleException
     def saveMenu(self, filename=None):
         """Save menu to filename."""
         # Warn before loosing cuts
