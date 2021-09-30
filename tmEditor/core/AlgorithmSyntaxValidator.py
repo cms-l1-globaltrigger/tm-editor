@@ -8,6 +8,8 @@ Usage example
 
 """
 
+from typing import List
+
 import tmGrammar
 
 from .Settings import CutSpecs
@@ -33,23 +35,55 @@ kType = 'type'
 #  Base classes
 # -----------------------------------------------------------------------------
 
+
+class SyntaxRule:
+    """Base class to be inherited by custom syntax rule classes."""
+
+    def __init__(self, validator) -> None:
+        self.validator = validator
+
+    def toObjectItem(self, token: str) -> tmGrammar.Object_Item:
+        item = tmGrammar.Object_Item()
+        if not tmGrammar.Object_parser(token, item):
+            message = f"Invalid object statement `{item.message}`"
+            raise AlgorithmSyntaxError(message, token)
+        return item
+
+    def toFunctionItem(self, token: str) -> tmGrammar.Function_Item:
+        item = tmGrammar.Function_Item()
+        if not tmGrammar.Function_parser(token, item):
+            message = f"Invalid function statement `{item.message}`"
+            raise AlgorithmSyntaxError(message, token)
+        return item
+
+    def toCutItem(self, token: str) -> tmGrammar.Cut_Item:
+        item = tmGrammar.Cut_Item()
+        if not tmGrammar.Cut_parser(token, item):
+            message = f"Invalid cut statement `{item.message}` at object {token}"
+            raise AlgorithmSyntaxError(message, token)
+        return item
+
+    def validate(self, tokens: List[str]) -> None:
+        raise NotImplementedError()
+
+
 class SyntaxValidator:
     """Base class to be inherited by custom syntax validator classes."""
 
-    def __init__(self, menu):
+    def __init__(self, menu) -> None:
         self.menu = menu # menu handle
-        self.rules = []
+        self.rules: List[SyntaxRule] = []
 
-    def validate(self, expression):
-        tokens = self.tokenize(expression)
+    def validate(self, expression: str) -> None:
+        tokens: List[str] = self.tokenize(expression)
         for rule in self.rules:
             rule.validate(tokens)
 
-    def addRule(self, cls):
+    def addRule(self, cls) -> None:
         """Add a syntx rule class. Creates and tores an instance of the class."""
         self.rules.append(cls(self))
 
-    def tokenize(self, expression):
+    def tokenize(self, expression: str) -> List[str]:
         """Parses algorithm expression and returns list of RPN tokens."""
         # Make sure to clear static algorithm logic.
         tmGrammar.Algorithm_Logic.clear()
@@ -62,39 +96,10 @@ class SyntaxValidator:
             raise AlgorithmSyntaxError(message)
         return tmGrammar.Algorithm_Logic.getTokens()
 
-class SyntaxRule:
-    """Base class to be inherited by custom syntax rule classes."""
-
-    def __init__(self, validator):
-        self.validator = validator
-
-    def toObjectItem(self, token):
-        item = tmGrammar.Object_Item()
-        if not tmGrammar.Object_parser(token, item):
-            message = f"Invalid object statement `{item.message}`"
-            raise AlgorithmSyntaxError(message, token)
-        return item
-
-    def toFunctionItem(self, token):
-        item = tmGrammar.Function_Item()
-        if not tmGrammar.Function_parser(token, item):
-            message = f"Invalid function statement `{item.message}`"
-            raise AlgorithmSyntaxError(message, token)
-        return item
-
-    def toCutItem(self, token):
-        item = tmGrammar.Cut_Item()
-        if not tmGrammar.Cut_parser(token, item):
-            message = f"Invalid cut statement `{item.message}` at object {token}"
-            raise AlgorithmSyntaxError(message, token)
-        return item
-
-    def validate(self, tokens):
-        raise NotImplementedError()
-
 # -----------------------------------------------------------------------------
 #  Algorithm language specific classes
 # -----------------------------------------------------------------------------
+
 
 class AlgorithmSyntaxError(Exception):
     """Exeption for algoithm syntax errors thrown by class AlgorithmSyntaxValidator."""
@@ -102,10 +107,11 @@ class AlgorithmSyntaxError(Exception):
         super().__init__(message)
         self.token = token
 
+
 class AlgorithmSyntaxValidator(SyntaxValidator):
     """Algorithm syntax validator class."""
 
-    def __init__(self, menu):
+    def __init__(self, menu) -> None:
         super().__init__(menu)
         self.addRule(BasicSyntax)
         self.addRule(CombBxOffset)
@@ -117,9 +123,12 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
         self.addRule(InvarientMass3)
         self.addRule(TransverseMass)
         self.addRule(TwoBodyPtNrObjects)
+        self.addRule(ImpactPrameter)
+
 
 class BasicSyntax(SyntaxRule):
     """Validates basic algorithm syntax."""
+
     def validate(self, tokens):
         menu = self.validator.menu
         ext_signal_names = [item[kName] for item in menu.extSignals.extSignals]
@@ -146,6 +155,7 @@ class BasicSyntax(SyntaxRule):
             else:
                 message = f"Invalid expression `{token}`"
                 raise AlgorithmSyntaxError(message, token)
+
 
 class ObjectThresholds(SyntaxRule):
     """Validates object thresholds/counts."""
@@ -183,6 +193,7 @@ class ObjectThresholds(SyntaxRule):
             message = f"Invalid threshold `{object.threshold}` at object `{token}`"
             raise AlgorithmSyntaxError(message, token)
 
+
 class CombBxOffset(SyntaxRule):
     """Validates that all objects of a combination function use the same BX offset."""
 
@@ -191,7 +202,7 @@ class CombBxOffset(SyntaxRule):
             if not isFunction(token):
                 continue
             name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
-            if not name in (tmGrammar.comb, tmGrammar.comb_orm):
+            if name not in (tmGrammar.comb, tmGrammar.comb_orm):
                 continue
             f = tmGrammar.Function_Item()
             if not tmGrammar.Function_parser(token, f):
@@ -205,6 +216,7 @@ class CombBxOffset(SyntaxRule):
                     message = f"All object requirements of function {name}{{...}} must be of same bunch crossing offset.\n" \
                               f"Invalid expression near `{token}`" # TODO differentiate!
                     raise AlgorithmSyntaxError(message, token)
+
 
 class ChargeCorrelation(SyntaxRule):
     """Validates that all objects of a function are of type muon if applying a CHGCOR cut."""
@@ -227,6 +239,7 @@ class ChargeCorrelation(SyntaxRule):
                               f"Invalid expression near `{token}`"
                     raise AlgorithmSyntaxError(message, token)
 
+
 class DistNrObjects(SyntaxRule):
     """Limit number of objects for distance function."""
 
@@ -235,7 +248,7 @@ class DistNrObjects(SyntaxRule):
             if not isFunction(token):
                 continue
             name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
-            if not name in (tmGrammar.dist, tmGrammar.dist_orm):
+            if name not in (tmGrammar.dist, tmGrammar.dist_orm):
                 continue
             f = tmGrammar.Function_Item()
             if not tmGrammar.Function_parser(token, f):
@@ -246,6 +259,7 @@ class DistNrObjects(SyntaxRule):
                           f"Invalid expression near `{token}`"
                 raise AlgorithmSyntaxError(message)
 
+
 class DistDeltaRange(SyntaxRule):
     """Validates that delta-eta/phi cut ranges does not exceed assigned objects limits."""
 
@@ -255,7 +269,7 @@ class DistDeltaRange(SyntaxRule):
             if not isFunction(token):
                 continue
             name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
-            if not name in (tmGrammar.dist, tmGrammar.dist_orm):
+            if name not in (tmGrammar.dist, tmGrammar.dist_orm):
                 continue
             for name in functionCuts(token):
                 cut = menu.cutByName(name)
@@ -284,6 +298,7 @@ class DistDeltaRange(SyntaxRule):
                 if cut.type == tmGrammar.DR:
                     pass # TODO
 
+
 class CutCount(SyntaxRule):
     """Limit number of cuts allowed to be assigned at once."""
 
@@ -302,6 +317,7 @@ class CutCount(SyntaxRule):
                 counts = self.countCuts(functionCuts(token))
                 self.checkCutCount(token, counts)
 
+
     def countCuts(self, names):
         """Returns dictionary with key of cut object/type pair and occurence as value."""
         menu = self.validator.menu
@@ -310,7 +326,7 @@ class CutCount(SyntaxRule):
             cut = menu.cutByName(name)
             if cut:
                 key = (cut.object, cut.type)
-                if not key in counts:
+                if key not in counts:
                     counts[key] = 0
                 counts[key] += 1
         return counts
@@ -325,6 +341,7 @@ class CutCount(SyntaxRule):
                     name = key[1] if key[0] in FunctionTypes else '-'.join(key)
                     message = f"In `{token}`, too many cuts of type `{name}` assigned, only {spec.count} allowed."
                     raise AlgorithmSyntaxError(message)
+
 
 class TransverseMass(SyntaxRule):
     """Validates transverse mass object requirements At least one non eta object is required."""
@@ -346,6 +363,7 @@ class TransverseMass(SyntaxRule):
                           f"Invalid expression near `{token}`"
                 raise AlgorithmSyntaxError(message, token)
 
+
 class InvarientMass3(SyntaxRule):
     """Validates invariant mass of three objects requirements."""
 
@@ -362,6 +380,7 @@ class InvarientMass3(SyntaxRule):
                 message = f"Invarient mass for three objects functions require only muons or only calorimeter objects.\n" \
                           f"Invalid expression near `{token}`"
                 raise AlgorithmSyntaxError(message, token)
+
 
 class TwoBodyPtNrObjects(SyntaxRule):
     """Validates number of objects in combination with two body Pt cuts."""
@@ -383,3 +402,36 @@ class TwoBodyPtNrObjects(SyntaxRule):
                         message = f"Two body Pt cut requires exactly two base object requirements to be applied on.\n" \
                                   f"Invalid expression in function `{name}` with cut `{cutname}` near `{token}`"
                         raise AlgorithmSyntaxError(message, token)
+
+
+class ImpactPrameter(SyntaxRule):
+    """Impact parameter cut requires also a upt cut."""
+
+    def validate(self, tokens):
+        for token in tokens:
+            if isObject(token):
+                item =  self.toObjectItem(token)
+                cuts = [cut for cut in item.cuts]
+                self.validateObject(cuts, token)
+            elif isFunction(token):
+                for cuts in functionObjectsCuts(token):
+                    self.validateObject(cuts, token)
+
+    def hasImpactParameter(self, cuts):
+        for cut in cuts:
+            if cut.startswith(tmGrammar.MU_IP):
+                return True
+        return False
+
+    def hasUnconstrainedPt(self, cuts):
+        for cut in cuts:
+            if cut.startswith(tmGrammar.MU_UPT):
+                return True
+        return False
+
+    def validateObject(self, cuts, token):
+        if self.hasImpactParameter(cuts):
+            if not self.hasUnconstrainedPt(cuts):
+                message: str = "Impact Parameter cut requires an Unconstrained Pt cut.\n" \
+                               f"Invalid expression near `{token}`"
+                raise AlgorithmSyntaxError(message, token)
