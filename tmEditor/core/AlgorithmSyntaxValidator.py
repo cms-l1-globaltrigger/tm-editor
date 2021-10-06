@@ -176,6 +176,9 @@ class ObjectThresholds(SyntaxRule):
 
     def validateThreshold(self, token, object):
         menu = self.validator.menu
+        if object.type not in ObjectScaleMap:
+            message = "Invalid object type `{0}`.".format(object.type)
+            raise AlgorithmSyntaxError(message, token)
         scale = menu.scaleMeta(object, ObjectScaleMap[object.type])
         if not scale:
             message = "No such object type `{0}` in scale set `{1}`.".format(object.type, menu.scales.scaleSet[kName])
