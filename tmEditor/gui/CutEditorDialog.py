@@ -482,8 +482,12 @@ class InfiniteRangeWidget(InputWidget):
 
     def updateCut(self, cut):
         """Update existing cut from inputs."""
-        cut.minimum = self.minimumSpinBox.value()
-        cut.maximum = self.maximumSpinBox.value()
+        minimum = self.minimumSpinBox.value()
+        maximum = self.maximumSpinBox.value()
+        if maximum <= minimum:
+            raise CutEditorError("Invalid range: [{0}-{1}] (minimum<maximum)!".format(minimum, maximum))
+        cut.minimum = minimum
+        cut.maximum = maximum
         cut.data = ""
 
 class SliceWidget(InputWidget):
