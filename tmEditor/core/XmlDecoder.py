@@ -47,11 +47,8 @@ kType = 'type'
 kUUIDFirmware = 'uuid_firmware'
 kUUIDMenu = 'uuid_menu'
 
-# -----------------------------------------------------------------------------
-#  Migration functions
-# -----------------------------------------------------------------------------
-
 MirgrationResult = namedtuple('MirgrationResult', 'subject,param,before,after')
+
 
 def mirgrate_chgcor_cut(cut):
     """Migrates old CHGCOR cut data specifications:
@@ -70,6 +67,7 @@ def mirgrate_chgcor_cut(cut):
             return MirgrationResult(cut, 'data', data, cut.data)
     return None
 
+
 def mirgrate_cut_object(cut):
     """Migrate obsolete object entries for function cuts."""
     object_ = cut.object
@@ -81,26 +79,25 @@ def mirgrate_cut_object(cut):
             return MirgrationResult(cut, 'object', object_, cut.object)
     return None
 
+
 def mirgrate_mass_function(algorithm):
     """Migrates old mass functions to newer mass_inv:
     "mass" -> "mass_inv"
     """
     expression = re.sub(r"\b{0}\b".format(tmGrammar.mass), tmGrammar.mass_inv, algorithm.expression)
     if algorithm.expression != expression:
-        prev_expression = algorithm.expression
+        # prev_expression = algorithm.expression
         algorithm.expression = expression
         logging.info("migrated function '%s' => '%s' in algorithm %s: %s", tmGrammar.mass, tmGrammar.mass_inv, algorithm.name, expression)
         return MirgrationResult(algorithm, 'expression', tmGrammar.mass, tmGrammar.mass_inv)
     return None
 
-# -----------------------------------------------------------------------------
-#  Decoder classes
-# -----------------------------------------------------------------------------
 
 class XmlDecoderError(Exception):
     """Exeption for XML decoder errors."""
     def __init__(self, message):
         super().__init__(message)
+
 
 class XmlDecoderQueue(Queue):
 
@@ -269,6 +266,7 @@ class XmlDecoderQueue(Queue):
     def run_verify_menu(self):
         logging.debug("verify menu integrity...")
         self.menu.validate()
+
 
 def load(filename):
     """Read XML menu from *filename*. Returns menu object."""

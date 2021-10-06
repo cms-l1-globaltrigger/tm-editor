@@ -20,20 +20,12 @@ from .Algorithm import functionObjects, functionCuts, functionObjectsCuts, objec
 
 __all__ = ['AlgorithmSyntaxValidator', 'AlgorithmSyntaxError']
 
-# -----------------------------------------------------------------------------
-#  Keys
-# -----------------------------------------------------------------------------
-
 kMinimum = 'minimum'
 kMaximum = 'maximum'
 kName = 'name'
 kObject = 'object'
 kStep = 'step'
 kType = 'type'
-
-# -----------------------------------------------------------------------------
-#  Base classes
-# -----------------------------------------------------------------------------
 
 
 class SyntaxRule:
@@ -95,10 +87,6 @@ class SyntaxValidator:
             message = f"Invalid expression `{expression}'"
             raise AlgorithmSyntaxError(message)
         return tmGrammar.Algorithm_Logic.getTokens()
-
-# -----------------------------------------------------------------------------
-#  Algorithm language specific classes
-# -----------------------------------------------------------------------------
 
 
 class AlgorithmSyntaxError(Exception):

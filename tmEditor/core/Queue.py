@@ -18,11 +18,13 @@ processing data ... 33 %
 saving data ... 66 %
 """
 
+
 class Callback:
 
-    def __init__(self, callback, message=None):
+    def __init__(self, callback, message: str = None):
         self.callback = callback
-        self.message = message or ""
+        self.message: str = message or ""
+
 
 class Queue:
 

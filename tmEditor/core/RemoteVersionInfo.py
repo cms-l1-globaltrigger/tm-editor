@@ -19,6 +19,7 @@ kUri = 'uri'
 kScaleSet = 'scale_set'
 kExtSignalSet = 'ext_signal_set'
 
+
 class RemoteVersionInfo:
     """Helper class for retrieving remote server side version info."""
 

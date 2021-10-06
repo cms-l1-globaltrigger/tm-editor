@@ -15,16 +15,9 @@ __all__ = ['Menu', 'GrammarVersion']
 GrammarVersion = StrictVersion('0.9')
 """Supported grammar version."""
 
-# ------------------------------------------------------------------------------
-#  Keys
-# ------------------------------------------------------------------------------
+kObject: str = 'object'
+kType: str = 'type'
 
-kObject = 'object'
-kType = 'type'
-
-# ------------------------------------------------------------------------------
-#  Menu container class
-# ------------------------------------------------------------------------------
 
 class Menu:
     """L1-Trigger Menu container class. Provides methods to read and write XML
@@ -33,32 +26,32 @@ class Menu:
 
     def __init__(self):
         self.menu = MenuInfo()
-        self.algorithms = []
-        self.cuts = []
-        self.objects = []
-        self.externals = []
+        self.algorithms: list = []
+        self.cuts: list = []
+        self.objects: list = []
+        self.externals: list = []
         self.scales = None
         self.extSignals = None
 
-    def addObject(self, object):
+    def addObject(self, object) -> None:
         """Creates a new object by specifing its paramters and adds it to the menu. Provided for convenience."""
         self.objects.append(object)
 
-    def addCut(self, cut):
+    def addCut(self, cut) -> None:
         """Creates a new cut by specifing its paramters and adds it to the menu. Provided for convenience."""
         self.cuts.append(cut)
 
-    def addExternal(self, external):
+    def addExternal(self, external) -> None:
         """Creates a new external signal by specifing its paramters and adds it to the menu. Provided for convenience."""
         self.externals.append(external)
 
-    def addAlgorithm(self, algorithm):
+    def addAlgorithm(self, algorithm) -> None:
         """Creates a new algorithm by specifing its paramters and adds it to the menu. Provided for convenience.
         **Note:** related objects must be added separately to the menu.
         """
         self.algorithms.append(algorithm)
 
-    def extendReferenced(self, algorithm):
+    def extendReferenced(self, algorithm) -> None:
         """Adds missing objects and external signals referenced by the
         *algorithm* to the menu.
         """
@@ -71,11 +64,11 @@ class Menu:
             if not self.externalByName(item):
                 self.externals.append(toExternal(item))
 
-    def algorithmByName(self, name):
+    def algorithmByName(self, name: str):
         """Returns algorithm item by its *name* or None if no such algorithm exists."""
         return (list(filter(lambda item: item.name == name, self.algorithms)) or [None])[0]
 
-    def algorithmByIndex(self, index):
+    def algorithmByIndex(self, index: int):
         """Returns algorithm item by its *index* or None if no such algorithm exists."""
         return (list(filter(lambda item: int(item.index) == int(index), self.algorithms)) or [None])[0]
 
@@ -87,15 +80,15 @@ class Menu:
         """Returns list of algorithms containing *external* signal."""
         return list(filter(lambda algorithm: external.basename in algorithm.externals(), self.algorithms))
 
-    def objectByName(self, name):
+    def objectByName(self, name: str):
         """Returns object requirement item by its *name* or None if no such object requirement exists."""
         return (list(filter(lambda item: item.name == name, self.objects)) or [None])[0]
 
-    def cutByName(self, name):
+    def cutByName(self, name: str):
         """Returns cut item by its *name* or None if no such cut exists."""
         return (list(filter(lambda item: item.name == name, self.cuts)) or [None])[0]
 
-    def externalByName(self, name):
+    def externalByName(self, name: str):
         """Returns external signal item by its *name* or None if no such external signal exists."""
         return (list(filter(lambda item: item.name == name, self.externals)) or [None])[0]
 
@@ -108,34 +101,34 @@ class Menu:
         key = f'{object.type}-{scaleType}'
         return self.scales.bins[key] if key in self.scales.bins else None
 
-    def orphanedObjects(self):
+    def orphanedObjects(self) -> list:
         """Returns list of orphaned object names not referenced by any algorithm."""
-        tags = [object.name for object in self.objects]
+        tags: list = [object.name for object in self.objects]
         for algorithm in self.algorithms:
             for name in algorithm.objects():
                 if name in tags:
                     tags.remove(name)
         return tags
 
-    def orphanedExternals(self):
+    def orphanedExternals(self) -> list:
         """Returns list of orphaned externals names not referenced by any algorithm."""
-        tags = [external.name for external in self.externals]
+        tags: list = [external.name for external in self.externals]
         for algorithm in self.algorithms:
             for name in algorithm.objects():
                 if name in tags:
                     tags.remove(name)
         return tags
 
-    def orphanedCuts(self):
+    def orphanedCuts(self) -> list:
         """Returns list of orphaned cut names not referenced by any algorithm."""
-        tags = [cut.name for cut in self.cuts]
+        tags: list = [cut.name for cut in self.cuts]
         for algorithm in self.algorithms:
             for name in algorithm.cuts():
                 if name in tags:
                     tags.remove(name)
         return tags
 
-    def validate(self):
+    def validate(self) -> None:
         """Consistecy check, raises exception in fail."""
         self.menu.validate()
 
@@ -165,26 +158,24 @@ class Menu:
             for external in algorithm.externals():
                 externalByName(external).validate()
 
-# ------------------------------------------------------------------------------
-#  Menu information container class.
-# ------------------------------------------------------------------------------
 
 class MenuInfo:
+    """Menu information container class."""
 
     RegExMenuName = re.compile(r'^(L1Menu_)([a-zA-Z0-9_]*)$')
 
-    def __init__(self, name=None, comment=None):
-        self.name = name or ""
-        self.comment = comment or ""
-        self.uuid_menu = ""
-        self.grammar_version = ""
+    def __init__(self, name: str = None, comment: str = None):
+        self.name: str = name or ""
+        self.comment: str = comment or ""
+        self.uuid_menu: str = ""
+        self.grammar_version: str = ""
 
-    def regenerate(self):
+    def regenerate(self) -> None:
         """Regenerate menu UUID and update grammar version."""
         self.uuid_menu = format(uuid.uuid4())
         self.grammar_version = format(GrammarVersion)
 
-    def validate(self):
+    def validate(self) -> None:
         """Run consistency checks."""
         if not self.RegExMenuName.match(self.name):
             message = f"invalid menu name: `{self.name}' (must start with `L1Menu_' followed only by characters, numbers or underscores)"

@@ -13,10 +13,6 @@ from .TableHelper import TableHelper
 from .Queue import Queue
 from .AlgorithmFormatter import AlgorithmFormatter
 
-# -----------------------------------------------------------------------------
-#  Keys
-# -----------------------------------------------------------------------------
-
 kAncestorId = 'ancestor_id'
 kBxOffset = 'bx_offset'
 kCable = 'cable'
@@ -60,12 +56,8 @@ FORMAT_BX_OFFSET = '+d'
 """BX offset format, signed decimal."""
 
 
-# -----------------------------------------------------------------------------
-#  Decorators
-# -----------------------------------------------------------------------------
-
 def chdir(directory):
-    """Execute function inside a different directory."""
+    """Decorator, execute function inside a different directory."""
     def decorate(func):
         @functools.wraps(func)
         def chdir_(*args, **kwargs):
@@ -74,7 +66,7 @@ def chdir(directory):
             os.chdir(directory)
             try:
                 result = func(*args, **kwargs)
-            except:
+            except Exception:
                 # Make sure to restore directory before raising an exception!
                 logging.debug("returning back to directory '%s'", directory)
                 os.chdir(cwd)
@@ -85,14 +77,12 @@ def chdir(directory):
         return chdir_
     return decorate
 
-# -----------------------------------------------------------------------------
-#  Encoder classes
-# -----------------------------------------------------------------------------
 
 class XmlEncoderError(Exception):
     """Exeption for XML encoder errors."""
     def __init__(self, message):
         super().__init__(message)
+
 
 class XmlEncoderQueue(Queue):
 
@@ -274,6 +264,7 @@ class XmlEncoderQueue(Queue):
             message = "failed to write to file `{0}'".format(self.filename)
             logging.error(message)
             raise XmlEncoderError(message)
+
 
 def dump(menu, filename):
     queue = XmlEncoderQueue(menu, filename)
