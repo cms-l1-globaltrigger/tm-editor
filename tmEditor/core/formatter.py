@@ -70,7 +70,8 @@ def fCutData(cut, separator=", ") -> str:
                 return "[{0}-{1}]".format(int(cut.minimum), int(cut.maximum))
         else:
             entries = [entry.strip() for entry in cut.data.split(",")]
-            if cut.type == tmGrammar.ISO: # except isolation luts
+            # except isolation luts
+            if cut.type == tmGrammar.ISO:
                 return ", ".join([spec.data[entry] for entry in entries])
             return fCompress([int(entry) for entry in entries if entry.isdigit()])
     return cut.data
@@ -101,7 +102,7 @@ def fThreshold(value, suffix=" GeV") -> str:
     >>> fThreshold("2p5")
     '2.5 GeV'
     """
-    value = format(value).replace('p', '.') # Replace 'p' by comma.
+    value = format(value).replace('p', '.')  # Replace 'p' by comma.
     return "{:.1f}{}".format(float(value), suffix)
 
 

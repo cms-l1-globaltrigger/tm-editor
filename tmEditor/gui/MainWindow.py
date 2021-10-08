@@ -274,34 +274,34 @@ class MainWindow(QtWidgets.QMainWindow):
                 try:
                     # Create document by reading temporary file.
                     document = Document(fp.name, self)
-                except (RuntimeError, OSError) as e:
-                    logger.error("Failed to open XML menu: %s", e)
+                except (RuntimeError, OSError) as exc:
+                    logger.error("Failed to open XML menu: %s", exc)
                     QtWidgets.QMessageBox.critical(
                         self,
                         self.tr("Failed to open XML menu"),
-                        format(e),
+                        format(exc),
                     )
                     return
                 else:
                     index = self.mdiArea.addDocument(document)
                     self.mdiArea.setCurrentIndex(index)
                     return
-        except HTTPError as e:
+        except HTTPError as exc:
             dialog.close()
-            logger.error("Failed to download remote XML menu %s, %s", url, format(e))
+            logger.error("Failed to download remote XML menu %s, %s", url, format(exc))
             QtWidgets.QMessageBox.critical(
                 self,
                 self.tr("Failed to download remote XML menu"),
-                self.tr("HTTP error, failed to download from {0}, {1}").format(url, format(e))
+                self.tr("HTTP error, failed to download from {0}, {1}").format(url, format(exc))
             )
             return
-        except URLError as e:
+        except URLError as exc:
             dialog.close()
-            logger.error("Failed to download remote XML menu %s, %s", url, format(e))
+            logger.error("Failed to download remote XML menu %s, %s", url, format(exc))
             QtWidgets.QMessageBox.critical(
                 self,
                 self.tr("Failed to download remote XML menu"),
-                self.tr("URL error, failed to download from {0}, {1}").format(url, format(e))
+                self.tr("URL error, failed to download from {0}, {1}").format(url, format(exc))
             )
             return
 
@@ -382,18 +382,18 @@ class MainWindow(QtWidgets.QMainWindow):
             if filename:
                 try:
                     dialog = ImportDialog(filename, self.mdiArea.currentDocument().menu(), self)
-                except AlgorithmSyntaxError as e:
+                except AlgorithmSyntaxError as exc:
                     QtWidgets.QMessageBox.critical(
                         self,
                         self.tr("Import error"),
-                        format(e)
+                        format(exc)
                     )
                     return
-                except (XmlDecoderError, RuntimeError, ValueError) as e:
+                except (XmlDecoderError, RuntimeError, ValueError) as exc:
                     QtWidgets.QMessageBox.critical(
                         self,
                         self.tr("Import error"),
-                        format(e)
+                        format(exc)
                     )
                     return
                 dialog.setModal(True)
@@ -405,11 +405,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     document = self.mdiArea.currentDocument()
                     document.importCuts(dialog.cuts)
                     document.importAlgorithms(dialog.algorithms)
-                except (RuntimeError, ValueError) as e:
+                except (RuntimeError, ValueError) as exc:
                     QtWidgets.QMessageBox.critical(
                         self,
                         self.tr("Import error"),
-                        format(e)
+                        format(exc)
                     )
 
     def onSave(self):
@@ -422,7 +422,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.critical(
                 self,
                 self.tr("Failed to write XML menu"),
-                format(e)
+                format(exc)
             )
 
     def onSaveAs(self):
@@ -443,11 +443,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 # TODO
                 self.mdiArea.setTabText(self.mdiArea.currentIndex(), document.name())
                 self.insertRecentFile(os.path.realpath(document.filename()))
-            except (XmlEncoderError, RuntimeError, ValueError, IOError) as e:
+            except (XmlEncoderError, RuntimeError, ValueError, IOError) as exc:
                 QtWidgets.QMessageBox.critical(
                     self,
                     self.tr("Failed to write XML menu"),
-                    format(e)
+                    format(exc)
                 )
         self.syncActions()
         self.updateRecentFilesMenu()

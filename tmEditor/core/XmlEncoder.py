@@ -243,7 +243,7 @@ class XmlEncoderQueue(Queue):
                     row[kMaximum] = format(float(cut.maximum), FORMAT_FLOAT)
                     row[kData] = ""
                 row[kComment] = cut.comment
-                #Validate cut row
+                # Validate cut row
                 if not tmTable.isCut(row):
                     message = "invalid cut: {0}".format(name)
                     logging.error(message)

@@ -28,7 +28,8 @@ def join(items, separator=""):
 
 def encode_comparison_operator(value):
     """Returns encoded comparison operator or an empty string on default value."""
-    if value == tmGrammar.GE: return ""
+    if value == tmGrammar.GE:
+        return ""
     return value
 
 
@@ -42,18 +43,20 @@ def encode_threshold(value, separator='p'):
 
 def decode_threshold(threshold, separator='p'):
     """Returns decoded float threshold."""
-    return float('.'.join(threshold.split(separator)[:2])) # TODO
+    return float('.'.join(threshold.split(separator)[:2]))  # TODO
 
 
 def encode_bx_offset(value):
     """Returns encoded BX offset or an empty string on default value."""
-    if value == 0: return ""
+    if value == 0:
+        return ""
     return format(value, '+d')
 
 
 def encode_cuts(items):
     """Returns encoded list of cuts or an empty string if no cuts."""
-    if not items: return ""
+    if not items:
+        return ""
     return "[{0}]".format(join(items, ","))
 
 

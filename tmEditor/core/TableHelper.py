@@ -17,10 +17,10 @@ class TableHelper:
     def load(self, filename: str) -> str:
         """Load tables from XML file."""
         self.reset()
-        filename = str(filename) # fixing unicode bug
+        filename = str(filename)  # fixing unicode bug
         return tmTable.xml2menu(filename, self.menu, self.scale, self.extSignal)
 
     def dump(self, filename: str) -> None:
         """Dump tables to XML file."""
-        filename = str(filename) # fixing unicode bug
+        filename = str(filename)  # fixing unicode bug
         tmTable.menu2xml(self.menu, self.scale, self.extSignal, filename)

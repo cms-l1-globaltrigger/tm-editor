@@ -146,8 +146,8 @@ class Menu:
 
         for algorithm in self.algorithms:
 
-            algorithm.validate() # check params
-            validate(algorithm.expression) # validate expression
+            algorithm.validate()  # check params
+            validate(algorithm.expression)  # validate expression
 
             for cut in algorithm.cuts():
                 cutByName(cut).validate()

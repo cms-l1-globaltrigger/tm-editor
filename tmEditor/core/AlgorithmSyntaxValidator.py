@@ -63,7 +63,7 @@ class SyntaxValidator:
     """Base class to be inherited by custom syntax validator classes."""
 
     def __init__(self, menu) -> None:
-        self.menu = menu # menu handle
+        self.menu = menu
         self.rules: List[SyntaxRule] = []
 
     def validate(self, expression: str) -> None:
@@ -174,7 +174,7 @@ class ObjectThresholds(SyntaxRule):
         threshold = object.decodeThreshold()
         minimum = float(scale[kMinimum])
         maximum = float(scale[kMaximum])
-        step = float(scale[kStep])
+        # step = float(scale[kStep])
         # Check range
         if not minimum <= threshold <= maximum:
             message = f"Object threshold exceeding scale limits ({minimum:.1f}..{maximum:.1f}) near `{token}`"
@@ -193,7 +193,7 @@ class CombBxOffset(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
             if name not in (tmGrammar.comb, tmGrammar.comb_orm):
                 continue
             f = tmGrammar.Function_Item()
@@ -202,11 +202,11 @@ class CombBxOffset(SyntaxRule):
             objects = functionObjects(token)
             sameBxRange = len(objects)
             if name == tmGrammar.comb_orm:
-                sameBxRange -= 1 # exclude last object
+                sameBxRange -= 1  # exclude last object
             for i in range(sameBxRange):
                 if int(objects[i].bx_offset) != int(objects[0].bx_offset):
                     message = f"All object requirements of function {name}{{...}} must be of same bunch crossing offset.\n" \
-                              f"Invalid expression near `{token}`" # TODO differentiate!
+                              f"Invalid expression near `{token}`"  # TODO differentiate!
                     raise AlgorithmSyntaxError(message, token)
 
 
@@ -226,7 +226,7 @@ class ChargeCorrelation(SyntaxRule):
             objects = functionObjects(token)
             for i in range(len(objects)):
                 if objects[i].type != tmGrammar.MU:
-                    name = token.split('{')[0] # TODO: get function name
+                    name = token.split('{')[0]  # TODO: get function name
                     message = f"All object requirements of function {name}{{...}} must be of type `{tmGrammar.MU}` when applying a `{tmGrammar.CHGCOR}` cut.\n" \
                               f"Invalid expression near `{token}`"
                     raise AlgorithmSyntaxError(message, token)
@@ -239,7 +239,7 @@ class DistNrObjects(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
             if name not in (tmGrammar.dist, tmGrammar.dist_orm):
                 continue
             f = tmGrammar.Function_Item()
@@ -260,7 +260,7 @@ class DistDeltaRange(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
             if name not in (tmGrammar.dist, tmGrammar.dist_orm):
                 continue
             for name in functionCuts(token):
@@ -288,7 +288,7 @@ class DistDeltaRange(SyntaxRule):
                             message = f"Cut `{name}` maximum limit of {cut.maximum} exceed valid object DPHI range of {maximum}"
                             raise AlgorithmSyntaxError(message)
                 if cut.type == tmGrammar.DR:
-                    pass # TODO
+                    pass  # TODO
 
 
 class CutCount(SyntaxRule):
@@ -308,7 +308,6 @@ class CutCount(SyntaxRule):
                     self.checkCutCount(token, counts)
                 counts = self.countCuts(functionCuts(token))
                 self.checkCutCount(token, counts)
-
 
     def countCuts(self, names):
         """Returns dictionary with key of cut object/type pair and occurence as value."""
@@ -342,7 +341,7 @@ class TransverseMass(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
             if not name == tmGrammar.mass_trv:
                 continue
             objects = functionObjects(token)
@@ -363,7 +362,7 @@ class InvarientMass3(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
             if not name == tmGrammar.mass_inv_3:
                 continue
             objects = functionObjects(token)
@@ -382,10 +381,10 @@ class TwoBodyPtNrObjects(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
             requiredObjects = (2, 2)
             if name in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_trv_orm):
-                requiredObjects = (2, 3) # for overlap removal add the reference
+                requiredObjects = (2, 3)  # for overlap removal add the reference
             objects = functionObjects(token)
             for cutname in functionCuts(token):
                 cut = menu.cutByName(cutname)
@@ -402,7 +401,7 @@ class ImpactPrameter(SyntaxRule):
     def validate(self, tokens):
         for token in tokens:
             if isObject(token):
-                item =  self.toObjectItem(token)
+                item = self.toObjectItem(token)
                 cuts = [cut for cut in item.cuts]
                 self.validateObject(cuts, token)
             elif isFunction(token):
@@ -436,7 +435,7 @@ class OverlapRemoval(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip() # fetch function name, eg "dist{...}[...]"
+            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
             if name not in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_trv_orm):
                 continue
             objects = functionObjects(token)

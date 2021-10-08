@@ -1059,9 +1059,9 @@ class CutEditorDialog(QtWidgets.QDialog):
         """Overloaded slot for accept()."""
         try:
             self.validate()
-        except CutEditorError as e:
-            logging.warning(format(e))
-            QtWidgets.QMessageBox.warning(self, "Validation error", format(e))
+        except CutEditorError as exc:
+            logging.warning(format(exc))
+            QtWidgets.QMessageBox.warning(self, "Validation error", format(exc))
         else:
             super().accept()
 

@@ -173,7 +173,7 @@ def calculateTwoBodyPtRange() -> Tuple[float, float]:
     pt2 = 2048.
     dPhi = math.pi
     minimum = 0.
-    maximum = math.sqrt(pt1**2 + pt2**2 + 2*pt1*pt2*(math.cos(dPhi)**2 + math.sin(dPhi)**2))
+    maximum = math.sqrt(pt1**2 + pt2**2 + 2 * pt1 * pt2 * (math.cos(dPhi)**2 + math.sin(dPhi)**2))
     return (minimum, maximum)
 
 
@@ -211,12 +211,12 @@ class Algorithm:
         objects = set()
         for token in self.tokens():
             if isObject(token):
-                object = toObject(token) # Cast to object required to fetch complete name.
-                if not object.name in objects:
+                object = toObject(token)  # Cast to object required to fetch complete name.
+                if object.name not in objects:
                     objects.add(object.name)
             if isFunction(token):
                 for object in functionObjects(token):
-                    if not object.name in objects:
+                    if object.name not in objects:
                         objects.add(object.name)
         return list(objects)
 
@@ -226,7 +226,7 @@ class Algorithm:
         for token in self.tokens():
             if isExternal(token):
                 external = toExternal(token)
-                if not external.name in externals:
+                if external.name not in externals:
                     externals.add(external.name)
         return list(externals)
 
@@ -236,15 +236,15 @@ class Algorithm:
         for token in self.tokens():
             if isObject(token):
                 for cut in objectCuts(token):
-                    if not cut in cuts:
+                    if cut not in cuts:
                         cuts.add(cut)
             if isFunction(token):
                 for cut in functionCuts(token):
-                    if not cut in cuts:
+                    if cut not in cuts:
                         cuts.add(cut)
                 for objcuts in functionObjectsCuts(token):
                     for cut in objcuts:
-                        if not cut in cuts:
+                        if cut not in cuts:
                             cuts.add(cut)
         return list(cuts)
 
@@ -284,12 +284,12 @@ class Cut:
     @property
     def typename(self) -> str:
         if self.isFunctionCut:
-            return self.type # HACK for function cuts
+            return self.type  # HACK for function cuts
         return '-'.join([self.object, self.type])
 
     @property
     def suffix(self) -> str:
-        return self.name[len(self.typename) + 1:] # TODO
+        return self.name[len(self.typename) + 1:]  # TODO
 
     def __eq__(self, item) -> bool:
         """Distinquish cuts by it's uinque name."""

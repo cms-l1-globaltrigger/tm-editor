@@ -73,11 +73,11 @@ def handleException(method):
     def handleException(self, *args, **kwargs):
         try:
             return method(self, *args, **kwargs)
-        except Exception as e:
+        except Exception as exc:
             QtWidgets.QMessageBox.critical(
                 self,
                 self.tr("Exception occured"),
-                format(e)
+                format(exc)
             )
     return handleException
 
@@ -557,8 +557,8 @@ class Document(BaseDocument):
                 self.addAlgorithm(index, item)
             elif item is self.cutsPage:
                 self.addCut(index, item)
-        except RuntimeError as e:
-            QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(e))
+        except RuntimeError as exc:
+            QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(exc))
         item.top.sortByColumn(0, QtCore.Qt.AscendingOrder)
         selectedeRows = item.top.selectionModel().selectedRows()
         if selectedeRows:
@@ -632,8 +632,8 @@ class Document(BaseDocument):
             elif item is self.cutsPage:
                 self.editCut(index, item)
             self.updateBottom()
-        except RuntimeError as e:
-            QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(e))
+        except RuntimeError as exc:
+            QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(exc))
         item.top.sortByColumn(0, QtCore.Qt.AscendingOrder)
         selectedeRows = item.top.selectionModel().selectedRows()
         if selectedeRows:

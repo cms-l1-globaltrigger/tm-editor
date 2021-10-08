@@ -275,11 +275,11 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         for helper in helpers:
             try:
                 self.validator.validate(AlgorithmFormatter.compress(helper.text()))
-            except AlgorithmSyntaxError as e:
+            except AlgorithmSyntaxError as exc:
                 QtWidgets.QMessageBox.warning(
                     self,
                     self.tr("Invalid expression"),
-                    self.tr("Invalid object requirement {0}: {1},<br /><br />Reason: {2}").format(helper.index+1, helper.text(), format(e))
+                    self.tr("Invalid object requirement {0}: {1},<br /><br />Reason: {2}").format(helper.index+1, helper.text(), format(exc))
                 )
                 return
         # Check required cuts
@@ -294,11 +294,11 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         # Validate whole expression
         try:
             self.validator.validate(AlgorithmFormatter.compress(self.expression()))
-        except AlgorithmSyntaxError as e:
+        except AlgorithmSyntaxError as exc:
             QtWidgets.QMessageBox.warning(
                 self,
                 self.tr("Invalid expression"),
-                self.tr("Invalid expression: {0}").format(format(e) or e.token),
+                self.tr("Invalid expression: {0}").format(format(exc) or exc.token),
             )
             return
         super().accept()
@@ -338,11 +338,11 @@ class FunctionReqHelper:
         if token: # else start with empty editor
             try:
                 dialog.loadObject(token)
-            except ValueError as e:
+            except ValueError as exc:
                 QtWidgets.QMessageBox.warning(
                     self.parent,
                     self.parent.tr("Invalid expression"),
-                    self.parent.tr("Invalid object expression: {0}").format(e),
+                    self.parent.tr("Invalid object expression: {0}").format(exc),
                 )
         dialog.exec_()
         if dialog.result() == QtWidgets.QDialog.Accepted:
