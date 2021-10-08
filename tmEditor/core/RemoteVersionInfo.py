@@ -19,6 +19,7 @@ kUri = 'uri'
 kScaleSet = 'scale_set'
 kExtSignalSet = 'ext_signal_set'
 
+
 class RemoteVersionInfo:
     """Helper class for retrieving remote server side version info."""
 
@@ -29,7 +30,8 @@ class RemoteVersionInfo:
         self.scale_set_url = None
         self.ext_signal_set_name = None
         self.ext_signal_set_url = None
-        if url: self.read_version(url)
+        if url:
+            self.read_version(url)
 
     @property
     def is_valid(self):
@@ -50,7 +52,7 @@ class RemoteVersionInfo:
             data = json.loads(self.read_url(url))
             if data:
                 self.load_json(data)
-        except (URLError, HTTPError) as e:
+        except (URLError, HTTPError):
             logging.warning("unable to retrieve version information from: %s", url)
 
     def load_json(self, data):

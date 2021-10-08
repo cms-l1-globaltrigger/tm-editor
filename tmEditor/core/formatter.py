@@ -6,19 +6,17 @@ from .types import FunctionCutTypes
 
 import tmGrammar
 
-# -----------------------------------------------------------------------------
-#  Common formatters
-# -----------------------------------------------------------------------------
 
-def fHex(value):
-    """Returns pretty hex representation."""
+def fHex(value) -> str:
+    """Return pretty hex representation."""
     try:
         return '0x{0:x}'.format(int(value))
     except ValueError:
         return ''
 
-def fCompress(values, separator=", ", dash="-"):
-    """Returns compressed representation of ranges of an integer list.
+
+def fCompress(values, separator=", ", dash="-") -> str:
+    """Return compressed representation of ranges of an integer list.
     >>> fCompress([0,1,2,3,5,7,8,9])
     '0-3, 5, 7-9'
     """
@@ -30,8 +28,9 @@ def fCompress(values, separator=", ", dash="-"):
             tokens.append(format(pair))
     return separator.join(tokens)
 
-def fFileSize(size, suffix='B'):
-    """Returns human readable file size given in bytes.
+
+def fFileSize(size, suffix='B') -> str:
+    """Return human readable file size given in bytes.
     >>> fFileSize(1234)
     '1.2KiB'
     """
@@ -42,12 +41,9 @@ def fFileSize(size, suffix='B'):
         size /= factor
     return "{0:.1f}{1}{2}".format(size, 'Yi', suffix)
 
-# -----------------------------------------------------------------------------
-#  Formatters for cuts
-# -----------------------------------------------------------------------------
 
-def fCutValue(value, precision=3):
-    """Returns floating point representation for cut values in string format,
+def fCutValue(value, precision=3) -> str:
+    """Return floating point representation for cut values in string format,
     returns empty string on error.
     """
     fmt = '+.{0}f'.format(precision)
@@ -56,8 +52,9 @@ def fCutValue(value, precision=3):
     except ValueError:
         return ''
 
-def fCutData(cut, separator=", "):
-    """Returns pretty formatted cut data according to cut specification settings."""
+
+def fCutData(cut, separator=", ") -> str:
+    """Return pretty formatted cut data according to cut specification settings."""
     if cut.type in FunctionCutTypes:
         spec = (CutSpecs.query(type=cut.type) or [None])[0]
     else:
@@ -73,12 +70,14 @@ def fCutData(cut, separator=", "):
                 return "[{0}-{1}]".format(int(cut.minimum), int(cut.maximum))
         else:
             entries = [entry.strip() for entry in cut.data.split(",")]
-            if cut.type == tmGrammar.ISO: # except isolation luts
+            # except isolation luts
+            if cut.type == tmGrammar.ISO:
                 return ", ".join([spec.data[entry] for entry in entries])
             return fCompress([int(entry) for entry in entries if entry.isdigit()])
     return cut.data
 
-def fCutLabel(cut):
+
+def fCutLabel(cut) -> str:
     """Formatted cut label containing name and values."""
     if cut.data:
         data = fCutData(cut)
@@ -91,32 +90,32 @@ def fCutLabel(cut):
         maximum = fCutValue(cut.maximum)
         return "{0} [{1}, {2}]".format(cut.name, minimum, maximum)
 
-def fCutLabelRichText(cut):
+
+def fCutLabelRichText(cut) -> str:
     """Rich text foramtted cut label, provided for convenience."""
     tokens = fCutLabel(cut).split()
     return "{0} {1}".format(tokens[0], " ".join(tokens[1:]))
 
-# -----------------------------------------------------------------------------
-#  Formatters for object requirements
-# -----------------------------------------------------------------------------
 
-def fThreshold(value, suffix=" GeV"):
-    """Retruns formatted object requirement threshold.
+def fThreshold(value, suffix=" GeV") -> str:
+    """Retrun formatted object requirement threshold.
     >>> fThreshold("2p5")
     '2.5 GeV'
     """
-    value = format(value).replace('p', '.') # Replace 'p' by comma.
+    value = format(value).replace('p', '.')  # Replace 'p' by comma.
     return "{:.1f}{}".format(float(value), suffix)
 
-def fCounts(value, suffix=" counts"):
-    """Retruns formatted object requirement count.
+
+def fCounts(value, suffix=" counts") -> str:
+    """Retrun formatted object requirement count.
     >>> fCounts("42")
     '42 counts'
     """
     return "{:.0f}{}".format(float(value), suffix)
 
-def fComparison(value):
-    """Retruns formatted thresold comparisons signs.
+
+def fComparison(value) -> str:
+    """Retrun formatted thresold comparisons signs.
     >>> fComparison(tmGrammar.GE)
     '>='
     """
@@ -129,8 +128,9 @@ def fComparison(value):
         tmGrammar.NE: "!=",
     }[value]
 
-def fBxOffset(value):
-    """Retruns formatted BX offset, accepts strings or integers.
+
+def fBxOffset(value) -> str:
+    """Return formatted BX offset, accepts strings or integers.
     >>> fBxOffset(2)
     '+2'
     """

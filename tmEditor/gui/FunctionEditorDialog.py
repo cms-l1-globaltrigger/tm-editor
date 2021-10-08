@@ -23,11 +23,36 @@ from tmEditor.gui.ObjectEditorDialog import ObjectEditorDialog, CutItem
 
 __all__ = ['FunctionEditorDialog', ]
 
+Functions = {
+    tmGrammar.comb: {"objects": 4, "label": "combination", "description": "Object combinations (di- tri- quad- objects)."},
+    tmGrammar.dist: {"objects": 2, "label": "correlation", "description": "Topological distance (correlation) of two object requirements."},
+    tmGrammar.mass_inv: {"objects": 2, "label": "invariant mass", "description": "Invariant mass of two object requirements."},
+    tmGrammar.mass_inv_upt: {"objects": 2, "label": "invariant mass unconstrained pt", "description": "Invariant mass for unconstained pt of two muon requirements."},
+    tmGrammar.mass_inv_dr: {"objects": 2, "label": "invariant mass/delta-R", "description": "Invariant mass/delta-R of two object requirements."},
+    tmGrammar.mass_inv_3: {"objects": 3, "label": "invariant mass of 3 particles", "description": "Invariant mass of three object requirements."},
+    tmGrammar.mass_trv: {"objects": 2, "label": "transverse mass", "description": "Transverse mass correlation of two object requirements (at least on without eta component)."},
+    tmGrammar.comb_orm: {"objects": 5, "label": "combination + overlap removal", "description": "Object combinations with overlap removal."},
+    tmGrammar.dist_orm: {"objects": 3, "label": "correlation + overlap removal", "description": "Topological distance (correlation) of two object requirements with overlap removal."},
+    tmGrammar.mass_inv_orm: {"objects": 3, "label": "invariant mass + overlap removal", "description": "Invariant mass correlation of two object requirements with overlap removal."},
+}
+
+
+def hasOverlapRemoval(name):
+    """Return True if function name provides an overlap removal."""
+    return name in (
+        tmGrammar.comb_orm,
+        tmGrammar.dist_orm,
+        tmGrammar.mass_inv_orm,
+        tmGrammar.mass_inv_orm,
+    )
+
+
 # -----------------------------------------------------------------------------
 #  Function editor dialog class
 # -----------------------------------------------------------------------------
 
 class FunctionEditorDialog(QtWidgets.QDialog):
+
     ObjectReqs = 5
 
     def __init__(self, menu, parent=None):
@@ -35,6 +60,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.menu = menu
         self.validator = AlgorithmSyntaxValidator(menu)
         self.setupUi()
+        self.functionComboBox.currentIndexChanged.connect(self.onUpdateObjectHelpers)
         self.addCutButton.clicked.connect(self.addCut)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
@@ -48,17 +74,9 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         self.setWindowIcon(createIcon("wizard-function"))
         self.setWindowTitle(self.tr("Function Editor"))
         self.functionComboBox = QtWidgets.QComboBox(self)
-        self.functionComboBox.addItem(self.tr("{} (combination)").format(tmGrammar.comb), tmGrammar.comb)
-        self.functionComboBox.addItem(self.tr("{} (correlation)").format(tmGrammar.dist), tmGrammar.dist)
-        self.functionComboBox.addItem(self.tr("{} (invariant mass)").format(tmGrammar.mass_inv), tmGrammar.mass_inv)
-        self.functionComboBox.addItem(self.tr("{} (invariant mass unconstrained pt)").format(tmGrammar.mass_inv_upt), tmGrammar.mass_inv_upt)
-        self.functionComboBox.addItem(self.tr("{} (invariant mass/delta-R)").format(tmGrammar.mass_inv_dr), tmGrammar.mass_inv_dr)
-        self.functionComboBox.addItem(self.tr("{} (invariant mass of 3 particles)").format(tmGrammar.mass_inv_3), tmGrammar.mass_inv_3)
-        self.functionComboBox.addItem(self.tr("{} (transverse mass)").format(tmGrammar.mass_trv), tmGrammar.mass_trv)
-        self.functionComboBox.addItem(self.tr("{} (combination + overlap removal)").format(tmGrammar.comb_orm), tmGrammar.comb_orm)
-        self.functionComboBox.addItem(self.tr("{} (correlation + overlap removal)").format(tmGrammar.dist_orm), tmGrammar.dist_orm)
-        self.functionComboBox.addItem(self.tr("{} (invariant mass + overlap removal)").format(tmGrammar.mass_inv_orm), tmGrammar.mass_inv_orm)
-        self.functionComboBox.currentIndexChanged.connect(self.onUpdateObjectHelpers)
+        for key, value in Functions.items():
+            label = value.get("label", "")
+            self.functionComboBox.addItem(f"{key} ({label})", key)
         self.objectHelpers = [FunctionReqHelper(i, self) for i in range(self.ObjectReqs)]
         self.cutListView = QtWidgets.QListView(self)
         self.cutListView.activated.connect(self.updateInfoText)
@@ -74,9 +92,9 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         layout.addWidget(QtWidgets.QLabel(self.tr("Function"), self), 0, 0)
         layout.addWidget(self.functionComboBox, 0, 1, 1, 2)
         for helper in self.objectHelpers:
-            layout.addWidget(helper.label, 1+helper.index, 0)
-            layout.addWidget(helper.lineEdit, 1+helper.index, 1)
-            layout.addWidget(helper.editButton, 1+helper.index, 2)
+            layout.addWidget(helper.label, 1 + helper.index, 0)
+            layout.addWidget(helper.lineEdit, 1 + helper.index, 1)
+            layout.addWidget(helper.editButton, 1 + helper.index, 2)
             helper.lineEdit.textChanged.connect(self.updateInfoText)
         layout.addWidget(QtWidgets.QLabel(self.tr("Cuts"), self), 6, 0)
         layout.addWidget(self.cutListView, 6, 1, 1, 2)
@@ -100,21 +118,16 @@ class FunctionEditorDialog(QtWidgets.QDialog):
     def onUpdateObjectHelpers(self, index):
         """Update object helper widgets."""
         self.updateCuts()
+        functionType = self.functionType()
         for helper in self.objectHelpers:
             # Enable all object types
             helper.types = ObjectTypes
-            helper.setEnabled(True)
-            # Disable helpers if not needed
-            if self.functionType() in (tmGrammar.dist, tmGrammar.mass_inv, tmGrammar.mass_inv_upt, tmGrammar.mass_inv_dr, tmGrammar.mass_trv) and helper.index >= 2:
-                helper.setEnabled(False)
-            if self.functionType() in (tmGrammar.mass_inv_3, tmGrammar.dist_orm, tmGrammar.mass_inv_orm) and helper.index >= 3:
-                helper.setEnabled(False)
-            if self.functionType() == tmGrammar.comb and helper.index >= 4:
-                helper.setEnabled(False)
+            # Disable helpers if not supported
+            count = Functions.get(functionType, {}).get("objects", 0)
+            helper.setEnabled(helper.index < count)
             # Set object types for object dialog
-            if self.functionType() in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm):
+            if hasOverlapRemoval(functionType):
                 helper.types = (tmGrammar.EG, tmGrammar.TAU, tmGrammar.JET)
-
         self.updateInfoText()
 
     def updateCuts(self):
@@ -156,30 +169,11 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         expression = AlgorithmFormatter.expand(self.expression())
         text = []
         text.append(f'<h3>{functionType} Function</h3>')
-        if functionType == tmGrammar.comb:
-            text.append(f'<p>Object combinations (di- tri- quad- objects).</p>')
-        elif functionType == tmGrammar.comb_orm:
-            text.append(f'<p>Object combinations with overlap removal.</p>')
-        elif functionType == tmGrammar.dist:
-            text.append(f'<p>Topological distance (correlation) of two object requirements.</p>')
-        elif functionType == tmGrammar.dist_orm:
-            text.append(f'<p>Topological distance (correlation) of two object requirements with overlap removal.</p>')
-        elif functionType == tmGrammar.mass_inv:
-            text.append(f'<p>Invariant mass of two object requirements.</p>')
-        elif functionType == tmGrammar.mass_inv_upt:
-            text.append(f'<p>Invariant mass for unconstained pt of two muon requirements.</p>')
-        elif functionType == tmGrammar.mass_inv_dr:
-            text.append(f'<p>Invariant mass/delta-R of two object requirements.</p>')
-        elif functionType == tmGrammar.mass_inv_3:
-            text.append(f'<p>Invariant mass of three object requirements.</p>')
-        elif functionType == tmGrammar.mass_inv_orm:
-            text.append(f'<p>Invariant mass correlation of two object requirements with overlap removal.</p>')
-        elif functionType == tmGrammar.mass_trv:
-            text.append(f'<p>Transverse mass correlation of two object requirements (at least on without eta component).</p>')
-        elif functionType == tmGrammar.mass_inv_orm:
-            text.append(f'<p>Transverse mass correlation of two object requirements (at least on without eta component) with overlap removal.</p>')
-        if functionType in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_inv_orm):
-            text.append(f'<p>The <em>last</em> object requirement must be of a diffrent type, applying the overlap removal on the <em>preceding</em> object requirement(s).</p>')
+        description = Functions.get(functionType, {}).get("description")
+        if description:
+            text.append(f"<p>{description}</p>")
+        if hasOverlapRemoval(functionType):
+            text.append(f'<p>The <em>last</em> object requirement must be of a different type, applying the overlap removal on the <em>preceding</em> object requirement(s).</p>')
         text.append(f'<h4>Preview</h4>')
         text.append(f'<p><pre>{expression}</pre></p>')
         self.infoTextEdit.setText(''.join(text))
@@ -281,11 +275,11 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         for helper in helpers:
             try:
                 self.validator.validate(AlgorithmFormatter.compress(helper.text()))
-            except AlgorithmSyntaxError as e:
+            except AlgorithmSyntaxError as exc:
                 QtWidgets.QMessageBox.warning(
                     self,
                     self.tr("Invalid expression"),
-                    self.tr("Invalid object requirement {0}: {1},<br /><br />Reason: {2}").format(helper.index+1, helper.text(), format(e))
+                    self.tr("Invalid object requirement {0}: {1},<br /><br />Reason: {2}").format(helper.index+1, helper.text(), format(exc))
                 )
                 return
         # Check required cuts
@@ -300,11 +294,11 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         # Validate whole expression
         try:
             self.validator.validate(AlgorithmFormatter.compress(self.expression()))
-        except AlgorithmSyntaxError as e:
+        except AlgorithmSyntaxError as exc:
             QtWidgets.QMessageBox.warning(
                 self,
                 self.tr("Invalid expression"),
-                self.tr("Invalid expression: {0}").format(format(e) or e.token),
+                self.tr("Invalid expression: {0}").format(format(exc) or exc.token),
             )
             return
         super().accept()
@@ -318,7 +312,7 @@ class FunctionReqHelper:
     def __init__(self, index, parent):
         self.index = index
         self.parent = parent
-        self.label = QtWidgets.QLabel(parent.tr("Req. {0}").format(index+1))
+        self.label = QtWidgets.QLabel(parent.tr("Req. {0}").format(index + 1))
         self.lineEdit = QtWidgets.QLineEdit(parent)
         self.editButton = QtWidgets.QToolButton(parent)
         self.editButton.setText(parent.tr("..."))
@@ -344,11 +338,11 @@ class FunctionReqHelper:
         if token: # else start with empty editor
             try:
                 dialog.loadObject(token)
-            except ValueError as e:
+            except ValueError as exc:
                 QtWidgets.QMessageBox.warning(
                     self.parent,
                     self.parent.tr("Invalid expression"),
-                    self.parent.tr("Invalid object expression: {0}").format(e),
+                    self.parent.tr("Invalid object expression: {0}").format(exc),
                 )
         dialog.exec_()
         if dialog.result() == QtWidgets.QDialog.Accepted:

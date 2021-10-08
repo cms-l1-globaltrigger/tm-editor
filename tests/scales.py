@@ -57,8 +57,8 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except RuntimeError as e:
-        logging.error(format(e))
+    except RuntimeError as exc:
+        logging.error(format(exc))
         sys.exit(1)
     else:
         sys.exit(0)

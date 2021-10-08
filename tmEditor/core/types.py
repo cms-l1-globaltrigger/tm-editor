@@ -63,6 +63,11 @@ SignalTypes = (
     tmGrammar.CENT5,
     tmGrammar.CENT6,
     tmGrammar.CENT7,
+    # Muon showers
+    tmGrammar.MUS0,
+    tmGrammar.MUS1,
+    tmGrammar.MUSOOT0,
+    tmGrammar.MUSOOT1,
 )
 """Ordered list of all supported signal types."""
 

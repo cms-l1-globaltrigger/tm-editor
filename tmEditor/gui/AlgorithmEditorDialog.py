@@ -18,7 +18,7 @@ import tmGrammar
 
 from tmEditor.core.Algorithm import Algorithm, External
 from tmEditor.core.Settings import MaxAlgorithms
-from tmEditor.core.Algorithm import RegExObject, RegExExtSignal, RegExFunction
+from tmEditor.core.Algorithm import RegExObject, RegExSignal, RegExExtSignal, RegExFunction
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 from tmEditor.core.AlgorithmSyntaxValidator import AlgorithmSyntaxValidator, AlgorithmSyntaxError
 from tmEditor.core.XmlDecoder import mirgrate_mass_function # HACK
@@ -49,6 +49,8 @@ __all__ = ['AlgorithmEditorDialog', ]
 
 kName = 'name'
 
+ContentsURL = "https://cern.ch/globaltrigger/upgrade/tme/userguide#create-algorithms"
+
 # -----------------------------------------------------------------------------
 #  Helper functions
 # -----------------------------------------------------------------------------
@@ -56,6 +58,10 @@ kName = 'name'
 def findObject(text, pos):
     """Returns object requirement at position *pos* or None if nothing found."""
     for result in RegExObject.finditer(text):
+        if result.start() <= pos < result.end():
+            if not result.group(0).startswith(tmGrammar.EXT): # Exclude EXT signals
+                return result.group(0), result.start(), result.end()
+    for result in RegExSignal.finditer(text):
         if result.start() <= pos < result.end():
             if not result.group(0).startswith(tmGrammar.EXT): # Exclude EXT signals
                 return result.group(0), result.start(), result.end()
@@ -491,8 +497,8 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         # Validate expression
         try:
             self.validator.validate(self.expression())
-        except AlgorithmSyntaxError as e:
-            self.messageBar.setErrorMessage(format(e))
+        except AlgorithmSyntaxError as exc:
+            self.messageBar.setErrorMessage(format(exc))
         else:
             self.messageBar.setMessage(self.tr("Expression OK"))
 
@@ -580,11 +586,11 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
     def onParse(self):
         try:
             self.validator.validate(self.expression())
-        except AlgorithmSyntaxError as e:
-            if e.token:
-                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("{} near {}").format(e, e.token))
+        except AlgorithmSyntaxError as exc:
+            if exc.token:
+                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), self.tr("{} near {}").format(exc, exc.token))
             else:
-                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), format(e))
+                QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), format(exc))
 
     def updateFreeIndices(self, ignore=None):
         # Get list of free indices.
@@ -726,18 +732,18 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
                     name = signal_name(name)
                     signalSet = self.editor.menu.extSignals.extSignalSet[kName]
                     raise AlgorithmSyntaxError(f"Undefined external signal `{name}` in current signal set `{signalSet}`.", name)
-        except AlgorithmSyntaxError as e:
-            if e.token:
+        except AlgorithmSyntaxError as exc:
+            if exc.token:
                 # Make sure to highlight the errornous part in the text editor.
                 self.editor.setExpression(self.editor.expression()) # normalize expression
                 self.editor.textEdit.moveCursor(QtGui.QTextCursor.Start)
-                self.editor.textEdit.find(AlgorithmFormatter.normalize(e.token))
-            QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), format(e))
+                self.editor.textEdit.find(AlgorithmFormatter.normalize(exc.token))
+            QtWidgets.QMessageBox.warning(self, self.tr("Invalid expression"), format(exc))
             return False
-        except ValueError as e:
+        except ValueError as exc:
             # TODO the tmGrammar parser errors are not user friendly.
             #       think about how to translate the messages in a user readable way.
-            token = format(e).strip()
+            token = format(exc).strip()
             c = re.compile(r"\w+\:\:\w+\s*\'([^\']*)\'")
             result = c.match(token)
             if result:
@@ -761,7 +767,7 @@ class AlgorithmEditorDialog(QtWidgets.QDialog):
 
     def showHelp(self):
         """Raise remote contents help."""
-        webbrowser.open_new_tab("http://globaltrigger.hephy.at/upgrade/tme/userguide#create-algorithms")
+        webbrowser.open_new_tab(ContentsURL)
 
     def closeEvent(self, event):
         """On window close event."""

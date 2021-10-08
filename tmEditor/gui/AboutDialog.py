@@ -81,5 +81,5 @@ class AboutDialog(QtWidgets.QDialog):
             return ''
         istream = QtCore.QTextStream(file)
         while not istream.atEnd():
-           lines.append(istream.readLine())
+            lines.append(istream.readLine())
         return os.linesep.join(lines)

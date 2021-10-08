@@ -108,7 +108,7 @@ class ImportDialog(QtWidgets.QDialog):
                 callback()
                 dialog.setValue(queue.progress())
                 QtWidgets.QApplication.processEvents()
-        except XmlDecoder.XmlDecoderError as e:
+        except XmlDecoder.XmlDecoderError:
             dialog.close() # make sure to close the progress dialog
             raise
         except Exception:

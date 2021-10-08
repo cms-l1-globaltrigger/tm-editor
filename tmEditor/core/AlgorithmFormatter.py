@@ -19,10 +19,12 @@ from .types import FunctionTypes
 
 __all__ = ['AlgorithmFormatter', ]
 
+
 class AlgorithmFormatter:
     """Formatter class used to format user input to the (currently very)
     restrictive algorithm equation syntax.
     """
+
     Functions = FunctionTypes
     Negators = (tmGrammar.NOT, )
     Operators = (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR, ) + Negators

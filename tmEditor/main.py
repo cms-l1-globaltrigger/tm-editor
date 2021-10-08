@@ -6,6 +6,7 @@ import signal
 import sys
 import os
 
+import PyQt5
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
@@ -62,7 +63,7 @@ def main():
             logging.getLogger().addHandler(handler)
 
     # Diagnostic output.
-    logging.debug("PyQt5 version %s", QtCore.QT_VERSION_STR)
+    logging.debug("%s version %s", PyQt5.__name__, QtCore.QT_VERSION_STR)
 
     app = QtWidgets.QApplication(sys.argv)
 

@@ -73,11 +73,11 @@ def handleException(method):
     def handleException(self, *args, **kwargs):
         try:
             return method(self, *args, **kwargs)
-        except Exception as e:
+        except Exception as exc:
             QtWidgets.QMessageBox.critical(
                 self,
                 self.tr("Exception occured"),
-                format(e)
+                format(exc)
             )
     return handleException
 
@@ -274,34 +274,35 @@ class Document(BaseDocument):
     def menu(self):
         return self._menu
 
-    @handleException
     def loadMenu(self, filename):
         """Load menu from filename, setup new document."""
         self.setFilename(filename)
         self.setName(os.path.basename(self.filename()))
-        dialog = QtWidgets.QProgressDialog(self)
-        dialog.setWindowTitle(self.tr("Loading..."))
-        dialog.setCancelButton(None)
-        dialog.setWindowModality(QtCore.Qt.WindowModal)
-        dialog.resize(260, dialog.height())
-        dialog.show()
-        QtWidgets.QApplication.processEvents()
-        # Create XML decoder and run
-        queue = XmlDecoder.XmlDecoderQueue(self.filename())
         try:
-            for callback in queue:
-                dialog.setLabelText(self.tr("{0}...").format(queue.message().capitalize()))
-                logging.debug("processing: %s...", queue.message())
-                QtWidgets.QApplication.sendPostedEvents(dialog, 0)
-                QtWidgets.QApplication.processEvents()
-                callback()
-                dialog.setValue(queue.progress())
-                QtWidgets.QApplication.processEvents()
-        except XmlDecoderError as e:
+            dialog = QtWidgets.QProgressDialog(self)
+            dialog.setWindowTitle(self.tr("Loading..."))
+            dialog.setCancelButton(None)
+            dialog.setWindowModality(QtCore.Qt.WindowModal)
+            dialog.resize(260, dialog.height())
+            dialog.show()
+            QtWidgets.QApplication.processEvents()
+            # Create XML decoder and run
+            queue = XmlDecoder.XmlDecoderQueue(self.filename())
+            try:
+                for callback in queue:
+                    dialog.setLabelText(self.tr("{0}...").format(queue.message().capitalize()))
+                    logging.debug("processing: %s...", queue.message())
+                    QtWidgets.QApplication.sendPostedEvents(dialog, 0)
+                    QtWidgets.QApplication.processEvents()
+                    callback()
+                    dialog.setValue(queue.progress())
+                    QtWidgets.QApplication.processEvents()
+            except XmlDecoderError as exc:
+                raise
+        except Exception:
             dialog.close()
             raise
         self._menu = queue.menu
-        dialog.close()
         if queue.applied_mirgrations:
             msgBox = QtWidgets.QMessageBox(self)
             msgBox.setIcon(QtWidgets.QMessageBox.Information)
@@ -330,7 +331,6 @@ class Document(BaseDocument):
             msgBox.exec_()
         self.setModified(False)
 
-    @handleException
     def saveMenu(self, filename=None):
         """Save menu to filename."""
         # Warn before loosing cuts
@@ -557,8 +557,8 @@ class Document(BaseDocument):
                 self.addAlgorithm(index, item)
             elif item is self.cutsPage:
                 self.addCut(index, item)
-        except RuntimeError as e:
-            QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(e))
+        except RuntimeError as exc:
+            QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(exc))
         item.top.sortByColumn(0, QtCore.Qt.AscendingOrder)
         selectedeRows = item.top.selectionModel().selectedRows()
         if selectedeRows:
@@ -632,8 +632,8 @@ class Document(BaseDocument):
             elif item is self.cutsPage:
                 self.editCut(index, item)
             self.updateBottom()
-        except RuntimeError as e:
-            QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(e))
+        except RuntimeError as exc:
+            QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(exc))
         item.top.sortByColumn(0, QtCore.Qt.AscendingOrder)
         selectedeRows = item.top.selectionModel().selectedRows()
         if selectedeRows:

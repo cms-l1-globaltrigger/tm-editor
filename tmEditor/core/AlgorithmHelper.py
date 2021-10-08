@@ -17,6 +17,7 @@ __all__ = [
     'AlgorithmHelper'
 ]
 
+
 def join(items, separator=""):
     """Joins string representation of list items.
     >>> join(["foo", "bar", 42], "-")
@@ -24,10 +25,13 @@ def join(items, separator=""):
     """
     return separator.join([format(item) for item in items])
 
+
 def encode_comparison_operator(value):
     """Returns encoded comparison operator or an empty string on default value."""
-    if value == tmGrammar.GE: return ""
+    if value == tmGrammar.GE:
+        return ""
     return value
+
 
 def encode_threshold(value, separator='p'):
     """Returns encoded threshold value, omits comma if decimals are zero."""
@@ -36,27 +40,35 @@ def encode_threshold(value, separator='p'):
         return separator.join([integer, decimal])
     return integer
 
+
 def decode_threshold(threshold, separator='p'):
     """Returns decoded float threshold."""
-    return float('.'.join(threshold.split(separator)[:2])) # TODO
+    return float('.'.join(threshold.split(separator)[:2]))  # TODO
+
 
 def encode_bx_offset(value):
     """Returns encoded BX offset or an empty string on default value."""
-    if value == 0: return ""
+    if value == 0:
+        return ""
     return format(value, '+d')
+
 
 def encode_cuts(items):
     """Returns encoded list of cuts or an empty string if no cuts."""
-    if not items: return ""
+    if not items:
+        return ""
     return "[{0}]".format(join(items, ","))
 
-class Helper:
 
-    def serialize(self):
+class Helper:
+    """Helper base class."""
+
+    def serialize(self) -> str:
         raise NotImplementedError()
 
     def __str__(self):
         return self.serialize()
+
 
 class ObjectHelper(Helper):
 
@@ -71,12 +83,24 @@ class ObjectHelper(Helper):
         self.cuts.append(cut)
         return self
 
-    def serialize(self):
+    def serialize(self) -> str:
         comparison_operator = encode_comparison_operator(self.comparison_operator)
         threshold = encode_threshold(self.threshold)
         bx_offset = encode_bx_offset(self.bx_offset)
         cuts = encode_cuts(self.cuts)
         return f"{self.type}{comparison_operator}{threshold}{bx_offset}{cuts}"
+
+
+class SignalHelper(Helper):
+
+    def __init__(self, type, bx_offset=0):
+        self.type = type
+        self.bx_offset = bx_offset
+
+    def serialize(self) -> str:
+        bx_offset = encode_bx_offset(self.bx_offset)
+        return f"{self.type}{bx_offset}"
+
 
 class ExtSignalHelper(Helper):
 
@@ -86,9 +110,10 @@ class ExtSignalHelper(Helper):
         if not name.startswith("EXT_"):
             raise ValueError()
 
-    def serialize(self):
+    def serialize(self) -> str:
         bx_offset = encode_bx_offset(self.bx_offset)
         return f"{self.name}{bx_offset}"
+
 
 class FunctionHelper(Helper):
 
@@ -106,15 +131,16 @@ class FunctionHelper(Helper):
         self.cuts.append(cut)
         return self
 
-    def serialize(self):
+    def serialize(self) -> str:
         objects = join(self.objects, ',')
         cuts = encode_cuts(self.cuts)
         return f"{self.name}{{{objects}}}{cuts}"
 
+
 class AlgorithmHelper(Helper):
 
-    def __init__(self, expression=None):
-        self.expression = expression or []
+    def __init__(self, expression: list = None):
+        self.expression: list = expression or []
 
     def addOperator(self, operator):
         self.expression.append(operator)
@@ -122,6 +148,11 @@ class AlgorithmHelper(Helper):
 
     def addObject(self, type, threshold, bx_offset=0, comparison_operator=tmGrammar.GE, cuts=None):
         helper = ObjectHelper(type, threshold, bx_offset, comparison_operator, cuts)
+        self.expression.append(helper)
+        return helper
+
+    def addSignal(self, type, bx_offset=0):
+        helper = SignalHelper(type, bx_offset)
         self.expression.append(helper)
         return helper
 
@@ -135,5 +166,5 @@ class AlgorithmHelper(Helper):
         self.expression.append(helper)
         return helper
 
-    def serialize(self):
+    def serialize(self) -> str:
         return join(self.expression, " ")

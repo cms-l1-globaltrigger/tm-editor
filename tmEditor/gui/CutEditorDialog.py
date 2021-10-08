@@ -482,8 +482,12 @@ class InfiniteRangeWidget(InputWidget):
 
     def updateCut(self, cut):
         """Update existing cut from inputs."""
-        cut.minimum = self.minimumSpinBox.value()
-        cut.maximum = self.maximumSpinBox.value()
+        minimum = self.minimumSpinBox.value()
+        maximum = self.maximumSpinBox.value()
+        if maximum <= minimum:
+            raise CutEditorError("Invalid range: [{0}-{1}] (minimum<maximum)!".format(minimum, maximum))
+        cut.minimum = minimum
+        cut.maximum = maximum
         cut.data = ""
 
 class SliceWidget(InputWidget):
@@ -1055,9 +1059,9 @@ class CutEditorDialog(QtWidgets.QDialog):
         """Overloaded slot for accept()."""
         try:
             self.validate()
-        except CutEditorError as e:
-            logging.warning(format(e))
-            QtWidgets.QMessageBox.warning(self, "Validation error", format(e))
+        except CutEditorError as exc:
+            logging.warning(format(exc))
+            QtWidgets.QMessageBox.warning(self, "Validation error", format(exc))
         else:
             super().accept()
 

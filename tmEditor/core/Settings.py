@@ -18,10 +18,10 @@ DefaultScaleSetUri = "scales/L1Menu_{scale_set}.xml"
 DefaultExtSignalSetUri = "cabling/L1Menu_{ext_signal_set}.xml"
 """Default URI format string for server side external signal set XML files."""
 
-DownloadSite = "http://globaltrigger.hephy.at/upgrade/tme/downloads"
+DownloadSite = "https://cern.ch/globaltrigger/upgrade/tme/downloads"
 """Web URL providing download information."""
 
-ContentsURL = "http://globaltrigger.hephy.at/upgrade/tme/userguide"
+ContentsURL = "https://cern.ch/globaltrigger/upgrade/tme/userguide"
 """Web URL hosting the user guide."""
 
 Empty = ""
@@ -333,7 +333,7 @@ CutSpecs = CutSpecificationPool(
         object=Empty,
         type=tmGrammar.CHGCOR,
         objects=[tmGrammar.MU],
-        functions=[tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_upt],
+        functions=[tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_upt, tmGrammar.mass_inv_dr, tmGrammar.mass_inv_3],
         title="Charge correlation",
         description="Applies charge correlation restriction to combinations of two or more muon objects. It can be applied to functions comb, dist, mass_inv and mass_trv.<br/><br/>" \
                     "<strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre>",
@@ -373,7 +373,7 @@ CutSpecs = CutSpecificationPool(
         object=Empty,
         type=tmGrammar.DR,
         objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU],
-        functions=[tmGrammar.dist, tmGrammar.dist_orm, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_orm],
+        functions=[tmGrammar.dist, tmGrammar.dist_orm, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_upt, tmGrammar.mass_inv_orm],
         range_precision=1,
         range_step=0.1,
         title="Delta-R",
@@ -421,11 +421,11 @@ CutSpecs = CutSpecificationPool(
         functions=[tmGrammar.mass_inv_dr],
         range_precision=1,
         range_step=0.2,
-        range_unit="m/dR",
+        range_unit="GeV",
         title="Invariant mass divided by delta-R",
         description="Applies invariant mass divided by delta-R restriction of two objects.<br/><br/>" \
                     "Calculation of invariant mass/delta-R:<br/><br/>" \
-                    "M<sub>0</sub>/&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>upt1</em> <em>upt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))</span>/&Delta;R<br/><br/>" \
+                    "M<sub>0</sub>/&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))</span>/&Delta;R<br/><br/>" \
                     "<strong>Example:</strong> <pre>mass_inv_dr{MU20, MU20}[MASSDR_X]</pre>"
     ),
     CutSpecification(

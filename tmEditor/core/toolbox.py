@@ -29,18 +29,18 @@ __all__ = [
 #  Low level helper functions
 # -----------------------------------------------------------------------------
 
-def getenv(name):
+def getenv(name: str) -> str:
     """Get environment variable. Raises a RuntimeError exception if variable not set."""
     value = os.getenv(name)
     if value is None:
         raise RuntimeError(f"`{name}' environment not set")
     return value
 
-def getXsdDir():
+def getXsdDir() -> str:
     """Returns path for XSD files."""
     return tmTable.UTM_XSD_DIR
 
-def query(data, **kwargs):
+def query(data: dict, **kwargs) -> list:
     """Perform dictionary query.
     >>> d = {'foo': 42, 'bar': 'baz'}
     >>> query(d, bar='baz')
@@ -58,7 +58,7 @@ def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
     return [int(text) if text.isdigit() else text.lower()
             for text in re.split(_nsre, format(s))]
 
-def safe_str(s, attrname):
+def safe_str(s: str, attrname: str) -> str:
     """Returns safe version of string. The function strips:
      * whitespaces, tabulators
      * newlines, carriage returns
@@ -69,15 +69,15 @@ def safe_str(s, attrname):
         logging.warning("normalized %s: '%s' to '%s'", attrname, s, t)
     return t
 
-def listextent(values):
+def listextent(values: list):
     """Retruns extent of sorted list."""
     if values[0] == values[-1]:
         return values[0]
     return values[0], values[-1]
 
-def listcompress(values):
+def listcompress(values: list):
     """Returns compressed ranges for sortel list."""
-    ranges = []
+    ranges: list = []
     for value in values:
         if not ranges: ranges.append([value])
         elif value - ranges[-1][-1] > 1:
@@ -86,11 +86,11 @@ def listcompress(values):
             ranges[-1].append(value)
     return [listextent(values) for values in ranges]
 
-def decode_labels(s):
+def decode_labels(s: str):
     """String to labels."""
     return sorted({label.strip() for label in s.split(',') if label.strip()})
 
-def encode_labels(labels, pretty=False):
+def encode_labels(labels, pretty: bool = False):
     sep = ', ' if pretty else ','
     return sep.join(sorted({label.strip() for label in labels if label.strip()}))
 
@@ -101,9 +101,9 @@ def encode_labels(labels, pretty=False):
 class CutSpecificationPool:
     """Cut specification pool."""
     def __init__(self, *args):
-        self.specs = args
+        self.specs: tuple = args
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.specs)
 
     def __iter__(self):
@@ -114,7 +114,7 @@ class CutSpecificationPool:
         >>> pool.filter(object='MU', type='ISO')
         [CutSpecification instance at 0x...>]
         """
-        results = self.specs
+        results: tuple = self.specs
         for key, value in kwargs.items():
             results = list(filter(lambda spec: hasattr(spec, key) and getattr(spec, key) == value, results))
         return results
