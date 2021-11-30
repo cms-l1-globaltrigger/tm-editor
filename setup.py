@@ -12,7 +12,7 @@ setup(
     url = "https://cern.ch/globaltrigger/upgrade/tme",
     packages = find_packages(),
     install_requires=[
-        'tm-python @ git+https://github.com/cms-l1-globaltrigger/tm-python@0.9.1',
+        'tm-python @ git+https://github.com/cms-l1-globaltrigger/tm-python@0.10.0',
         'Markdown>=3.1',
         'PyQt5>=5.13.*'
     ],

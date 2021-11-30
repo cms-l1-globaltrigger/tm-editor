@@ -82,6 +82,7 @@ ObjectCutTypes = (
     tmGrammar.PHI,
     tmGrammar.ISO,
     tmGrammar.QLTY,
+    tmGrammar.DISP,
     tmGrammar.CHG,
     tmGrammar.IP,
     tmGrammar.SLICE,
