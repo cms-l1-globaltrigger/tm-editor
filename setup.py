@@ -4,7 +4,7 @@ long_description = open('README.md').read()
 
 setup(
     name='tm-editor',
-    version='0.13.0',
+    version='0.14.0',
     description="CMS Level-1 Trigger Menu Editor",
     long_description=long_description,
     author = "Bernhard Arnold",
