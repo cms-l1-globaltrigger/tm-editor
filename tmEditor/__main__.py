@@ -10,10 +10,11 @@ import PyQt5
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
-from .gui.MainWindow import MainWindow
 from . import __version__
+from .application import Application
 
-def parse_args():
+
+def parse_args() -> argparse.Namespace:
     """Command line argument parser."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -44,7 +45,8 @@ def parse_args():
     )
     return parser.parse_args()
 
-def main():
+
+def main() -> None:
     """Main application routine."""
     # Parse arguments.
     args = parse_args()
@@ -53,50 +55,23 @@ def main():
     level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(format='%(levelname)s: %(message)s', level=level)
 
-    # As things are getting serious let's start logging to file.
-    if args.verbose:
-        filename = os.path.expanduser('~/tm-editor.log')
-        if os.access(filename, os.W_OK): # is writable?
-            handler = logging.FileHandler(filename, mode='a')
-            handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
-            handler.setLevel(level)
-            logging.getLogger().addHandler(handler)
-
     # Diagnostic output.
     logging.debug("%s version %s", PyQt5.__name__, QtCore.QT_VERSION_STR)
 
-    app = QtWidgets.QApplication(sys.argv)
-
-    # Create/Load application settings.
-    app.setApplicationName("Trigger Menu Editor")
-    app.setApplicationVersion(__version__)
-    app.setOrganizationName("HEPHY")
-    app.setOrganizationDomain("hephy.at")
-
-    # Init global settings.
-    QtCore.QSettings()
-
-    # Create main window.
-    window = MainWindow()
-    window.setRemoteTimeout(args.timeout)
-    window.show()
-
-    # Terminate application on SIG_INT signal.
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-    # Run timer to catch SIG_INT signals.
-    timer = QtCore.QTimer()
-    timer.start(500)
-    timer.timeout.connect(lambda: None)
+    app = Application()
+    app.setRemoteTimeout(args.timeout)
+    app.loadSettings()
 
     # Load documents from command line (optional).
     def loadDocuments():
         for filename in args.filenames:
             logging.debug("loading file %s", filename)
-            window.loadDocument(filename)
+            app.loadDocument(filename)
     QtCore.QTimer().singleShot(100, loadDocuments)
 
-    return app.exec_()
+    app.eventLoop()
+    app.storeSettings()
+
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
