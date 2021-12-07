@@ -49,8 +49,6 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
         # Setup window.
         self.setWindowIcon(QtGui.QIcon(":icons/tm-editor.svg"))
-        self.setWindowTitle(self.tr("L1-Trigger Menu Editor"))
-        self.resize(800, 600)
         # Create actions and toolbars.
         self.createActions()
         self.createMenus()

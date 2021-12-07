@@ -249,7 +249,7 @@ class PrefixedSpinBox(QtWidgets.QSpinBox):
     Used for assigning bunch crossing offsets.
     """
     def __init__(self, parent=None):
-        """Constructur, takes optional reference to parent widget."""
+        """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
 
     def textFromValue(self, value):
@@ -339,7 +339,7 @@ class RestrictedLineEdit(QtWidgets.QLineEdit):
     """
 
     def __init__(self, parent=None):
-        """Widget's constructor.
+        """Widget's .
 
         @param parent optional parent widget.
         """
@@ -461,7 +461,7 @@ class EtaCutChart(QtWidgets.QWidget):
     FontSize = 7
 
     def __init__(self, parent=None):
-        """Constructur, takes optional reference to parent widget."""
+        """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
         self.setRange(-5, 5)
         self.setFixedSize(self.Margin * 2 + self.Length, self.Margin * 2 + self.Radius)
@@ -526,7 +526,7 @@ class PhiCutChart(QtWidgets.QWidget):
     FontSize = 7
 
     def __init__(self, parent=None):
-        """Constructur, takes optional reference to parent widget."""
+        """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
         self.setRange(0, 360 * 16)
         self.setFixedSize((self.Margin + self.Radius) * 2, (self.Margin + self.Radius) * 2)

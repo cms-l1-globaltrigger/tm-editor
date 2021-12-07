@@ -232,6 +232,18 @@ CutSpecs = CutSpecificationPool(
         }
     ),
     CutSpecification(
+        name=CutSpecification.join(tmGrammar.JET, tmGrammar.DISP),
+        object=tmGrammar.JET,
+        type=tmGrammar.DISP,
+        title="Jet displaced",
+        description="Displaced jet for LLP",
+        data_exclusive=True,
+        data={
+            "0": "non-displaced",
+            "1": "displaced"
+        }
+    ),
+    CutSpecification(
         name=CutSpecification.join(tmGrammar.JET, tmGrammar.SLICE),
         object=tmGrammar.JET,
         type=tmGrammar.SLICE,

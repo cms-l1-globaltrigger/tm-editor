@@ -832,6 +832,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.PHI: ScaleWidget,
         tmGrammar.ISO: MultipleJoiceIsoWidget,
         tmGrammar.QLTY: MultipleJoiceWidget,
+        tmGrammar.DISP: SingleJoiceWidget,
         tmGrammar.CHG: SingleJoiceWidget,
         tmGrammar.IP: MultipleJoiceWidget,
         tmGrammar.SLICE: SliceWidget,
