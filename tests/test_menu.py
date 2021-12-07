@@ -105,7 +105,7 @@ class MenuTests(unittest.TestCase):
             "MU10": [],
             "MU80[MU-ISO_Q,MU-QLTY_Q]": ["MU-ISO_Q", "MU-QLTY_Q"],
             "TAU10[TAU-ETA_Q,TAU-PHI_Q]": ["TAU-ETA_Q", "TAU-PHI_Q"],
-            "JET0[JET_DISP_LLP]": ["JET-DISP_LLP"],
+            "JET0[JET-DISP_LLP]": ["JET-DISP_LLP"],
         }
         for token, ref in cases.items():
             self.assertEqual(objectCuts(token), ref)
