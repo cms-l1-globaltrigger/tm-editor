@@ -53,6 +53,7 @@ class MenuTests(unittest.TestCase):
             "MU10": dict(name="MU10", threshold="10", type=tmGrammar.MU, comparison_operator=tmGrammar.GE, bx_offset=0),
             "EG.ge.60+1": dict(name="EG60+1", threshold="60", type=tmGrammar.EG, comparison_operator=tmGrammar.GE, bx_offset=1),
             "TAU.eq.260p5-2": dict(name="TAU.eq.260p5-2", threshold="260p5", type=tmGrammar.TAU, comparison_operator=tmGrammar.EQ, bx_offset=-2),
+            "JET4[JET-DISP_LLP]": dict(name="JET4", threshold="4", type=tmGrammar.JET, comparison_operator=tmGrammar.GE, bx_offset=0),
         }
         for token, ref in cases.items():
             self.assertEqual(toObject(token), Object(**ref), "missmatch at object requirment conversion")
@@ -83,6 +84,8 @@ class MenuTests(unittest.TestCase):
             "dist{MU10,MU20}[DR_Q]": ["DR_Q"],
             "dist{EG80+1,EG60+1}[DETA_Q,DPHI_Q]": ["DETA_Q", "DPHI_Q"],
             "dist{TAU80[TAU-ISO_Q],TAU20[TAU-ISO_Q]}[DETA_Q]": ["DETA_Q"],
+            "mass_inv{MU10,MU20}[MASS_X,CHGCOR_OS]": ["MASS_X", "CHGCOR_OS"],
+            "mass_inv_3{MU10,MU20,MU20}[MASS_X]": ["MASS_X"],
         }
         for token, ref in cases.items():
             self.assertEqual(functionCuts(token), ref)
