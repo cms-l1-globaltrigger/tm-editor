@@ -295,7 +295,7 @@ class Document(BaseDocument):
                     QtWidgets.QApplication.sendPostedEvents(dialog, 0)
                     QtWidgets.QApplication.processEvents()
                     callback()
-                    dialog.setValue(queue.progress())
+                    dialog.setValue(int(queue.progress()))
                     QtWidgets.QApplication.processEvents()
             except XmlDecoderError as exc:
                 raise
@@ -368,7 +368,7 @@ class Document(BaseDocument):
                 QtWidgets.QApplication.sendPostedEvents(dialog, 0)
                 QtWidgets.QApplication.processEvents()
                 callback()
-                dialog.setValue(queue.progress())
+                dialog.setValue(int(queue.progress()))
                 QtWidgets.QApplication.processEvents()
         except XmlEncoderError:
             dialog.close()
