@@ -1,5 +1,7 @@
 """Abstract table model."""
 
+from typing import List, Optional
+
 from collections import namedtuple
 
 from PyQt5 import QtCore
@@ -21,10 +23,10 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
                                           'decoration, headerToolTip, headerDecoration, ' \
                                           'headerSizeHint, headerTextAlignment')
 
-    def __init__(self, values, parent=None):
+    def __init__(self, values, parent: Optional[QtCore.QObject] = None) -> None:
         super().__init__(parent)
         self.values = values
-        self.columnSpecs = []
+        self.columnSpecs: List = []
 
     def addColumnSpec(self, title, callback,
                       format=str,

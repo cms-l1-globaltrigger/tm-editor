@@ -9,6 +9,7 @@ class MessageBarWidget
 import logging
 import re
 import webbrowser
+from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -101,9 +102,6 @@ class ExpressionCodeEditor(CodeEditor):
     editFunction = QtCore.pyqtSignal(tuple)
     """Signal raised on edit function expression request (custom context menu)."""
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
     def contextMenuEvent(self, event):
         """Custom ciontext menu providing actions to edit object and function
         expressions.
@@ -151,7 +149,7 @@ class ExpressionCodeEditor(CodeEditor):
 class AlgorithmEditor(QtWidgets.QMainWindow):
     """Algorithm editor class."""
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         # Setup window
         self.setWindowTitle(self.tr("Algorithm Editor"))
@@ -318,6 +316,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         dock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)
         widget = QtWidgets.QWidget(self)
         hbox = QtWidgets.QHBoxLayout()
+        hbox.setContentsMargins(0, 0, 0, 0)
         hbox.addWidget(self.indexSpinBox)
         pushButton = QtWidgets.QToolButton(self)
         pushButton.setDefaultAction(self.selectIndexAct)
@@ -610,7 +609,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
 class AlgorithmEditorDialog(QtWidgets.QDialog):
     """Algorithm editor dialog class."""
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.editor = AlgorithmEditor(menu)
         self.loadedAlgorithm = None
@@ -802,7 +801,7 @@ class MessageBarWidget(QtWidgets.QWidget):
 
     showMore = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setMaximumHeight(31)
         self.icon = QtWidgets.QLabel(self)

@@ -37,7 +37,7 @@ class Application:
         timer.timeout.connect(lambda: None)
         return timer
 
-    def setRemoteTimeout(self, timeout: float) -> None:
+    def setRemoteTimeout(self, timeout: int) -> None:
         self.window.setRemoteTimeout(timeout)
 
     def loadDocument(self, filename: str) -> None:

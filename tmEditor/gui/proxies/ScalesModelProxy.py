@@ -16,9 +16,6 @@ class ScalesModelProxy(QtCore.QSortFilterProxyModel):
     StepColumn = 4
     BitsColumn = 5
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
     def lessThan(self, left, right):
         """Custom range sorting."""
         if left.column() in (self.MinimumColumn, self.MaximumColumn, self.StepColumn, self.BitsColumn):

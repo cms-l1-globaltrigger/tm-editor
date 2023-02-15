@@ -17,6 +17,7 @@
 """
 
 import math
+from typing import List, Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -29,8 +30,6 @@ __all__ = [
     'richTextSignalsPreview',
     'richTextExtSignalsPreview',
     'richTextCutsPreview',
-    'ColorIcon',
-    'ColorLabel',
     'IconLabel',
     'SelectableLabel',
     'PrefixedSpinBox',
@@ -142,63 +141,6 @@ def miniIcon(name, size=13):
     """Returns mini icon to be used for items in list and tree views."""
     return QtGui.QIcon(QtGui.QIcon(f':/icons/{name}.svg').pixmap(size, size))
 
-# -----------------------------------------------------------------------------
-#  A framed color icon box.
-# -----------------------------------------------------------------------------
-
-class ColorIcon(QtWidgets.QFrame):
-    """Provides an fixed sized framed color icon for building color labeled legends.
-
-    The default square size is 12 pixel.
-    """
-    def __init__(self, color, parent=None, size=12):
-        super().__init__(parent)
-        # Fix the icon size.
-        self.setFixedSize(size, size)
-        # Draw a border around the icon.
-        self.setFrameShape(self.Box)
-        self.setFrameShadow(self.Plain)
-        # Make sure background color is displayed.
-        self.setAutoFillBackground(True)
-        # Store the icon's color.
-        self.setColor(color)
-
-    def setColor(self, color):
-        # Store the icon's color.
-        self.color = QtGui.QColor(color)
-        # Setup the active color background brush.
-        palette = self.palette()
-        brush = QtGui.QBrush(self.color)
-        brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Light, brush) # Bugfix for parent widgets with background role: Light.
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Light, brush)
-        self.setPalette(palette)
-
-# -----------------------------------------------------------------------------
-#  Legend label with color icon on the right.
-# -----------------------------------------------------------------------------
-
-class ColorLabel(QtWidgets.QWidget):
-    """Color legend with icon and text label on the left."""
-
-    def __init__(self, color, text, parent=None):
-        super().__init__(parent)
-        # Create the icon and the text label.
-        self.icon = ColorIcon(color, self)
-        self.label = QtWidgets.QLabel(text, self)
-        # Setup the layout.
-        layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(self.icon)
-        layout.addWidget(self.label)
-        self.setLayout(layout)
-
-    def setColor(self, color):
-        self.icon.setColor(color)
-
-    def setText(self, text):
-        self.label.setText(text)
 
 # -----------------------------------------------------------------------------
 #  Legend label with icon on the right.
@@ -207,35 +149,37 @@ class ColorLabel(QtWidgets.QWidget):
 class IconLabel(QtWidgets.QWidget):
     """label with 16x16 pixel icon and text label on the left."""
 
-    def __init__(self, icon, text, parent=None):
+    def __init__(self, icon: QtGui.QIcon, text: str, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Set icon of type QIcon and a text message."""
         super().__init__(parent)
-        # Create the icon and the text label.
-        self.icon = QtWidgets.QLabel(self)
-        self.icon.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+
+        self.iconLabel: QtWidgets.QLabel = QtWidgets.QLabel(self)
+        self.iconLabel.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+
+        self.textLabel: QtWidgets.QLabel = QtWidgets.QLabel(self)
+
+        layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout(self)
+        layout.addWidget(self.iconLabel)
+        layout.addWidget(self.textLabel)
+
         self.setIcon(icon)
-        self.label = QtWidgets.QLabel(text, self)
-        self.icon.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        # Setup the layout.
-        layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(self.icon)
-        layout.addWidget(self.label)
-        self.setLayout(layout)
+        self.setText(text)
 
-    def setIcon(self, icon):
+    def setIcon(self, icon: QtGui.QIcon) -> None:
         """Set displayed icon."""
-        self.icon.setPixmap(icon.pixmap(16, 16))
+        self.iconLabel.setPixmap(icon.pixmap(16, 16))
 
-    def setText(self, text):
+    def setText(self, text: str) -> None:
         """Set displayed text."""
-        self.label.setText(text)
+        self.textLabel.setText(text)
 
 # -----------------------------------------------------------------------------
 #  Selectable label.
 # -----------------------------------------------------------------------------
 
 class SelectableLabel(QtWidgets.QLabel):
-    def __init__(self, parent=None):
+
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setWordWrap(True)
         self.setTextInteractionFlags(
@@ -252,7 +196,7 @@ class PrefixedSpinBox(QtWidgets.QSpinBox):
     """A decimal spin box with plus and minus sign prefix.
     Used for assigning bunch crossing offsets.
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
 
@@ -266,7 +210,7 @@ class PrefixedSpinBox(QtWidgets.QSpinBox):
 class ReadOnlyLineEdit(QtWidgets.QLineEdit):
     """Customized rad only line edit."""
 
-    def __init__(self, text, parent=None):
+    def __init__(self, text, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """
         @param text the initial text to display.
         @param parent optional parent widget.
@@ -288,7 +232,7 @@ class TextFilterWidget(QtWidgets.QWidget):
 
     textChanged = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent=None, spacer=False):
+    def __init__(self, spacer: bool = False, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setAutoFillBackground(True)
         self.filterLabel = QtWidgets.QLabel(self.tr("Filter"), self)
@@ -342,7 +286,7 @@ class RestrictedLineEdit(QtWidgets.QLineEdit):
     can be defined.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Widget's .
 
         @param parent optional parent widget.
@@ -383,7 +327,7 @@ class RestrictedLineEdit(QtWidgets.QLineEdit):
 class RestrictedPlainTextEdit(QtWidgets.QPlainTextEdit):
     """Restricted plain text edit widget. Maximum length can be specified.
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self._maxLength = None
         self.textChanged.connect(self.validate)
@@ -410,47 +354,50 @@ class RestrictedPlainTextEdit(QtWidgets.QPlainTextEdit):
 class ListSpinBox(QtWidgets.QSpinBox):
     """Custom spin box for a list of integers."""
 
-    def __init__(self, values, parent=None):
+    def __init__(self, values: Optional[List[int]] = None, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
-        self.setValues(values)
+        self.setValues(values or [])
 
-    def setValues(self, values):
-        self.values = [int(value) for value in values]
-        self.index = 0
-        minimum = min(self.values)
-        maximum = max(self.values)
+    def values(self) -> List[int]:
+        return list(self._values)
+
+    def setValues(self, values: List[int]) -> None:
+        self._values = [int(value) for value in values]
+        self._index = 0
+        minimum = min(self._values)
+        maximum = max(self._values)
         self.setRange(minimum, maximum)
 
-    def stepBy(self, steps):
-        self.index += steps
-        self.setValue(int(self.values[self.index]))
+    def stepBy(self, steps: int) -> None:
+        self._index += steps
+        self.setValue(int(self._values[self._index]))
 
-    def value(self, index=None):
+    def value(self, index=None) -> int:
         """Returns bins floating point value by LUT index (upper or lower depending on mode)."""
-        if index == None: index = self.index
-        return self.values[index]
+        if index is None: index = self._index
+        return self._values[index]
 
-    def minimum(self):
+    def minimum(self) -> int:
         return self.value(0)
 
-    def maximum(self):
+    def maximum(self) -> int:
         return self.value(-1)
 
-    def setValue(self, value):
+    def setValue(self, value: int) -> None:
         value = self.nearest(value)
         super().setValue(value)
 
-    def valueFromText(self, text):
+    def valueFromText(self, text: str) -> int:
         """Re-implementation of valueFromText(), it returns only the nearest."""
         return self.nearest(int(text.strip(" =<>!")))
 
-    def nearest(self, value):
+    def nearest(self, value: int) -> int:
         """Returns nearest neighbor of value in range."""
         # See also "finding index of an item closest to the value in a list that's not entirely sorted"
         # http://stackoverflow.com/questions/9706041/finding-index-of-an-item-closest-to-the-value-in-a-list-thats-not-entirely-sort
-        result = min(range(len(self.values)), key=lambda i: abs(self.values[i] - value))
-        self.index = result
-        return self.value(self.index)
+        index = min(range(len(self._values)), key=lambda i: abs(self._values[i] - value))
+        self._index = index
+        return self.value(index)
 
 #
 # More complex widgets.
@@ -464,7 +411,7 @@ class EtaCutChart(QtWidgets.QWidget):
     Length = 100
     FontSize = 7
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
         self.setRange(-5, 5)
@@ -529,7 +476,7 @@ class PhiCutChart(QtWidgets.QWidget):
     Radius = 30
     FontSize = 7
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
         self.setRange(0, 360 * 16)

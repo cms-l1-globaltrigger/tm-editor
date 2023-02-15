@@ -1,5 +1,7 @@
 """Preferences dialog."""
 
+from typing import Optional
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 __all__ = ['PreferencesDialog', ]
@@ -11,7 +13,7 @@ __all__ = ['PreferencesDialog', ]
 class PreferencesDialog(QtWidgets.QDialog):
     """Preferences dialog providing settings for the application."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setupUi()
 

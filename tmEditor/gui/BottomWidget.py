@@ -1,6 +1,7 @@
 """Bottom widget."""
 
 import re
+from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -83,7 +84,7 @@ class ToolbarWidget(QtWidgets.QWidget):
     removeTriggered = QtCore.pyqtSignal()
     moveTriggered = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
@@ -119,7 +120,7 @@ class ToolbarWidget(QtWidgets.QWidget):
 class BottomWidget(QtWidgets.QWidget):
     """Widget displayed below table view showing previews of selected items."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.toolbar = ToolbarWidget(self)
         self.notice = IconLabel(QtGui.QIcon(), "", self)
@@ -182,26 +183,25 @@ class BottomWidget(QtWidgets.QWidget):
         self.setLayout(layout)
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         self.clearNotice()
         self.etaCutWidget.hide()
         self.phiCutWidget.hide()
         self.clearNotice()
 
-    def setNotice(self, text, icon=None):
+    def setNotice(self, text: str, icon: Optional[QtGui.QIcon] = None) -> None:
         self.notice.show()
-        self.notice.icon.hide()
-        self.notice.icon.clear()
+        self.notice.iconLabel.hide()
+        self.notice.iconLabel.clear()
         self.notice.setText(text)
         if icon:
-            self.notice.icon.show()
+            self.notice.iconLabel.show()
             self.notice.setIcon(icon)
 
-    def clearNotice(self):
+    def clearNotice(self) -> None:
         self.notice.hide()
         self.notice.setText("")
-        self.notice.icon.clear()
-        self.notice.label.clear()
+        self.notice.iconLabel.clear()
 
     def setEtaCutChart(self, lower, upper):
         self.etaCutChart.setRange(lower, upper)
@@ -211,7 +211,7 @@ class BottomWidget(QtWidgets.QWidget):
         self.phiCutChart.setRange(lower, upper)
         self.phiCutWidget.show()
 
-    def setText(self, message):
+    def setText(self, message: str) -> None:
         self.textEdit.setText(message)
 
     # Load params from item

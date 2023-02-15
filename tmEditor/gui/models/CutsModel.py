@@ -1,5 +1,7 @@
 """Cuts model."""
 
+from typing import Optional
+
 from PyQt5 import QtCore, QtGui
 
 import tmGrammar
@@ -41,7 +43,7 @@ def maximumCallback(item):
 class CutsModel(AbstractTableModel):
     """Default cuts table model."""
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtCore.QObject] = None) -> None:
         super().__init__(menu.cuts, parent)
         self.menu = menu
         self.addColumnSpec("Name", lambda item: item.name)

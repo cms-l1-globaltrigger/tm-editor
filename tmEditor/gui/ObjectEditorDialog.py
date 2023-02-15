@@ -1,5 +1,5 @@
 """Object editor dialog."""
-from typing import List, Optional
+from typing import Iterable, List, Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -24,7 +24,7 @@ from tmEditor.gui.CommonWidgets import createIcon, miniIcon
 
 from tmEditor.gui.CutEditorDialog import CutEditorDialog
 
-__all__ = ['ObjectEditorDialog', ]
+__all__ = ["ObjectEditorDialog"]
 
 # -----------------------------------------------------------------------------
 #  Keys
@@ -87,15 +87,14 @@ class CutItem(QtGui.QStandardItem):
 class ObjectEditorDialog(QtWidgets.QDialog):
     """Object editor dialog class."""
 
-    def __init__(self, menu, parent=None, objects=None):
+    def __init__(self, menu: object, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes a reference to a menu and an optional parent.
-        Optionally a custom list of objects can be assigned to the dialog.
         """
         super().__init__(parent)
-        self.menu = menu
+        self.setMenu(menu)
+        self.setObjectTypes(list(ExtendedTypes))
         self.setupUi()
-        self.objectTypes = objects or ExtendedTypes
-        self.initObjectList(self.objectTypes)
+        self.initObjectList(self.objectTypes())
         self.initCuts()
         self.updateObjectType()
         # Connect signals
@@ -113,37 +112,51 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         self.setWindowIcon(createIcon("wizard-object"))
         self.setWindowTitle(self.tr("Object Requirement Editor"))
         self.resize(640, 380)
+
         self.objectLabel = QtWidgets.QLabel(self.tr("Object"), self)
         self.objectLabel.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
+
         self.typeComboBox = ComboBoxPlus(self)
         self.typeComboBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
+
         self.compareComboBox = QtWidgets.QComboBox(self)
         self.compareComboBox.addItem('>=', tmGrammar.GE)
         self.compareComboBox.addItem('==', tmGrammar.EQ)
+
         self.thresholdSpinBox = QtWidgets.QDoubleSpinBox(self)
+
         self.offsetSpinBox = PrefixedSpinBox(self)
         self.offsetSpinBox.setRange(-2, 2)
         self.offsetSpinBox.setValue(0)
         self.offsetSpinBox.setSuffix(self.tr(" BX"))
+
         self.cutLabel = QtWidgets.QLabel(self.tr("Cuts"), self)
         self.cutLabel.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
+
         self.cutListView = QtWidgets.QListView(self)
         self.cutListView.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.cutListView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+
         self.filterWidget = TextFilterWidget(self)
+
         self.addCutButton = QtWidgets.QPushButton(createIcon("list-add"), self.tr("Add..."), self)
+
         self.infoTextEdit = QtWidgets.QTextEdit(self)
         self.infoTextEdit.setReadOnly(True)
         self.infoTextEdit.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Expanding)
+
         self.buttonBox = QtWidgets.QDialogButtonBox(self)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
-        layout = QtWidgets.QGridLayout()
+
+        layout = QtWidgets.QGridLayout(self)
         layout.addWidget(self.objectLabel, 0, 0)
+
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.typeComboBox)
         hbox.addWidget(self.compareComboBox)
         hbox.addWidget(self.thresholdSpinBox)
         hbox.addWidget(self.offsetSpinBox)
+
         layout.addLayout(hbox, 0, 1, 1, 2)
         layout.addWidget(self.cutLabel, 1, 0)
         layout.addWidget(self.cutListView, 1, 1, 1, 2)
@@ -151,7 +164,18 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         layout.addWidget(self.addCutButton, 2, 2)
         layout.addWidget(self.infoTextEdit, 0, 3, 3, 1)
         layout.addWidget(self.buttonBox, 3, 0, 1, 4)
-        self.setLayout(layout)
+
+    def menu(self) -> object:
+        return self._menu
+
+    def setMenu(self, menu: object) -> None:
+        self._menu = menu
+
+    def objectTypes(self) -> List:
+        return self._objectTypes
+
+    def setObjectTypes(self, types: Iterable) -> None:
+        self._objectTypes = list(types)
 
     def updateObjectType(self):
         """Update inputs according to selected object type."""
@@ -206,7 +230,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         """Initialize list of checkable cuts."""
         self.cutModel = QtGui.QStandardItemModel(self)
         self.cutModel._items = []
-        for cut in sorted(self.menu.cuts, key=lambda cut: cut.name):
+        for cut in sorted(self.menu().cuts, key=lambda cut: cut.name):
             if cut.object == self.objectType():
                 label = fCutLabel(cut)
                 item = CutItem(label)
@@ -228,7 +252,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
     def getScale(self, objectType):
         """Returns scale for object or None if not found."""
         # Get only scales of object type
-        scales = list(filter(lambda item: item[kObject] == objectType, self.menu.scales.scales))
+        scales = list(filter(lambda item: item[kObject] == objectType, self.menu().scales.scales))
         # Get only threshold/count scales
         return (list(filter(lambda item: item[kType] in (kET, kCOUNT, ), scales)) or [None])[0]
 
@@ -298,7 +322,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         *token* is not a valid object.
         """
         object_ = toObject(token)
-        if object_.type not in self.objectTypes:
+        if object_.type not in self.objectTypes():
             raise ValueError("Invalid object type.")
         object_.cuts = objectCuts(token)
         self.typeComboBox.setCurrentIndex(self.typeComboBox.findText(object_.type))
@@ -312,7 +336,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
     def addCut(self):
         """Raise cut editor to add a new cut."""
         # Load cut settings only for selected object type
-        dialog = CutEditorDialog(self.menu, self)
+        dialog = CutEditorDialog(self.menu(), self)
         specs = CutSpecs.query(object=self.objectType())
         dialog.setupCuts(specs)
         dialog.setModal(True)
@@ -320,7 +344,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         if dialog.result() != QtWidgets.QDialog.Accepted:
             return
         new_cut = dialog.newCut()
-        self.menu.addCut(new_cut)
+        self.menu().addCut(new_cut)
         # TODO code refactoring!
         # Restore selected cuts and newly added one.
         selectedCuts = self.selectedCuts()

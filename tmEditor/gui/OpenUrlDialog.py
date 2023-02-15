@@ -9,6 +9,8 @@ Example usage:
 >>> print dialog.url()
 """
 
+from typing import Optional
+
 from PyQt5 import QtCore, QtWidgets
 
 __all__ = ['OpenUrlDialog', ]
@@ -20,7 +22,7 @@ __all__ = ['OpenUrlDialog', ]
 class OpenUrlDialog(QtWidgets.QDialog):
     """Dialog providing an URL input field."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         # Dialog appeareance
         self.setWindowTitle(self.tr("Open URL"))

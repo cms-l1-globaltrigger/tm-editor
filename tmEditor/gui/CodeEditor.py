@@ -7,6 +7,7 @@ http://www.jjoe64.com/2011/08/qplaintextedit-change-shiftreturn.html
 """
 
 import string
+from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -19,7 +20,7 @@ __all__ = ['CodeEditor', ]
 class CodeEditor(QtWidgets.QPlainTextEdit):
     """Source code editor widget."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.lineNumberArea = LineNumberArea(self)
         self.blockCountChanged.connect(self.updateLineNumberAreaWidth)

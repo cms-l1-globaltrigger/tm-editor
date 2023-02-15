@@ -1,5 +1,7 @@
 """External signal editor dialog."""
 
+from typing import Optional
+
 from PyQt5 import QtWidgets
 
 from tmEditor.core.Algorithm import toExternal
@@ -29,7 +31,7 @@ kLabel = 'label'
 class ExtSignalEditorDialog(QtWidgets.QDialog):
     """External signal editor dialog class."""
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes a reference to a menu and an optional parent."""
         super().__init__(parent)
         self.menu = menu

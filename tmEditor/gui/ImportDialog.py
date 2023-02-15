@@ -10,6 +10,7 @@ Example usage:
 """
 
 import logging
+from typing import Optional
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -37,7 +38,7 @@ kName = 'name'
 class ImportDialog(QtWidgets.QDialog):
     """Dialog providing importing of algorithms from another XML file."""
 
-    def __init__(self, filename, menu, parent=None):
+    def __init__(self, filename, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         # Algorithm selection
         self.algorithms = []
@@ -60,7 +61,7 @@ class ImportDialog(QtWidgets.QDialog):
         self.setWindowTitle(self.tr("Import"))
         self.setMinimumWidth(500)
         # Filter bar
-        self.filterWidget = TextFilterWidget(self, spacer=True)
+        self.filterWidget = TextFilterWidget(True, self)
         self.filterWidget.textChanged.connect(self.setFilterText)
         # Table view
         model = AlgorithmsModel(self.menu, self)

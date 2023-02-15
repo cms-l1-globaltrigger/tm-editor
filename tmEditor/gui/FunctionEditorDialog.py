@@ -1,5 +1,7 @@
 """Function editor dialog."""
 
+from typing import Optional
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import tmGrammar
@@ -53,7 +55,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
 
     ObjectReqs = 5
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.menu = menu
         self.validator = AlgorithmSyntaxValidator(menu)
@@ -331,7 +333,8 @@ class FunctionReqHelper:
         self.editButton.setEnabled(enabled)
 
     def edit(self):
-        dialog = ObjectEditorDialog(self.parent.menu, self.parent, objects=self.types)
+        dialog = ObjectEditorDialog(self.parent.menu, self.parent)
+        dialog.setObjects(self.types)
         token = self.text()
         if token: # else start with empty editor
             try:

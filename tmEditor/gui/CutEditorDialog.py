@@ -3,6 +3,7 @@
 import math
 import logging
 import re
+from typing import Optional
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -132,7 +133,7 @@ class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
     MaximumMode = kMaximum
     EmptyScale = [{kNumber: 0, kMinimum: .0, kMaximum: .0}]
 
-    def __init__(self, mode=MinimumMode, parent=None):
+    def __init__(self, mode=MinimumMode, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setMode(mode)
         self.setScale(self.EmptyScale)
@@ -197,7 +198,7 @@ class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
 class RangeSpinBox(QtWidgets.QDoubleSpinBox):
     """Custom spin box for fixed stepped ranges."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
 
     def setMinimum(self, minimum):
@@ -230,7 +231,7 @@ class InputWidget(QtWidgets.QWidget):
     >>> widget.updateCut(cut)
     """
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.specification = specification
         self.scales = scales
@@ -246,7 +247,7 @@ class InputWidget(QtWidgets.QWidget):
 class ScaleWidget(InputWidget):
     """Provides scales range entries."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -330,7 +331,7 @@ class ScaleWidget(InputWidget):
 class RangeWidget(InputWidget):
     """Provides range entries."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -399,7 +400,7 @@ class RangeWidget(InputWidget):
 class InfiniteRangeWidget(InputWidget):
     """Provides range entries with infinity option."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -492,7 +493,7 @@ class InfiniteRangeWidget(InputWidget):
 class SliceWidget(InputWidget):
     """Provides slice selection entries, using cut minimum/maximum."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -555,7 +556,7 @@ class SliceWidget(InputWidget):
 class ThresholdWidget(InputWidget):
     """Provides a single threshold entry, using only cut minimum."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -603,7 +604,7 @@ class ThresholdWidget(InputWidget):
 class MaximumWidget(InputWidget):
     """Provides a maximum only entriy."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -651,7 +652,7 @@ class MaximumWidget(InputWidget):
 class MultipleJoiceWidget(InputWidget):
     """Provides a multiple joice entry."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
 
@@ -717,7 +718,7 @@ class MultipleJoiceWidget(InputWidget):
 class MultipleJoiceIsoWidget(MultipleJoiceWidget):
     """Provides a multiple joice entry for isolation."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
 
     def format_label(self, key, value):
@@ -728,7 +729,7 @@ class MultipleJoiceIsoWidget(MultipleJoiceWidget):
 class SingleJoiceWidget(InputWidget):
     """Provides a single joice entry."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
 
@@ -794,7 +795,7 @@ class SingleJoiceWidget(InputWidget):
 class CutTreeWidget(QtWidgets.QTreeWidget):
     """Tree widget displaying cut types hierarchical."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
 
     def loadCutSpecs(self, specs):
@@ -849,7 +850,7 @@ class CutEditorDialog(QtWidgets.QDialog):
     }
     """Widget factory for different cut input types."""
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Create new dialog window."""
         super().__init__(parent)
         self.menu = menu

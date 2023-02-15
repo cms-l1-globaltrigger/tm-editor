@@ -1,5 +1,9 @@
 """External signals model."""
 
+from typing import Optional
+
+from PyQt5 import QtCore
+
 from .AbstractTableModel import AbstractTableModel
 from tmEditor.gui.CommonWidgets import miniIcon
 
@@ -22,7 +26,7 @@ kChannel = 'channel'
 class ExtSignalsModel(AbstractTableModel):
     """Default external signals table model."""
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtCore.QObject] = None) -> None:
         super().__init__(menu.extSignals.extSignals, parent)
         self.addColumnSpec("System", lambda item: item[kSystem], decoration=miniIcon('ext'))
         self.addColumnSpec("Name", lambda item: item[kName])
