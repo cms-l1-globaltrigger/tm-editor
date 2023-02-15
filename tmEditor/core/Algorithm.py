@@ -3,7 +3,7 @@
 import logging
 import math
 import re
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import tmGrammar
 
@@ -11,7 +11,7 @@ from .types import ObjectTypes, SignalTypes, ExternalObjectTypes, FunctionCutTyp
 from .Settings import MaxAlgorithms
 from .AlgorithmHelper import decode_threshold, encode_threshold
 
-__all__ = ['Algorithm', ]
+__all__ = ['Algorithm']
 
 RegExObject = re.compile(r'({0})(?:\.(?:ge|eq)\.)?(\d+(?:p\d+)?)(?:[\+\-]\d+)?(?:\[[^\]]+\])?'.format(r'|'.join(ObjectTypes)))
 """Precompiled regular expression for matching object requirements."""
@@ -115,12 +115,12 @@ def functionCuts(token: str) -> List:
     return cuts
 
 
-def functionObjectsCuts(token: str) -> List:
+def functionObjectsCuts(token: str) -> List[List[str]]:
     """Returns lists of cuts assigned to function objects. Index ist object number.
     >>> functionObjectsCuts("comb{MU0[MU-QLTY_HQ,MU-ETA_2p1],MU0[MU-QLTY_OPEN]}")
-    ['MU-QLTY_HQ,MU-ETA_2p1', 'MU-QLTY_OPEN']
+    [['MU-QLTY_HQ,MU-ETA_2p1'], ['MU-QLTY_OPEN']]
     """
-    cuts: List = []
+    cuts: List[List[str]] = []
     f = tmGrammar.Function_Item()
     if not tmGrammar.Function_parser(token, f):
         raise ValueError(token)
@@ -182,8 +182,8 @@ class Algorithm:
 
     RegExAlgorithmName = re.compile(r'^(L1_)([a-zA-Z\d_]+)$')
 
-    def __init__(self, index: int, name: str, expression: str,
-                 comment: str = None, labels: list = None):
+    def __init__(self, index: int, name: str, expression: str, comment: Optional[str] = None,
+                 labels: Optional[List[str]] = None) -> None:
         self.index: int = index
         self.name: str = name
         self.expression: str = expression
@@ -267,14 +267,15 @@ class Cut:
 
     RegExCutName = re.compile(r'^([A-Z\-]+_)([a-zA-Z\d_]+)$')
 
-    def __init__(self, name, object, type, minimum=None, maximum=None, data=None, comment=None):
-        self.name = name
-        self.object = object
-        self.type = type
+    def __init__(self, name: str, object: str, type: str, minimum=None, maximum=None, data: Optional[str] = None,
+                 comment: Optional[str] = None) -> None:
+        self.name: str = name
+        self.object: str = object
+        self.type: str = type
         self.minimum = minimum or 0. if not data else ""
         self.maximum = maximum or 0. if not data else ""
-        self.data = data or ""
-        self.comment = comment or ""
+        self.data: str = data or ""
+        self.comment: str = comment or ""
         self.modified = False
 
     @property
@@ -299,7 +300,7 @@ class Cut:
         """Custom sorting by type and object and suffix name."""
         return (self.type, self.object, self.suffix) < (item.type, item.object, item.suffix)
 
-    def scale(self, scale):
+    def scale(self, scale):  # TODO
         if self.typename in scale.bins.keys():
             return scale.bins[self.typename]
         return None
@@ -314,13 +315,14 @@ class Cut:
 class Object:
     """Object container class."""
 
-    def __init__(self, name, type, threshold, comparison_operator=None, bx_offset=None, comment=None):
-        self.name = name
-        self.type = type
-        self.threshold = threshold
-        self.comparison_operator = comparison_operator or tmGrammar.GE
-        self.bx_offset = bx_offset or 0
-        self.comment = comment or ""
+    def __init__(self, name: str, type: str, threshold: str, comparison_operator: Optional[str] = None,
+                 bx_offset: Optional[int] = None, comment: Optional[str] = None) -> None:
+        self.name: str = name
+        self.type: str = type
+        self.threshold: str = threshold
+        self.comparison_operator: str = comparison_operator or tmGrammar.GE
+        self.bx_offset: int = bx_offset or 0
+        self.comment: str = comment or ""
 
     def isSignal(self) -> bool:
         return self.type in SignalTypes
@@ -352,7 +354,7 @@ class Object:
             (sortable_type(item.type), item.decodeThreshold(), item.bx_offset)
 
     def validate(self) -> None:
-        pass
+        ...
 
 
 class External:
@@ -360,10 +362,10 @@ class External:
 
     RegExSignalName = re.compile(r"^(EXT_)([a-zA-Z\d\._]+)([+-]\d+)?$")
 
-    def __init__(self, name, bx_offset=None, comment=None):
-        self.name = name
-        self.bx_offset = bx_offset or 0
-        self.comment = comment or ""
+    def __init__(self, name: str, bx_offset: Optional[int] = None, comment: Optional[str] = None) -> None:
+        self.name: str = name
+        self.bx_offset: int = bx_offset or 0
+        self.comment: str = comment or ""
 
     @property
     def basename(self) -> str:

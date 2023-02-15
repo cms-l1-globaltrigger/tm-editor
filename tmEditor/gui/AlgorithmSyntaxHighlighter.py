@@ -13,8 +13,7 @@ Attaching a syntax hilighter to an text document is quite simple:
 
 from collections import namedtuple
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
+from PyQt5 import QtCore, QtGui
 
 import tmGrammar
 

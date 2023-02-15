@@ -18,28 +18,30 @@ processing data ... 33 %
 saving data ... 66 %
 """
 
+from typing import Callable, List
+
 
 class Callback:
 
-    def __init__(self, callback, message: str = None):
-        self.callback = callback
+    def __init__(self, callback: Callable, message: str):
+        self.callback: Callable = callback
         self.message: str = message or ""
 
 
 class Queue:
 
-    def __init__(self):
-        self.__callbacks = []
-        self.__ptr = 0
-        self.__message = ""
+    def __init__(self) -> None:
+        self.__callbacks: List[Callback] = []
+        self.__count: int = 0
+        self.__message: str = ""
 
-    def add_callback(self, callback, message=None):
+    def add_callback(self, callback: Callable, message: str) -> None:
         self.__callbacks.append(Callback(callback, message))
 
-    def progress(self):
-        return 100. / len(self.__callbacks) * self.__ptr
+    def progress(self) -> int:
+        return int(round(100. / len(self.__callbacks) * self.__count))
 
-    def message(self):
+    def message(self) -> str:
         return self.__message
 
     def __iter__(self):
@@ -47,17 +49,13 @@ class Queue:
 
     def __next__(self):
         """Python3 version."""
-        if self.__ptr >= len(self.__callbacks):
+        if self.__count >= len(self.__callbacks):
             raise StopIteration()
-        callback = self.__callbacks[self.__ptr]
+        callback = self.__callbacks[self.__count]
         self.__message = callback.message
-        self.__ptr += 1
+        self.__count += 1
         return callback.callback
 
-    def next(self):
-        """Python2 fallback."""
-        return self.__next__()
-
-    def exec_(self):
+    def exec_(self) -> None:
         for callback in self:
             callback()

@@ -5,6 +5,7 @@ import os
 import platform
 import re
 import ssl
+from typing import List, Tuple
 
 from urllib.request import urlopen
 
@@ -100,8 +101,8 @@ def encode_labels(labels, pretty: bool = False):
 
 class CutSpecificationPool:
     """Cut specification pool."""
-    def __init__(self, *args):
-        self.specs: tuple = args
+    def __init__(self, *args) -> None:
+        self.specs: Tuple = args
 
     def __len__(self) -> int:
         return len(self.specs)
@@ -109,12 +110,12 @@ class CutSpecificationPool:
     def __iter__(self):
         return iter(self.specs)
 
-    def query(self, **kwargs):
+    def query(self, **kwargs) -> List:
         """Query specifications by attributes and values.
         >>> pool.filter(object='MU', type='ISO')
         [CutSpecification instance at 0x...>]
         """
-        results: tuple = self.specs
+        results: List = list(self.specs)
         for key, value in kwargs.items():
             results = list(filter(lambda spec: hasattr(spec, key) and getattr(spec, key) == value, results))
         return results

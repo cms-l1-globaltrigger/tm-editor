@@ -8,9 +8,7 @@ import re
 
 from urllib.error import HTTPError, URLError
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from ..core.formatter import fFileSize
 from ..core.AlgorithmSyntaxValidator import AlgorithmSyntaxError
@@ -472,7 +470,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onShowAbout(self):
         """Raise about this application dialog."""
-        dialog = AboutDialog(self.windowTitle(), self)
+        dialog = AboutDialog(self)
         dialog.exec_()
 
     def closeEvent(self, event):

@@ -10,9 +10,7 @@ import logging
 import re
 import webbrowser
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import tmGrammar
 
@@ -320,7 +318,6 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         dock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)
         widget = QtWidgets.QWidget(self)
         hbox = QtWidgets.QHBoxLayout()
-        hbox.setContentsMargins(0, 0, 0, 0)
         hbox.addWidget(self.indexSpinBox)
         pushButton = QtWidgets.QToolButton(self)
         pushButton.setDefaultAction(self.selectIndexAct)
@@ -604,7 +601,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         if indices:
             self.indexSpinBox.setValues(list(indices))
         if ignore is not None:
-            self.indexSpinBox.setValue(ignore)
+            self.indexSpinBox.setValue(int(ignore))
 
 # -----------------------------------------------------------------------------
 #  Algorithm editor dialog (modal)

@@ -3,6 +3,7 @@
 import logging
 import uuid
 import re
+from typing import List, Optional
 
 from distutils.version import StrictVersion
 
@@ -24,12 +25,12 @@ class Menu:
     menu files and adding and removing contents.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.menu = MenuInfo()
-        self.algorithms: list = []
-        self.cuts: list = []
-        self.objects: list = []
-        self.externals: list = []
+        self.algorithms: List = []
+        self.cuts: List = []
+        self.objects: List = []
+        self.externals: List = []
         self.scales = None
         self.extSignals = None
 
@@ -164,7 +165,7 @@ class MenuInfo:
 
     RegExMenuName = re.compile(r'^(L1Menu_)([a-zA-Z0-9_]*)$')
 
-    def __init__(self, name: str = None, comment: str = None):
+    def __init__(self, name: Optional[str] = None, comment: Optional[str] = None):
         self.name: str = name or ""
         self.comment: str = comment or ""
         self.uuid_menu: str = ""

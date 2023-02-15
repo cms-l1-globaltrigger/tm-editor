@@ -66,7 +66,7 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.DisplayRole:
             return spec.format(spec.callback(self.values[row])) # TODO
         if role == QtCore.Qt.TextAlignmentRole:
-            return spec.textAlignment
+            return int(spec.textAlignment)
         if role == QtCore.Qt.DecorationRole:
             return spec.decoration
         if role == QtCore.Qt.ToolTipRole:
@@ -82,7 +82,7 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
             if role == QtCore.Qt.DisplayRole:
                 return spec.title
             if role == QtCore.Qt.TextAlignmentRole:
-                return spec.headerTextAlignment
+                return int(spec.headerTextAlignment)
             if role == QtCore.Qt.DecorationRole:
                 return spec.headerDecoration
             if role == QtCore.Qt.ToolTipRole:

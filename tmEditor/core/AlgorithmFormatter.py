@@ -13,6 +13,8 @@ Cascade an algorithm expression to increase human readability:
 >>> AlgorithmFormatter.expand(expression)
 """
 
+from typing import List, Optional
+
 import tmGrammar
 
 from .types import FunctionTypes
@@ -41,15 +43,15 @@ class AlgorithmFormatter:
     Spaces = (' ', '\t', '\r', '\n')
 
     @staticmethod
-    def tokenize(expression):
+    def tokenize(expression: str) -> List[str]:
         """Robust algorithm expression tokenization, splitting expression in
         objects, functions, cuts and paranthesis.
 
         >>> tokenize("comb{MU20[MU-ISO_1],MU10}")
         ['comb', '{', 'MU20', '[', 'MU-ISO_1', ']', ',', 'MU10', '}']
         """
-        tokens = []
-        token = []
+        tokens: List[str] = []
+        token: List[str] = []
         for char in expression:
             # Ignore spaces, append optional previous token.
             if char in AlgorithmFormatter.Spaces:
@@ -71,7 +73,7 @@ class AlgorithmFormatter:
         return tokens
 
     @staticmethod
-    def sanitize(expression):
+    def sanitize(expression: str) -> List[str]:
         """Returns sanitized tokens auto correcting some frequent mistakes, like
         lower case operators, upper case function names, and removes occurences
         of multiple commas and trailing commas.
@@ -79,7 +81,7 @@ class AlgorithmFormatter:
         >>> tokens = sanitize("MU10 and COMB{JET20, ,JET10, }")
         ['MU10', 'AND', 'comb', '{', 'JET20', ',', 'JET10', '}']
         """
-        tokens = []
+        tokens: List[str] = []
         for token in AlgorithmFormatter.tokenize(expression):
             # Make sure operators are upper case.
             if token.upper() in AlgorithmFormatter.Operators:
@@ -99,7 +101,7 @@ class AlgorithmFormatter:
         return tokens
 
     @staticmethod
-    def compress(expression):
+    def compress(expression: str) -> str:
         """Return expression applying strict foramtting required by tmGrammar.
 
         >>> compress("comb{MU40, MU30, MU20, MU10, }")
@@ -113,7 +115,7 @@ class AlgorithmFormatter:
         return ''.join(tokens)
 
     @staticmethod
-    def normalize(expression):
+    def normalize(expression: str) -> str:
         """Returns expression applying a human readable formatting.
 
         >>> normalize("comb{MU40,MU30,MU20,MU10}")
@@ -126,7 +128,7 @@ class AlgorithmFormatter:
         return expression.strip()
 
     @staticmethod
-    def expand(expression, tabwidth=2, ws=" ", eol="\n"):
+    def expand(expression: str, tabwidth: int = 2, ws: Optional[str] = None, eol: Optional[str] = None) -> str:
         """Return expression applying an expanded formatting.
 
         >>> print expand("MU10 AND (JET20 OR TAU20)")
@@ -137,11 +139,13 @@ class AlgorithmFormatter:
           TAU20
         )
         """
+        ws = ws or " "
+        eol = eol or "\n"
         level = 0
         # Returns indent according to current
         def indent():
             return ws * tabwidth * level
-        result = []
+        result: List[str] = []
         previous = None
         # Track paranthesis levels.
         in_function = False

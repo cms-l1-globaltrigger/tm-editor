@@ -4,8 +4,7 @@ import logging
 import copy
 import os
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 from tmEditor.core import Settings
 from tmEditor.core.Settings import MaxAlgorithms
@@ -295,7 +294,7 @@ class Document(BaseDocument):
                     QtWidgets.QApplication.sendPostedEvents(dialog, 0)
                     QtWidgets.QApplication.processEvents()
                     callback()
-                    dialog.setValue(int(queue.progress()))
+                    dialog.setValue(queue.progress())
                     QtWidgets.QApplication.processEvents()
             except XmlDecoderError as exc:
                 raise
@@ -368,7 +367,7 @@ class Document(BaseDocument):
                 QtWidgets.QApplication.sendPostedEvents(dialog, 0)
                 QtWidgets.QApplication.processEvents()
                 callback()
-                dialog.setValue(int(queue.progress()))
+                dialog.setValue(queue.progress())
                 QtWidgets.QApplication.processEvents()
         except XmlEncoderError:
             dialog.close()

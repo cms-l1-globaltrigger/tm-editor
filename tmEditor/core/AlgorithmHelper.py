@@ -1,6 +1,8 @@
 """Algorithm helper."""
 
 import re
+from abc import ABC, abstractmethod
+from typing import Any, Iterable, List, Optional
 
 import tmGrammar
 
@@ -18,68 +20,80 @@ __all__ = [
 ]
 
 
-def join(items, separator=""):
+def join(items: Iterable[Any], separator: Optional[str] = None) -> str:
     """Joins string representation of list items.
     >>> join(["foo", "bar", 42], "-")
     'foo-bar-42'
     """
-    return separator.join([format(item) for item in items])
+    return (separator or "").join([format(item) for item in items])
 
 
-def encode_comparison_operator(value):
+def encode_comparison_operator(value: str) -> str:
     """Returns encoded comparison operator or an empty string on default value."""
     if value == tmGrammar.GE:
         return ""
     return value
 
 
-def encode_threshold(value, separator='p'):
+def encode_threshold(value: float) -> str:
     """Returns encoded threshold value, omits comma if decimals are zero."""
-    integer, decimal = re.match(r'(\d+)(?:.(\d+))', format(float(value))).groups()
-    if int(decimal):
-        return separator.join([integer, decimal])
-    return integer
+    match = re.match(r'(\d+)(?:.(\d+))', format(float(value)))
+    if match:
+        integer, decimal = match.groups()
+        if int(decimal):
+            return "p".join([integer, decimal])
+        return integer
+    return ""
 
 
-def decode_threshold(threshold, separator='p'):
+def decode_threshold(threshold: str) -> float:
     """Returns decoded float threshold."""
-    return float('.'.join(threshold.split(separator)[:2]))  # TODO
+    return float('.'.join(threshold.split("p")[:2]))  # TODO
 
 
-def encode_bx_offset(value):
+def encode_bx_offset(value: int) -> str:
     """Returns encoded BX offset or an empty string on default value."""
     if value == 0:
         return ""
     return format(value, '+d')
 
 
-def encode_cuts(items):
+def encode_cuts(items: Iterable[str]) -> str:
     """Returns encoded list of cuts or an empty string if no cuts."""
-    if not items:
-        return ""
-    return "[{0}]".format(join(items, ","))
+    s = join(items, ",")
+    return "[{0}]".format(s) if s else s
 
 
-class Helper:
+class Helper(ABC):
     """Helper base class."""
 
+    @abstractmethod
     def serialize(self) -> str:
-        raise NotImplementedError()
+        ...
 
     def __str__(self):
         return self.serialize()
 
 
+class OperatorHelper(Helper):
+
+    def __init__(self, operator: str) -> None:
+        self.operator: str = operator
+
+    def serialize(self) -> str:
+        return f"{self.operator}"
+
+
 class ObjectHelper(Helper):
 
-    def __init__(self, type, threshold, bx_offset=0, comparison_operator=tmGrammar.GE, cuts=None):
+    def __init__(self, type, threshold, bx_offset: int = 0, comparison_operator: Optional[str] = None, cuts=None) -> None:
         self.type = type
-        self.comparison_operator = comparison_operator
+        self.comparison_operator = tmGrammar.GE if comparison_operator is None else comparison_operator
         self.threshold = threshold
-        self.bx_offset = bx_offset
-        self.cuts = cuts or []
+        self.bx_offset: int = bx_offset
+        self.cuts: List = cuts or []
 
-    def addCut(self, cut):
+    def addCut(self, cut) -> "ObjectHelper":
         self.cuts.append(cut)
         return self
 
@@ -93,9 +107,9 @@ class ObjectHelper(Helper):
 
 class SignalHelper(Helper):
 
-    def __init__(self, type, bx_offset=0):
+    def __init__(self, type, bx_offset: int = 0) -> None:
         self.type = type
-        self.bx_offset = bx_offset
+        self.bx_offset: int = bx_offset
 
     def serialize(self) -> str:
         bx_offset = encode_bx_offset(self.bx_offset)
@@ -104,11 +118,11 @@ class SignalHelper(Helper):
 
 class ExtSignalHelper(Helper):
 
-    def __init__(self, name, bx_offset=0):
-        self.name = name
-        self.bx_offset = bx_offset
+    def __init__(self, name: str, bx_offset: int = 0) -> None:
+        self.name: str = name
+        self.bx_offset: int = bx_offset
         if not name.startswith("EXT_"):
-            raise ValueError()
+            raise ValueError(f"Invalid name for external signal: {name}")
 
     def serialize(self) -> str:
         bx_offset = encode_bx_offset(self.bx_offset)
@@ -117,17 +131,18 @@ class ExtSignalHelper(Helper):
 
 class FunctionHelper(Helper):
 
-    def __init__(self, name, objects=None, cuts=None):
-        self.name = name
-        self.objects = objects or []
-        self.cuts = cuts or []
+    def __init__(self, name: str, objects=None, cuts=None) -> None:
+        self.name: str = name
+        self.objects: List = objects or []
+        self.cuts: List = cuts or []
 
-    def addObject(self, type, threshold, bx_offset=0, comparison_operator=tmGrammar.GE, cuts=None):
+    def addObject(self, type: str, threshold: float, bx_offset: int = 0, comparison_operator: Optional[str] = None, cuts=None) -> ObjectHelper:
+        comparison_operator = tmGrammar.GE if comparison_operator is None else comparison_operator
         helper = ObjectHelper(type, threshold, bx_offset, comparison_operator, cuts)
         self.objects.append(helper)
         return helper
 
-    def addCut(self, cut):
+    def addCut(self, cut) -> "FunctionHelper":
         self.cuts.append(cut)
         return self
 
@@ -139,29 +154,31 @@ class FunctionHelper(Helper):
 
 class AlgorithmHelper(Helper):
 
-    def __init__(self, expression: list = None):
-        self.expression: list = expression or []
+    def __init__(self, expression: Optional[List] = None) -> None:
+        self.expression: List = expression or []
 
-    def addOperator(self, operator):
-        self.expression.append(operator)
+    def addOperator(self, operator: str) -> "AlgorithmHelper":
+        helper = OperatorHelper(operator)
+        self.expression.append(helper)
         return self
 
-    def addObject(self, type, threshold, bx_offset=0, comparison_operator=tmGrammar.GE, cuts=None):
+    def addObject(self, type: str, threshold: float, bx_offset: int = 0, comparison_operator: Optional[str] = None, cuts=None) -> ObjectHelper:
+        comparison_operator = tmGrammar.GE if comparison_operator is None else comparison_operator
         helper = ObjectHelper(type, threshold, bx_offset, comparison_operator, cuts)
         self.expression.append(helper)
         return helper
 
-    def addSignal(self, type, bx_offset=0):
+    def addSignal(self, type: str, bx_offset: int = 0) -> SignalHelper:
         helper = SignalHelper(type, bx_offset)
         self.expression.append(helper)
         return helper
 
-    def addExtSignal(self, name, bx_offset=0):
+    def addExtSignal(self, name: str, bx_offset: int = 0) -> ExtSignalHelper:
         helper = ExtSignalHelper(name, bx_offset)
         self.expression.append(helper)
         return helper
 
-    def addFunction(self, name, objects=None, cuts=None):
+    def addFunction(self, name: str, objects=None, cuts=None) -> FunctionHelper:
         helper = FunctionHelper(name, objects, cuts)
         self.expression.append(helper)
         return helper

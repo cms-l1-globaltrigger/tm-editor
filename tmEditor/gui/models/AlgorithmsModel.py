@@ -1,7 +1,6 @@
 """Algorithms model."""
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
+from PyQt5 import QtCore, QtGui
 
 from tmEditor.core.toolbox import encode_labels
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter

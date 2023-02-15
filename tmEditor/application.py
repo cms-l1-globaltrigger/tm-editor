@@ -4,8 +4,7 @@ import logging
 import signal
 import sys
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 from .gui.MainWindow import MainWindow
 from . import __version__

@@ -3,8 +3,7 @@
 class AlgorithmSelectIndexDialog
 """
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 from tmEditor.core.Settings import MaxAlgorithms
 

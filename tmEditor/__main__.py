@@ -7,8 +7,7 @@ import sys
 import os
 
 import PyQt5
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 from . import __version__
 from .application import Application
@@ -67,7 +66,7 @@ def main() -> None:
         for filename in args.filenames:
             logging.debug("loading file %s", filename)
             app.loadDocument(filename)
-    QtCore.QTimer().singleShot(100, loadDocuments)
+    QtCore.QTimer().singleShot(100, loadDocuments)  # ignore: type
 
     app.eventLoop()
     app.storeSettings()

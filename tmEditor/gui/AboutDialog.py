@@ -3,9 +3,7 @@
 import os
 import markdown
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from tmEditor import __version__
 from tmEditor import tmeditor_rc
@@ -25,9 +23,9 @@ L1ApplicationContributors = (
 class AboutDialog(QtWidgets.QDialog):
     """About dialog providing information on the application and credits."""
 
-    def __init__(self, title, parent=None):
-        """Param title is the applciation name."""
+    def __init__(self, parent=None):
         super().__init__(parent)
+        title = "Trigger Menu Editor"
         self.setWindowTitle(self.tr("About {}").format(title))
         self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
         self.setMinimumSize(420, 320)

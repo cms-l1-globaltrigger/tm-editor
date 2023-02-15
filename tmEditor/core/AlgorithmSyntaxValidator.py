@@ -8,7 +8,8 @@ Usage example
 
 """
 
-from typing import List
+from abc import ABC, abstractmethod
+from typing import Dict, Iterable, List
 
 import tmGrammar
 
@@ -28,7 +29,7 @@ kStep = 'step'
 kType = 'type'
 
 
-class SyntaxRule:
+class SyntaxRule(ABC):
     """Base class to be inherited by custom syntax rule classes."""
 
     def __init__(self, validator) -> None:
@@ -55,8 +56,9 @@ class SyntaxRule:
             raise AlgorithmSyntaxError(message, token)
         return item
 
+    @abstractmethod
     def validate(self, tokens: List[str]) -> None:
-        raise NotImplementedError()
+        ...
 
 
 class SyntaxValidator:
@@ -118,7 +120,7 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
 class BasicSyntax(SyntaxRule):
     """Validates basic algorithm syntax."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         menu = self.validator.menu
         ext_signal_names = [item[kName] for item in menu.extSignals.extSignals]
         for token in tokens:
@@ -149,7 +151,7 @@ class BasicSyntax(SyntaxRule):
 class ObjectThresholds(SyntaxRule):
     """Validates object thresholds/counts."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         # TODO... better to use floating point representation and compare by string?!
         for token in tokens:
             # Validate object
@@ -162,7 +164,7 @@ class ObjectThresholds(SyntaxRule):
                 for object in functionObjects(token):
                     self.validateThreshold(token, object)
 
-    def validateThreshold(self, token, object):
+    def validateThreshold(self, token: str, object):
         menu = self.validator.menu
         if object.type not in ObjectScaleMap:
             message = "Invalid object type `{0}`.".format(object.type)
@@ -189,7 +191,7 @@ class ObjectThresholds(SyntaxRule):
 class CombBxOffset(SyntaxRule):
     """Validates that all objects of a combination function use the same BX offset."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue
@@ -213,7 +215,7 @@ class CombBxOffset(SyntaxRule):
 class ChargeCorrelation(SyntaxRule):
     """Validates that all objects of a function are of type muon if applying a CHGCOR cut."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue
@@ -235,7 +237,7 @@ class ChargeCorrelation(SyntaxRule):
 class DistNrObjects(SyntaxRule):
     """Limit number of objects for distance function."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue
@@ -255,7 +257,7 @@ class DistNrObjects(SyntaxRule):
 class DistDeltaRange(SyntaxRule):
     """Validates that delta-eta/phi cut ranges does not exceed assigned objects limits."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         menu = self.validator.menu
         for token in tokens:
             if not isFunction(token):
@@ -294,7 +296,7 @@ class DistDeltaRange(SyntaxRule):
 class CutCount(SyntaxRule):
     """Limit number of cuts allowed to be assigned at once."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         for token in tokens:
             # Objects
             if isObject(token):
@@ -309,7 +311,7 @@ class CutCount(SyntaxRule):
                 counts = self.countCuts(functionCuts(token))
                 self.checkCutCount(token, counts)
 
-    def countCuts(self, names):
+    def countCuts(self, names: Iterable[str]) -> Dict:
         """Returns dictionary with key of cut object/type pair and occurence as value."""
         menu = self.validator.menu
         counts = {}
@@ -322,7 +324,7 @@ class CutCount(SyntaxRule):
                 counts[key] += 1
         return counts
 
-    def checkCutCount(self, token, counts):
+    def checkCutCount(self, token: str, counts: Dict) -> None:
         """Counts has to be a dictionary of format returned by countCuts()."""
         for key, count in counts.items():
             object_, type_ = key
@@ -337,7 +339,7 @@ class CutCount(SyntaxRule):
 class TransverseMass(SyntaxRule):
     """Validates transverse mass object requirements At least one non eta object is required."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue
@@ -358,7 +360,7 @@ class TransverseMass(SyntaxRule):
 class InvarientMass3(SyntaxRule):
     """Validates invariant mass of three objects requirements."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue
@@ -376,7 +378,7 @@ class InvarientMass3(SyntaxRule):
 class TwoBodyPtNrObjects(SyntaxRule):
     """Validates number of objects in combination with two body Pt cuts."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         menu = self.validator.menu
         for token in tokens:
             if not isFunction(token):
@@ -398,7 +400,7 @@ class TwoBodyPtNrObjects(SyntaxRule):
 class ImpactPrameter(SyntaxRule):
     """Impact parameter cut requires also a upt cut."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         for token in tokens:
             if isObject(token):
                 item = self.toObjectItem(token)
@@ -408,19 +410,19 @@ class ImpactPrameter(SyntaxRule):
                 for cuts in functionObjectsCuts(token):
                     self.validateObject(cuts, token)
 
-    def hasImpactParameter(self, cuts):
+    def hasImpactParameter(self, cuts) -> bool:
         for cut in cuts:
             if cut.startswith(tmGrammar.MU_IP):
                 return True
         return False
 
-    def hasUnconstrainedPt(self, cuts):
+    def hasUnconstrainedPt(self, cuts) -> bool:
         for cut in cuts:
             if cut.startswith(tmGrammar.MU_UPT):
                 return True
         return False
 
-    def validateObject(self, cuts, token):
+    def validateObject(self, cuts, token: str) -> None:
         if self.hasImpactParameter(cuts):
             if not self.hasUnconstrainedPt(cuts):
                 message: str = "Impact Parameter cut requires an Unconstrained Pt cut.\n" \
@@ -431,7 +433,7 @@ class ImpactPrameter(SyntaxRule):
 class OverlapRemoval(SyntaxRule):
     """Validates only calorimeter objects are used with overlap removal functions."""
 
-    def validate(self, tokens):
+    def validate(self, tokens: List[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue

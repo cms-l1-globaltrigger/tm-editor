@@ -1,8 +1,7 @@
 """Object editor dialog."""
+from typing import List, Optional
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import tmGrammar
 
@@ -237,11 +236,11 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         """Update cut filter."""
         self.cutListView.model().setFilterWildcard(text)
 
-    def objectType(self):
+    def objectType(self) -> str:
         """Returns object type."""
         return self.typeComboBox.currentText()
 
-    def comparisonOperator(self):
+    def comparisonOperator(self) -> Optional[str]:
         """Returns comparison operator."""
         return self.compareComboBox.itemData(self.compareComboBox.currentIndex())
 
@@ -252,7 +251,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
     def bxOffset(self):
         return self.offsetSpinBox.value()
 
-    def selectedCuts(self):
+    def selectedCuts(self) -> List[str]:
         """Retruns list of checked cut names."""
         return [item.data().name for item in list(filter(lambda item: item.checkState() == QtCore.Qt.Checked, self.cutModel._items))]
 
