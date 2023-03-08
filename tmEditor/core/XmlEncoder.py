@@ -13,46 +13,46 @@ from .TableHelper import TableHelper
 from .Queue import Queue
 from .AlgorithmFormatter import AlgorithmFormatter
 
-kAncestorId = 'ancestor_id'
-kBxOffset = 'bx_offset'
-kCable = 'cable'
-kChannel = 'channel'
-kComment = 'comment'
-kComparisonOperator = 'comparison_operator'
-kData = 'data'
-kDescription = 'description'
-kExpression = 'expression'
-kGlobalTag = 'global_tag'
-kGrammarVersion = 'grammar_version'
-kIndex = 'index'
-kIsObsolete = 'is_obsolete'
-kIsValid = 'is_valid'
-kLabels = 'labels'
-kMaximum = 'maximum'
-kMinimum = 'minimum'
-kModuleId = 'module_id'
-kModuleIndex = 'module_index'
-kNBits = 'n_bits'
-kNModules = 'n_modules'
-kName = 'name'
-kObject = 'object'
-kStep = 'step'
-kSystem = 'system'
-kThreshold = 'threshold'
-kType = 'type'
-kUUIDFirmware = 'uuid_firmware'
-kUUIDMenu = 'uuid_menu'
+kAncestorId = "ancestor_id"
+kBxOffset = "bx_offset"
+kCable = "cable"
+kChannel = "channel"
+kComment = "comment"
+kComparisonOperator = "comparison_operator"
+kData = "data"
+kDescription = "description"
+kExpression = "expression"
+kGlobalTag = "global_tag"
+kGrammarVersion = "grammar_version"
+kIndex = "index"
+kIsObsolete = "is_obsolete"
+kIsValid = "is_valid"
+kLabels = "labels"
+kMaximum = "maximum"
+kMinimum = "minimum"
+kModuleId = "module_id"
+kModuleIndex = "module_index"
+kNBits = "n_bits"
+kNModules = "n_modules"
+kName = "name"
+kObject = "object"
+kStep = "step"
+kSystem = "system"
+kThreshold = "threshold"
+kType = "type"
+kUUIDFirmware = "uuid_firmware"
+kUUIDMenu = "uuid_menu"
 
-DEFAULT_UUID = '00000000-0000-0000-0000-000000000000'
+DEFAULT_UUID = "00000000-0000-0000-0000-000000000000"
 """Empty UUID"""
 
-FORMAT_FLOAT = '+23.16E'
+FORMAT_FLOAT = "+23.16E"
 """Floating point string format."""
 
-FORMAT_INDEX = 'd'
+FORMAT_INDEX = "d"
 """Algorithm index format."""
 
-FORMAT_BX_OFFSET = '+d'
+FORMAT_BX_OFFSET = "+d"
 """BX offset format, signed decimal."""
 
 
@@ -62,16 +62,16 @@ def chdir(directory):
         @functools.wraps(func)
         def chdir_(*args, **kwargs):
             cwd = os.getcwd()
-            logging.debug("changing to directory '%s'", directory)
+            logging.debug("changing to directory %r", directory)
             os.chdir(directory)
             try:
                 result = func(*args, **kwargs)
             except Exception:
                 # Make sure to restore directory before raising an exception!
-                logging.debug("returning back to directory '%s'", directory)
+                logging.debug("returning back to directory %r", directory)
                 os.chdir(cwd)
                 raise
-            logging.debug("returning back to directory '%s'", cwd)
+            logging.debug("returning back to directory %r", cwd)
             os.chdir(cwd)
             return result
         return chdir_
@@ -255,13 +255,13 @@ class XmlEncoderQueue(Queue):
     @chdir(toolbox.getXsdDir())
     def run_dump_xml(self):
         # Write to XML file.
-        logging.debug("writing XML file to `%s'", self.filename)
+        logging.debug("writing XML file to %r", self.filename)
         self.tables.dump(self.filename)
 
     def run_verify_dump(self):
         # WORKAROUND (check if file was written)
         if not os.path.isfile(self.filename):
-            message = "failed to write to file `{0}'".format(self.filename)
+            message = "failed to write to file {0!r}".format(self.filename)
             logging.error(message)
             raise XmlEncoderError(message)
 

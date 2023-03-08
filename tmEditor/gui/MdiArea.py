@@ -6,7 +6,7 @@ from PyQt5 import QtCore, QtWidgets
 
 from tmEditor.gui.CommonWidgets import createIcon
 
-__all__ = ['MdiArea', ]
+__all__ = ["MdiArea"]
 
 # -----------------------------------------------------------------------------
 #  MDI Area class

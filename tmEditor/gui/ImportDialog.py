@@ -5,12 +5,12 @@ This dialog provides an dialog to import algorithms from another XML file.
 Example usage:
 >>> dialog = ImportDialog()
 >>> dialog.exec_()
->>> print dialog.algorithms
->>> print dialog.cuts
+>>> print(dialog.algorithms)
+>>> print(dialog.cuts)
 """
 
 import logging
-from typing import Optional
+from typing import List, Optional
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -23,13 +23,13 @@ from tmEditor.gui.Document import TableView
 from tmEditor.gui.CommonWidgets import IconLabel, createIcon
 from tmEditor.gui.CommonWidgets import TextFilterWidget
 
-__all__ = ['ImportDialog', ]
+__all__ = ["ImportDialog"]
 
 # -----------------------------------------------------------------------------
 #  Keys
 # -----------------------------------------------------------------------------
 
-kName = 'name'
+kName = "name"
 
 # -----------------------------------------------------------------------------
 #  Import dialog class
@@ -41,8 +41,8 @@ class ImportDialog(QtWidgets.QDialog):
     def __init__(self, filename, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         # Algorithm selection
-        self.algorithms = []
-        self.cuts = []
+        self.algorithms: List = []
+        self.cuts: List = []
         self.baseMenu = menu
         self.loadMenu(filename)
         self.validateMenu()

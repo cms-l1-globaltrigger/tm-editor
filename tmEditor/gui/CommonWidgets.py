@@ -26,20 +26,20 @@ from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.types import CountObjectTypes, ObjectTypes, SignalTypes
 
 __all__ = [
-    'richTextObjectsPreview',
-    'richTextSignalsPreview',
-    'richTextExtSignalsPreview',
-    'richTextCutsPreview',
-    'IconLabel',
-    'SelectableLabel',
-    'PrefixedSpinBox',
-    'ReadOnlyLineEdit',
-    'ComboBoxPlus',
-    'RestrictedLineEdit',
-    'RestrictedPlainTextEdit',
-    'ListSpinBox',
-    'EtaCutChart',
-    'PhiCutChart'
+    "richTextObjectsPreview",
+    "richTextSignalsPreview",
+    "richTextExtSignalsPreview",
+    "richTextCutsPreview",
+    "IconLabel",
+    "SelectableLabel",
+    "PrefixedSpinBox",
+    "ReadOnlyLineEdit",
+    "ComboBoxPlus",
+    "RestrictedLineEdit",
+    "RestrictedPlainTextEdit",
+    "ListSpinBox",
+    "EtaCutChart",
+    "PhiCutChart",
 ]
 
 # -----------------------------------------------------------------------------
@@ -126,20 +126,20 @@ def createIcon(name):
         return icon
     icon = QtGui.QIcon()
     if not len(icon.availableSizes()):
-        filename = f':/icons/{name}.svg'
+        filename = f":/icons/{name}.svg"
         if QtCore.QFile.exists(filename):
             icon.addFile(filename)
-        filename = f':/icons/16/{name}.svg'
+        filename = f":/icons/16/{name}.svg"
         if QtCore.QFile.exists(filename):
             icon.addPixmap(QtGui.QPixmap(filename))
-        filename = f':/icons/24/{name}.svg'
+        filename = f":/icons/24/{name}.svg"
         if QtCore.QFile.exists(filename):
             icon.addPixmap(QtGui.QPixmap(filename))
     return icon
 
 def miniIcon(name, size=13):
     """Returns mini icon to be used for items in list and tree views."""
-    return QtGui.QIcon(QtGui.QIcon(f':/icons/{name}.svg').pixmap(size, size))
+    return QtGui.QIcon(QtGui.QIcon(f":/icons/{name}.svg").pixmap(size, size))
 
 
 # -----------------------------------------------------------------------------
@@ -201,7 +201,7 @@ class PrefixedSpinBox(QtWidgets.QSpinBox):
         super().__init__(parent)
 
     def textFromValue(self, value):
-        return format(value, '+d') # prefix integers also with plus sign
+        return format(value, "+d") # prefix integers also with plus sign
 
 # -----------------------------------------------------------------------------
 #  Read only line edit widget.
@@ -464,7 +464,7 @@ class EtaCutChart(QtWidgets.QWidget):
         painter.setBrush(QtCore.Qt.transparent)
         painter.drawRect(toRect(self.Margin, self.Margin, self.Length / 2, self.Radius))
         painter.drawRect(toRect(self.Margin + self.Length / 2, self.Margin, self.Length / 2, self.Radius))
-        painter.setFont(QtGui.QFont('Sans', self.FontSize))
+        painter.setFont(QtGui.QFont("Sans", self.FontSize))
         painter.drawText(toPoint(self.Margin + self.Length / 2 - 2, self.Margin - 1), "0")
         painter.drawText(toPoint(0, (self.Margin + self.Radius) + self.FontSize / 2), u"-5")
         painter.drawText(toPoint(self.Margin + self.Length + 1, (self.Margin + self.Radius) + self.FontSize / 2), u"5")
@@ -510,6 +510,6 @@ class PhiCutChart(QtWidgets.QWidget):
         painter.setPen(QtGui.QPen(QtCore.Qt.black))
         painter.setBrush(QtCore.Qt.transparent)
         painter.drawArc(rectangle, 0, 360 * 16)
-        painter.setFont(QtGui.QFont('Sans', self.FontSize))
+        painter.setFont(QtGui.QFont("Sans", self.FontSize))
         painter.drawText(toPoint(self.Radius * 2 + self.Margin + 2, (self.Margin + self.Radius) + self.FontSize / 2), u"0")
         painter.drawText(toPoint(0, (self.Margin + self.Radius) + self.FontSize / 2), u"π")

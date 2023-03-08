@@ -12,7 +12,7 @@ from tmEditor.core.Settings import MaxAlgorithms
 # Common widgets
 from tmEditor.gui.CommonWidgets import IconLabel, createIcon
 
-__all__ = ['AlgorithmSelectIndexDialog', ]
+__all__ = ["AlgorithmSelectIndexDialog"]
 
 # -----------------------------------------------------------------------------
 #  Helper functions
@@ -20,6 +20,7 @@ __all__ = ['AlgorithmSelectIndexDialog', ]
 
 def map_expand(indices):
     return [index in indices for index in range(MaxAlgorithms)]
+
 
 def match_pattern(a, b):
     assert len(a) == len(b)

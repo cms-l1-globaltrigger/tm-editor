@@ -19,7 +19,7 @@ import tmGrammar
 
 from .types import FunctionTypes
 
-__all__ = ['AlgorithmFormatter', ]
+__all__ = ["AlgorithmFormatter"]
 
 
 class AlgorithmFormatter:
@@ -30,17 +30,17 @@ class AlgorithmFormatter:
     Functions = FunctionTypes
     Negators = (tmGrammar.NOT, )
     Operators = (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR, ) + Negators
-    LeftPar = '('
-    RightPar = ')'
-    LeftFunctionPar = '{'
-    RightFunctionPar = '}'
-    LeftCutPar = '['
-    RightCutPar = ']'
+    LeftPar = "("
+    RightPar = ")"
+    LeftFunctionPar = "{"
+    RightFunctionPar = "}"
+    LeftCutPar = "["
+    RightCutPar = "]"
     OpeningPar = (LeftPar, LeftFunctionPar, LeftCutPar, )
     ClosingPar = (RightPar, RightFunctionPar, RightCutPar, )
     Paranthesis = OpeningPar + ClosingPar
-    Separators = (',', )
-    Spaces = (' ', '\t', '\r', '\n')
+    Separators = (",", )
+    Spaces = (" ", "\t", "\r", "\n")
 
     @staticmethod
     def tokenize(expression: str) -> List[str]:
@@ -56,20 +56,20 @@ class AlgorithmFormatter:
             # Ignore spaces, append optional previous token.
             if char in AlgorithmFormatter.Spaces:
                 if token:
-                    tokens.append(''.join(token))
+                    tokens.append("".join(token))
                 token = []
             # Append optional previous token, append separator.
             elif char in AlgorithmFormatter.Separators or \
                  char in AlgorithmFormatter.Paranthesis:
                 if token:
-                    tokens.append(''.join(token))
+                    tokens.append("".join(token))
                 tokens.append(char)
                 token = []
             # Continue collecting token.
             else:
                 token.append(char)
         if token:
-            tokens.append(''.join(token))
+            tokens.append("".join(token))
         return tokens
 
     @staticmethod
@@ -112,7 +112,7 @@ class AlgorithmFormatter:
             if token in AlgorithmFormatter.Operators:
                 token = " {token} ".format(token=token)
             tokens.append(token)
-        return ''.join(tokens)
+        return "".join(tokens)
 
     @staticmethod
     def normalize(expression: str) -> str:
@@ -179,11 +179,11 @@ class AlgorithmFormatter:
                 else:
                     result += (token, )
             elif token == AlgorithmFormatter.LeftPar:
-                result += (ws if previous else '', token, eol, indent(), ws*tabwidth)
+                result += (ws if previous else "", token, eol, indent(), ws*tabwidth)
             elif token in lpars:
-                result += (ws if previous not in AlgorithmFormatter.Functions else '', token)
+                result += (ws if previous not in AlgorithmFormatter.Functions else "", token)
             elif token in rpars:
-                result += (eol if previous else '', indent(), token)
+                result += (eol if previous else "", indent(), token)
             else:
                 if previous == AlgorithmFormatter.RightPar:
                     result += (ws, token)
@@ -208,4 +208,4 @@ class AlgorithmFormatter:
                     result += (ws, )
             previous = token
 
-        return ''.join(result)
+        return "".join(result)

@@ -11,7 +11,7 @@ Setup a callbalc queue.
 Executing th callback queue.
 
 >>> for callback in q:
-...     print q.message(), '...', q.progress(), '%'
+...     print(q.message(), "...", q.progress(), "%")
 ...     q.callback()
 loading data ... 0 %
 processing data ... 33 %

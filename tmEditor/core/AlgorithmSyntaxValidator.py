@@ -19,14 +19,17 @@ from .Algorithm import isOperator, isObject, isExternal, isFunction
 from .Algorithm import toObject, toExternal
 from .Algorithm import functionObjects, functionCuts, functionObjectsCuts, objectCuts
 
-__all__ = ['AlgorithmSyntaxValidator', 'AlgorithmSyntaxError']
+__all__ = [
+    "AlgorithmSyntaxValidator",
+    "AlgorithmSyntaxError",
+]
 
-kMinimum = 'minimum'
-kMaximum = 'maximum'
-kName = 'name'
-kObject = 'object'
-kStep = 'step'
-kType = 'type'
+kMinimum = "minimum"
+kMaximum = "maximum"
+kName = "name"
+kObject = "object"
+kStep = "step"
+kType = "type"
 
 
 class SyntaxRule(ABC):
@@ -195,7 +198,7 @@ class CombBxOffset(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
+            name = token.split("{")[0].strip()  # fetch function name, eg "dist{...}[...]"
             if name not in (tmGrammar.comb, tmGrammar.comb_orm):
                 continue
             f = tmGrammar.Function_Item()
@@ -228,7 +231,7 @@ class ChargeCorrelation(SyntaxRule):
             objects = functionObjects(token)
             for i in range(len(objects)):
                 if objects[i].type != tmGrammar.MU:
-                    name = token.split('{')[0]  # TODO: get function name
+                    name = token.split("{")[0]  # TODO: get function name
                     message = f"All object requirements of function {name}{{...}} must be of type `{tmGrammar.MU}` when applying a `{tmGrammar.CHGCOR}` cut.\n" \
                               f"Invalid expression near `{token}`"
                     raise AlgorithmSyntaxError(message, token)
@@ -241,7 +244,7 @@ class DistNrObjects(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
+            name = token.split("{")[0].strip()  # fetch function name, eg "dist{...}[...]"
             if name not in (tmGrammar.dist, tmGrammar.dist_orm):
                 continue
             f = tmGrammar.Function_Item()
@@ -262,7 +265,7 @@ class DistDeltaRange(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
+            name = token.split("{")[0].strip()  # fetch function name, eg "dist{...}[...]"
             if name not in (tmGrammar.dist, tmGrammar.dist_orm):
                 continue
             for name in functionCuts(token):
@@ -282,7 +285,7 @@ class DistDeltaRange(SyntaxRule):
                     for object in functionObjects(token):
                         scale = list(filter(lambda scale: scale[kObject] == object.type and scale[kType] == tmGrammar.PHI, menu.scales.scales))[0]
                         minimum = 0
-                        maximum = float(format(float(scale[kMaximum]), '.3f'))
+                        maximum = float(format(float(scale[kMaximum]), ".3f"))
                         if not minimum <= float(cut.minimum) <= maximum:
                             message = f"Cut `{name}` minimum limit of {cut.minimum} exceed valid object DPHI range of {minimum}"
                             raise AlgorithmSyntaxError(message)
@@ -331,7 +334,7 @@ class CutCount(SyntaxRule):
             spec = (CutSpecs.query(enabled=True, object=object_, type=type_) or [None])[0]
             if spec:
                 if count > spec.count:
-                    name = key[1] if key[0] in FunctionTypes else '-'.join(key)
+                    name = key[1] if key[0] in FunctionTypes else "-".join(key)
                     message = f"In `{token}`, too many cuts of type `{name}` assigned, only {spec.count} allowed."
                     raise AlgorithmSyntaxError(message)
 
@@ -343,7 +346,7 @@ class TransverseMass(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
+            name = token.split("{")[0].strip()  # fetch function name, eg "dist{...}[...]"
             if not name == tmGrammar.mass_trv:
                 continue
             objects = functionObjects(token)
@@ -364,7 +367,7 @@ class InvarientMass3(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
+            name = token.split("{")[0].strip()  # fetch function name, eg "dist{...}[...]"
             if not name == tmGrammar.mass_inv_3:
                 continue
             objects = functionObjects(token)
@@ -383,7 +386,7 @@ class TwoBodyPtNrObjects(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
+            name = token.split("{")[0].strip()  # fetch function name, eg "dist{...}[...]"
             requiredObjects = (2, 2)
             if name in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_trv_orm):
                 requiredObjects = (2, 3)  # for overlap removal add the reference
@@ -437,7 +440,7 @@ class OverlapRemoval(SyntaxRule):
         for token in tokens:
             if not isFunction(token):
                 continue
-            name = token.split('{')[0].strip()  # fetch function name, eg "dist{...}[...]"
+            name = token.split("{")[0].strip()  # fetch function name, eg "dist{...}[...]"
             if name not in (tmGrammar.comb_orm, tmGrammar.dist_orm, tmGrammar.mass_inv_orm, tmGrammar.mass_trv_orm):
                 continue
             objects = functionObjects(token)

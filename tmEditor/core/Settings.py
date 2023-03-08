@@ -4,7 +4,7 @@ from .toolbox import CutSpecificationPool, CutSpecification
 
 import tmGrammar
 
-__all__ = ['MaxAlgorithms', 'CutSpecs', ]
+__all__ = ["MaxAlgorithms", "CutSpecs"]
 
 MaxAlgorithms = 512
 """Maximum number of supported algorithms."""

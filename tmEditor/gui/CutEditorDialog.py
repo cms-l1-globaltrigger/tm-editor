@@ -32,14 +32,14 @@ __all__ = ["CutEditorDialog"]
 #  Keys
 # ------------------------------------------------------------------------------
 
-kComment = 'comment'
-kData = 'data'
-kMaximum = 'maximum'
-kMinimum = 'minimum'
-kName = 'name'
-kNumber = 'number'
-kType = 'type'
-kObject = 'object'
+kComment = "comment"
+kData = "data"
+kMaximum = "maximum"
+kMinimum = "minimum"
+kName = "name"
+kNumber = "number"
+kType = "type"
+kObject = "object"
 
 ObjectCollectionRanges = {
     tmGrammar.MU: (0, 7),
@@ -53,7 +53,7 @@ ObjectCollectionRanges = {
 #  Regular expressions
 # -----------------------------------------------------------------------------
 
-RegExFloatingPoint = re.compile(r'([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)')
+RegExFloatingPoint = re.compile(r"([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)")
 """Regular expression to match floating points."""
 
 # -----------------------------------------------------------------------------
@@ -866,7 +866,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         # Type selector
         self.treeWidget = CutTreeWidget(self)
         self.treeWidget.setObjectName("treeWidget")
-        self.treeWidget.setProperty('showDropIndicator', QtCore.QVariant(False))
+        self.treeWidget.setProperty("showDropIndicator", QtCore.QVariant(False))
         self.treeWidget.header().setVisible(False)
         # Stack widget
         self.stackWidget = QtWidgets.QStackedWidget(self)
@@ -876,7 +876,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         self.suffixLabel.setObjectName("suffixLabel")
         self.suffixLineEdit = RestrictedLineEdit(self)
         self.suffixLineEdit.setObjectName("suffixLineEdit")
-        self.suffixLineEdit.setRegexPattern('[a-zA-Z0-9_]+')
+        self.suffixLineEdit.setRegexPattern("[a-zA-Z0-9_]+")
         self.suffixLineEdit.setText(self.tr("Unnamed"))
         # Description
         self.textBrowser = QtWidgets.QTextBrowser(self)

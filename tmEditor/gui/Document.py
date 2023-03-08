@@ -31,28 +31,28 @@ from tmEditor.gui.CommonWidgets import TextFilterWidget
 from tmEditor.gui.CommonWidgets import RestrictedLineEdit
 from tmEditor.gui.CommonWidgets import createIcon
 
-__all__ = ['Document', ]
+__all__ = ["Document"]
 
 # ------------------------------------------------------------------------------
 #  Keys
 # ------------------------------------------------------------------------------
 
-kCable = 'cable'
-kChannel = 'channel'
-kData = 'data'
-kDescription = 'description'
-kExpression = 'expression'
-kIndex = 'index'
-kLabel = 'label'
-kMaximum = 'maximum'
-kMinimum = 'minimum'
-kNBits = 'n_bits'
-kName = 'name'
-kNumber = 'number'
-kObject = 'object'
-kStep = 'step'
-kSystem = 'system'
-kType = 'type'
+kCable = "cable"
+kChannel = "channel"
+kData = "data"
+kDescription = "description"
+kExpression = "expression"
+kIndex = "index"
+kLabel = "label"
+kMaximum = "maximum"
+kMinimum = "minimum"
+kNBits = "n_bits"
+kName = "name"
+kNumber = "number"
+kObject = "object"
+kStep = "step"
+kSystem = "system"
+kType = "type"
 
 def fScale(scale):
     """Rename muon scale for visualization."""
@@ -262,9 +262,11 @@ class Document(BaseDocument):
         tableView.selectionModel().selectionChanged.connect(self.updateBottom)
         return tableView
 
-    def addPage(self, name, top=None, parent: Optional[QtWidgets.QWidget] = None):
+    def addPage(self, name, top=None, parent: Optional[QtWidgets.QTreeWidgetItem] = None):
         """Add page consisting of navigation tree entry, top and bottom widget."""
-        page = PageItem(name, top, self.bottomWidget, parent or self.navigationTreeWidget)
+        page = PageItem(name, top, self.bottomWidget, parent)
+        if parent is None:
+            self.navigationTreeWidget.addTopLevelItem(page)
         if 0 > self.topStack.indexOf(top):
             self.topStack.addWidget(top)
         self._pages.append(page)
@@ -319,21 +321,21 @@ class Document(BaseDocument):
             msgBox.setWindowTitle(self.tr("Migration report"))
             msgBox.setText(self.tr(f"The loaded XML document has been migrated to the most recent grammar <strong>version {Menu.GrammarVersion}</strong>"))
             messages = [
-                f"in file '{filename}'"
+                f"in file {filename!r}"
             ]
             for migration in queue.applied_mirgrations:
                 if isinstance(migration.subject, Cut):
-                    if migration.param == 'object':
-                        message = f"in cut '{migration.subject.name}':\n" \
-                                  f"  in attribute '{migration.param}': removed obsolete entry '{migration.before}'"
+                    if migration.param == "object":
+                        message = f"in cut {migration.subject.name!r}:\n" \
+                                  f"  in attribute {migration.param!r}: removed obsolete entry {migration.before!r}"
                         messages.append(message)
                     else:
-                        message = f"in cut '{migration.subject.name}':\n" \
-                                  f"  in attribute '{migration.param}': '{migration.before}' => '{migration.after}'"
+                        message = f"in cut {migration.subject.name!r}:\n" \
+                                  f"  in attribute {migration.param!r}: {migration.before!r} => {migration.after!r}"
                         messages.append(message)
                 elif isinstance(migration.subject, Algorithm):
-                    message = f"in algorithm '{migration.subject.name}':\n  " \
-                              f"  in attribute '{migration.param}': '{migration.before}' => '{migration.after}'"
+                    message = f"in algorithm {migration.subject.name!r}:\n  " \
+                              f"  in attribute {migration.param!r}: {migration.before!r} => {migration.after!r}"
                     messages.append(message)
             msgBox.setDetailedText("\n\n".join(messages))
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -421,14 +423,14 @@ class Document(BaseDocument):
         if self.menu().algorithmByName(name):
             # Default name is already used, try to find a derivate
             for i in range(2, MaxAlgorithms):
-                name = '{0}_{1}'.format(basename, i)
+                name = "{0}_{1}".format(basename, i)
                 if not self.menu().algorithmByName(name):
                     return name # got unused name!
         return basename # no clue...
 
     def updateTop(self):
         index, item = self.getSelection()
-        if item and hasattr(item.top, 'sortByColumn'):
+        if item and hasattr(item.top, "sortByColumn"):
             item.top.sortByColumn(0, QtCore.Qt.AscendingOrder)
         self.topStack.setCurrentWidget(item.top)
         excludedPages = [self.menuPage, ]
@@ -441,7 +443,7 @@ class Document(BaseDocument):
     def updateBottom(self):
         index, item = self.getSelection()
         # Generic preview...
-        if hasattr(item.bottom, 'reset'):
+        if hasattr(item.bottom, "reset"):
             item.bottom.reset()
         self.bottomWidget.show()
         if item is self.algorithmsPage:
@@ -871,7 +873,8 @@ class PageItem(QtWidgets.QTreeWidgetItem):
     """Custom QTreeWidgetItem holding references to top and bottom widgets."""
 
     def __init__(self, name, top=None, bottom=None, parent: Optional[QtWidgets.QTreeWidgetItem] = None) -> None:
-        super().__init__(parent, [name])
+        super().__init__(parent)  # type: ignore
+        self.setText(0, name)
         self.name = name
         self.top = top
         self.bottom = bottom

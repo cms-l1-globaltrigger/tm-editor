@@ -1,30 +1,34 @@
-from tmEditor.gui.CutEditorDialog import CutEditorDialog
-from tmEditor.core.Algorithm import Cut
-from tmEditor.core.Settings import CutSpecs
-from tmEditor.core.Menu import Menu
-from tmEditor.core import XmlDecoder
-from tmEditor import tmeditor_rc
-
-from PyQt5 import QtWidgets
-
 import argparse
 import logging
 import sys
 
+from PyQt5 import QtWidgets
+
+from tmEditor import tmeditor_rc
+from tmEditor.core import XmlDecoder
+from tmEditor.core.Algorithm import Cut
+from tmEditor.core.Settings import CutSpecs
+from tmEditor.core.Menu import Menu
+from tmEditor.gui.CutEditorDialog import CutEditorDialog
+
+
 def load_menu():
     parser = argparse.ArgumentParser()
-    parser.add_argument('filename')
+    parser.add_argument("filename")
     args = parser.parse_args()
     return XmlDecoder.load(args.filename)
+
 
 def type_assert(value, type_):
     assert isinstance(value, type_), "{0} != {1} (expected)".format(type(value), type_)
 
+
 def dump(value):
     logging.info("%s  %s", value, type(value))
 
+
 def test_dialog():
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
     menu = load_menu()
     app = QtWidgets.QApplication(sys.argv)
@@ -38,9 +42,10 @@ def test_dialog():
     print("name    :", cut.name)
     print("object  :", cut.object)
     print("type    :", cut.type)
-    print("minimum :", format(cut.minimum, '+23.16E'))
-    print("maximum :", format(cut.maximum, '+23.16E'))
+    print("minimum :", format(cut.minimum, "+23.16E"))
+    print("maximum :", format(cut.maximum, "+23.16E"))
     print("data    :", cut.data)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_dialog()

@@ -11,18 +11,18 @@ from .types import ObjectTypes, SignalTypes, ExternalObjectTypes, FunctionCutTyp
 from .Settings import MaxAlgorithms
 from .AlgorithmHelper import decode_threshold, encode_threshold
 
-__all__ = ['Algorithm']
+__all__ = ["Algorithm"]
 
-RegExObject = re.compile(r'({0})(?:\.(?:ge|eq)\.)?(\d+(?:p\d+)?)(?:[\+\-]\d+)?(?:\[[^\]]+\])?'.format(r'|'.join(ObjectTypes)))
+RegExObject = re.compile(r"({0})(?:\.(?:ge|eq)\.)?(\d+(?:p\d+)?)(?:[\+\-]\d+)?(?:\[[^\]]+\])?".format("|".join(ObjectTypes)))
 """Precompiled regular expression for matching object requirements."""
 
-RegExSignal = re.compile(r'({0})(?:[\+\-]\d+)?'.format(r'|'.join(SignalTypes)))
+RegExSignal = re.compile(r"({0})(?:[\+\-]\d+)?".format("|".join(SignalTypes)))
 """Precompiled regular expression for matching signal requirements."""
 
-RegExExtSignal = re.compile(r'{0}_[\w\d_\.]+(?:[\+\-]\d+)?'.format(r'|'.join(ExternalObjectTypes)))
+RegExExtSignal = re.compile(r"{0}_[\w\d_\.]+(?:[\+\-]\d+)?".format("|".join(ExternalObjectTypes)))
 """Precompiled regular expression for matching external signal requirements."""
 
-RegExFunction = re.compile(r'\w+\s*\{[^\}]+\}(?:\[[^\]]+\])?')
+RegExFunction = re.compile(r"\w+\s*\{[^\}]+\}(?:\[[^\]]+\])?")
 """Precompiled regular expression for matching function expressions."""
 
 
@@ -67,7 +67,7 @@ def isFunction(token: str) -> bool:
     return tmGrammar.isFunction(token)
 
 
-def toObject(token: str) -> 'Object':
+def toObject(token: str) -> "Object":
     """Returns an object's dict."""
     o = tmGrammar.Object_Item()
     if not tmGrammar.Object_parser(token, o):
@@ -81,18 +81,18 @@ def toObject(token: str) -> 'Object':
     )
 
 
-def toExternal(token: str) -> 'External':
+def toExternal(token: str) -> "External":
     """Returns an external's dict."""
     # Test if external signal ends with bunch crossign offset.
-    result = re.match(r'.*(\+\d+|\-\d+)$', token)
-    bx_offset = result.group(1) if result else '+0'
+    result = re.match(r".*(\+\d+|\-\d+)$", token)
+    bx_offset = result.group(1) if result else "+0"
     return External(
         name=token,
         bx_offset=int(bx_offset)
     )
 
 
-def functionObjects(token: str) -> List['Object']:
+def functionObjects(token: str) -> List["Object"]:
     """Returns list of object dicts assigned to a function."""
     objects = []
     f = tmGrammar.Function_Item()
@@ -126,7 +126,7 @@ def functionObjectsCuts(token: str) -> List[List[str]]:
         raise ValueError(token)
     # Note: returns strings containting list of cuts.
     for names in tmGrammar.Function_getObjectCuts(f):
-        cuts.append(names.split(',') if names else [])
+        cuts.append(names.split(",") if names else [])
     return cuts
 
 
@@ -180,7 +180,7 @@ def calculateTwoBodyPtRange() -> Tuple[float, float]:
 class Algorithm:
     """Algorithm container class."""
 
-    RegExAlgorithmName = re.compile(r'^(L1_)([a-zA-Z\d_]+)$')
+    RegExAlgorithmName = re.compile(r"^(L1_)([a-zA-Z\d_]+)$")
 
     def __init__(self, index: int, name: str, expression: str, comment: Optional[str] = None,
                  labels: Optional[List[str]] = None) -> None:
@@ -265,7 +265,7 @@ class Algorithm:
 class Cut:
     """Cut container class."""
 
-    RegExCutName = re.compile(r'^([A-Z\-]+_)([a-zA-Z\d_]+)$')
+    RegExCutName = re.compile(r"^([A-Z\-]+_)([a-zA-Z\d_]+)$")
 
     def __init__(self, name: str, object: str, type: str, minimum=None, maximum=None, data: Optional[str] = None,
                  comment: Optional[str] = None) -> None:
@@ -286,7 +286,7 @@ class Cut:
     def typename(self) -> str:
         if self.isFunctionCut:
             return self.type  # HACK for function cuts
-        return '-'.join([self.object, self.type])
+        return "-".join([self.object, self.type])
 
     @property
     def suffix(self) -> str:
@@ -372,7 +372,7 @@ class External:
         """Returns signal name with leading EXT_ prefix but without BX offset."""
         result = self.RegExSignalName.match(self.name)
         if result:
-            return ''.join((result.group(1), result.group(2)))
+            return "".join((result.group(1), result.group(2)))
         return self.name
 
     @property

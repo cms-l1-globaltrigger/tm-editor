@@ -30,26 +30,26 @@ __all__ = ["ObjectEditorDialog"]
 #  Keys
 # -----------------------------------------------------------------------------
 
-kMinimum = 'minimum'
-kMaximum = 'maximum'
-kObject = 'object'
-kStep = 'step'
-kType = 'type'
-kET = 'ET'
-kCOUNT = 'COUNT'
+kMinimum = "minimum"
+kMaximum = "maximum"
+kObject = "object"
+kStep = "step"
+kType = "type"
+kET = "ET"
+kCOUNT = "COUNT"
 
 # -----------------------------------------------------------------------------
 #  Object capabilites
 # -----------------------------------------------------------------------------
 
-ThresholdType = 'threshold'
-CounterType = 'counter'
-SignalType = 'signal'
+ThresholdType = "threshold"
+CounterType = "counter"
+SignalType = "signal"
 
 ObjectCapabilities = {
-    ThresholdType: {'scales': True, 'threshold': True},
-    CounterType: {'scales': True, 'threshold': False},
-    SignalType: {'scales': False, 'threshold': False},
+    ThresholdType: {"scales": True, "threshold": True},
+    CounterType: {"scales": True, "threshold": False},
+    SignalType: {"scales": False, "threshold": False},
 }
 
 ExtendedTypes = ObjectTypes + SignalTypes
@@ -120,8 +120,8 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         self.typeComboBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
 
         self.compareComboBox = QtWidgets.QComboBox(self)
-        self.compareComboBox.addItem('>=', tmGrammar.GE)
-        self.compareComboBox.addItem('==', tmGrammar.EQ)
+        self.compareComboBox.addItem(">=", tmGrammar.GE)
+        self.compareComboBox.addItem("==", tmGrammar.EQ)
 
         self.thresholdSpinBox = QtWidgets.QDoubleSpinBox(self)
 
@@ -184,13 +184,13 @@ class ObjectEditorDialog(QtWidgets.QDialog):
 
         objectType = self.objectType()
         objectCapabilities = getObjectCapabilities(objectType)
-        if objectCapabilities.get('threshold'):
+        if objectCapabilities.get("threshold"):
             self.compareComboBox.setVisible(True)
             self.thresholdSpinBox.setVisible(True)
         else:
             self.compareComboBox.setVisible(False)
             self.thresholdSpinBox.setVisible(False)
-        if objectCapabilities.get('scales'):
+        if objectCapabilities.get("scales"):
             scale = self.getScale(objectType)
             # Just to make sure...
             if scale is None:
@@ -302,20 +302,20 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         objectType = self.objectType()
         objectCapabilities = getObjectCapabilities(objectType)
         text = []
-        text.append(f'<h3>{objectType} Object Requirement</h3>')
-        if objectCapabilities.get('scales'):
+        text.append(f"<h3>{objectType} Object Requirement</h3>")
+        if objectCapabilities.get("scales"):
             scale = self.getScale(objectType)
             minimum = float(scale[kMinimum])
             maximum = float(scale[kMaximum])
             step = float(scale[kStep])
             if objectType in ThresholdObjectTypes:
-                text.append(f'<p>Valid threshold: {minimum:.1f} GeV - {maximum:.1f} GeV ({step:.1f} GeV steps)</p>')
+                text.append(f"<p>Valid threshold: {minimum:.1f} GeV - {maximum:.1f} GeV ({step:.1f} GeV steps)</p>")
             elif objectType in CountObjectTypes:
-                text.append(f'<p>Valid count: {minimum:.0f} - {maximum:.0f}</p>')
+                text.append(f"<p>Valid count: {minimum:.0f} - {maximum:.0f}</p>")
         expression = self.expression()
-        text.append(f'<h4>Preview</h4>')
-        text.append(f'<p><pre>{expression}</pre></p>')
-        self.infoTextEdit.setText(''.join(text))
+        text.append(f"<h4>Preview</h4>")
+        text.append(f"<p><pre>{expression}</pre></p>")
+        self.infoTextEdit.setText("".join(text))
 
     def loadObject(self, token):
         """Load dialog by values from object. Will raise a ValueError if string

@@ -1,7 +1,4 @@
-#
-# Unittests for tmEditor.Menu module
-# Author: Bernhard Arnold <bernhard.arnold@cern.ch>
-#
+import logging
 
 import tmGrammar
 import tmTable
@@ -15,38 +12,32 @@ from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.Algorithm import functionObjects, functionCuts, functionObjectsCuts
 from tmEditor.core.Algorithm import objectCuts
 
-import unittest
-import tempfile
-import logging
+UTM_VERSION: str = "0.11.0"
 
-UTM_VERSION = '0.10.0'
 
-class MenuTests(unittest.TestCase):
-
-    def setUp(self):
-        pass
+class TestMenu:
 
     def test_isOperator(self):
         for op in tmGrammar.gateName:
-            self.assertTrue(isOperator(op))
+            assert isOperator(op) is True
         for op in ("comb", "MU10", "MU-ISO_Q"):
-            self.assertFalse(isOperator(op))
+            assert isOperator(op) is False
 
     def test_isObject(self):
-        self.assertTrue(isObject("MU10"))
-        self.assertTrue(isObject("EG100-1"))
-        self.assertTrue(isObject("TAU.eq.50p5+1"))
-        self.assertFalse(isObject("comb"))
-        self.assertFalse(isObject("AND"))
-        self.assertFalse(isObject("NOT"))
+        assert isObject("MU10") is True
+        assert isObject("EG100-1") is True
+        assert isObject("TAU.eq.50p5+1") is True
+        assert isObject("comb") is False
+        assert isObject("AND") is False
+        assert isObject("NOT") is False
 
     def test_isFunction(self):
-        self.assertTrue(isFunction("comb{MU20,MU10}"))
-        self.assertTrue(isFunction("dist{MU100,JET100}[DPHI_Q]"))
-        self.assertTrue(isFunction("dist{MU20[MU-PHI_Q],MU10[MU-PHI_Q]}[DPHI_Q]"))
-        self.assertFalse(isFunction("MU-ISO_Q"))
-        self.assertFalse(isFunction("AND"))
-        self.assertFalse(isFunction("MU10"))
+        assert isFunction("comb{MU20,MU10}") is True
+        assert isFunction("dist{MU100,JET100}[DPHI_Q]") is True
+        assert isFunction("dist{MU20[MU-PHI_Q],MU10[MU-PHI_Q]}[DPHI_Q]") is True
+        assert isFunction("MU-ISO_Q") is False
+        assert isFunction("AND") is False
+        assert isFunction("MU10") is False
 
     def test_toObject(self):
         cases = {
@@ -56,7 +47,7 @@ class MenuTests(unittest.TestCase):
             "JET4[JET-DISP_LLP]": dict(name="JET4", threshold="4", type=tmGrammar.JET, comparison_operator=tmGrammar.GE, bx_offset=0),
         }
         for token, ref in cases.items():
-            self.assertEqual(toObject(token), Object(**ref), "missmatch at object requirment conversion")
+            assert toObject(token) == Object(**ref), "missmatch at object requirment conversion"
 
     def test_toExternal(self):
         cases = {
@@ -66,7 +57,7 @@ class MenuTests(unittest.TestCase):
             "BPTX_plus_AND_minus+2": dict(name="BPTX_plus_AND_minus+2", bx_offset=+2),
         }
         for token, ref in cases.items():
-            self.assertEqual(toExternal(token), External(**ref))
+            assert toExternal(token) == External(**ref)
 
     def test_functionObjects(self):
         def to_objects(*args): return [toObject(token) for token in args]
@@ -76,7 +67,7 @@ class MenuTests(unittest.TestCase):
             "comb{TAU80[TAU-ISO_Q],TAU60[TAU-ISO_Q],TAU40[TAU-ISO_Q],TAU20[TAU-ISO_Q]}": to_objects("TAU80", "TAU60", "TAU40", "TAU20"),
         }
         for token, ref in cases.items():
-            self.assertEqual(functionObjects(token), ref)
+            assert functionObjects(token) == ref
 
     def test_functionCuts(self):
         cases = {
@@ -88,7 +79,7 @@ class MenuTests(unittest.TestCase):
             "mass_inv_3{MU10,MU20,MU20}[MASS_X]": ["MASS_X"],
         }
         for token, ref in cases.items():
-            self.assertEqual(functionCuts(token), ref)
+            assert functionCuts(token) == ref
 
     def test_functionObjectsCuts(self):
         cases = {
@@ -101,7 +92,7 @@ class MenuTests(unittest.TestCase):
             "comb{MU400[MU-ETA_Q],MU300[MU-ETA_Q,MU-PHI_Q,MU-ISO_Q],MU200[MU-PHI_Q],MU100[MU-ETA_Q]}": [["MU-ETA_Q"], ["MU-ETA_Q","MU-PHI_Q","MU-ISO_Q"], ["MU-PHI_Q"], ["MU-ETA_Q"]],
         }
         for token, ref in cases.items():
-            self.assertEqual(functionObjectsCuts(token), ref)
+            assert functionObjectsCuts(token) == ref
 
     def test_objectCuts(self):
         cases = {
@@ -111,29 +102,26 @@ class MenuTests(unittest.TestCase):
             "JET0[JET-DISP_LLP]": ["JET-DISP_LLP"],
         }
         for token, ref in cases.items():
-            self.assertEqual(objectCuts(token), ref)
+            assert objectCuts(token) == ref
 
     def test_serdes(self):
         menu = Menu()
         menu.menu.name = "L1Menu_Unittest"
-    #     menu.scale = tmTable.Scale()
-    #     menu.scale.scales = tmTable.Table()
-    #     menu.extSignals = tmTable.ExtSignal()
+        # menu.scale = tmTable.Scale()
+        # menu.scale.scales = tmTable.Table()
+        # menu.extSignals = tmTable.ExtSignal()
         menu.addObject(Object("MU10", "MU", 10))
         menu.addObject(Object("MU20", "MU", 20))
         menu.addCut(Cut("MU-ETA_2p1", "MU", "ETA", -2.1, +2.1))
         menu.addAlgorithm(Algorithm(42, "L1_DoubleMu_er2p1", "comb{MU20[MU-ETA_2p1],MU10[MU-ETA_2p1]}"))
-    #     file, filename = tempfile.mkstemp()
-    #     open(filename).close()
-    #     XmlEncoder.dump(menu, filename)
-    #     menu = XmlDecoder.load(filename)
+        # file, filename = tempfile.mkstemp()
+        # open(filename).close()
+        # XmlEncoder.dump(menu, filename)
+        # menu = XmlDecoder.load(filename)
         logging.info("algorithms: %s", menu.algorithms)
         logging.info("cuts: %s", menu.cuts)
         logging.info("objects: %s", menu.objects)
 
     def test_version(self):
-        self.assertEqual(tmGrammar.__version__, UTM_VERSION)
-        self.assertEqual(tmTable.__version__, UTM_VERSION)
-
-if __name__ == '__main__':
-    unittest.main()
+        assert tmGrammar.__version__ == UTM_VERSION
+        assert tmTable.__version__ == UTM_VERSION

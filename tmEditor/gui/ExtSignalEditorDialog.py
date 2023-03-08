@@ -11,18 +11,18 @@ from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
 # Common widgets
 from tmEditor.gui.CommonWidgets import PrefixedSpinBox, createIcon, miniIcon
 
-__all__ = ['ExtSignalEditorDialog', ]
+__all__ = ["ExtSignalEditorDialog"]
 
 # -----------------------------------------------------------------------------
 #  Keys
 # -----------------------------------------------------------------------------
 
-kEXT = 'EXT'
-kName = 'name'
-kSystem = 'system'
-kCable = 'cable'
-kChannel = 'channel'
-kLabel = 'label'
+kEXT = "EXT"
+kName = "name"
+kSystem = "system"
+kCable = "cable"
+kChannel = "channel"
+kLabel = "label"
 
 # -----------------------------------------------------------------------------
 #  External signal editor dialog class
@@ -53,7 +53,7 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
         self.signalComboBox = QtWidgets.QComboBox(self)
         self.signalComboBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
         for signal in self.menu.extSignals.extSignals:
-            self.signalComboBox.addItem(miniIcon('ext'), '_'.join((kEXT, signal[kName])))
+            self.signalComboBox.addItem(miniIcon("ext"), "_".join((kEXT, signal[kName])))
         self.offsetSpinBox = PrefixedSpinBox(self)
         self.offsetSpinBox.setRange(-2, 2)
         self.offsetSpinBox.setValue(0)
@@ -99,15 +99,15 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
         label = signal[kLabel] if kLabel in signal else ""
         expression = self.expression()
         text = []
-        text.append(f'<h3>External Signal Requirement</h3>')
-        text.append(f'<p>System: {system}</p>')
-        text.append(f'<p>Cable: {cable}</p>')
-        text.append(f'<p>Channel: {channel}</p>')
+        text.append(f"<h3>External Signal Requirement</h3>")
+        text.append(f"<p>System: {system}</p>")
+        text.append(f"<p>Cable: {cable}</p>")
+        text.append(f"<p>Channel: {channel}</p>")
         if label:
-            text.append(f'<p>Label: {label}</p>')
-        text.append(f'<h4>Preview</h4>')
-        text.append(f'<p><pre>{expression}</pre></p>')
-        self.infoTextEdit.setText(''.join(text))
+            text.append(f"<p>Label: {label}</p>")
+        text.append(f"<h4>Preview</h4>")
+        text.append(f"<p><pre>{expression}</pre></p>")
+        self.infoTextEdit.setText("".join(text))
 
     def loadExtSignal(self, token):
         """Load dialog by values from external signal. Will raise a ValueError if string

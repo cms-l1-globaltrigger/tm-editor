@@ -13,7 +13,7 @@ from typing import Optional
 
 from PyQt5 import QtCore, QtWidgets
 
-__all__ = ['OpenUrlDialog', ]
+__all__ = ["OpenUrlDialog"]
 
 # -----------------------------------------------------------------------------
 #  Open URL dialog class

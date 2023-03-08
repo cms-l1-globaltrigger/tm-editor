@@ -12,9 +12,9 @@ from .types import FunctionCutTypes
 def fHex(value: int) -> str:
     """Return pretty hex representation."""
     try:
-        return '0x{0:x}'.format(int(value))
+        return "0x{0:x}".format(int(value))
     except ValueError:
-        return ''
+        return ""
 
 
 def fCompress(values: List[int]) -> str:
@@ -38,22 +38,22 @@ def fFileSize(size) -> str:
     """
     suffix: str = "B"
     factor: int = 1024
-    for unit in ('', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi'):
+    for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
         if abs(size) < factor:
             return "{0:3.1f}{1}{2}".format(size, unit, suffix)
         size /= factor
-    return "{0:.1f}{1}{2}".format(size, 'Yi', suffix)
+    return "{0:.1f}{1}{2}".format(size, "Yi", suffix)
 
 
 def fCutValue(value, precision: int = 3) -> str:
     """Return floating point representation for cut values in string format,
     returns empty string on error.
     """
-    fmt = '+.{0}f'.format(precision)
+    fmt = "+.{0}f".format(precision)
     try:
         return format(float(value), fmt)
     except ValueError:
-        return ''
+        return ""
 
 
 def fCutData(cut) -> str:
@@ -105,7 +105,7 @@ def fThreshold(value: str) -> str:
     >>> fThreshold("2p5")
     '2.5 GeV'
     """
-    value = format(value).replace('p', '.')  # Replace 'p' by comma.
+    value = format(value).replace("p", ".")  # Replace 'p' by comma.
     return "{:.1f} GeV".format(float(value))
 
 
@@ -137,4 +137,4 @@ def fBxOffset(value: int) -> str:
     >>> fBxOffset(2)
     '+2'
     """
-    return '0' if int(value) == 0 else format(int(value), '+d')
+    return "0" if int(value) == 0 else format(int(value), "+d")

@@ -4,7 +4,7 @@ from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-__all__ = ['PreferencesDialog', ]
+__all__ = ["PreferencesDialog"]
 
 # -----------------------------------------------------------------------------
 #  Preferences dialog class
@@ -19,7 +19,7 @@ class PreferencesDialog(QtWidgets.QDialog):
 
     def setupUi(self):
         self.setWindowTitle(self.tr("Preferences"))
-        self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
+        self.setWindowIcon(QtGui.QIcon(":icons/tm-editor.svg"))
         self.resize(240, 100)
         self.tabWidget = QtWidgets.QTabWidget(self)
         # Files tab

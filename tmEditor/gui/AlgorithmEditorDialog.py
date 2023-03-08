@@ -40,13 +40,13 @@ from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextCutsPreview
 from tmEditor.gui.CommonWidgets import createIcon
 
-__all__ = ['AlgorithmEditorDialog', ]
+__all__ = ["AlgorithmEditorDialog"]
 
 # ------------------------------------------------------------------------------
 #  Keys
 # ------------------------------------------------------------------------------
 
-kName = 'name'
+kName = "name"
 
 ContentsURL = "https://cern.ch/globaltrigger/upgrade/tme/userguide#create-algorithms"
 
@@ -162,8 +162,8 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         self.indexSpinBox.setMaximum(MaxAlgorithms)
         self.indexSpinBox.setMinimumWidth(60)
         self.nameLineEdit = RestrictedLineEdit(self)
-        self.nameLineEdit.setPrefix('L1_')
-        self.nameLineEdit.setRegexPattern('L1_[a-zA-Z0-9_]+')
+        self.nameLineEdit.setPrefix("L1_")
+        self.nameLineEdit.setRegexPattern("L1_[a-zA-Z0-9_]+")
         self.nameLineEdit.setMinimumWidth(310)
         self.previewTextBrowser = QtWidgets.QTextBrowser(self)
         self.previewTextBrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
@@ -425,7 +425,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         if dialog.result() == QtWidgets.QDialog.Accepted:
             self.replacePlainText(
                 self.currentFormatter(
-                    ''.join([
+                    "".join([
                         text[:token[1]],
                         dialog.expression(),
                         text[token[2]:],
@@ -445,7 +445,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         if dialog.result() == QtWidgets.QDialog.Accepted:
             self.replacePlainText(
                 self.currentFormatter(
-                    ''.join([
+                    "".join([
                         text[:token[1]],
                         dialog.expression(),
                         text[token[2]:],
@@ -465,7 +465,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         if dialog.result() == QtWidgets.QDialog.Accepted:
             self.replacePlainText(
                 self.currentFormatter(
-                    ''.join([
+                    "".join([
                         text[:token[1]],
                         dialog.expression(),
                         text[token[2]:],

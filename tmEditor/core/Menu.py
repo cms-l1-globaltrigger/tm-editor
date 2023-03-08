@@ -11,13 +11,13 @@ from .Settings import MaxAlgorithms
 from .AlgorithmSyntaxValidator import AlgorithmSyntaxValidator
 from .Algorithm import toObject, toExternal
 
-__all__ = ['Menu', 'GrammarVersion']
+__all__ = ["Menu", "GrammarVersion"]
 
-GrammarVersion = StrictVersion('0.10')
+GrammarVersion = StrictVersion("0.10")
 """Supported grammar version."""
 
-kObject: str = 'object'
-kType: str = 'type'
+kObject: str = "object"
+kType: str = "type"
 
 
 class Menu:
@@ -99,7 +99,7 @@ class Menu:
 
     def scaleBins(self, object, scaleType):
         """Returns bins for *object* by *scaleType*."""
-        key = f'{object.type}-{scaleType}'
+        key = f"{object.type}-{scaleType}"
         return self.scales.bins[key] if key in self.scales.bins else None
 
     def orphanedObjects(self) -> list:
@@ -163,7 +163,7 @@ class Menu:
 class MenuInfo:
     """Menu information container class."""
 
-    RegExMenuName = re.compile(r'^(L1Menu_)([a-zA-Z0-9_]*)$')
+    RegExMenuName = re.compile(r"^(L1Menu_)([a-zA-Z0-9_]*)$")
 
     def __init__(self, name: Optional[str] = None, comment: Optional[str] = None):
         self.name: str = name or ""

@@ -7,16 +7,16 @@ from typing import Any, Iterable, List, Optional
 import tmGrammar
 
 __all__ = [
-    'join',
-    'encode_comparison_operator',
-    'encode_threshold',
-    'decode_threshold',
-    'encode_bx_offset',
-    'encode_cuts',
-    'ObjectHelper',
-    'ExtSignalHelper',
-    'FunctionHelper',
-    'AlgorithmHelper'
+    "join",
+    "encode_comparison_operator",
+    "encode_threshold",
+    "decode_threshold",
+    "encode_bx_offset",
+    "encode_cuts",
+    "ObjectHelper",
+    "ExtSignalHelper",
+    "FunctionHelper",
+    "AlgorithmHelper",
 ]
 
 
@@ -37,7 +37,7 @@ def encode_comparison_operator(value: str) -> str:
 
 def encode_threshold(value: float) -> str:
     """Returns encoded threshold value, omits comma if decimals are zero."""
-    match = re.match(r'(\d+)(?:.(\d+))', format(float(value)))
+    match = re.match(r"(\d+)(?:.(\d+))", format(float(value)))
     if match:
         integer, decimal = match.groups()
         if int(decimal):
@@ -48,14 +48,14 @@ def encode_threshold(value: float) -> str:
 
 def decode_threshold(threshold: str) -> float:
     """Returns decoded float threshold."""
-    return float('.'.join(threshold.split("p")[:2]))  # TODO
+    return float(".".join(threshold.split("p")[:2]))  # TODO
 
 
 def encode_bx_offset(value: int) -> str:
     """Returns encoded BX offset or an empty string on default value."""
     if value == 0:
         return ""
-    return format(value, '+d')
+    return format(value, "+d")
 
 
 def encode_cuts(items: Iterable[str]) -> str:
@@ -147,7 +147,7 @@ class FunctionHelper(Helper):
         return self
 
     def serialize(self) -> str:
-        objects = join(self.objects, ',')
+        objects = join(self.objects, ",")
         cuts = encode_cuts(self.cuts)
         return f"{self.name}{{{objects}}}{cuts}"
 

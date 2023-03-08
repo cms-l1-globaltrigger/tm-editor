@@ -11,7 +11,7 @@ from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-__all__ = ['CodeEditor', ]
+__all__ = ["CodeEditor"]
 
 # -----------------------------------------------------------------------------
 #  Code editor class

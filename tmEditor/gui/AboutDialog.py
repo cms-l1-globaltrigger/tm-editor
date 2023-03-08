@@ -10,7 +10,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from tmEditor import __version__, tmeditor_rc
 from tmGrammar import __version__ as utm_version
 
-__all__ = ['AboutDialog', ]
+__all__ = ["AboutDialog"]
 
 L1ApplicationAuthors = (
     (u"Bernhard Arnold", "bernhard.arnold@cern.ch"),
@@ -28,12 +28,12 @@ class AboutDialog(QtWidgets.QDialog):
         title: str = "Trigger Menu Editor"
 
         self.setWindowTitle(self.tr("About {}").format(title))
-        self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
+        self.setWindowIcon(QtGui.QIcon(":icons/tm-editor.svg"))
         self.setMinimumSize(420, 320)
 
         self.iconLabel: QtWidgets.QLabel = QtWidgets.QLabel(self)
         self.iconLabel.setFixedSize(32, 32)
-        self.iconLabel.setPixmap(QtGui.QPixmap(QtGui.QIcon(':icons/tm-editor.svg').pixmap(QtCore.QSize(32, 32))))
+        self.iconLabel.setPixmap(QtGui.QPixmap(QtGui.QIcon(":icons/tm-editor.svg").pixmap(QtCore.QSize(32, 32))))
 
         self.titleLabel: QtWidgets.QLabel = QtWidgets.QLabel(self)
 
@@ -70,7 +70,7 @@ class AboutDialog(QtWidgets.QDialog):
         layout.addWidget(self.buttonBox)
 
         # Initialize
-        self.titleLabel.setText('<span style="font:bold 16px">{}</span><br />{}'.format(
+        self.titleLabel.setText("<span style=\"font:bold 16px\">{}</span><br />{}".format(
             title,
             self.tr("Editor for CERN CMS Level-1 Trigger Menus.")
         ))

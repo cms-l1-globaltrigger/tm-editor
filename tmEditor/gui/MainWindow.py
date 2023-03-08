@@ -28,13 +28,13 @@ from .CommonWidgets import createIcon
 from .Document import Document
 from .MdiArea import MdiArea
 
-__all__ = ['MainWindow', ]
+__all__ = ["MainWindow"]
 
 logger = logging.getLogger(__name__)
 
-XmlFileExtension = '.xml'
+XmlFileExtension = ".xml"
 
-RegExUrl = re.compile(r'(\w+)\://(.+)')
+RegExUrl = re.compile(r"(\w+)\://(.+)")
 """Precompiled regular expression for matching URLs (protocol://path).
 Returned groups are protocol and path.
 """
@@ -361,7 +361,7 @@ class MainWindow(QtWidgets.QMainWindow):
         file menu action."""
         action = self.sender()
         if action:
-            self.loadDocument(action.data())
+            self.loadDocument(action.data())  # type: ignore
 
     @QtCore.pyqtSlot()
     def onImport(self) -> None:
@@ -426,7 +426,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def onSaveAs(self) -> None:
         path = self.mdiArea.currentDocument().filename()
         if not path.endswith(XmlFileExtension):
-            path = os.path.join(QtCore.QDir.homePath(), ''.join((os.path.basename(path), XmlFileExtension)))
+            path = os.path.join(QtCore.QDir.homePath(), "".join((os.path.basename(path), XmlFileExtension)))
         filename, filter_ = QtWidgets.QFileDialog.getSaveFileName(
             self,
             self.tr("Save as..."), path,
@@ -434,7 +434,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         if filename:
             if not filename.endswith(XmlFileExtension):
-                filename = ''.join((filename, XmlFileExtension))
+                filename = "".join((filename, XmlFileExtension))
             document = self.mdiArea.currentDocument()
             try:
                 document.saveMenu(filename)

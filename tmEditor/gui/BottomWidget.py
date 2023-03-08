@@ -24,25 +24,25 @@ from tmEditor.gui.CommonWidgets import createIcon
 
 from tmEditor import tmeditor_rc
 
-__all__ = ['BottomWidget', ]
+__all__ = ["BottomWidget"]
 
 # HACK: overload with missing attributes.
 tmGrammar.ET = "ET"
 tmGrammar.PT = "PT"
 
-kCable = 'cable'
-kChannel = 'channel'
-kDescription = 'description'
-kLabel = 'label'
-kMaximum = 'maximum'
-kMinimum = 'minimum'
-kNBits = 'n_bits'
-kName = 'name'
-kNumber = 'number'
-kObject = 'object'
-kStep = 'step'
-kSystem = 'system'
-kType = 'type'
+kCable = "cable"
+kChannel = "channel"
+kDescription = "description"
+kLabel = "label"
+kMaximum = "maximum"
+kMinimum = "minimum"
+kNBits = "n_bits"
+kName = "name"
+kNumber = "number"
+kObject = "object"
+kStep = "step"
+kSystem = "system"
+kType = "type"
 
 # ------------------------------------------------------------------------------
 #  Helpers
@@ -53,14 +53,14 @@ def highlight(expression):
     expression = AlgorithmFormatter.normalize(expression)
     for name in FunctionTypes:
         expression = re.sub(
-            r'({0})({{)'.format(name),
-            r'<span style="color: blue; font-weight: bold;">\1</span>\2',
+            r"({0})({{)".format(name),
+            r"<span style=\"color: blue; font-weight: bold;\">\1</span>\2",
             expression
         )
     for name in (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR, tmGrammar.NOT):
         expression = re.sub(
-            r'([\ \)])({0})([\ \(])'.format(name),
-            r'\1<span style="color: darkblue; font-weight: bold;">\2</span>\3',
+            r"([\ \)])({0})([\ \(])".format(name),
+            r"\1<span style=\"color: darkblue; font-weight: bold;\">\2</span>\3",
             expression
         )
     return expression
@@ -148,10 +148,9 @@ class BottomWidget(QtWidgets.QWidget):
         box.addWidget(self.etaCutChart)
         groupBox.setLayout(box)
         groupBox.setAlignment(QtCore.Qt.AlignBottom)
-        layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(5, 5, 5, 5)
-        layout.addWidget(groupBox)
-        self.etaCutWidget.setLayout(layout)
+        etaCutLayout = QtWidgets.QVBoxLayout(self.etaCutWidget)
+        etaCutLayout.setContentsMargins(5, 5, 5, 5)
+        etaCutLayout.addWidget(groupBox)
 
         self.phiCutChart = PhiCutChart(self)
         # MacOS workaround, need to wrap group box to avoid layout glitch
@@ -167,12 +166,11 @@ class BottomWidget(QtWidgets.QWidget):
         box.addWidget(self.phiCutChart)
         groupBox.setLayout(box)
         groupBox.setAlignment(QtCore.Qt.AlignBottom)
-        layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(5, 5, 5, 5)
-        layout.addWidget(groupBox)
-        self.phiCutWidget.setLayout(layout)
+        phiCutLayout = QtWidgets.QVBoxLayout(self.phiCutWidget)
+        phiCutLayout.setContentsMargins(5, 5, 5, 5)
+        phiCutLayout.addWidget(groupBox)
 
-        layout = QtWidgets.QGridLayout()
+        layout = QtWidgets.QGridLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.toolbar, 0, 0, 1, 3)
@@ -180,7 +178,7 @@ class BottomWidget(QtWidgets.QWidget):
         layout.addWidget(self.textEdit, 2, 0)
         layout.addWidget(self.etaCutWidget, 2, 1)
         layout.addWidget(self.phiCutWidget, 2, 2)
-        self.setLayout(layout)
+
         self.reset()
 
     def reset(self) -> None:
@@ -256,7 +254,7 @@ class BottomWidget(QtWidgets.QWidget):
                     data_ = CutSpecs.query(type=cut.type)[0].data # TODO
                 else:
                     data_ = CutSpecs.query(type=cut.type, object=cut.object)[0].data # TODO
-                for key in cut.data.split(','):
+                for key in cut.data.split(","):
                     if cut.type == tmGrammar.ISO:
                         datalist.append(self.tr("<li>[0b{0:02b}] {1}</li>").format(int(key), data_[key]))
                     else:
