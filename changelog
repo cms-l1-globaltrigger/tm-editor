@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Support for MUS2 signal.
+- Support for MU-INDEX cut.
 - Automated testing using tox and mypy.
 
 ### Fixed

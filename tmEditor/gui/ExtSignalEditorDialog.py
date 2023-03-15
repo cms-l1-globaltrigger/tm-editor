@@ -92,22 +92,23 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
     def updateInfoText(self):
         """Update info box text."""
         name = toExternal(self.name()).signal_name
-        signal = list(filter(lambda signal: signal[kName] == name, self.menu.extSignals.extSignals))[0]
-        system = signal[kSystem]
-        cable = signal[kCable]
-        channel = signal[kChannel]
-        label = signal[kLabel] if kLabel in signal else ""
-        expression = self.expression()
-        text = []
-        text.append(f"<h3>External Signal Requirement</h3>")
-        text.append(f"<p>System: {system}</p>")
-        text.append(f"<p>Cable: {cable}</p>")
-        text.append(f"<p>Channel: {channel}</p>")
-        if label:
-            text.append(f"<p>Label: {label}</p>")
-        text.append(f"<h4>Preview</h4>")
-        text.append(f"<p><pre>{expression}</pre></p>")
-        self.infoTextEdit.setText("".join(text))
+        for signal in filter(lambda signal: signal.get(kName) == name, self.menu.extSignals.extSignals):
+            system = signal.get(kSystem)
+            cable = signal.get(kCable)
+            channel = signal.get(kChannel)
+            label = signal.get(kLabel, "")
+            expression = self.expression()
+            text = []
+            text.append(f"<h3>External Signal Requirement</h3>")
+            text.append(f"<p>System: {system}</p>")
+            text.append(f"<p>Cable: {cable}</p>")
+            text.append(f"<p>Channel: {channel}</p>")
+            if label:
+                text.append(f"<p>Label: {label}</p>")
+            text.append(f"<h4>Preview</h4>")
+            text.append(f"<p><pre>{expression}</pre></p>")
+            self.infoTextEdit.setText("".join(text))
+            break
 
     def loadExtSignal(self, token):
         """Load dialog by values from external signal. Will raise a ValueError if string

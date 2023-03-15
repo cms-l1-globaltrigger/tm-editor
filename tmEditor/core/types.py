@@ -66,6 +66,7 @@ SignalTypes = (
     # Muon showers
     tmGrammar.MUS0,
     tmGrammar.MUS1,
+    tmGrammar.MUS2,
     tmGrammar.MUSOOT0,
     tmGrammar.MUSOOT1,
 )

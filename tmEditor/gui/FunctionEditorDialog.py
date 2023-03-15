@@ -334,7 +334,7 @@ class FunctionReqHelper:
 
     def edit(self):
         dialog = ObjectEditorDialog(self.parent.menu, self.parent)
-        dialog.setObjects(self.types)
+        dialog.setObjectTypes(self.types)
         token = self.text()
         if token: # else start with empty editor
             try:
