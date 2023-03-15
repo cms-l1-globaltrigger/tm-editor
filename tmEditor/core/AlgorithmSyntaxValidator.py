@@ -333,9 +333,9 @@ class CutCount(SyntaxRule):
             object_, type_ = key
             spec = (CutSpecs.query(enabled=True, object=object_, type=type_) or [None])[0]
             if spec:
-                if count > spec.count:
+                if count > spec.count_maximum:
                     name = key[1] if key[0] in FunctionTypes else "-".join(key)
-                    message = f"In `{token}`, too many cuts of type `{name}` assigned, only {spec.count} allowed."
+                    message = f"In `{token}`, too many cuts of type `{name}` assigned, only {spec.count_maximum} allowed."
                     raise AlgorithmSyntaxError(message)
 
 

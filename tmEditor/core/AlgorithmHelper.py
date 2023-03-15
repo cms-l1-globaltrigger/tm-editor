@@ -107,13 +107,19 @@ class ObjectHelper(Helper):
 
 class SignalHelper(Helper):
 
-    def __init__(self, type, bx_offset: int = 0) -> None:
+    def __init__(self, type, bx_offset: int = 0, cuts=None) -> None:
         self.type = type
         self.bx_offset: int = bx_offset
+        self.cuts: List = cuts or []
+
+    def addCut(self, cut) -> "SignalHelper":
+        self.cuts.append(cut)
+        return self
 
     def serialize(self) -> str:
         bx_offset = encode_bx_offset(self.bx_offset)
-        return f"{self.type}{bx_offset}"
+        cuts = encode_cuts(self.cuts)
+        return f"{self.type}{bx_offset}{cuts}"
 
 
 class ExtSignalHelper(Helper):
@@ -168,8 +174,8 @@ class AlgorithmHelper(Helper):
         self.expression.append(helper)
         return helper
 
-    def addSignal(self, type: str, bx_offset: int = 0) -> SignalHelper:
-        helper = SignalHelper(type, bx_offset)
+    def addSignal(self, type: str, bx_offset: int = 0, cuts=None) -> SignalHelper:
+        helper = SignalHelper(type, bx_offset, cuts)
         self.expression.append(helper)
         return helper
 

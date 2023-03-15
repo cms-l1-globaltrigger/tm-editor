@@ -66,11 +66,13 @@ def getScale(scales, name):
     except IndexError:
         return []
 
+
 def createVerticalSpacerItem(width=0, height=0):
     """Returns a new vertical QSpacerItem instance."""
     horizontalPolicy = QtWidgets.QSizePolicy.MinimumExpanding
     verticalPolicy = QtWidgets.QSizePolicy.MinimumExpanding
     return QtWidgets.QSpacerItem(width, height, horizontalPolicy, verticalPolicy)
+
 
 def calculateRange(specification, scales):
     """Returns calcualted range for linear cut."""
@@ -112,14 +114,18 @@ def calculateRange(specification, scales):
         return calculateInvMassRange()
     # Invariant mass/delta-R
     if specification.type == tmGrammar.MASSDR:
-        return 0E0, 1E8
+        return 0, 1e8
     # Two body pt
     if specification.type == tmGrammar.TBPT:
         return calculateTwoBodyPtRange()
     # Slices
     if specification.type == tmGrammar.SLICE:
         return ObjectCollectionRanges[specification.object]
+    # Anomaly score
+    if specification.type == tmGrammar.ASCORE:
+        return 0, 1e8
     raise RuntimeError(f"Invalid cut type: {specification.type}")
+
 
 # -----------------------------------------------------------------------------
 #  Exception classes
@@ -250,6 +256,7 @@ class InputWidget(QtWidgets.QWidget):
         """Update existing cut from inputs."""
         raise NotImplementedError()
 
+
 class ScaleWidget(InputWidget):
     """Provides scales range entries."""
 
@@ -334,6 +341,7 @@ class ScaleWidget(InputWidget):
             self.phiCutChart.update()
             self.phiCutChart.show()
 
+
 class RangeWidget(InputWidget):
     """Provides range entries."""
 
@@ -402,6 +410,7 @@ class RangeWidget(InputWidget):
         cut.minimum = self.minimumSpinBox.value()
         cut.maximum = self.maximumSpinBox.value()
         cut.data = ""
+
 
 class InfiniteRangeWidget(InputWidget):
     """Provides range entries with infinity option."""
@@ -496,6 +505,7 @@ class InfiniteRangeWidget(InputWidget):
         cut.maximum = maximum
         cut.data = ""
 
+
 class SliceWidget(InputWidget):
     """Provides slice selection entries, using cut minimum/maximum."""
 
@@ -559,6 +569,7 @@ class SliceWidget(InputWidget):
         cut.maximum = end
         cut.data = ""
 
+
 class ThresholdWidget(InputWidget):
     """Provides a single threshold entry, using only cut minimum."""
 
@@ -607,6 +618,7 @@ class ThresholdWidget(InputWidget):
         cut.maximum = 0.
         cut.data = ""
 
+
 class MaximumWidget(InputWidget):
     """Provides a maximum only entriy."""
 
@@ -654,6 +666,7 @@ class MaximumWidget(InputWidget):
         cut.minimum = 0.
         cut.maximum = self.maximumSpinBox.value()
         cut.data = ""
+
 
 class MultipleJoiceWidget(InputWidget):
     """Provides a multiple joice entry."""
@@ -721,6 +734,7 @@ class MultipleJoiceWidget(InputWidget):
         cut.maximum = ""
         cut.data = ",".join(tokens)
 
+
 class MultipleJoiceIsoWidget(MultipleJoiceWidget):
     """Provides a multiple joice entry for isolation."""
 
@@ -731,6 +745,7 @@ class MultipleJoiceIsoWidget(MultipleJoiceWidget):
         """Check box label formatter provided for overlaoding."""
         index = int(key)
         return f"[0b{index:02b}] {value}"
+
 
 class SingleJoiceWidget(InputWidget):
     """Provides a single joice entry."""
@@ -829,10 +844,12 @@ class CutTreeWidget(QtWidgets.QTreeWidget):
         item.widget = widget
         return item
 
+
 class CutEditorDialog(QtWidgets.QDialog):
     """Cut editor dialog."""
 
     InputWidgetFactory = {
+        # Object cuts
         tmGrammar.UPT: InfiniteRangeWidget,
         tmGrammar.ETA: ScaleWidget,
         tmGrammar.PHI: ScaleWidget,
@@ -843,6 +860,8 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.IP: MultipleJoiceWidget,
         tmGrammar.SLICE: SliceWidget,
         tmGrammar.INDEX: ScaleWidget,
+        tmGrammar.ASCORE: ThresholdWidget,
+        # Function cuts
         tmGrammar.CHGCOR: SingleJoiceWidget,
         tmGrammar.DETA: RangeWidget,
         tmGrammar.DPHI: RangeWidget,
@@ -1052,7 +1071,6 @@ class CutEditorDialog(QtWidgets.QDialog):
                     description.append("<li><span>{0}</span></li>".format(obj))
                 description.append("</ul>")
             self.textBrowser.setHtml("".join(description))
-
 
     @QtCore.pyqtSlot()
     def showSelectedCut(self):

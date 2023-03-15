@@ -16,7 +16,7 @@ __all__ = ["Algorithm"]
 RegExObject = re.compile(r"({0})(?:\.(?:ge|eq)\.)?(\d+(?:p\d+)?)(?:[\+\-]\d+)?(?:\[[^\]]+\])?".format("|".join(ObjectTypes)))
 """Precompiled regular expression for matching object requirements."""
 
-RegExSignal = re.compile(r"({0})(?:[\+\-]\d+)?".format("|".join(SignalTypes)))
+RegExSignal = re.compile(r"({0})(?:[\+\-]\d+)?(?:\[[^\]]+\])?".format("|".join(SignalTypes)))
 """Precompiled regular expression for matching signal requirements."""
 
 RegExExtSignal = re.compile(r"{0}_[\w\d_\.]+(?:[\+\-]\d+)?".format("|".join(ExternalObjectTypes)))

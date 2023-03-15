@@ -5,7 +5,7 @@ import os
 import platform
 import re
 import ssl
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from urllib.request import urlopen
 
@@ -141,27 +141,31 @@ class CutSpecification:
     enabled            enable or disable cut specification, default is true
     """
 
-    def __init__(self, name, object, type, count=None, objects=None, functions=None,
-                 range_precision=None, range_step=None, range_unit=None,
-                 data=None, data_exclusive=False, title=None, description=None,
-                 enabled=True):
-        self.name = name
-        self.object = object
-        self.type = type
-        self.count = count or 1
-        self.objects = objects or []
-        self.functions = functions or []
-        self.range_precision = int(range_precision or 0)
-        self.range_step = float(range_step or 0.)
-        self.range_unit = range_unit or ""
-        self.data = data or {}
-        self.data_exclusive = data_exclusive
-        self.title = title or ""
-        self.description = description or ""
-        self.enabled = enabled
+    def __init__(self, name: str, object: str, type: str, count_minimum: int = 0,
+                 count_maximum: int = 1, objects: Optional[List[str]] = None,
+                 functions: Optional[List[str]] = None, range_precision: int = 0,
+                 range_step: float = 0, range_unit: Optional[str] = None,
+                 data: Optional[Dict] = None, data_exclusive: bool = False,
+                 title: Optional[str] = None, description: Optional[str] = None,
+                 enabled: bool = True):
+        self.name: str = name
+        self.object: str = object
+        self.type: str = type
+        self.count_maximum: int = count_maximum
+        self.count_minimum: int = count_minimum
+        self.objects: List[str] = objects or []
+        self.functions: List[str] = functions or []
+        self.range_precision: int = range_precision
+        self.range_step: float = float(range_step)
+        self.range_unit: str = range_unit or ""
+        self.data: Dict = data or {}
+        self.data_exclusive: bool = data_exclusive
+        self.title: str = title or ""
+        self.description: str = description or ""
+        self.enabled: bool = enabled
 
     @property
-    def data_sorted(self):
+    def data_sorted(self) -> List[str]:
         """Returns sorted list of data dict values."""
         return [self.data[key] for key in sorted(self.data.keys())]
 

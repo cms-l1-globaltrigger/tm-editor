@@ -69,6 +69,8 @@ SignalTypes = (
     tmGrammar.MUS2,
     tmGrammar.MUSOOT0,
     tmGrammar.MUSOOT1,
+    # Anomaly detection trigger
+    tmGrammar.ADT,
 )
 """Ordered list of all supported signal types."""
 
@@ -87,7 +89,10 @@ ObjectCutTypes = (
     tmGrammar.CHG,
     tmGrammar.IP,
     tmGrammar.SLICE,
+    # For muons
     tmGrammar.INDEX,
+    # For anomaly detection trigger
+    tmGrammar.ASCORE,
 )
 """Orderd list of object cut type names."""
 

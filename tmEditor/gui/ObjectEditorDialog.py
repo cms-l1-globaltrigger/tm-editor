@@ -285,7 +285,8 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         if self.objectType() in SignalTypes:
             expression.addSignal(
                 type=self.objectType(),
-                bx_offset=self.bxOffset()
+                bx_offset=self.bxOffset(),
+                cuts=self.selectedCuts(),
             )
         else:
             expression.addObject(
@@ -293,7 +294,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
                 comparison_operator=self.comparisonOperator(),
                 threshold=self.threshold(),
                 bx_offset=self.bxOffset(),
-                cuts=self.selectedCuts()
+                cuts=self.selectedCuts(),
             )
         return AlgorithmFormatter.normalize(expression.serialize())
 
