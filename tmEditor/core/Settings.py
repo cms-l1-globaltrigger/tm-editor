@@ -40,6 +40,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.ETA),
         object=tmGrammar.MU,
         type=tmGrammar.ETA,
+        range_precision=3,
         count=5,
         title="Muon eta",
         description="Restricts valid eta range for muon object requirement."
@@ -48,6 +49,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.PHI),
         object=tmGrammar.MU,
         type=tmGrammar.PHI,
+        range_precision=3,
         count=2,
         range_unit="rad",
         title="Muon phi",
@@ -124,6 +126,15 @@ CutSpecs = CutSpecificationPool(
         range_step=1,
         title="Muon slice",
         description="Restricts collection range for muon object requirement."
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.INDEX),
+        object=tmGrammar.MU,
+        type=tmGrammar.INDEX,
+        range_precision=0,
+        count=5,
+        title="Muon index",
+        description="Restricts valid index range for muon object requirement."
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.EG, tmGrammar.ETA),

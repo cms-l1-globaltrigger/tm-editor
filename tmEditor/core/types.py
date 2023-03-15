@@ -86,6 +86,7 @@ ObjectCutTypes = (
     tmGrammar.CHG,
     tmGrammar.IP,
     tmGrammar.SLICE,
+    tmGrammar.INDEX,
 )
 """Orderd list of object cut type names."""
 

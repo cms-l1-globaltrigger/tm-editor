@@ -60,6 +60,12 @@ RegExFloatingPoint = re.compile(r"([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)")
 #  Helper functions
 # -----------------------------------------------------------------------------
 
+def getScale(scales, name):
+    try:
+        return scales.bins[name]
+    except IndexError:
+        return []
+
 def createVerticalSpacerItem(width=0, height=0):
     """Returns a new vertical QSpacerItem instance."""
     horizontalPolicy = QtWidgets.QSizePolicy.MinimumExpanding
@@ -298,9 +304,9 @@ class ScaleWidget(InputWidget):
         self.maximumSpinBox.valueChanged.connect(self.updateCharts)
 
     def initRange(self):
-        scale = self.scales.bins[self.specification.name]
-        self.minimumSpinBox.setScale(scale)
-        self.maximumSpinBox.setScale(scale)
+        scale = getScale(self.scales, self.specification.name)
+        self.minimumSpinBox.setScale(scale, self.specification.range_precision)
+        self.maximumSpinBox.setScale(scale, self.specification.range_precision)
         minimum = self.minimumSpinBox.minimum()
         maximum = self.maximumSpinBox.maximum()
         self.minimumSpinBox.setValue(minimum)
@@ -836,6 +842,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.CHG: SingleJoiceWidget,
         tmGrammar.IP: MultipleJoiceWidget,
         tmGrammar.SLICE: SliceWidget,
+        tmGrammar.INDEX: ScaleWidget,
         tmGrammar.CHGCOR: SingleJoiceWidget,
         tmGrammar.DETA: RangeWidget,
         tmGrammar.DPHI: RangeWidget,
@@ -940,7 +947,7 @@ class CutEditorDialog(QtWidgets.QDialog):
                 rootItems[key] = self.treeWidget.addRootItem(key, widget)
             root = rootItems[key]
             # On missing scale (editing outdated XML?)
-            if spec.type in (tmGrammar.ETA, tmGrammar.PHI, tmGrammar.UPT):
+            if spec.type in (tmGrammar.ETA, tmGrammar.PHI, tmGrammar.UPT, tmGrammar.INDEX):
                 if spec.name not in scales.bins:
                     widget = self.stackWidget.widget(0)
                     item = self.treeWidget.addCutItem(root, spec, widget) # TODO
