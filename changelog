@@ -4,11 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.15.0] - 2022-03-16
 ### Added
 - Support for MUS2 signal.
 - Support for MU-INDEX cut.
+- Support for ADT object and ADT_ASCORE cut.
+- Support for ZDCP and ZDCM objects.
 - Automated testing using tox and mypy.
+
+### Changed
+- Replaced deprecated `distutils.version.StrictVersion` (since Python 3.10) with `packaging.version.Version`.
+- Depends now on PyQt5 version 5.15
 
 ### Fixed
 - Various issues related to PyQt5 on Python 3.11

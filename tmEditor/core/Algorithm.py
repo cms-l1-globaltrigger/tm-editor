@@ -13,6 +13,8 @@ from .AlgorithmHelper import decode_threshold, encode_threshold
 
 __all__ = ["Algorithm"]
 
+RangeType = Tuple[float, float]
+
 RegExObject = re.compile(r"({0})(?:\.(?:ge|eq)\.)?(\d+(?:p\d+)?)(?:[\+\-]\d+)?(?:\[[^\]]+\])?".format("|".join(ObjectTypes)))
 """Precompiled regular expression for matching object requirements."""
 
@@ -138,7 +140,7 @@ def objectCuts(token: str) -> List[str]:
     return list(o.cuts)
 
 
-def calculateDRRange() -> Tuple[float, float]:
+def calculateDRRange() -> RangeType:
     """Calculate valid DR range. This is function is currently a prototype and
     should fetch the actual limits from the menus scales in future.
     dR = sqrt( dEta^2 + dPhi^2 )
@@ -150,7 +152,7 @@ def calculateDRRange() -> Tuple[float, float]:
     return (minimum, maximum)
 
 
-def calculateInvMassRange() -> Tuple[float, float]:
+def calculateInvMassRange() -> RangeType:
     """Calculate valid invariant mass range. This is function is currently a
     prototype and should fetch the actual limits from the menus scales in future.
     M = sqrt( 2 pt1 pt2 ( cosh(dEta) - cos(dPhi) )
@@ -164,7 +166,7 @@ def calculateInvMassRange() -> Tuple[float, float]:
     return (minimum, maximum)
 
 
-def calculateTwoBodyPtRange() -> Tuple[float, float]:
+def calculateTwoBodyPtRange() -> RangeType:
     """Calculate valid invariant mass range. This is function is currently a
     prototype and should fetch the actual limits from the menus scales in future.
     M = sqrt( pt1^2 + pt2^2 + 2pt1pt2 ( cos(dPhi)^2 + sin(dPhi)^2 )
@@ -267,13 +269,13 @@ class Cut:
 
     RegExCutName = re.compile(r"^([A-Z\-]+_)([a-zA-Z\d_]+)$")
 
-    def __init__(self, name: str, object: str, type: str, minimum=None, maximum=None, data: Optional[str] = None,
+    def __init__(self, name: str, object: str, type: str, minimum=0.0, maximum=0.0, data: Optional[str] = None,
                  comment: Optional[str] = None) -> None:
         self.name: str = name
         self.object: str = object
         self.type: str = type
-        self.minimum = minimum or 0. if not data else ""
-        self.maximum = maximum or 0. if not data else ""
+        self.minimum: float = minimum if not data else 0.0  # TODO
+        self.maximum: float = maximum if not data else 0.0
         self.data: str = data or ""
         self.comment: str = comment or ""
         self.modified = False

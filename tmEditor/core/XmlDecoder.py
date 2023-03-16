@@ -4,7 +4,7 @@ import logging
 import os
 import re
 
-from distutils.version import StrictVersion
+from packaging.version import Version
 from collections import namedtuple
 
 import tmGrammar
@@ -147,7 +147,7 @@ class XmlDecoderQueue(Queue):
             logging.error(message)
             raise XmlDecoderError(message)
         try:
-            version = StrictVersion(version)
+            version = Version(version)
         except ValueError:
             message = "Invalid grammar version `{0}`, corrupted file?".format(version)
             logging.error(message)

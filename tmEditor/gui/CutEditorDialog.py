@@ -3,7 +3,7 @@
 import math
 import logging
 import re
-from typing import Optional
+from typing import List, Optional, Tuple
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -28,18 +28,20 @@ from tmEditor.gui.CommonWidgets import (
 
 __all__ = ["CutEditorDialog"]
 
+RangeType = Tuple[float, float]
+
 # ------------------------------------------------------------------------------
 #  Keys
 # ------------------------------------------------------------------------------
 
-kComment = "comment"
-kData = "data"
-kMaximum = "maximum"
-kMinimum = "minimum"
-kName = "name"
-kNumber = "number"
-kType = "type"
-kObject = "object"
+kComment: str = "comment"
+kData: str = "data"
+kMaximum: str = "maximum"
+kMinimum: str = "minimum"
+kName: str = "name"
+kNumber: str = "number"
+kType: str = "type"
+kObject: str = "object"
 
 ObjectCollectionRanges = {
     tmGrammar.MU: (0, 7),
@@ -60,21 +62,21 @@ RegExFloatingPoint = re.compile(r"([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)")
 #  Helper functions
 # -----------------------------------------------------------------------------
 
-def getScale(scales, name):
+def getScale(scales, name: str) -> List:
     try:
         return scales.bins[name]
     except IndexError:
         return []
 
 
-def createVerticalSpacerItem(width=0, height=0):
+def createVerticalSpacerItem(width: int = 0, height: int = 0):
     """Returns a new vertical QSpacerItem instance."""
     horizontalPolicy = QtWidgets.QSizePolicy.MinimumExpanding
     verticalPolicy = QtWidgets.QSizePolicy.MinimumExpanding
     return QtWidgets.QSpacerItem(width, height, horizontalPolicy, verticalPolicy)
 
 
-def calculateRange(specification, scales):
+def calculateRange(specification, scales) -> RangeType:
     """Returns calcualted range for linear cut."""
     # Unconstrained pt
     if specification.type == tmGrammar.UPT:
@@ -84,7 +86,7 @@ def calculateRange(specification, scales):
             minimum = float(scale[kMinimum])
             maximum = float(scale[kMaximum])
             return minimum, maximum
-        return 0, 0
+        return 0.0, 0.0
     # Delta eta
     if specification.type in (tmGrammar.DETA, tmGrammar.ORMDETA):
         def isMuEta(scale): # filter
@@ -94,13 +96,13 @@ def calculateRange(specification, scales):
         for scaleMu in filter(isMuEta, scales.scales):
             for scaleCalo in filter(isJetEta, scales.scales):
                 scale = scaleMu if scaleMu[kMaximum] > scaleCalo[kMaximum] else scaleCalo
-                minimum = 0.
-                maximum = float(scale[kMaximum]) * 2.
+                minimum = 0.0
+                maximum = float(scale[kMaximum]) * 2.0
                 return minimum, maximum
-            return 0, 0
+            return 0.0, 0.0
     # Delta phi
     if specification.type in (tmGrammar.DPHI, tmGrammar.ORMDPHI):
-        minimum = 0.
+        minimum = 0.0
         maximum = math.pi
         return minimum, maximum
     # Delta-R
@@ -114,7 +116,7 @@ def calculateRange(specification, scales):
         return calculateInvMassRange()
     # Invariant mass/delta-R
     if specification.type == tmGrammar.MASSDR:
-        return 0, 1e8
+        return 0.0, 1e8
     # Two body pt
     if specification.type == tmGrammar.TBPT:
         return calculateTwoBodyPtRange()
@@ -123,7 +125,7 @@ def calculateRange(specification, scales):
         return ObjectCollectionRanges[specification.object]
     # Anomaly score
     if specification.type == tmGrammar.ASCORE:
-        return 0, 1e8
+        return 0.0, 1e8
     raise RuntimeError(f"Invalid cut type: {specification.type}")
 
 
@@ -730,8 +732,8 @@ class MultipleJoiceWidget(InputWidget):
                 tokens.append(key)
         if not tokens:
             raise CutEditorError("No option checked!")
-        cut.minimum = ""
-        cut.maximum = ""
+        cut.minimum = 0.0
+        cut.maximum = 0.0
         cut.data = ",".join(tokens)
 
 
@@ -805,8 +807,8 @@ class SingleJoiceWidget(InputWidget):
                 break
         if not token:
             raise CutEditorError("No option checked!")
-        cut.minimum = ""
-        cut.maximum = ""
+        cut.minimum = 0.0
+        cut.maximum = 0.0
         cut.data = token
 
 # -----------------------------------------------------------------------------

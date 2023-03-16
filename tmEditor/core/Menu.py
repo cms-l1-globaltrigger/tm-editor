@@ -5,7 +5,7 @@ import uuid
 import re
 from typing import List, Optional
 
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 from .Settings import MaxAlgorithms
 from .AlgorithmSyntaxValidator import AlgorithmSyntaxValidator
@@ -13,7 +13,7 @@ from .Algorithm import toObject, toExternal
 
 __all__ = ["Menu", "GrammarVersion"]
 
-GrammarVersion = StrictVersion("0.11")
+GrammarVersion = Version("0.11")
 """Supported grammar version."""
 
 kObject: str = "object"

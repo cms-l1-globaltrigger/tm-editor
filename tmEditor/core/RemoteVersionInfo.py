@@ -4,7 +4,7 @@ import logging
 import json
 import os
 
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 from . import Settings
 
@@ -63,7 +63,7 @@ class RemoteVersionInfo:
             self.name = application.get(kName)
             self.version = application.get(kVersion)
             if self.version:
-                self.version = StrictVersion(self.version)
+                self.version = Version(self.version)
         menu = data.get(kMenu)
         if menu:
             # Scale set

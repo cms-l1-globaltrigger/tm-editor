@@ -47,6 +47,9 @@ CountObjectTypes = (
     tmGrammar.MBT1HFM,
     # Tower counts
     tmGrammar.TOWERCOUNT,
+    # ZDC
+    tmGrammar.ZDCP,
+    tmGrammar.ZDCM,
 )
 """Ordered list of count type object names."""
 
@@ -172,6 +175,8 @@ ObjectScaleMap = {
     tmGrammar.ASYMHT: kCOUNT,
     tmGrammar.ASYMETHF: kCOUNT,
     tmGrammar.ASYMHTHF: kCOUNT,
+    tmGrammar.ZDCP: kCOUNT,
+    tmGrammar.ZDCM: kCOUNT,
 }
 """Mapping of threshold/count scale types for objects."""
 

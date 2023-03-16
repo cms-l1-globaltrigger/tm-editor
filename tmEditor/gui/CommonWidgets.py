@@ -17,7 +17,7 @@
 """
 
 import math
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -65,6 +65,7 @@ def richTextObjectsPreview(algorithm, parent):
         content.append(parent.tr("</p>"))
     return "".join(content)
 
+
 def richTextSignalsPreview(algorithm, parent):
     content = []
     signals = [toObject(obj) for obj in algorithm.objects()]
@@ -79,6 +80,7 @@ def richTextSignalsPreview(algorithm, parent):
         content.append(parent.tr("</p>"))
     return "".join(content)
 
+
 def richTextExtSignalsPreview(algorithm, parent):
     content = []
     externals = [toExternal(ext) for ext in algorithm.externals()]
@@ -90,6 +92,7 @@ def richTextExtSignalsPreview(algorithm, parent):
             content.append(parent.tr("<img src=\":/icons/ext.svg\"> {0}<br/>").format(ext.name))
         content.append(parent.tr("</p>"))
     return "".join(content)
+
 
 def richTextCutsPreview(menu, algorithm, parent):
     # List used cuts.
@@ -109,8 +112,10 @@ def richTextCutsPreview(menu, algorithm, parent):
         content.append(parent.tr("</p>"))
     return "".join(content)
 
+
 def toPoint(x: float, y: float) -> QtCore.QPoint:
     return QtCore.QPoint(int(round(x)), int(round(y)))
+
 
 def toRect(x: float, y: float, w: float, h: float) -> QtCore.QRect:
     return QtCore.QRect(int(round(x)), int(round(y)), int(round(w)), int(round(h)))
@@ -136,6 +141,7 @@ def createIcon(name):
         if QtCore.QFile.exists(filename):
             icon.addPixmap(QtGui.QPixmap(filename))
     return icon
+
 
 def miniIcon(name, size=13):
     """Returns mini icon to be used for items in list and tree views."""
@@ -293,18 +299,16 @@ class RestrictedLineEdit(QtWidgets.QLineEdit):
         """
         super().__init__(parent)
         # Optional prefix.
-        self._prefix = None
-        # Optional regular expression pattern.
-        self._pattern = None
+        self._prefix: str = ""
         # Guard all user input changes.
         self.textChanged.connect(self.validate)
 
-    def setPrefix(self, prefix):
+    def setPrefix(self, prefix: str) -> None:
         """Set a fixed value prefix."""
         self._prefix = prefix
         self.validate()
 
-    def prefix(self):
+    def prefix(self) -> str:
         """@returns prefix, None if not set."""
         return self._prefix
 
@@ -312,7 +316,7 @@ class RestrictedLineEdit(QtWidgets.QLineEdit):
         """Set regular expression pattern to guard user input."""
         self.setValidator(QtGui.QRegExpValidator(QtCore.QRegExp(pattern), self))
 
-    def validate(self):
+    def validate(self) -> None:
         """Validate user input."""
         if self._prefix and len(self.text()) < len(self._prefix):
             # Make it impossible to remove the L1Menu_ prefix.
@@ -329,19 +333,19 @@ class RestrictedPlainTextEdit(QtWidgets.QPlainTextEdit):
     """
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
-        self._maxLength = None
+        self._maxLength: int = 0
         self.textChanged.connect(self.validate)
         self.setTabChangesFocus(True)
 
-    def setMaxLength(self, length):
+    def setMaxLength(self, length: int) -> None:
         """Set maximal input length."""
-        self._maxLength = int(length)
+        self._maxLength = length
 
-    def maxLength(self):
+    def maxLength(self) -> int:
         """@returns maximal input length."""
-        return int(self._maxLength)
+        return self._maxLength
 
-    def validate(self):
+    def validate(self) -> None:
         """Validate user input."""
         if self._maxLength:
             if len(self.toPlainText()) > self._maxLength:
@@ -372,7 +376,7 @@ class ListSpinBox(QtWidgets.QSpinBox):
         self._index += steps
         self.setValue(int(self._values[self._index]))
 
-    def value(self, index=None) -> int:
+    def value(self, index: Optional[int] = None) -> int:
         """Returns bins floating point value by LUT index (upper or lower depending on mode)."""
         if index is None: index = self._index
         return self._values[index]
@@ -406,25 +410,27 @@ class ListSpinBox(QtWidgets.QSpinBox):
 class EtaCutChart(QtWidgets.QWidget):
     """Graphical ETA cut representation."""
 
-    Margin = 10
-    Radius = 50
-    Length = 100
-    FontSize = 7
+    Margin: int = 10
+    Radius: int = 50
+    Length: int = 100
+    FontSize: int = 7
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
+        self._lower: int = 0
+        self._upper: int = 0
         self.setRange(-5, 5)
         self.setFixedSize(self.Margin * 2 + self.Length, self.Margin * 2 + self.Radius)
 
-    def setRange(self, lower, upper):
+    def setRange(self, lower: int, upper: int) -> None:
         """Set lower and upper bounding of range."""
-        self.lower = lower
-        self.upper = upper
+        self._lower = lower
+        self._upper = upper
 
-    def range(self):
+    def range(self) -> Tuple[int, int]:
         """Returns tuple containing lower and upper bounding of range."""
-        return self.lower, self.upper
+        return self._lower, self._upper
 
     def getPoint(self, value: float) -> QtCore.QPoint:
         """Calculate pixel coordinate for an ETA value."""
@@ -440,7 +446,7 @@ class EtaCutChart(QtWidgets.QWidget):
             return toPoint(self.Margin, self.Margin + abs(round(stepY * (value + 2.5))))
         raise ValueError()
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QtCore.QEvent) -> None:
         """Paint ETA cut graph on windget."""
         lower, upper = self.range()
         painter = QtGui.QPainter(self)
@@ -469,29 +475,32 @@ class EtaCutChart(QtWidgets.QWidget):
         painter.drawText(toPoint(0, (self.Margin + self.Radius) + self.FontSize / 2), u"-5")
         painter.drawText(toPoint(self.Margin + self.Length + 1, (self.Margin + self.Radius) + self.FontSize / 2), u"5")
 
+
 class PhiCutChart(QtWidgets.QWidget):
     """Graphical PHI cut representation."""
 
-    Margin = 8
-    Radius = 30
-    FontSize = 7
+    Margin: int = 8
+    Radius: int = 30
+    FontSize: int = 7
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
+        self._lower: int = 0
+        self._upper: int = 0
         self.setRange(0, 360 * 16)
         self.setFixedSize((self.Margin + self.Radius) * 2, (self.Margin + self.Radius) * 2)
 
-    def setRange(self, lower, upper):
+    def setRange(self, lower: int, upper: int) -> None:
         """Set lower and upper bounding of range."""
-        self.lower = lower
-        self.upper = upper
+        self._lower = lower
+        self._upper = upper
 
-    def range(self):
+    def range(self) -> Tuple[int, int]:
         """Returns tuple containing lower and upper bounding of range."""
-        return self.lower, self.upper
+        return self._lower, self._upper
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QtCore.QEvent) -> None:
         """Paint PHI cut graph on windget."""
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
