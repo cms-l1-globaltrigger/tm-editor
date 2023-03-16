@@ -30,7 +30,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.highlightCurrentLine()
         # Setup font hints for monospace/typewriter
         font = QtGui.QFont("Monospace")
-        font.setStyleHint(QtGui.QFont.TypeWriter)
+        font.setStyleHint(QtGui.QFont.Monospace)
         self.setFont(font)
         # self.document().setDocumentMargin(0)
 
