@@ -46,14 +46,19 @@ class Application:
     def loadSettings(self) -> None:
         settings = QtCore.QSettings()
         # Window size
-        size = settings.value("window/size", QtCore.QSize(800, 600))
-        self.window.resize(size)
+        geometry = settings.value("window/geometry", QtCore.QByteArray(), QtCore.QByteArray)
+        if not self.window.restoreGeometry(geometry):
+            self.window.resize(800, 600)
+        state = settings.value("window/state", QtCore.QByteArray(), QtCore.QByteArray)
+        self.window.restoreState(state)
 
     def storeSettings(self) -> None:
         settings = QtCore.QSettings()
         # Window size
-        size = self.window.size()
-        settings.setValue("window/size", size)
+        geometry = self.window.saveGeometry()
+        settings.setValue("window/geometry", geometry)
+        state = self.window.saveGeometry()
+        settings.setValue("window/state", state)
 
     def eventLoop(self) -> None:
         timer = self.createInterruptTimer()

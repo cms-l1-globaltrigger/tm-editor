@@ -481,7 +481,7 @@ class Document(BaseDocument):
                 if 1 < rows:
                     item.bottom.setText(self.tr("<p>Selected {} cuts.</p>").format(rows))
                 else:
-                    item.bottom.loadCut(data)
+                    item.bottom.loadCut(data, self.menu())
             elif item is self.scalesPage:
                 if 1 < rows:
                     item.bottom.setText(self.tr("<p>Selected {} scale sets.</p>").format(rows))
@@ -517,6 +517,7 @@ class Document(BaseDocument):
                 for algorithm in self.menu().algorithms:
                     if cut.name in algorithm.cuts():
                         item.bottom.toolbar.removeButton.setEnabled(False)
+                        break
         else:
             item.bottom.toolbar.hide()
 

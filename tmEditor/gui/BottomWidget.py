@@ -230,7 +230,7 @@ class BottomWidget(QtWidgets.QWidget):
         content.append(richTextCutsPreview(menu, algorithm, self))
         self.setText("".join(content))
 
-    def loadCut(self, cut):
+    def loadCut(self, cut, menu):
         self.reset()
         content = []
         content.append(self.tr("<h2>{}</h2>").format(cut.name))
@@ -268,6 +268,16 @@ class BottomWidget(QtWidgets.QWidget):
         if cut.comment:
             content.append(self.tr("<p><strong>Comment:</strong></p>"))
             content.append(self.tr("<p><code>{}</code></p>").format(cut.comment))
+        # usedIn = {}
+        # for algorithm in menu.algorithms:
+        #     if cut.name in algorithm.cuts():
+        #         usedIn[algorithm.name] = algorithm
+        # if usedIn:
+        #     content.append(self.tr("<p><strong>Used in {} Algorithm(s):</strong></p>").format(len(usedIn)))
+        #     content.append(self.tr("<p><ul>"))
+        #     for algorithm in usedIn.values():
+        #         content.append(self.tr("<li>{} {}</li>").format(algorithm.index, algorithm.name))
+        #     content.append(self.tr("</ul></p>"))
         self.setText("".join(content))
         # Show charts if available.
         if cut.type == tmGrammar.ETA:

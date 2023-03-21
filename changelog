@@ -4,12 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
 ## [0.15.0] - 2022-03-16
 ### Added
-- Support for MUS2 signal.
-- Support for MU-INDEX cut.
-- Support for ADT object and ADT_ASCORE cut.
-- Support for ZDCP and ZDCM objects.
+- Support for grammar revision 0.11
+- Additional muon shower signal (MUS2).
+- Muon index cut (MU-INDEX).
+- Anomaly detextion trigger (ADT) and anomaly score cut (ADT_ASCORE).
+- Zero degree calorimeter objects (ZDCP and ZDCM).
 - Automated testing using tox and mypy.
 
 ### Changed
@@ -17,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Depends now on PyQt5 version 5.15
 
 ### Fixed
+- Font issue in code editor on MacOS.
 - Various issues related to PyQt5 on Python 3.11
 
 ## [0.14.0] - 2021-12-06
@@ -370,7 +374,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support most of the algorithm expression language features.
 
-[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.14.0...HEAD
+[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.0...HEAD
+[0.15.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.14.0...0.15.0
 [0.14.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.13.0...0.14.0
 [0.13.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.12.1...0.13.0
 [0.12.1]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.12.0...0.12.1
