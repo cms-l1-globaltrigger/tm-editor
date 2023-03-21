@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Replaced deprecated `distutils.version.StrictVersion` (since Python 3.10) with `packaging.version.Version`.
-- Depends now on PyQt5 version 5.15
+- Depends on PyQt5 5.15
+- Depends on utm 0.11.2
 
 ### Fixed
 - Font issue in code editor on MacOS.
@@ -27,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support for grammar revision 0.10
 - Displaced jet cut.
+
+### Changed
+- Depends on utm 0.10.0
 
 ## [0.13.0] - 2021-09-23
 ### Added
