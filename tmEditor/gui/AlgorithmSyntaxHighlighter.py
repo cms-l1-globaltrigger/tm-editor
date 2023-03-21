@@ -13,14 +13,13 @@ Attaching a syntax hilighter to an text document is quite simple:
 
 from collections import namedtuple
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
+from PyQt5 import QtCore, QtGui
 
 import tmGrammar
 
 from tmEditor.core.types import FunctionTypes
 
-__all__ = ['AlgorithmSyntaxHighlighter', ]
+__all__ = ["AlgorithmSyntaxHighlighter"]
 
 # -----------------------------------------------------------------------------
 #  Helper functions
@@ -36,7 +35,7 @@ def makeKeyword(key):
 class AlgorithmSyntaxHighlighter(QtGui.QSyntaxHighlighter):
     """Syntax highighter class for algorithm expressions."""
 
-    HighlightingRule = namedtuple('HighlightingRule', 'format, pattern')
+    HighlightingRule = namedtuple("HighlightingRule", "format, pattern")
     """Container for highlighting rules."""
 
     def __init__(self, document):

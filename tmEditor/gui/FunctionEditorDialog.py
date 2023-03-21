@@ -1,8 +1,8 @@
 """Function editor dialog."""
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from typing import Optional
+
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import tmGrammar
 
@@ -21,7 +21,7 @@ from tmEditor.gui.CommonWidgets import createIcon
 from tmEditor.gui.CutEditorDialog import CutEditorDialog
 from tmEditor.gui.ObjectEditorDialog import ObjectEditorDialog, CutItem
 
-__all__ = ['FunctionEditorDialog', ]
+__all__ = ["FunctionEditorDialog"]
 
 Functions = {
     tmGrammar.comb: {"objects": 4, "label": "combination", "description": "Object combinations (di- tri- quad- objects)."},
@@ -55,7 +55,7 @@ class FunctionEditorDialog(QtWidgets.QDialog):
 
     ObjectReqs = 5
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.menu = menu
         self.validator = AlgorithmSyntaxValidator(menu)
@@ -168,15 +168,15 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         functionType = self.functionType()
         expression = AlgorithmFormatter.expand(self.expression())
         text = []
-        text.append(f'<h3>{functionType} Function</h3>')
+        text.append(f"<h3>{functionType} Function</h3>")
         description = Functions.get(functionType, {}).get("description")
         if description:
             text.append(f"<p>{description}</p>")
         if hasOverlapRemoval(functionType):
-            text.append(f'<p>The <em>last</em> object requirement must be of a different type, applying the overlap removal on the <em>preceding</em> object requirement(s).</p>')
-        text.append(f'<h4>Preview</h4>')
-        text.append(f'<p><pre>{expression}</pre></p>')
-        self.infoTextEdit.setText(''.join(text))
+            text.append(f"<p>The <em>last</em> object requirement must be of a different type, applying the overlap removal on the <em>preceding</em> object requirement(s).</p>")
+        text.append(f"<h4>Preview</h4>")
+        text.append(f"<p><pre>{expression}</pre></p>")
+        self.infoTextEdit.setText("".join(text))
 
     def expression(self):
         """Returns expression selected by the inputs."""
@@ -333,7 +333,8 @@ class FunctionReqHelper:
         self.editButton.setEnabled(enabled)
 
     def edit(self):
-        dialog = ObjectEditorDialog(self.parent.menu, self.parent, objects=self.types)
+        dialog = ObjectEditorDialog(self.parent.menu, self.parent)
+        dialog.setObjectTypes(self.types)
         token = self.text()
         if token: # else start with empty editor
             try:

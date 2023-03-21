@@ -4,7 +4,7 @@ from .toolbox import CutSpecificationPool, CutSpecification
 
 import tmGrammar
 
-__all__ = ['MaxAlgorithms', 'CutSpecs', ]
+__all__ = ["MaxAlgorithms", "CutSpecs"]
 
 MaxAlgorithms = 512
 """Maximum number of supported algorithms."""
@@ -40,7 +40,8 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.ETA),
         object=tmGrammar.MU,
         type=tmGrammar.ETA,
-        count=5,
+        range_precision=3,
+        count_maximum=5,
         title="Muon eta",
         description="Restricts valid eta range for muon object requirement."
     ),
@@ -48,7 +49,8 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.PHI),
         object=tmGrammar.MU,
         type=tmGrammar.PHI,
-        count=2,
+        range_precision=3,
+        count_maximum=2,
         range_unit="rad",
         title="Muon phi",
         description="Restricts valid phi range for muon object requirement."
@@ -126,10 +128,19 @@ CutSpecs = CutSpecificationPool(
         description="Restricts collection range for muon object requirement."
     ),
     CutSpecification(
+        name=CutSpecification.join(tmGrammar.MU, tmGrammar.INDEX),
+        object=tmGrammar.MU,
+        type=tmGrammar.INDEX,
+        range_precision=0,
+        count_maximum=5,
+        title="Muon index",
+        description="Restricts valid index range for muon object requirement."
+    ),
+    CutSpecification(
         name=CutSpecification.join(tmGrammar.EG, tmGrammar.ETA),
         object=tmGrammar.EG,
         type=tmGrammar.ETA,
-        count=5,
+        count_maximum=5,
         title="Electron/gamma eta",
         description=""
     ),
@@ -137,7 +148,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.EG, tmGrammar.PHI),
         object=tmGrammar.EG,
         type=tmGrammar.PHI,
-        count=2,
+        count_maximum=2,
         range_unit="rad",
         title="Electron/gamma phi",
         description=""
@@ -192,7 +203,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.JET, tmGrammar.ETA),
         object=tmGrammar.JET,
         type=tmGrammar.ETA,
-        count=5,
+        count_maximum=5,
         title="Jet eta",
         description=""
     ),
@@ -200,7 +211,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.JET, tmGrammar.PHI),
         object=tmGrammar.JET,
         type=tmGrammar.PHI,
-        count=2,
+        count_maximum=2,
         range_unit="rad",
         title="Jet phi",
         description=""
@@ -254,7 +265,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.TAU, tmGrammar.ETA),
         object=tmGrammar.TAU,
         type=tmGrammar.ETA,
-        count=5,
+        count_maximum=5,
         title="Tau eta",
         description=""
     ),
@@ -262,7 +273,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.TAU, tmGrammar.PHI),
         object=tmGrammar.TAU,
         type=tmGrammar.PHI,
-        count=2,
+        count_maximum=2,
         range_unit="rad",
         title="Tau phi",
         description=""
@@ -317,7 +328,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.ETM, tmGrammar.PHI),
         object=tmGrammar.ETM,
         type=tmGrammar.PHI,
-        count=2,
+        count_maximum=2,
         range_unit="rad",
         title="Missing energy phi",
         description=""
@@ -326,7 +337,7 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.ETMHF, tmGrammar.PHI),
         object=tmGrammar.ETMHF,
         type=tmGrammar.PHI,
-        count=2,
+        count_maximum=2,
         range_unit="rad",
         title="Missing energy HF phi",
         description=""
@@ -335,10 +346,21 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.HTM, tmGrammar.PHI),
         object=tmGrammar.HTM,
         type=tmGrammar.PHI,
-        count=2,
+        count_maximum=2,
         range_unit="rad",
         title="Missing energy phi",
         description=""
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.ADT, tmGrammar.ASCORE),
+        object=tmGrammar.ADT,
+        type=tmGrammar.ASCORE,
+        range_precision=0,
+        range_step=1,
+        count_minimum=1,
+        count_maximum=1,
+        title="Anomaly score",
+        description="Threshold score for Anomaly Detection Trigger."
     ),
     CutSpecification(
         name=tmGrammar.CHGCOR,

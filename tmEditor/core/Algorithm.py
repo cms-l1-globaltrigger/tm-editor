@@ -3,7 +3,7 @@
 import logging
 import math
 import re
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import tmGrammar
 
@@ -11,18 +11,20 @@ from .types import ObjectTypes, SignalTypes, ExternalObjectTypes, FunctionCutTyp
 from .Settings import MaxAlgorithms
 from .AlgorithmHelper import decode_threshold, encode_threshold
 
-__all__ = ['Algorithm', ]
+__all__ = ["Algorithm"]
 
-RegExObject = re.compile(r'({0})(?:\.(?:ge|eq)\.)?(\d+(?:p\d+)?)(?:[\+\-]\d+)?(?:\[[^\]]+\])?'.format(r'|'.join(ObjectTypes)))
+RangeType = Tuple[float, float]
+
+RegExObject = re.compile(r"({0})(?:\.(?:ge|eq)\.)?(\d+(?:p\d+)?)(?:[\+\-]\d+)?(?:\[[^\]]+\])?".format("|".join(ObjectTypes)))
 """Precompiled regular expression for matching object requirements."""
 
-RegExSignal = re.compile(r'({0})(?:[\+\-]\d+)?'.format(r'|'.join(SignalTypes)))
+RegExSignal = re.compile(r"({0})(?:[\+\-]\d+)?(?:\[[^\]]+\])?".format("|".join(SignalTypes)))
 """Precompiled regular expression for matching signal requirements."""
 
-RegExExtSignal = re.compile(r'{0}_[\w\d_\.]+(?:[\+\-]\d+)?'.format(r'|'.join(ExternalObjectTypes)))
+RegExExtSignal = re.compile(r"{0}_[\w\d_\.]+(?:[\+\-]\d+)?".format("|".join(ExternalObjectTypes)))
 """Precompiled regular expression for matching external signal requirements."""
 
-RegExFunction = re.compile(r'\w+\s*\{[^\}]+\}(?:\[[^\]]+\])?')
+RegExFunction = re.compile(r"\w+\s*\{[^\}]+\}(?:\[[^\]]+\])?")
 """Precompiled regular expression for matching function expressions."""
 
 
@@ -67,7 +69,7 @@ def isFunction(token: str) -> bool:
     return tmGrammar.isFunction(token)
 
 
-def toObject(token: str) -> 'Object':
+def toObject(token: str) -> "Object":
     """Returns an object's dict."""
     o = tmGrammar.Object_Item()
     if not tmGrammar.Object_parser(token, o):
@@ -81,18 +83,18 @@ def toObject(token: str) -> 'Object':
     )
 
 
-def toExternal(token: str) -> 'External':
+def toExternal(token: str) -> "External":
     """Returns an external's dict."""
     # Test if external signal ends with bunch crossign offset.
-    result = re.match(r'.*(\+\d+|\-\d+)$', token)
-    bx_offset = result.group(1) if result else '+0'
+    result = re.match(r".*(\+\d+|\-\d+)$", token)
+    bx_offset = result.group(1) if result else "+0"
     return External(
         name=token,
         bx_offset=int(bx_offset)
     )
 
 
-def functionObjects(token: str) -> List['Object']:
+def functionObjects(token: str) -> List["Object"]:
     """Returns list of object dicts assigned to a function."""
     objects = []
     f = tmGrammar.Function_Item()
@@ -115,18 +117,18 @@ def functionCuts(token: str) -> List:
     return cuts
 
 
-def functionObjectsCuts(token: str) -> List:
+def functionObjectsCuts(token: str) -> List[List[str]]:
     """Returns lists of cuts assigned to function objects. Index ist object number.
     >>> functionObjectsCuts("comb{MU0[MU-QLTY_HQ,MU-ETA_2p1],MU0[MU-QLTY_OPEN]}")
-    ['MU-QLTY_HQ,MU-ETA_2p1', 'MU-QLTY_OPEN']
+    [['MU-QLTY_HQ,MU-ETA_2p1'], ['MU-QLTY_OPEN']]
     """
-    cuts: List = []
+    cuts: List[List[str]] = []
     f = tmGrammar.Function_Item()
     if not tmGrammar.Function_parser(token, f):
         raise ValueError(token)
     # Note: returns strings containting list of cuts.
     for names in tmGrammar.Function_getObjectCuts(f):
-        cuts.append(names.split(',') if names else [])
+        cuts.append(names.split(",") if names else [])
     return cuts
 
 
@@ -138,7 +140,7 @@ def objectCuts(token: str) -> List[str]:
     return list(o.cuts)
 
 
-def calculateDRRange() -> Tuple[float, float]:
+def calculateDRRange() -> RangeType:
     """Calculate valid DR range. This is function is currently a prototype and
     should fetch the actual limits from the menus scales in future.
     dR = sqrt( dEta^2 + dPhi^2 )
@@ -150,7 +152,7 @@ def calculateDRRange() -> Tuple[float, float]:
     return (minimum, maximum)
 
 
-def calculateInvMassRange() -> Tuple[float, float]:
+def calculateInvMassRange() -> RangeType:
     """Calculate valid invariant mass range. This is function is currently a
     prototype and should fetch the actual limits from the menus scales in future.
     M = sqrt( 2 pt1 pt2 ( cosh(dEta) - cos(dPhi) )
@@ -164,7 +166,7 @@ def calculateInvMassRange() -> Tuple[float, float]:
     return (minimum, maximum)
 
 
-def calculateTwoBodyPtRange() -> Tuple[float, float]:
+def calculateTwoBodyPtRange() -> RangeType:
     """Calculate valid invariant mass range. This is function is currently a
     prototype and should fetch the actual limits from the menus scales in future.
     M = sqrt( pt1^2 + pt2^2 + 2pt1pt2 ( cos(dPhi)^2 + sin(dPhi)^2 )
@@ -180,10 +182,10 @@ def calculateTwoBodyPtRange() -> Tuple[float, float]:
 class Algorithm:
     """Algorithm container class."""
 
-    RegExAlgorithmName = re.compile(r'^(L1_)([a-zA-Z\d_]+)$')
+    RegExAlgorithmName = re.compile(r"^(L1_)([a-zA-Z\d_]+)$")
 
-    def __init__(self, index: int, name: str, expression: str,
-                 comment: str = None, labels: list = None):
+    def __init__(self, index: int, name: str, expression: str, comment: Optional[str] = None,
+                 labels: Optional[List[str]] = None) -> None:
         self.index: int = index
         self.name: str = name
         self.expression: str = expression
@@ -265,16 +267,17 @@ class Algorithm:
 class Cut:
     """Cut container class."""
 
-    RegExCutName = re.compile(r'^([A-Z\-]+_)([a-zA-Z\d_]+)$')
+    RegExCutName = re.compile(r"^([A-Z\-]+_)([a-zA-Z\d_]+)$")
 
-    def __init__(self, name, object, type, minimum=None, maximum=None, data=None, comment=None):
-        self.name = name
-        self.object = object
-        self.type = type
-        self.minimum = minimum or 0. if not data else ""
-        self.maximum = maximum or 0. if not data else ""
-        self.data = data or ""
-        self.comment = comment or ""
+    def __init__(self, name: str, object: str, type: str, minimum=0.0, maximum=0.0, data: Optional[str] = None,
+                 comment: Optional[str] = None) -> None:
+        self.name: str = name
+        self.object: str = object
+        self.type: str = type
+        self.minimum: float = minimum if not data else 0.0  # TODO
+        self.maximum: float = maximum if not data else 0.0
+        self.data: str = data or ""
+        self.comment: str = comment or ""
         self.modified = False
 
     @property
@@ -285,7 +288,7 @@ class Cut:
     def typename(self) -> str:
         if self.isFunctionCut:
             return self.type  # HACK for function cuts
-        return '-'.join([self.object, self.type])
+        return "-".join([self.object, self.type])
 
     @property
     def suffix(self) -> str:
@@ -299,7 +302,7 @@ class Cut:
         """Custom sorting by type and object and suffix name."""
         return (self.type, self.object, self.suffix) < (item.type, item.object, item.suffix)
 
-    def scale(self, scale):
+    def scale(self, scale):  # TODO
         if self.typename in scale.bins.keys():
             return scale.bins[self.typename]
         return None
@@ -314,13 +317,14 @@ class Cut:
 class Object:
     """Object container class."""
 
-    def __init__(self, name, type, threshold, comparison_operator=None, bx_offset=None, comment=None):
-        self.name = name
-        self.type = type
-        self.threshold = threshold
-        self.comparison_operator = comparison_operator or tmGrammar.GE
-        self.bx_offset = bx_offset or 0
-        self.comment = comment or ""
+    def __init__(self, name: str, type: str, threshold: str, comparison_operator: Optional[str] = None,
+                 bx_offset: Optional[int] = None, comment: Optional[str] = None) -> None:
+        self.name: str = name
+        self.type: str = type
+        self.threshold: str = threshold
+        self.comparison_operator: str = comparison_operator or tmGrammar.GE
+        self.bx_offset: int = bx_offset or 0
+        self.comment: str = comment or ""
 
     def isSignal(self) -> bool:
         return self.type in SignalTypes
@@ -352,7 +356,7 @@ class Object:
             (sortable_type(item.type), item.decodeThreshold(), item.bx_offset)
 
     def validate(self) -> None:
-        pass
+        ...
 
 
 class External:
@@ -360,17 +364,17 @@ class External:
 
     RegExSignalName = re.compile(r"^(EXT_)([a-zA-Z\d\._]+)([+-]\d+)?$")
 
-    def __init__(self, name, bx_offset=None, comment=None):
-        self.name = name
-        self.bx_offset = bx_offset or 0
-        self.comment = comment or ""
+    def __init__(self, name: str, bx_offset: Optional[int] = None, comment: Optional[str] = None) -> None:
+        self.name: str = name
+        self.bx_offset: int = bx_offset or 0
+        self.comment: str = comment or ""
 
     @property
     def basename(self) -> str:
         """Returns signal name with leading EXT_ prefix but without BX offset."""
         result = self.RegExSignalName.match(self.name)
         if result:
-            return ''.join((result.group(1), result.group(2)))
+            return "".join((result.group(1), result.group(2)))
         return self.name
 
     @property

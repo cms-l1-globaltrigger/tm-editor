@@ -4,7 +4,7 @@ import logging
 import json
 import os
 
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 from . import Settings
 
@@ -12,12 +12,12 @@ from urllib.request import urlopen
 from urllib.error import URLError, HTTPError
 from urllib.parse import urljoin
 
-kName = 'name'
-kVersion = 'version'
-kMenu = 'menu'
-kUri = 'uri'
-kScaleSet = 'scale_set'
-kExtSignalSet = 'ext_signal_set'
+kName = "name"
+kVersion = "version"
+kMenu = "menu"
+kUri = "uri"
+kScaleSet = "scale_set"
+kExtSignalSet = "ext_signal_set"
 
 
 class RemoteVersionInfo:
@@ -42,7 +42,7 @@ class RemoteVersionInfo:
 
     def read_url(self, url):
         r = urlopen(url)
-        charset = r.info().get('charset') or 'utf-8'
+        charset = r.info().get("charset") or "utf-8"
         return r.read().decode(charset)
 
     def read_version(self, url):
@@ -58,12 +58,12 @@ class RemoteVersionInfo:
     def load_json(self, data):
         """Load data from JSON dict."""
         baseurl = os.path.dirname(Settings.VersionUrl)
-        application = data.get('application')
+        application = data.get("application")
         if application:
             self.name = application.get(kName)
             self.version = application.get(kVersion)
             if self.version:
-                self.version = StrictVersion(self.version)
+                self.version = Version(self.version)
         menu = data.get(kMenu)
         if menu:
             # Scale set

@@ -1,5 +1,7 @@
 """Abstract table model."""
 
+from typing import List, Optional
+
 from collections import namedtuple
 
 from PyQt5 import QtCore
@@ -21,10 +23,10 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
                                           'decoration, headerToolTip, headerDecoration, ' \
                                           'headerSizeHint, headerTextAlignment')
 
-    def __init__(self, values, parent=None):
+    def __init__(self, values, parent: Optional[QtCore.QObject] = None) -> None:
         super().__init__(parent)
         self.values = values
-        self.columnSpecs = []
+        self.columnSpecs: List = []
 
     def addColumnSpec(self, title, callback,
                       format=str,
@@ -66,7 +68,7 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.DisplayRole:
             return spec.format(spec.callback(self.values[row])) # TODO
         if role == QtCore.Qt.TextAlignmentRole:
-            return spec.textAlignment
+            return int(spec.textAlignment)
         if role == QtCore.Qt.DecorationRole:
             return spec.decoration
         if role == QtCore.Qt.ToolTipRole:
@@ -82,7 +84,7 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
             if role == QtCore.Qt.DisplayRole:
                 return spec.title
             if role == QtCore.Qt.TextAlignmentRole:
-                return spec.headerTextAlignment
+                return int(spec.headerTextAlignment)
             if role == QtCore.Qt.DecorationRole:
                 return spec.headerDecoration
             if role == QtCore.Qt.ToolTipRole:

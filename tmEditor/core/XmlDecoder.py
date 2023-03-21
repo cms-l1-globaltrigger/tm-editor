@@ -4,7 +4,7 @@ import logging
 import os
 import re
 
-from distutils.version import StrictVersion
+from packaging.version import Version
 from collections import namedtuple
 
 import tmGrammar
@@ -21,33 +21,33 @@ from .TableHelper import TableHelper
 #  Keys
 # -----------------------------------------------------------------------------
 
-kBxOffset = 'bx_offset'
-kCable = 'cable'
-kChannel = 'channel'
-kComment = 'comment'
-kComparisonOperator = 'comparison_operator'
-kData = 'data'
-kDescription = 'description'
-kExpression = 'expression'
-kGrammarVersion = 'grammar_version'
-kIndex = 'index'
-kLabels = 'labels'
-kMaximum = 'maximum'
-kMinimum = 'minimum'
-kModuleId = 'module_id'
-kModuleIndex = 'module_index'
-kNBits = 'n_bits'
-kNModules = 'n_modules'
-kName = 'name'
-kObject = 'object'
-kStep = 'step'
-kSystem = 'system'
-kThreshold = 'threshold'
-kType = 'type'
-kUUIDFirmware = 'uuid_firmware'
-kUUIDMenu = 'uuid_menu'
+kBxOffset = "bx_offset"
+kCable = "cable"
+kChannel = "channel"
+kComment = "comment"
+kComparisonOperator = "comparison_operator"
+kData = "data"
+kDescription = "description"
+kExpression = "expression"
+kGrammarVersion = "grammar_version"
+kIndex = "index"
+kLabels = "labels"
+kMaximum = "maximum"
+kMinimum = "minimum"
+kModuleId = "module_id"
+kModuleIndex = "module_index"
+kNBits = "n_bits"
+kNModules = "n_modules"
+kName = "name"
+kObject = "object"
+kStep = "step"
+kSystem = "system"
+kThreshold = "threshold"
+kType = "type"
+kUUIDFirmware = "uuid_firmware"
+kUUIDMenu = "uuid_menu"
 
-MirgrationResult = namedtuple('MirgrationResult', 'subject,param,before,after')
+MirgrationResult = namedtuple("MirgrationResult", "subject,param,before,after")
 
 
 def mirgrate_chgcor_cut(cut):
@@ -56,15 +56,15 @@ def mirgrate_chgcor_cut(cut):
       "1" -> "os"
     """
     chgcor_mapping = {
-        '0': 'ls',
-        '1': 'os',
+        "0": "ls",
+        "1": "os",
     }
     if cut.type == tmGrammar.CHGCOR:
         data = cut.data.strip()
         if data in chgcor_mapping:
             cut.data = chgcor_mapping[data]
-            logging.info("migrated cut %s: '%s' => '%s'", cut.name, data, cut.data)
-            return MirgrationResult(cut, 'data', data, cut.data)
+            logging.info("migrated cut %s: %r => %r", cut.name, data, cut.data)
+            return MirgrationResult(cut, "data", data, cut.data)
     return None
 
 
@@ -75,8 +75,8 @@ def mirgrate_cut_object(cut):
         object_ = cut.object
         if cut.object:
             cut.object = "" # clear
-            logging.info("migrated function cut object type %s: '%s' => '%s'", cut.name, object_, cut.object)
-            return MirgrationResult(cut, 'object', object_, cut.object)
+            logging.info("migrated function cut object type %s: %r => %r", cut.name, object_, cut.object)
+            return MirgrationResult(cut, "object", object_, cut.object)
     return None
 
 
@@ -88,8 +88,8 @@ def mirgrate_mass_function(algorithm):
     if algorithm.expression != expression:
         # prev_expression = algorithm.expression
         algorithm.expression = expression
-        logging.info("migrated function '%s' => '%s' in algorithm %s: %s", tmGrammar.mass, tmGrammar.mass_inv, algorithm.name, expression)
-        return MirgrationResult(algorithm, 'expression', tmGrammar.mass, tmGrammar.mass_inv)
+        logging.info("migrated function %r => %r in algorithm %r: %r", tmGrammar.mass, tmGrammar.mass_inv, algorithm.name, expression)
+        return MirgrationResult(algorithm, "expression", tmGrammar.mass, tmGrammar.mass_inv)
     return None
 
 
@@ -121,17 +121,17 @@ class XmlDecoderQueue(Queue):
     def run_prepare(self):
         logging.debug("checking file access rights...")
         if not os.path.isfile(self.filename):
-            message = "No such file or directory `{0}'".format(self.filename)
+            message = "No such file or directory {0!r}".format(self.filename)
             logging.error(message)
             raise XmlDecoderError(message)
 
     def run_load_xml(self):
-        logging.debug("Reading XML file from `%s'", self.filename)
+        logging.debug("Reading XML file from %r", self.filename)
         self.tables = TableHelper()
         warnings = self.tables.load(self.filename)
 
         if warnings:
-            message = "Failed to read XML menu `{0}'\n{1}".format(self.filename, warnings)
+            message = "Failed to read XML menu {0!r}\n{1}".format(self.filename, warnings)
             logging.error(message)
             raise XmlDecoderError(message)
 
@@ -147,7 +147,7 @@ class XmlDecoderQueue(Queue):
             logging.error(message)
             raise XmlDecoderError(message)
         try:
-            version = StrictVersion(version)
+            version = Version(version)
         except ValueError:
             message = "Invalid grammar version `{0}`, corrupted file?".format(version)
             logging.error(message)
@@ -229,7 +229,7 @@ class XmlDecoderQueue(Queue):
                 if obj.type in types.ObjectTypes:
                     if obj.type not in [scaleSet[kObject] for scaleSet in self.tables.scale.scales]:
                         algorithm = self.menu.algorithmsByObject(obj)[0]
-                        message = "Object type `{0}' assigned to algorithm `{1} {2}' is missing in scales set `{3}'".format(obj.type, algorithm.index, algorithm.name, self.tables.scale.scaleSet[kName])
+                        message = "Object type {0!r} assigned to algorithm {1!r} {2!r} is missing in scales set {3!r}".format(obj.type, algorithm.index, algorithm.name, self.tables.scale.scaleSet[kName])
                         logging.error(message)
                         raise XmlDecoderError(message)
                 if not obj in self.menu.objects:
@@ -248,7 +248,7 @@ class XmlDecoderQueue(Queue):
                 external = Algorithm.External(name, bx_offset, comment)
                 # Verify that all external signals are part of the external signal set.
                 if external.signal_name not in ext_signal_names:
-                    message = "External signal `{0}' is missing in external signal set `{1}'".format(external.basename, ext_signal_set_name)
+                    message = "External signal {0!r} is missing in external signal set {1!r}".format(external.basename, ext_signal_set_name)
                     logging.error(message)
                     raise XmlDecoderError(message)
                 if external not in self.menu.externals:

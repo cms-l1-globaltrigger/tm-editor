@@ -3,15 +3,16 @@
 class AlgorithmSelectIndexDialog
 """
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from typing import Optional
+
+from PyQt5 import QtCore, QtWidgets
 
 from tmEditor.core.Settings import MaxAlgorithms
 
 # Common widgets
 from tmEditor.gui.CommonWidgets import IconLabel, createIcon
 
-__all__ = ['AlgorithmSelectIndexDialog', ]
+__all__ = ["AlgorithmSelectIndexDialog"]
 
 # -----------------------------------------------------------------------------
 #  Helper functions
@@ -19,6 +20,7 @@ __all__ = ['AlgorithmSelectIndexDialog', ]
 
 def map_expand(indices):
     return [index in indices for index in range(MaxAlgorithms)]
+
 
 def match_pattern(a, b):
     assert len(a) == len(b)
@@ -41,7 +43,7 @@ class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
     ColumnCount = 8
     RowCount = MaxAlgorithms // ColumnCount
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         # Setup window
         self.setWindowTitle(self.tr("Select Index"))
@@ -64,7 +66,7 @@ class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
                 if index >= MaxAlgorithms:
                     break
                 button = QtWidgets.QPushButton(format(index), self)
-                button.index = index
+                button.index = index  # type: ignore
                 button.setCheckable(True)
                 button.setMaximumWidth(50)
                 #self._setButtonStyle(button, self.Green)

@@ -7,12 +7,11 @@ http://www.jjoe64.com/2011/08/qplaintextedit-change-shiftreturn.html
 """
 
 import string
+from typing import Optional
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-__all__ = ['CodeEditor', ]
+__all__ = ["CodeEditor"]
 
 # -----------------------------------------------------------------------------
 #  Code editor class
@@ -21,7 +20,7 @@ __all__ = ['CodeEditor', ]
 class CodeEditor(QtWidgets.QPlainTextEdit):
     """Source code editor widget."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.lineNumberArea = LineNumberArea(self)
         self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
@@ -31,7 +30,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.highlightCurrentLine()
         # Setup font hints for monospace/typewriter
         font = QtGui.QFont("Monospace")
-        font.setStyleHint(QtGui.QFont.TypeWriter)
+        font.setStyleHint(QtGui.QFont.Monospace)
         self.setFont(font)
         # self.document().setDocumentMargin(0)
 

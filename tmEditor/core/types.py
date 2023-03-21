@@ -9,9 +9,9 @@ tmGrammar.ET = "ET"
 #  Keys
 # -----------------------------------------------------------------------------
 
-kET = 'ET'
-kCOUNT = 'COUNT'
-kSeparator = '-'
+kET = "ET"
+kCOUNT = "COUNT"
+kSeparator = "-"
 
 # -----------------------------------------------------------------------------
 #  Type tuples
@@ -47,6 +47,9 @@ CountObjectTypes = (
     tmGrammar.MBT1HFM,
     # Tower counts
     tmGrammar.TOWERCOUNT,
+    # ZDC
+    tmGrammar.ZDCP,
+    tmGrammar.ZDCM,
 )
 """Ordered list of count type object names."""
 
@@ -66,8 +69,11 @@ SignalTypes = (
     # Muon showers
     tmGrammar.MUS0,
     tmGrammar.MUS1,
+    tmGrammar.MUS2,
     tmGrammar.MUSOOT0,
     tmGrammar.MUSOOT1,
+    # Anomaly detection trigger
+    tmGrammar.ADT,
 )
 """Ordered list of all supported signal types."""
 
@@ -86,6 +92,10 @@ ObjectCutTypes = (
     tmGrammar.CHG,
     tmGrammar.IP,
     tmGrammar.SLICE,
+    # For muons
+    tmGrammar.INDEX,
+    # For anomaly detection trigger
+    tmGrammar.ASCORE,
 )
 """Orderd list of object cut type names."""
 
@@ -165,6 +175,8 @@ ObjectScaleMap = {
     tmGrammar.ASYMHT: kCOUNT,
     tmGrammar.ASYMETHF: kCOUNT,
     tmGrammar.ASYMHTHF: kCOUNT,
+    tmGrammar.ZDCP: kCOUNT,
+    tmGrammar.ZDCM: kCOUNT,
 }
 """Mapping of threshold/count scale types for objects."""
 

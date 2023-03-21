@@ -17,32 +17,29 @@
 """
 
 import math
+from typing import List, Optional, Tuple
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from tmEditor.core import formatter
 from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.types import CountObjectTypes, ObjectTypes, SignalTypes
 
 __all__ = [
-    'richTextObjectsPreview',
-    'richTextSignalsPreview',
-    'richTextExtSignalsPreview',
-    'richTextCutsPreview',
-    'ColorIcon',
-    'ColorLabel',
-    'IconLabel',
-    'SelectableLabel',
-    'PrefixedSpinBox',
-    'ReadOnlyLineEdit',
-    'ComboBoxPlus',
-    'RestrictedLineEdit',
-    'RestrictedPlainTextEdit',
-    'ListSpinBox',
-    'EtaCutChart',
-    'PhiCutChart'
+    "richTextObjectsPreview",
+    "richTextSignalsPreview",
+    "richTextExtSignalsPreview",
+    "richTextCutsPreview",
+    "IconLabel",
+    "SelectableLabel",
+    "PrefixedSpinBox",
+    "ReadOnlyLineEdit",
+    "ComboBoxPlus",
+    "RestrictedLineEdit",
+    "RestrictedPlainTextEdit",
+    "ListSpinBox",
+    "EtaCutChart",
+    "PhiCutChart",
 ]
 
 # -----------------------------------------------------------------------------
@@ -68,6 +65,7 @@ def richTextObjectsPreview(algorithm, parent):
         content.append(parent.tr("</p>"))
     return "".join(content)
 
+
 def richTextSignalsPreview(algorithm, parent):
     content = []
     signals = [toObject(obj) for obj in algorithm.objects()]
@@ -82,6 +80,7 @@ def richTextSignalsPreview(algorithm, parent):
         content.append(parent.tr("</p>"))
     return "".join(content)
 
+
 def richTextExtSignalsPreview(algorithm, parent):
     content = []
     externals = [toExternal(ext) for ext in algorithm.externals()]
@@ -93,6 +92,7 @@ def richTextExtSignalsPreview(algorithm, parent):
             content.append(parent.tr("<img src=\":/icons/ext.svg\"> {0}<br/>").format(ext.name))
         content.append(parent.tr("</p>"))
     return "".join(content)
+
 
 def richTextCutsPreview(menu, algorithm, parent):
     # List used cuts.
@@ -112,6 +112,14 @@ def richTextCutsPreview(menu, algorithm, parent):
         content.append(parent.tr("</p>"))
     return "".join(content)
 
+
+def toPoint(x: float, y: float) -> QtCore.QPoint:
+    return QtCore.QPoint(int(round(x)), int(round(y)))
+
+
+def toRect(x: float, y: float, w: float, h: float) -> QtCore.QRect:
+    return QtCore.QRect(int(round(x)), int(round(y)), int(round(w)), int(round(h)))
+
 # -----------------------------------------------------------------------------
 #  Icon factories
 # -----------------------------------------------------------------------------
@@ -123,78 +131,22 @@ def createIcon(name):
         return icon
     icon = QtGui.QIcon()
     if not len(icon.availableSizes()):
-        filename = f':/icons/{name}.svg'
+        filename = f":/icons/{name}.svg"
         if QtCore.QFile.exists(filename):
             icon.addFile(filename)
-        filename = f':/icons/16/{name}.svg'
+        filename = f":/icons/16/{name}.svg"
         if QtCore.QFile.exists(filename):
             icon.addPixmap(QtGui.QPixmap(filename))
-        filename = f':/icons/24/{name}.svg'
+        filename = f":/icons/24/{name}.svg"
         if QtCore.QFile.exists(filename):
             icon.addPixmap(QtGui.QPixmap(filename))
     return icon
 
+
 def miniIcon(name, size=13):
     """Returns mini icon to be used for items in list and tree views."""
-    return QtGui.QIcon(QtGui.QIcon(f':/icons/{name}.svg').pixmap(size, size))
+    return QtGui.QIcon(QtGui.QIcon(f":/icons/{name}.svg").pixmap(size, size))
 
-# -----------------------------------------------------------------------------
-#  A framed color icon box.
-# -----------------------------------------------------------------------------
-
-class ColorIcon(QtWidgets.QFrame):
-    """Provides an fixed sized framed color icon for building color labeled legends.
-
-    The default square size is 12 pixel.
-    """
-    def __init__(self, color, parent=None, size=12):
-        super().__init__(parent)
-        # Fix the icon size.
-        self.setFixedSize(size, size)
-        # Draw a border around the icon.
-        self.setFrameShape(self.Box)
-        self.setFrameShadow(self.Plain)
-        # Make sure background color is displayed.
-        self.setAutoFillBackground(True)
-        # Store the icon's color.
-        self.setColor(color)
-
-    def setColor(self, color):
-        # Store the icon's color.
-        self.color = QtGui.QColor(color)
-        # Setup the active color background brush.
-        palette = self.palette()
-        brush = QtGui.QBrush(self.color)
-        brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Light, brush) # Bugfix for parent widgets with background role: Light.
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Light, brush)
-        self.setPalette(palette)
-
-# -----------------------------------------------------------------------------
-#  Legend label with color icon on the right.
-# -----------------------------------------------------------------------------
-
-class ColorLabel(QtWidgets.QWidget):
-    """Color legend with icon and text label on the left."""
-
-    def __init__(self, color, text, parent=None):
-        super().__init__(parent)
-        # Create the icon and the text label.
-        self.icon = ColorIcon(color, self)
-        self.label = QtWidgets.QLabel(text, self)
-        # Setup the layout.
-        layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(self.icon)
-        layout.addWidget(self.label)
-        self.setLayout(layout)
-
-    def setColor(self, color):
-        self.icon.setColor(color)
-
-    def setText(self, text):
-        self.label.setText(text)
 
 # -----------------------------------------------------------------------------
 #  Legend label with icon on the right.
@@ -203,35 +155,37 @@ class ColorLabel(QtWidgets.QWidget):
 class IconLabel(QtWidgets.QWidget):
     """label with 16x16 pixel icon and text label on the left."""
 
-    def __init__(self, icon, text, parent=None):
+    def __init__(self, icon: QtGui.QIcon, text: str, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Set icon of type QIcon and a text message."""
         super().__init__(parent)
-        # Create the icon and the text label.
-        self.icon = QtWidgets.QLabel(self)
-        self.icon.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+
+        self.iconLabel: QtWidgets.QLabel = QtWidgets.QLabel(self)
+        self.iconLabel.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+
+        self.textLabel: QtWidgets.QLabel = QtWidgets.QLabel(self)
+
+        layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout(self)
+        layout.addWidget(self.iconLabel)
+        layout.addWidget(self.textLabel)
+
         self.setIcon(icon)
-        self.label = QtWidgets.QLabel(text, self)
-        self.icon.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        # Setup the layout.
-        layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(self.icon)
-        layout.addWidget(self.label)
-        self.setLayout(layout)
+        self.setText(text)
 
-    def setIcon(self, icon):
+    def setIcon(self, icon: QtGui.QIcon) -> None:
         """Set displayed icon."""
-        self.icon.setPixmap(icon.pixmap(16, 16))
+        self.iconLabel.setPixmap(icon.pixmap(16, 16))
 
-    def setText(self, text):
+    def setText(self, text: str) -> None:
         """Set displayed text."""
-        self.label.setText(text)
+        self.textLabel.setText(text)
 
 # -----------------------------------------------------------------------------
 #  Selectable label.
 # -----------------------------------------------------------------------------
 
 class SelectableLabel(QtWidgets.QLabel):
-    def __init__(self, parent=None):
+
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setWordWrap(True)
         self.setTextInteractionFlags(
@@ -248,12 +202,12 @@ class PrefixedSpinBox(QtWidgets.QSpinBox):
     """A decimal spin box with plus and minus sign prefix.
     Used for assigning bunch crossing offsets.
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
 
     def textFromValue(self, value):
-        return format(value, '+d') # prefix integers also with plus sign
+        return format(value, "+d") # prefix integers also with plus sign
 
 # -----------------------------------------------------------------------------
 #  Read only line edit widget.
@@ -262,7 +216,7 @@ class PrefixedSpinBox(QtWidgets.QSpinBox):
 class ReadOnlyLineEdit(QtWidgets.QLineEdit):
     """Customized rad only line edit."""
 
-    def __init__(self, text, parent=None):
+    def __init__(self, text, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """
         @param text the initial text to display.
         @param parent optional parent widget.
@@ -284,7 +238,7 @@ class TextFilterWidget(QtWidgets.QWidget):
 
     textChanged = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent=None, spacer=False):
+    def __init__(self, spacer: bool = False, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setAutoFillBackground(True)
         self.filterLabel = QtWidgets.QLabel(self.tr("Filter"), self)
@@ -338,25 +292,23 @@ class RestrictedLineEdit(QtWidgets.QLineEdit):
     can be defined.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Widget's .
 
         @param parent optional parent widget.
         """
         super().__init__(parent)
         # Optional prefix.
-        self._prefix = None
-        # Optional regular expression pattern.
-        self._pattern = None
+        self._prefix: str = ""
         # Guard all user input changes.
         self.textChanged.connect(self.validate)
 
-    def setPrefix(self, prefix):
+    def setPrefix(self, prefix: str) -> None:
         """Set a fixed value prefix."""
         self._prefix = prefix
         self.validate()
 
-    def prefix(self):
+    def prefix(self) -> str:
         """@returns prefix, None if not set."""
         return self._prefix
 
@@ -364,7 +316,7 @@ class RestrictedLineEdit(QtWidgets.QLineEdit):
         """Set regular expression pattern to guard user input."""
         self.setValidator(QtGui.QRegExpValidator(QtCore.QRegExp(pattern), self))
 
-    def validate(self):
+    def validate(self) -> None:
         """Validate user input."""
         if self._prefix and len(self.text()) < len(self._prefix):
             # Make it impossible to remove the L1Menu_ prefix.
@@ -379,21 +331,21 @@ class RestrictedLineEdit(QtWidgets.QLineEdit):
 class RestrictedPlainTextEdit(QtWidgets.QPlainTextEdit):
     """Restricted plain text edit widget. Maximum length can be specified.
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
-        self._maxLength = None
+        self._maxLength: int = 0
         self.textChanged.connect(self.validate)
         self.setTabChangesFocus(True)
 
-    def setMaxLength(self, length):
+    def setMaxLength(self, length: int) -> None:
         """Set maximal input length."""
-        self._maxLength = int(length)
+        self._maxLength = length
 
-    def maxLength(self):
+    def maxLength(self) -> int:
         """@returns maximal input length."""
-        return int(self._maxLength)
+        return self._maxLength
 
-    def validate(self):
+    def validate(self) -> None:
         """Validate user input."""
         if self._maxLength:
             if len(self.toPlainText()) > self._maxLength:
@@ -406,47 +358,50 @@ class RestrictedPlainTextEdit(QtWidgets.QPlainTextEdit):
 class ListSpinBox(QtWidgets.QSpinBox):
     """Custom spin box for a list of integers."""
 
-    def __init__(self, values, parent=None):
+    def __init__(self, values: Optional[List[int]] = None, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
-        self.setValues(values)
+        self.setValues(values or [])
 
-    def setValues(self, values):
-        self.values = [int(value) for value in values]
-        self.index = 0
-        minimum = min(self.values)
-        maximum = max(self.values)
+    def values(self) -> List[int]:
+        return list(self._values)
+
+    def setValues(self, values: List[int]) -> None:
+        self._values = [int(value) for value in values]
+        self._index = 0
+        minimum = min(self._values)
+        maximum = max(self._values)
         self.setRange(minimum, maximum)
 
-    def stepBy(self, steps):
-        self.index += steps
-        self.setValue(int(self.values[self.index]))
+    def stepBy(self, steps: int) -> None:
+        self._index += steps
+        self.setValue(int(self._values[self._index]))
 
-    def value(self, index=None):
+    def value(self, index: Optional[int] = None) -> int:
         """Returns bins floating point value by LUT index (upper or lower depending on mode)."""
-        if index == None: index = self.index
-        return self.values[index]
+        if index is None: index = self._index
+        return self._values[index]
 
-    def minimum(self):
+    def minimum(self) -> int:
         return self.value(0)
 
-    def maximum(self):
+    def maximum(self) -> int:
         return self.value(-1)
 
-    def setValue(self, value):
+    def setValue(self, value: int) -> None:
         value = self.nearest(value)
         super().setValue(value)
 
-    def valueFromText(self, text):
+    def valueFromText(self, text: str) -> int:
         """Re-implementation of valueFromText(), it returns only the nearest."""
         return self.nearest(int(text.strip(" =<>!")))
 
-    def nearest(self, value):
+    def nearest(self, value: int) -> int:
         """Returns nearest neighbor of value in range."""
         # See also "finding index of an item closest to the value in a list that's not entirely sorted"
         # http://stackoverflow.com/questions/9706041/finding-index-of-an-item-closest-to-the-value-in-a-list-thats-not-entirely-sort
-        result = min(range(len(self.values)), key=lambda i: abs(self.values[i] - value))
-        self.index = result
-        return self.value(self.index)
+        index = min(range(len(self._values)), key=lambda i: abs(self._values[i] - value))
+        self._index = index
+        return self.value(index)
 
 #
 # More complex widgets.
@@ -455,103 +410,108 @@ class ListSpinBox(QtWidgets.QSpinBox):
 class EtaCutChart(QtWidgets.QWidget):
     """Graphical ETA cut representation."""
 
-    Margin = 10
-    Radius = 50
-    Length = 100
-    FontSize = 7
+    Margin: int = 10
+    Radius: int = 50
+    Length: int = 100
+    FontSize: int = 7
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
+        self._lower: int = 0
+        self._upper: int = 0
         self.setRange(-5, 5)
         self.setFixedSize(self.Margin * 2 + self.Length, self.Margin * 2 + self.Radius)
 
-    def setRange(self, lower, upper):
+    def setRange(self, lower: int, upper: int) -> None:
         """Set lower and upper bounding of range."""
-        self.lower = lower
-        self.upper = upper
+        self._lower = lower
+        self._upper = upper
 
-    def range(self):
+    def range(self) -> Tuple[int, int]:
         """Returns tuple containing lower and upper bounding of range."""
-        return self.lower, self.upper
+        return self._lower, self._upper
 
-    def getPoint(self, value):
+    def getPoint(self, value: float) -> QtCore.QPoint:
         """Calculate pixel coordinate for an ETA value."""
         stepX = (self.Length / 2) / 2.5
         stepY = self.Radius / 2.5
         if 2.5 < value <= 5.0:
-            return QtCore.QPoint(self.Margin + self.Length, self.Margin + round(stepY * (value - 2.5)))
+            return toPoint(self.Margin + self.Length, self.Margin + round(stepY * (value - 2.5)))
         if 0. < value <= 2.5:
-            return QtCore.QPoint(self.Margin + self.Length / 2 + round(stepX * value), self.Margin)
+            return toPoint(self.Margin + self.Length / 2 + round(stepX * value), self.Margin)
         if -2.5 <= value <= 0.:
-            return QtCore.QPoint(self.Margin + self.Length / 2 + round(stepX * value), self.Margin)
+            return toPoint(self.Margin + self.Length / 2 + round(stepX * value), self.Margin)
         if -5.0 <= value < -2.5:
-            return QtCore.QPoint(self.Margin, self.Margin + abs(round(stepY * (value + 2.5))))
+            return toPoint(self.Margin, self.Margin + abs(round(stepY * (value + 2.5))))
         raise ValueError()
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QtCore.QEvent) -> None:
         """Paint ETA cut graph on windget."""
         lower, upper = self.range()
         painter = QtGui.QPainter(self)
         painter.setBrush(QtCore.Qt.white)
         # Draw Background
-        painter.drawRect(self.Margin, self.Margin, self.Length, self.Radius)
+        painter.drawRect(toRect(self.Margin, self.Margin, self.Length, self.Radius))
         painter.setPen(QtGui.QPen(QtCore.Qt.transparent))
         painter.setBrush(QtCore.Qt.red)
         # Draw Polygon
         polygon = QtGui.QPolygon()
-        polygon.append(QtCore.QPoint(self.Margin + self.Length / 2, self.Margin + self.Radius))
+        polygon.append(toPoint(self.Margin + self.Length / 2, self.Margin + self.Radius))
         polygon.append(self.getPoint(upper))
         if upper > 2.5 and lower < 2.5:
-            polygon.append(QtCore.QPoint(self.Margin + self.Length, self.Margin))
+            polygon.append(toPoint(self.Margin + self.Length, self.Margin))
         if lower < -2.5 and upper > -2.5:
-            polygon.append(QtCore.QPoint(self.Margin, self.Margin))
+            polygon.append(toPoint(self.Margin, self.Margin))
         polygon.append(self.getPoint(lower))
         painter.drawPolygon(polygon)
         # Draw frames
         painter.setPen(QtGui.QPen(QtCore.Qt.black))
         painter.setBrush(QtCore.Qt.transparent)
-        painter.drawRect(self.Margin, self.Margin, self.Length / 2, self.Radius)
-        painter.drawRect(self.Margin + self.Length / 2, self.Margin, self.Length / 2, self.Radius)
-        painter.setFont(QtGui.QFont('Sans', self.FontSize))
-        painter.drawText(QtCore.QPoint(self.Margin + self.Length / 2 - 2, self.Margin - 1), "0")
-        painter.drawText(QtCore.QPoint(0, (self.Margin + self.Radius) + self.FontSize / 2), u"-5")
-        painter.drawText(QtCore.QPoint(self.Margin + self.Length + 1, (self.Margin + self.Radius) + self.FontSize / 2), u"5")
+        painter.drawRect(toRect(self.Margin, self.Margin, self.Length / 2, self.Radius))
+        painter.drawRect(toRect(self.Margin + self.Length / 2, self.Margin, self.Length / 2, self.Radius))
+        painter.setFont(QtGui.QFont("Sans", self.FontSize))
+        painter.drawText(toPoint(self.Margin + self.Length / 2 - 2, self.Margin - 1), "0")
+        painter.drawText(toPoint(0, (self.Margin + self.Radius) + self.FontSize / 2), u"-5")
+        painter.drawText(toPoint(self.Margin + self.Length + 1, (self.Margin + self.Radius) + self.FontSize / 2), u"5")
+
 
 class PhiCutChart(QtWidgets.QWidget):
     """Graphical PHI cut representation."""
 
-    Margin = 8
-    Radius = 30
-    FontSize = 7
+    Margin: int = 8
+    Radius: int = 30
+    FontSize: int = 7
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
+        self._lower: int = 0
+        self._upper: int = 0
         self.setRange(0, 360 * 16)
         self.setFixedSize((self.Margin + self.Radius) * 2, (self.Margin + self.Radius) * 2)
 
-    def setRange(self, lower, upper):
+    def setRange(self, lower: int, upper: int) -> None:
         """Set lower and upper bounding of range."""
-        self.lower = lower
-        self.upper = upper
+        self._lower = lower
+        self._upper = upper
 
-    def range(self):
+    def range(self) -> Tuple[int, int]:
         """Returns tuple containing lower and upper bounding of range."""
-        return self.lower, self.upper
+        return self._lower, self._upper
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QtCore.QEvent) -> None:
         """Paint PHI cut graph on windget."""
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
-        rectangle = QtCore.QRect(self.Margin, self.Margin, self.Radius * 2, self.Radius * 2)
+        rectangle = toRect(self.Margin, self.Margin, self.Radius * 2, self.Radius * 2)
         painter.setPen(QtGui.QPen(QtCore.Qt.transparent))
         painter.setBrush(QtCore.Qt.white)
         painter.drawPie(rectangle, 0, 360 * 16)
         painter.setBrush(QtCore.Qt.red)
         lower, upper = self.range()
-        lower = math.degrees(lower)
-        upper = math.degrees(upper)
+        lower = int(round(math.degrees(lower)))
+        upper = int(round(math.degrees(upper)))
         if lower < upper:
             painter.drawPie(rectangle, lower * 16, (upper-lower) * 16)
         else:
@@ -559,6 +519,6 @@ class PhiCutChart(QtWidgets.QWidget):
         painter.setPen(QtGui.QPen(QtCore.Qt.black))
         painter.setBrush(QtCore.Qt.transparent)
         painter.drawArc(rectangle, 0, 360 * 16)
-        painter.setFont(QtGui.QFont('Sans', self.FontSize))
-        painter.drawText(QtCore.QPoint(self.Radius * 2 + self.Margin + 2, (self.Margin + self.Radius) + self.FontSize / 2), u"0")
-        painter.drawText(QtCore.QPoint(0, (self.Margin + self.Radius) + self.FontSize / 2), u"π")
+        painter.setFont(QtGui.QFont("Sans", self.FontSize))
+        painter.drawText(toPoint(self.Radius * 2 + self.Margin + 2, (self.Margin + self.Radius) + self.FontSize / 2), u"0")
+        painter.drawText(toPoint(0, (self.Margin + self.Radius) + self.FontSize / 2), u"π")

@@ -1,21 +1,23 @@
 """Various specialized string formatting functions."""
 
+from typing import List
+
+import tmGrammar
+
 from .toolbox import listcompress
 from .Settings import CutSpecs
 from .types import FunctionCutTypes
 
-import tmGrammar
 
-
-def fHex(value) -> str:
+def fHex(value: int) -> str:
     """Return pretty hex representation."""
     try:
-        return '0x{0:x}'.format(int(value))
+        return "0x{0:x}".format(int(value))
     except ValueError:
-        return ''
+        return ""
 
 
-def fCompress(values, separator=", ", dash="-") -> str:
+def fCompress(values: List[int]) -> str:
     """Return compressed representation of ranges of an integer list.
     >>> fCompress([0,1,2,3,5,7,8,9])
     '0-3, 5, 7-9'
@@ -23,37 +25,38 @@ def fCompress(values, separator=", ", dash="-") -> str:
     tokens = []
     for pair in listcompress(values):
         if isinstance(pair, tuple):
-            tokens.append("{1}{0}{2}".format(dash, *pair))
+            tokens.append("{0}-{1}".format(*pair))
         else:
             tokens.append(format(pair))
-    return separator.join(tokens)
+    return ", ".join(tokens)
 
 
-def fFileSize(size, suffix='B') -> str:
+def fFileSize(size) -> str:
     """Return human readable file size given in bytes.
     >>> fFileSize(1234)
     '1.2KiB'
     """
-    factor = 1024.
-    for unit in ('', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi'):
+    suffix: str = "B"
+    factor: int = 1024
+    for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
         if abs(size) < factor:
             return "{0:3.1f}{1}{2}".format(size, unit, suffix)
         size /= factor
-    return "{0:.1f}{1}{2}".format(size, 'Yi', suffix)
+    return "{0:.1f}{1}{2}".format(size, "Yi", suffix)
 
 
-def fCutValue(value, precision=3) -> str:
+def fCutValue(value, precision: int = 3) -> str:
     """Return floating point representation for cut values in string format,
     returns empty string on error.
     """
-    fmt = '+.{0}f'.format(precision)
+    fmt = "+.{0}f".format(precision)
     try:
         return format(float(value), fmt)
     except ValueError:
-        return ''
+        return ""
 
 
-def fCutData(cut, separator=", ") -> str:
+def fCutData(cut) -> str:
     """Return pretty formatted cut data according to cut specification settings."""
     if cut.type in FunctionCutTypes:
         spec = (CutSpecs.query(type=cut.type) or [None])[0]
@@ -97,24 +100,24 @@ def fCutLabelRichText(cut) -> str:
     return "{0} {1}".format(tokens[0], " ".join(tokens[1:]))
 
 
-def fThreshold(value, suffix=" GeV") -> str:
+def fThreshold(value: str) -> str:
     """Retrun formatted object requirement threshold.
     >>> fThreshold("2p5")
     '2.5 GeV'
     """
-    value = format(value).replace('p', '.')  # Replace 'p' by comma.
-    return "{:.1f}{}".format(float(value), suffix)
+    value = format(value).replace("p", ".")  # Replace 'p' by comma.
+    return "{:.1f} GeV".format(float(value))
 
 
-def fCounts(value, suffix=" counts") -> str:
+def fCounts(value: str) -> str:
     """Retrun formatted object requirement count.
     >>> fCounts("42")
     '42 counts'
     """
-    return "{:.0f}{}".format(float(value), suffix)
+    return "{:.0f} counts".format(float(value))
 
 
-def fComparison(value) -> str:
+def fComparison(value: str) -> str:
     """Retrun formatted thresold comparisons signs.
     >>> fComparison(tmGrammar.GE)
     '>='
@@ -129,9 +132,9 @@ def fComparison(value) -> str:
     }[value]
 
 
-def fBxOffset(value) -> str:
+def fBxOffset(value: int) -> str:
     """Return formatted BX offset, accepts strings or integers.
     >>> fBxOffset(2)
     '+2'
     """
-    return '0' if int(value) == 0 else format(int(value), '+d')
+    return "0" if int(value) == 0 else format(int(value), "+d")

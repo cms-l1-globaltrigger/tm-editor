@@ -9,10 +9,9 @@ class MessageBarWidget
 import logging
 import re
 import webbrowser
+from typing import Optional
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import tmGrammar
 
@@ -41,13 +40,13 @@ from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextCutsPreview
 from tmEditor.gui.CommonWidgets import createIcon
 
-__all__ = ['AlgorithmEditorDialog', ]
+__all__ = ["AlgorithmEditorDialog"]
 
 # ------------------------------------------------------------------------------
 #  Keys
 # ------------------------------------------------------------------------------
 
-kName = 'name'
+kName = "name"
 
 ContentsURL = "https://cern.ch/globaltrigger/upgrade/tme/userguide#create-algorithms"
 
@@ -103,9 +102,6 @@ class ExpressionCodeEditor(CodeEditor):
     editFunction = QtCore.pyqtSignal(tuple)
     """Signal raised on edit function expression request (custom context menu)."""
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
     def contextMenuEvent(self, event):
         """Custom ciontext menu providing actions to edit object and function
         expressions.
@@ -153,7 +149,7 @@ class ExpressionCodeEditor(CodeEditor):
 class AlgorithmEditor(QtWidgets.QMainWindow):
     """Algorithm editor class."""
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         # Setup window
         self.setWindowTitle(self.tr("Algorithm Editor"))
@@ -166,8 +162,8 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         self.indexSpinBox.setMaximum(MaxAlgorithms)
         self.indexSpinBox.setMinimumWidth(60)
         self.nameLineEdit = RestrictedLineEdit(self)
-        self.nameLineEdit.setPrefix('L1_')
-        self.nameLineEdit.setRegexPattern('L1_[a-zA-Z0-9_]+')
+        self.nameLineEdit.setPrefix("L1_")
+        self.nameLineEdit.setRegexPattern("L1_[a-zA-Z0-9_]+")
         self.nameLineEdit.setMinimumWidth(310)
         self.previewTextBrowser = QtWidgets.QTextBrowser(self)
         self.previewTextBrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
@@ -429,7 +425,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         if dialog.result() == QtWidgets.QDialog.Accepted:
             self.replacePlainText(
                 self.currentFormatter(
-                    ''.join([
+                    "".join([
                         text[:token[1]],
                         dialog.expression(),
                         text[token[2]:],
@@ -449,7 +445,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         if dialog.result() == QtWidgets.QDialog.Accepted:
             self.replacePlainText(
                 self.currentFormatter(
-                    ''.join([
+                    "".join([
                         text[:token[1]],
                         dialog.expression(),
                         text[token[2]:],
@@ -469,7 +465,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         if dialog.result() == QtWidgets.QDialog.Accepted:
             self.replacePlainText(
                 self.currentFormatter(
-                    ''.join([
+                    "".join([
                         text[:token[1]],
                         dialog.expression(),
                         text[token[2]:],
@@ -604,7 +600,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         if indices:
             self.indexSpinBox.setValues(list(indices))
         if ignore is not None:
-            self.indexSpinBox.setValue(ignore)
+            self.indexSpinBox.setValue(int(ignore))
 
 # -----------------------------------------------------------------------------
 #  Algorithm editor dialog (modal)
@@ -613,7 +609,7 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
 class AlgorithmEditorDialog(QtWidgets.QDialog):
     """Algorithm editor dialog class."""
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.editor = AlgorithmEditor(menu)
         self.loadedAlgorithm = None
@@ -805,7 +801,7 @@ class MessageBarWidget(QtWidgets.QWidget):
 
     showMore = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setMaximumHeight(31)
         self.icon = QtWidgets.QLabel(self)

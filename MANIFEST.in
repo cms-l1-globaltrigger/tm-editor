@@ -2,7 +2,7 @@ include changelog
 include LICENSE
 include README.md
 include requirements.txt
-include resource/*.qrc
+include resource/tmEditor.rcc
 include resource/share/applications/*.desktop
 include resource/share/icons/hicolor/scalable/apps/*.svg
 include resource/share/man/man1/*.1

@@ -1,10 +1,10 @@
 """Preferences dialog."""
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from typing import Optional
 
-__all__ = ['PreferencesDialog', ]
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+__all__ = ["PreferencesDialog"]
 
 # -----------------------------------------------------------------------------
 #  Preferences dialog class
@@ -13,13 +13,13 @@ __all__ = ['PreferencesDialog', ]
 class PreferencesDialog(QtWidgets.QDialog):
     """Preferences dialog providing settings for the application."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setupUi()
 
     def setupUi(self):
         self.setWindowTitle(self.tr("Preferences"))
-        self.setWindowIcon(QtGui.QIcon(':icons/tm-editor.svg'))
+        self.setWindowIcon(QtGui.QIcon(":icons/tm-editor.svg"))
         self.resize(240, 100)
         self.tabWidget = QtWidgets.QTabWidget(self)
         # Files tab

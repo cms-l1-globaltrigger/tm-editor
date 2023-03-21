@@ -14,9 +14,6 @@ class CutsModelProxy(QtCore.QSortFilterProxyModel):
     MinimumColumn = 3
     MaximumColumn = 4
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
     def lessThan(self, left, right):
         """Custom cut sorting."""
         if left.column() in (self.MinimumColumn, self.MaximumColumn):

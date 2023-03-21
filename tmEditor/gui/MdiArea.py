@@ -1,11 +1,12 @@
 """Multi Document Interface (MDI) area."""
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from typing import Optional
+
+from PyQt5 import QtCore, QtWidgets
 
 from tmEditor.gui.CommonWidgets import createIcon
 
-__all__ = ['MdiArea', ]
+__all__ = ["MdiArea"]
 
 # -----------------------------------------------------------------------------
 #  MDI Area class
@@ -14,7 +15,7 @@ __all__ = ['MdiArea', ]
 class MdiArea(QtWidgets.QTabWidget):
     """A tab widget based MDI area widget."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setTabsClosable(True)
         self.setMovable(True)

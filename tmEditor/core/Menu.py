@@ -3,20 +3,21 @@
 import logging
 import uuid
 import re
+from typing import List, Optional
 
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 from .Settings import MaxAlgorithms
 from .AlgorithmSyntaxValidator import AlgorithmSyntaxValidator
 from .Algorithm import toObject, toExternal
 
-__all__ = ['Menu', 'GrammarVersion']
+__all__ = ["Menu", "GrammarVersion"]
 
-GrammarVersion = StrictVersion('0.10')
+GrammarVersion = Version("0.11")
 """Supported grammar version."""
 
-kObject: str = 'object'
-kType: str = 'type'
+kObject: str = "object"
+kType: str = "type"
 
 
 class Menu:
@@ -24,12 +25,12 @@ class Menu:
     menu files and adding and removing contents.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.menu = MenuInfo()
-        self.algorithms: list = []
-        self.cuts: list = []
-        self.objects: list = []
-        self.externals: list = []
+        self.algorithms: List = []
+        self.cuts: List = []
+        self.objects: List = []
+        self.externals: List = []
         self.scales = None
         self.extSignals = None
 
@@ -98,7 +99,7 @@ class Menu:
 
     def scaleBins(self, object, scaleType):
         """Returns bins for *object* by *scaleType*."""
-        key = f'{object.type}-{scaleType}'
+        key = f"{object.type}-{scaleType}"
         return self.scales.bins[key] if key in self.scales.bins else None
 
     def orphanedObjects(self) -> list:
@@ -162,9 +163,9 @@ class Menu:
 class MenuInfo:
     """Menu information container class."""
 
-    RegExMenuName = re.compile(r'^(L1Menu_)([a-zA-Z0-9_]*)$')
+    RegExMenuName = re.compile(r"^(L1Menu_)([a-zA-Z0-9_]*)$")
 
-    def __init__(self, name: str = None, comment: str = None):
+    def __init__(self, name: Optional[str] = None, comment: Optional[str] = None):
         self.name: str = name or ""
         self.comment: str = comment or ""
         self.uuid_menu: str = ""

@@ -3,9 +3,10 @@
 import logging
 import copy
 import os
+import threading
+from typing import List, Optional
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 from tmEditor.core import Settings
 from tmEditor.core.Settings import MaxAlgorithms
@@ -30,28 +31,28 @@ from tmEditor.gui.CommonWidgets import TextFilterWidget
 from tmEditor.gui.CommonWidgets import RestrictedLineEdit
 from tmEditor.gui.CommonWidgets import createIcon
 
-__all__ = ['Document', ]
+__all__ = ["Document"]
 
 # ------------------------------------------------------------------------------
 #  Keys
 # ------------------------------------------------------------------------------
 
-kCable = 'cable'
-kChannel = 'channel'
-kData = 'data'
-kDescription = 'description'
-kExpression = 'expression'
-kIndex = 'index'
-kLabel = 'label'
-kMaximum = 'maximum'
-kMinimum = 'minimum'
-kNBits = 'n_bits'
-kName = 'name'
-kNumber = 'number'
-kObject = 'object'
-kStep = 'step'
-kSystem = 'system'
-kType = 'type'
+kCable = "cable"
+kChannel = "channel"
+kData = "data"
+kDescription = "description"
+kExpression = "expression"
+kIndex = "index"
+kLabel = "label"
+kMaximum = "maximum"
+kMinimum = "minimum"
+kNBits = "n_bits"
+kName = "name"
+kNumber = "number"
+kObject = "object"
+kStep = "step"
+kSystem = "system"
+kType = "type"
 
 def fScale(scale):
     """Rename muon scale for visualization."""
@@ -91,7 +92,7 @@ class BaseDocument(QtWidgets.QWidget):
     modified = QtCore.pyqtSignal()
     """This signal is emitted whenever the content of the document changes."""
 
-    def __init__(self, filename, parent=None):
+    def __init__(self, filename, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setFilename(filename)
         self.setModified(False)
@@ -123,8 +124,8 @@ class Document(BaseDocument):
     the bottom widget holds a versatile preview widget displaying details and
     actions for the above selected data set.
 
-        +-----+-SlimSplitter-------+
-        |     | +--SlimSplitter--+ |
+        +-----+--QSplitter---------+
+        |     | +--QSplitter-----+ |
         |     | | filterWidget   | |
         |     | +----------------+ |
         | [1] | | topStack       | |
@@ -137,16 +138,16 @@ class Document(BaseDocument):
 
     """
 
-    def __init__(self, filename, parent=None):
+    def __init__(self, filename: str, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(filename, parent)
         # Attributes
         self.loadMenu(filename)
         # Layout
         self.setContentsMargins(0, 0, 0, 0)
         #
-        self._pages = []
+        self._pages: List = []
         # Filter bar
-        self.filterWidget = TextFilterWidget(self, spacer=True)
+        self.filterWidget = TextFilterWidget(True, self)
         self.filterWidget.textChanged.connect(self.setFilterText)
         # Stacks
         self.topStack = QtWidgets.QStackedWidget(self)
@@ -162,16 +163,24 @@ class Document(BaseDocument):
         # Finsish navigation setup.
         self.navigationTreeWidget.expandItem(self.menuPage)
         self.navigationTreeWidget.setCurrentItem(self.menuPage)
+
         # Splitters
-        self.vsplitter = SlimSplitter(QtCore.Qt.Horizontal, self)
+
+        self.vsplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal, self)
+        self.vsplitter.setHandleWidth(1)
+        self.vsplitter.setContentsMargins(0, 0, 0, 0)
         self.vsplitter.setObjectName("vsplitter")
         self.vsplitter.setStyleSheet("#vsplitter { border: 0; background: #888; }")
         self.vsplitter.addWidget(self.navigationTreeWidget)
         self.vsplitter.setOpaqueResize(False)
-        self.hsplitter = SlimSplitter(QtCore.Qt.Vertical, self)
+
+        self.hsplitter = QtWidgets.QSplitter(QtCore.Qt.Vertical, self)
+        self.hsplitter.setHandleWidth(1)
+        self.hsplitter.setContentsMargins(0, 0, 0, 0)
         self.hsplitter.addWidget(self.filterWidget)
         self.hsplitter.addWidget(self.topStack)
         self.hsplitter.addWidget(self.bottomWidget)
+
         self.vsplitter.addWidget(self.hsplitter)
         self.vsplitter.setStretchFactor(0, 0)
         self.vsplitter.setStretchFactor(1, 1)
@@ -253,9 +262,11 @@ class Document(BaseDocument):
         tableView.selectionModel().selectionChanged.connect(self.updateBottom)
         return tableView
 
-    def addPage(self, name, top=None, parent=None):
+    def addPage(self, name, top=None, parent: Optional[QtWidgets.QTreeWidgetItem] = None):
         """Add page consisting of navigation tree entry, top and bottom widget."""
-        page = PageItem(name, top, self.bottomWidget, parent or self.navigationTreeWidget)
+        page = PageItem(name, top, self.bottomWidget, parent)
+        if parent is None:
+            self.navigationTreeWidget.addTopLevelItem(page)
         if 0 > self.topStack.indexOf(top):
             self.topStack.addWidget(top)
         self._pages.append(page)
@@ -267,14 +278,15 @@ class Document(BaseDocument):
         if item not in excludedPages:
             item.top.model().setFilterFixedString(text)
 
-    def onModified(self):
+    @QtCore.pyqtSlot()
+    def onModified(self) -> None:
         self.setModified(True)
         self.modified.emit()
 
     def menu(self):
         return self._menu
 
-    def loadMenu(self, filename):
+    def loadMenu(self, filename: str) -> None:
         """Load menu from filename, setup new document."""
         self.setFilename(filename)
         self.setName(os.path.basename(self.filename()))
@@ -309,21 +321,21 @@ class Document(BaseDocument):
             msgBox.setWindowTitle(self.tr("Migration report"))
             msgBox.setText(self.tr(f"The loaded XML document has been migrated to the most recent grammar <strong>version {Menu.GrammarVersion}</strong>"))
             messages = [
-                f"in file '{filename}'"
+                f"in file {filename!r}"
             ]
             for migration in queue.applied_mirgrations:
                 if isinstance(migration.subject, Cut):
-                    if migration.param == 'object':
-                        message = f"in cut '{migration.subject.name}':\n" \
-                                  f"  in attribute '{migration.param}': removed obsolete entry '{migration.before}'"
+                    if migration.param == "object":
+                        message = f"in cut {migration.subject.name!r}:\n" \
+                                  f"  in attribute {migration.param!r}: removed obsolete entry {migration.before!r}"
                         messages.append(message)
                     else:
-                        message = f"in cut '{migration.subject.name}':\n" \
-                                  f"  in attribute '{migration.param}': '{migration.before}' => '{migration.after}'"
+                        message = f"in cut {migration.subject.name!r}:\n" \
+                                  f"  in attribute {migration.param!r}: {migration.before!r} => {migration.after!r}"
                         messages.append(message)
                 elif isinstance(migration.subject, Algorithm):
-                    message = f"in algorithm '{migration.subject.name}':\n  " \
-                              f"  in attribute '{migration.param}': '{migration.before}' => '{migration.after}'"
+                    message = f"in algorithm {migration.subject.name!r}:\n  " \
+                              f"  in attribute {migration.param!r}: {migration.before!r} => {migration.after!r}"
                     messages.append(message)
             msgBox.setDetailedText("\n\n".join(messages))
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -411,14 +423,14 @@ class Document(BaseDocument):
         if self.menu().algorithmByName(name):
             # Default name is already used, try to find a derivate
             for i in range(2, MaxAlgorithms):
-                name = '{0}_{1}'.format(basename, i)
+                name = "{0}_{1}".format(basename, i)
                 if not self.menu().algorithmByName(name):
                     return name # got unused name!
         return basename # no clue...
 
     def updateTop(self):
         index, item = self.getSelection()
-        if item and hasattr(item.top, 'sortByColumn'):
+        if item and hasattr(item.top, "sortByColumn"):
             item.top.sortByColumn(0, QtCore.Qt.AscendingOrder)
         self.topStack.setCurrentWidget(item.top)
         excludedPages = [self.menuPage, ]
@@ -431,7 +443,7 @@ class Document(BaseDocument):
     def updateBottom(self):
         index, item = self.getSelection()
         # Generic preview...
-        if hasattr(item.bottom, 'reset'):
+        if hasattr(item.bottom, "reset"):
             item.bottom.reset()
         self.bottomWidget.show()
         if item is self.algorithmsPage:
@@ -469,7 +481,7 @@ class Document(BaseDocument):
                 if 1 < rows:
                     item.bottom.setText(self.tr("<p>Selected {} cuts.</p>").format(rows))
                 else:
-                    item.bottom.loadCut(data)
+                    item.bottom.loadCut(data, self.menu())
             elif item is self.scalesPage:
                 if 1 < rows:
                     item.bottom.setText(self.tr("<p>Selected {} scale sets.</p>").format(rows))
@@ -505,6 +517,7 @@ class Document(BaseDocument):
                 for algorithm in self.menu().algorithms:
                     if cut.name in algorithm.cuts():
                         item.bottom.toolbar.removeButton.setEnabled(False)
+                        break
         else:
             item.bottom.toolbar.hide()
 
@@ -854,38 +867,15 @@ class Document(BaseDocument):
         self.update()
 
 # ------------------------------------------------------------------------------
-#  Splitter and custom handle
-# ------------------------------------------------------------------------------
-
-class SlimSplitter(QtWidgets.QSplitter):
-    """Slim splitter with a decent narrow splitter handle."""
-
-    def __init__(self, orientation, parent=None):
-        super().__init__(orientation, parent)
-        self.setHandleWidth(1)
-        self.setContentsMargins(0, 0, 0, 0)
-
-    def createHandle(self):
-        return SlimSplitterHandle(self.orientation(), self)
-
-class SlimSplitterHandle(QtWidgets.QSplitterHandle):
-    """Custom splitter handle for the slim splitter."""
-
-    def __init__(self, orientation, parent=None):
-        super().__init__(orientation, parent)
-
-    def paintEvent(self, event):
-        pass
-
-# ------------------------------------------------------------------------------
 #  Navigation tree item
 # ------------------------------------------------------------------------------
 
 class PageItem(QtWidgets.QTreeWidgetItem):
     """Custom QTreeWidgetItem holding references to top and bottom widgets."""
 
-    def __init__(self, name, top=None, bottom=None, parent=None):
-        super().__init__(parent, [name])
+    def __init__(self, name, top=None, bottom=None, parent: Optional[QtWidgets.QTreeWidgetItem] = None) -> None:
+        super().__init__(parent)  # type: ignore
+        self.setText(0, name)
         self.name = name
         self.top = top
         self.bottom = bottom
@@ -905,37 +895,47 @@ class MenuWidget(QtWidgets.QScrollArea):
 
     modified = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
-        self.nameLineEdit = RestrictedLineEdit(self)
+
+        self.nameLabel: QtWidgets.QLabel = QtWidgets.QLabel(self)
+        self.nameLabel.setText(self.tr("Name"))
+
+        self.nameLineEdit: QtWidgets.QLineEdit = RestrictedLineEdit(self)
         self.nameLineEdit.setPrefix("L1Menu_")
         self.nameLineEdit.setRegexPattern("L1Menu_[a-zA-Z0-9_]+")
         self.nameLineEdit.textEdited.connect(self.onModified)
-        self.commentTextEdit = QtWidgets.QPlainTextEdit(self)
-        self.commentTextEdit.setMaximumHeight(80)
+
+        self.commentLabel: QtWidgets.QLabel = QtWidgets.QLabel(self)
+        self.commentLabel.setText(self.tr("Comment"))
+
+        self.commentTextEdit: QtWidgets.QPlainTextEdit = QtWidgets.QPlainTextEdit(self)
         self.commentTextEdit.textChanged.connect(self.onModified)
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addWidget(QtWidgets.QLabel(self.tr("Name"), self))
-        vbox.addWidget(self.nameLineEdit)
-        vbox.addWidget(QtWidgets.QLabel(self.tr("Comment"), self))
-        vbox.addWidget(self.commentTextEdit)
-        vbox.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
-        view = QtWidgets.QWidget(self)
-        view.setLayout(vbox)
+
+        widget: QtWidgets.QWidget = QtWidgets.QWidget(self)
+
+        layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(widget)
+        layout.addWidget(self.nameLabel)
+        layout.addWidget(self.nameLineEdit)
+        layout.addWidget(self.commentLabel)
+        layout.addWidget(self.commentTextEdit)
+        layout.setStretch(3, 1)
+
         self.setAutoFillBackground(True)
         self.setWidgetResizable(True)
         self.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.setWidget(view)
+        self.setWidget(widget)
 
-    def loadMenu(self, menu):
+    def loadMenu(self, menu) -> None:
         """Load input values from menu."""
         self.nameLineEdit.setText(menu.menu.name)
         self.commentTextEdit.setPlainText(menu.menu.comment)
 
-    def updateMenu(self, menu):
+    def updateMenu(self, menu) -> None:
         """Update menu with values from inputs."""
         menu.menu.name = self.nameLineEdit.text()
         menu.menu.comment = self.commentTextEdit.toPlainText()
 
-    def onModified(self):
+    @QtCore.pyqtSlot()
+    def onModified(self) -> None:
         self.modified.emit()

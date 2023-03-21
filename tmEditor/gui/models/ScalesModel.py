@@ -1,5 +1,9 @@
 """Scales model."""
 
+from typing import Optional
+
+from PyQt5 import QtCore
+
 import tmGrammar
 
 # HACK: overload with missing attributes.
@@ -36,7 +40,7 @@ def fPatchType(item):
 class ScalesModel(AbstractTableModel):
     """Default scales table model."""
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtCore.QObject] = None) -> None:
         super().__init__(menu.scales.scales, parent)
         self.addColumnSpec("Object", lambda item: item[kObject])
         self.addColumnSpec("Type", fPatchType)

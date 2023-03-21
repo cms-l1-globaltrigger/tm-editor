@@ -5,14 +5,14 @@ This dialog provides an dialog to import algorithms from another XML file.
 Example usage:
 >>> dialog = ImportDialog()
 >>> dialog.exec_()
->>> print dialog.algorithms
->>> print dialog.cuts
+>>> print(dialog.algorithms)
+>>> print(dialog.cuts)
 """
 
 import logging
+from typing import List, Optional
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 from tmEditor.core import XmlDecoder
 
@@ -23,13 +23,13 @@ from tmEditor.gui.Document import TableView
 from tmEditor.gui.CommonWidgets import IconLabel, createIcon
 from tmEditor.gui.CommonWidgets import TextFilterWidget
 
-__all__ = ['ImportDialog', ]
+__all__ = ["ImportDialog"]
 
 # -----------------------------------------------------------------------------
 #  Keys
 # -----------------------------------------------------------------------------
 
-kName = 'name'
+kName = "name"
 
 # -----------------------------------------------------------------------------
 #  Import dialog class
@@ -38,11 +38,11 @@ kName = 'name'
 class ImportDialog(QtWidgets.QDialog):
     """Dialog providing importing of algorithms from another XML file."""
 
-    def __init__(self, filename, menu, parent=None):
+    def __init__(self, filename, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         # Algorithm selection
-        self.algorithms = []
-        self.cuts = []
+        self.algorithms: List = []
+        self.cuts: List = []
         self.baseMenu = menu
         self.loadMenu(filename)
         self.validateMenu()
@@ -61,7 +61,7 @@ class ImportDialog(QtWidgets.QDialog):
         self.setWindowTitle(self.tr("Import"))
         self.setMinimumWidth(500)
         # Filter bar
-        self.filterWidget = TextFilterWidget(self, spacer=True)
+        self.filterWidget = TextFilterWidget(True, self)
         self.filterWidget.textChanged.connect(self.setFilterText)
         # Table view
         model = AlgorithmsModel(self.menu, self)

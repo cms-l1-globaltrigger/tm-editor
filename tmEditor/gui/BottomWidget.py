@@ -1,10 +1,9 @@
 """Bottom widget."""
 
 import re
+from typing import Optional
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import tmGrammar
 
@@ -25,25 +24,25 @@ from tmEditor.gui.CommonWidgets import createIcon
 
 from tmEditor import tmeditor_rc
 
-__all__ = ['BottomWidget', ]
+__all__ = ["BottomWidget"]
 
 # HACK: overload with missing attributes.
 tmGrammar.ET = "ET"
 tmGrammar.PT = "PT"
 
-kCable = 'cable'
-kChannel = 'channel'
-kDescription = 'description'
-kLabel = 'label'
-kMaximum = 'maximum'
-kMinimum = 'minimum'
-kNBits = 'n_bits'
-kName = 'name'
-kNumber = 'number'
-kObject = 'object'
-kStep = 'step'
-kSystem = 'system'
-kType = 'type'
+kCable = "cable"
+kChannel = "channel"
+kDescription = "description"
+kLabel = "label"
+kMaximum = "maximum"
+kMinimum = "minimum"
+kNBits = "n_bits"
+kName = "name"
+kNumber = "number"
+kObject = "object"
+kStep = "step"
+kSystem = "system"
+kType = "type"
 
 # ------------------------------------------------------------------------------
 #  Helpers
@@ -54,14 +53,14 @@ def highlight(expression):
     expression = AlgorithmFormatter.normalize(expression)
     for name in FunctionTypes:
         expression = re.sub(
-            r'({0})({{)'.format(name),
-            r'<span style="color: blue; font-weight: bold;">\1</span>\2',
+            r"({0})({{)".format(name),
+            r"<span style=\"color: blue; font-weight: bold;\">\1</span>\2",
             expression
         )
     for name in (tmGrammar.AND, tmGrammar.OR, tmGrammar.XOR, tmGrammar.NOT):
         expression = re.sub(
-            r'([\ \)])({0})([\ \(])'.format(name),
-            r'\1<span style="color: darkblue; font-weight: bold;">\2</span>\3',
+            r"([\ \)])({0})([\ \(])".format(name),
+            r"\1<span style=\"color: darkblue; font-weight: bold;\">\2</span>\3",
             expression
         )
     return expression
@@ -85,7 +84,7 @@ class ToolbarWidget(QtWidgets.QWidget):
     removeTriggered = QtCore.pyqtSignal()
     moveTriggered = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
@@ -121,7 +120,7 @@ class ToolbarWidget(QtWidgets.QWidget):
 class BottomWidget(QtWidgets.QWidget):
     """Widget displayed below table view showing previews of selected items."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.toolbar = ToolbarWidget(self)
         self.notice = IconLabel(QtGui.QIcon(), "", self)
@@ -149,10 +148,9 @@ class BottomWidget(QtWidgets.QWidget):
         box.addWidget(self.etaCutChart)
         groupBox.setLayout(box)
         groupBox.setAlignment(QtCore.Qt.AlignBottom)
-        layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(5, 5, 5, 5)
-        layout.addWidget(groupBox)
-        self.etaCutWidget.setLayout(layout)
+        etaCutLayout = QtWidgets.QVBoxLayout(self.etaCutWidget)
+        etaCutLayout.setContentsMargins(5, 5, 5, 5)
+        etaCutLayout.addWidget(groupBox)
 
         self.phiCutChart = PhiCutChart(self)
         # MacOS workaround, need to wrap group box to avoid layout glitch
@@ -168,12 +166,11 @@ class BottomWidget(QtWidgets.QWidget):
         box.addWidget(self.phiCutChart)
         groupBox.setLayout(box)
         groupBox.setAlignment(QtCore.Qt.AlignBottom)
-        layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(5, 5, 5, 5)
-        layout.addWidget(groupBox)
-        self.phiCutWidget.setLayout(layout)
+        phiCutLayout = QtWidgets.QVBoxLayout(self.phiCutWidget)
+        phiCutLayout.setContentsMargins(5, 5, 5, 5)
+        phiCutLayout.addWidget(groupBox)
 
-        layout = QtWidgets.QGridLayout()
+        layout = QtWidgets.QGridLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.toolbar, 0, 0, 1, 3)
@@ -181,29 +178,28 @@ class BottomWidget(QtWidgets.QWidget):
         layout.addWidget(self.textEdit, 2, 0)
         layout.addWidget(self.etaCutWidget, 2, 1)
         layout.addWidget(self.phiCutWidget, 2, 2)
-        self.setLayout(layout)
+
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         self.clearNotice()
         self.etaCutWidget.hide()
         self.phiCutWidget.hide()
         self.clearNotice()
 
-    def setNotice(self, text, icon=None):
+    def setNotice(self, text: str, icon: Optional[QtGui.QIcon] = None) -> None:
         self.notice.show()
-        self.notice.icon.hide()
-        self.notice.icon.clear()
+        self.notice.iconLabel.hide()
+        self.notice.iconLabel.clear()
         self.notice.setText(text)
         if icon:
-            self.notice.icon.show()
+            self.notice.iconLabel.show()
             self.notice.setIcon(icon)
 
-    def clearNotice(self):
+    def clearNotice(self) -> None:
         self.notice.hide()
         self.notice.setText("")
-        self.notice.icon.clear()
-        self.notice.label.clear()
+        self.notice.iconLabel.clear()
 
     def setEtaCutChart(self, lower, upper):
         self.etaCutChart.setRange(lower, upper)
@@ -213,7 +209,7 @@ class BottomWidget(QtWidgets.QWidget):
         self.phiCutChart.setRange(lower, upper)
         self.phiCutWidget.show()
 
-    def setText(self, message):
+    def setText(self, message: str) -> None:
         self.textEdit.setText(message)
 
     # Load params from item
@@ -234,7 +230,7 @@ class BottomWidget(QtWidgets.QWidget):
         content.append(richTextCutsPreview(menu, algorithm, self))
         self.setText("".join(content))
 
-    def loadCut(self, cut):
+    def loadCut(self, cut, menu):
         self.reset()
         content = []
         content.append(self.tr("<h2>{}</h2>").format(cut.name))
@@ -258,7 +254,7 @@ class BottomWidget(QtWidgets.QWidget):
                     data_ = CutSpecs.query(type=cut.type)[0].data # TODO
                 else:
                     data_ = CutSpecs.query(type=cut.type, object=cut.object)[0].data # TODO
-                for key in cut.data.split(','):
+                for key in cut.data.split(","):
                     if cut.type == tmGrammar.ISO:
                         datalist.append(self.tr("<li>[0b{0:02b}] {1}</li>").format(int(key), data_[key]))
                     else:
@@ -272,6 +268,16 @@ class BottomWidget(QtWidgets.QWidget):
         if cut.comment:
             content.append(self.tr("<p><strong>Comment:</strong></p>"))
             content.append(self.tr("<p><code>{}</code></p>").format(cut.comment))
+        # usedIn = {}
+        # for algorithm in menu.algorithms:
+        #     if cut.name in algorithm.cuts():
+        #         usedIn[algorithm.name] = algorithm
+        # if usedIn:
+        #     content.append(self.tr("<p><strong>Used in {} Algorithm(s):</strong></p>").format(len(usedIn)))
+        #     content.append(self.tr("<p><ul>"))
+        #     for algorithm in usedIn.values():
+        #         content.append(self.tr("<li>{} {}</li>").format(algorithm.index, algorithm.name))
+        #     content.append(self.tr("</ul></p>"))
         self.setText("".join(content))
         # Show charts if available.
         if cut.type == tmGrammar.ETA:

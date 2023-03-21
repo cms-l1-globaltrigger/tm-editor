@@ -3,9 +3,9 @@
 import math
 import logging
 import re
+from typing import List, Optional, Tuple
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 import tmGrammar
 
@@ -28,18 +28,20 @@ from tmEditor.gui.CommonWidgets import (
 
 __all__ = ["CutEditorDialog"]
 
+RangeType = Tuple[float, float]
+
 # ------------------------------------------------------------------------------
 #  Keys
 # ------------------------------------------------------------------------------
 
-kComment = 'comment'
-kData = 'data'
-kMaximum = 'maximum'
-kMinimum = 'minimum'
-kName = 'name'
-kNumber = 'number'
-kType = 'type'
-kObject = 'object'
+kComment: str = "comment"
+kData: str = "data"
+kMaximum: str = "maximum"
+kMinimum: str = "minimum"
+kName: str = "name"
+kNumber: str = "number"
+kType: str = "type"
+kObject: str = "object"
 
 ObjectCollectionRanges = {
     tmGrammar.MU: (0, 7),
@@ -53,20 +55,28 @@ ObjectCollectionRanges = {
 #  Regular expressions
 # -----------------------------------------------------------------------------
 
-RegExFloatingPoint = re.compile(r'([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)')
+RegExFloatingPoint = re.compile(r"([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)")
 """Regular expression to match floating points."""
 
 # -----------------------------------------------------------------------------
 #  Helper functions
 # -----------------------------------------------------------------------------
 
-def createVerticalSpacerItem(width=0, height=0):
+def getScale(scales, name: str) -> List:
+    try:
+        return scales.bins[name]
+    except IndexError:
+        return []
+
+
+def createVerticalSpacerItem(width: int = 0, height: int = 0):
     """Returns a new vertical QSpacerItem instance."""
     horizontalPolicy = QtWidgets.QSizePolicy.MinimumExpanding
     verticalPolicy = QtWidgets.QSizePolicy.MinimumExpanding
     return QtWidgets.QSpacerItem(width, height, horizontalPolicy, verticalPolicy)
 
-def calculateRange(specification, scales):
+
+def calculateRange(specification, scales) -> RangeType:
     """Returns calcualted range for linear cut."""
     # Unconstrained pt
     if specification.type == tmGrammar.UPT:
@@ -76,7 +86,7 @@ def calculateRange(specification, scales):
             minimum = float(scale[kMinimum])
             maximum = float(scale[kMaximum])
             return minimum, maximum
-        return 0, 0
+        return 0.0, 0.0
     # Delta eta
     if specification.type in (tmGrammar.DETA, tmGrammar.ORMDETA):
         def isMuEta(scale): # filter
@@ -86,13 +96,13 @@ def calculateRange(specification, scales):
         for scaleMu in filter(isMuEta, scales.scales):
             for scaleCalo in filter(isJetEta, scales.scales):
                 scale = scaleMu if scaleMu[kMaximum] > scaleCalo[kMaximum] else scaleCalo
-                minimum = 0.
-                maximum = float(scale[kMaximum]) * 2.
+                minimum = 0.0
+                maximum = float(scale[kMaximum]) * 2.0
                 return minimum, maximum
-            return 0, 0
+            return 0.0, 0.0
     # Delta phi
     if specification.type in (tmGrammar.DPHI, tmGrammar.ORMDPHI):
-        minimum = 0.
+        minimum = 0.0
         maximum = math.pi
         return minimum, maximum
     # Delta-R
@@ -106,14 +116,18 @@ def calculateRange(specification, scales):
         return calculateInvMassRange()
     # Invariant mass/delta-R
     if specification.type == tmGrammar.MASSDR:
-        return 0E0, 1E8
+        return 0.0, 1e8
     # Two body pt
     if specification.type == tmGrammar.TBPT:
         return calculateTwoBodyPtRange()
     # Slices
     if specification.type == tmGrammar.SLICE:
         return ObjectCollectionRanges[specification.object]
+    # Anomaly score
+    if specification.type == tmGrammar.ASCORE:
+        return 0.0, 1e8
     raise RuntimeError(f"Invalid cut type: {specification.type}")
+
 
 # -----------------------------------------------------------------------------
 #  Exception classes
@@ -133,7 +147,7 @@ class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
     MaximumMode = kMaximum
     EmptyScale = [{kNumber: 0, kMinimum: .0, kMaximum: .0}]
 
-    def __init__(self, mode=MinimumMode, parent=None):
+    def __init__(self, mode=MinimumMode, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setMode(mode)
         self.setScale(self.EmptyScale)
@@ -198,7 +212,7 @@ class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
 class RangeSpinBox(QtWidgets.QDoubleSpinBox):
     """Custom spin box for fixed stepped ranges."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
 
     def setMinimum(self, minimum):
@@ -231,7 +245,7 @@ class InputWidget(QtWidgets.QWidget):
     >>> widget.updateCut(cut)
     """
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.specification = specification
         self.scales = scales
@@ -244,10 +258,11 @@ class InputWidget(QtWidgets.QWidget):
         """Update existing cut from inputs."""
         raise NotImplementedError()
 
+
 class ScaleWidget(InputWidget):
     """Provides scales range entries."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -298,9 +313,9 @@ class ScaleWidget(InputWidget):
         self.maximumSpinBox.valueChanged.connect(self.updateCharts)
 
     def initRange(self):
-        scale = self.scales.bins[self.specification.name]
-        self.minimumSpinBox.setScale(scale)
-        self.maximumSpinBox.setScale(scale)
+        scale = getScale(self.scales, self.specification.name)
+        self.minimumSpinBox.setScale(scale, self.specification.range_precision)
+        self.maximumSpinBox.setScale(scale, self.specification.range_precision)
         minimum = self.minimumSpinBox.minimum()
         maximum = self.maximumSpinBox.maximum()
         self.minimumSpinBox.setValue(minimum)
@@ -328,10 +343,11 @@ class ScaleWidget(InputWidget):
             self.phiCutChart.update()
             self.phiCutChart.show()
 
+
 class RangeWidget(InputWidget):
     """Provides range entries."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -397,10 +413,11 @@ class RangeWidget(InputWidget):
         cut.maximum = self.maximumSpinBox.value()
         cut.data = ""
 
+
 class InfiniteRangeWidget(InputWidget):
     """Provides range entries with infinity option."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -490,10 +507,11 @@ class InfiniteRangeWidget(InputWidget):
         cut.maximum = maximum
         cut.data = ""
 
+
 class SliceWidget(InputWidget):
     """Provides slice selection entries, using cut minimum/maximum."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -553,10 +571,11 @@ class SliceWidget(InputWidget):
         cut.maximum = end
         cut.data = ""
 
+
 class ThresholdWidget(InputWidget):
     """Provides a single threshold entry, using only cut minimum."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -601,10 +620,11 @@ class ThresholdWidget(InputWidget):
         cut.maximum = 0.
         cut.data = ""
 
+
 class MaximumWidget(InputWidget):
     """Provides a maximum only entriy."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
         self.initRange()
@@ -649,10 +669,11 @@ class MaximumWidget(InputWidget):
         cut.maximum = self.maximumSpinBox.value()
         cut.data = ""
 
+
 class MultipleJoiceWidget(InputWidget):
     """Provides a multiple joice entry."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
 
@@ -711,14 +732,15 @@ class MultipleJoiceWidget(InputWidget):
                 tokens.append(key)
         if not tokens:
             raise CutEditorError("No option checked!")
-        cut.minimum = ""
-        cut.maximum = ""
+        cut.minimum = 0.0
+        cut.maximum = 0.0
         cut.data = ",".join(tokens)
+
 
 class MultipleJoiceIsoWidget(MultipleJoiceWidget):
     """Provides a multiple joice entry for isolation."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
 
     def format_label(self, key, value):
@@ -726,10 +748,11 @@ class MultipleJoiceIsoWidget(MultipleJoiceWidget):
         index = int(key)
         return f"[0b{index:02b}] {value}"
 
+
 class SingleJoiceWidget(InputWidget):
     """Provides a single joice entry."""
 
-    def __init__(self, specification, scales, parent=None):
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
         self.setupUi()
 
@@ -784,8 +807,8 @@ class SingleJoiceWidget(InputWidget):
                 break
         if not token:
             raise CutEditorError("No option checked!")
-        cut.minimum = ""
-        cut.maximum = ""
+        cut.minimum = 0.0
+        cut.maximum = 0.0
         cut.data = token
 
 # -----------------------------------------------------------------------------
@@ -795,7 +818,7 @@ class SingleJoiceWidget(InputWidget):
 class CutTreeWidget(QtWidgets.QTreeWidget):
     """Tree widget displaying cut types hierarchical."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
 
     def loadCutSpecs(self, specs):
@@ -823,10 +846,12 @@ class CutTreeWidget(QtWidgets.QTreeWidget):
         item.widget = widget
         return item
 
+
 class CutEditorDialog(QtWidgets.QDialog):
     """Cut editor dialog."""
 
     InputWidgetFactory = {
+        # Object cuts
         tmGrammar.UPT: InfiniteRangeWidget,
         tmGrammar.ETA: ScaleWidget,
         tmGrammar.PHI: ScaleWidget,
@@ -836,6 +861,9 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.CHG: SingleJoiceWidget,
         tmGrammar.IP: MultipleJoiceWidget,
         tmGrammar.SLICE: SliceWidget,
+        tmGrammar.INDEX: ScaleWidget,
+        tmGrammar.ASCORE: ThresholdWidget,
+        # Function cuts
         tmGrammar.CHGCOR: SingleJoiceWidget,
         tmGrammar.DETA: RangeWidget,
         tmGrammar.DPHI: RangeWidget,
@@ -850,7 +878,7 @@ class CutEditorDialog(QtWidgets.QDialog):
     }
     """Widget factory for different cut input types."""
 
-    def __init__(self, menu, parent=None):
+    def __init__(self, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Create new dialog window."""
         super().__init__(parent)
         self.menu = menu
@@ -866,7 +894,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         # Type selector
         self.treeWidget = CutTreeWidget(self)
         self.treeWidget.setObjectName("treeWidget")
-        self.treeWidget.setProperty('showDropIndicator', QtCore.QVariant(False))
+        self.treeWidget.setProperty("showDropIndicator", QtCore.QVariant(False))
         self.treeWidget.header().setVisible(False)
         # Stack widget
         self.stackWidget = QtWidgets.QStackedWidget(self)
@@ -876,7 +904,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         self.suffixLabel.setObjectName("suffixLabel")
         self.suffixLineEdit = RestrictedLineEdit(self)
         self.suffixLineEdit.setObjectName("suffixLineEdit")
-        self.suffixLineEdit.setRegexPattern('[a-zA-Z0-9_]+')
+        self.suffixLineEdit.setRegexPattern("[a-zA-Z0-9_]+")
         self.suffixLineEdit.setText(self.tr("Unnamed"))
         # Description
         self.textBrowser = QtWidgets.QTextBrowser(self)
@@ -940,7 +968,7 @@ class CutEditorDialog(QtWidgets.QDialog):
                 rootItems[key] = self.treeWidget.addRootItem(key, widget)
             root = rootItems[key]
             # On missing scale (editing outdated XML?)
-            if spec.type in (tmGrammar.ETA, tmGrammar.PHI, tmGrammar.UPT):
+            if spec.type in (tmGrammar.ETA, tmGrammar.PHI, tmGrammar.UPT, tmGrammar.INDEX):
                 if spec.name not in scales.bins:
                     widget = self.stackWidget.widget(0)
                     item = self.treeWidget.addCutItem(root, spec, widget) # TODO
@@ -1045,7 +1073,6 @@ class CutEditorDialog(QtWidgets.QDialog):
                     description.append("<li><span>{0}</span></li>".format(obj))
                 description.append("</ul>")
             self.textBrowser.setHtml("".join(description))
-
 
     @QtCore.pyqtSlot()
     def showSelectedCut(self):
