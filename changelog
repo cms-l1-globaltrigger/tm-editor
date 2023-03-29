@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.15.0] - 2022-03-16
+## [0.15.1] - 2023-03-29
+### Fixed
+- Crash on add/edit external signal in algorithm editor.
+
+## [0.15.0] - 2023-03-16
 ### Added
 - Support for grammar revision 0.11
 - Additional muon shower signal (MUS2).

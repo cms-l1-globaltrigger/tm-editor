@@ -92,11 +92,11 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
     def updateInfoText(self):
         """Update info box text."""
         name = toExternal(self.name()).signal_name
-        for signal in filter(lambda signal: signal.get(kName) == name, self.menu.extSignals.extSignals):
-            system = signal.get(kSystem)
-            cable = signal.get(kCable)
-            channel = signal.get(kChannel)
-            label = signal.get(kLabel, "")
+        for signal in filter(lambda signal: signal[kName] == name, self.menu.extSignals.extSignals):
+            system = signal[kSystem]
+            cable = signal[kCable]
+            channel = signal[kChannel]
+            label = signal[kLabel] if kLabel in signal else ""
             expression = self.expression()
             text = []
             text.append(f"<h3>External Signal Requirement</h3>")
