@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.3] - 2023-04-24
+### Fixed
+- Bug preventing entering/editing ETA and PHI cut ranges for non muon objects.
+
 ## [0.15.2] - 2023-03-29
 ### Changed
 - Depends on PyQt5 5.14
@@ -389,7 +393,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support most of the algorithm expression language features.
 
-[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.2...HEAD
+[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.3...HEAD
+[0.15.3]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.2...0.15.3
 [0.15.2]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.1...0.15.2
 [0.15.1]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.0...0.15.1
 [0.15.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.14.0...0.15.0
