@@ -7,7 +7,7 @@ Install using pip (>= 19.0)
 
 ```bash
 pip install --upgrade pip
-pip install git+https://github.com/cms-l1-globaltrigger/tm-editor.git@0.15.2
+pip install git+https://github.com/cms-l1-globaltrigger/tm-editor.git@0.15.3
 ```
 
 ## Build
