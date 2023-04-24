@@ -6,13 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-<<<<<<< HEAD
 ## [0.15.3] - 2023-04-24
 ### Fixed
 - Bug preventing entering/editing ETA and PHI cut ranges for non muon objects.
 
-=======
->>>>>>> main
 ## [0.15.2] - 2023-03-29
 ### Changed
 - Depends on PyQt5 5.14
