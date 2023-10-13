@@ -124,11 +124,14 @@ def toRect(x: float, y: float, w: float, h: float) -> QtCore.QRect:
 #  Icon factories
 # -----------------------------------------------------------------------------
 
-def createIcon(name):
+def createIcon(name: str) -> QtGui.QIcon:
     """Factory function, creates a multi resolution gnome theme icon."""
-    icon = QtGui.QIcon.fromTheme(name)
-    if not icon.isNull():
-        return icon
+    # Check if icon is provided by theme
+    if QtGui.QIcon.hasThemeIcon(name):
+        icon = QtGui.QIcon.fromTheme(name)
+        if not icon.isNull():
+            return icon
+    # Create fallback icon
     icon = QtGui.QIcon()
     if not len(icon.availableSizes()):
         filename = f":/icons/{name}.svg"

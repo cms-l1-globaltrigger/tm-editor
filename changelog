@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.4] - 2023-10-13
+### Fixed
+- Show default icon if missing theme icon (#37).
+
 ## [0.15.3] - 2023-04-24
 ### Fixed
 - Bug preventing entering/editing ETA and PHI cut ranges for non muon objects.
@@ -393,7 +397,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support most of the algorithm expression language features.
 
-[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.3...HEAD
+[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.4...HEAD
+[0.15.4]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.3...0.15.4
 [0.15.3]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.2...0.15.3
 [0.15.2]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.1...0.15.2
 [0.15.1]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.0...0.15.1
