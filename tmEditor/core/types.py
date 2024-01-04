@@ -74,6 +74,10 @@ SignalTypes = (
     tmGrammar.MUSOOT1,
     # Anomaly detection trigger
     tmGrammar.ADT,
+    # Topological trigger
+    tmGrammar.TOPO,
+    # CICADA trigger
+    tmGrammar.CICADA,
 )
 """Ordered list of all supported signal types."""
 
@@ -96,6 +100,10 @@ ObjectCutTypes = (
     tmGrammar.INDEX,
     # For anomaly detection trigger
     tmGrammar.ASCORE,
+    # For topological trigger
+    tmGrammar.TSCORE,
+    # For CICADA trigger
+    tmGrammar.CSCORE,
 )
 """Orderd list of object cut type names."""
 

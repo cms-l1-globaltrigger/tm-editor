@@ -206,6 +206,24 @@ class RequiredObjectCuts(SyntaxRule):
                     if ascore_count != 1:
                         message = f"ADT object requires exactly one ASCORE cut. Invalid expression near {token!r}"
                         raise AlgorithmSyntaxError(message)
+                if token.startswith(tmGrammar.TOPO):
+                    o = self.toObjectItem(token)
+                    tscore_count = 0
+                    for cut in o.cuts:
+                        if cut.startswith(tmGrammar.TOPO + "-" + tmGrammar.TSCORE):
+                            tscore_count += 1
+                    if tscore_count != 1:
+                        message = f"TOPO object requires exactly one TSCORE cut. Invalid expression near {token!r}"
+                        raise AlgorithmSyntaxError(message)
+                if token.startswith(tmGrammar.CICADA):
+                    o = self.toObjectItem(token)
+                    cscore_count = 0
+                    for cut in o.cuts:
+                        if cut.startswith(tmGrammar.CICADA + "-" + tmGrammar.CSCORE):
+                            cscore_count += 1
+                    if cscore_count != 1:
+                        message = f"CICADA object requires exactly one CSCORE cut. Invalid expression near {token!r}"
+                        raise AlgorithmSyntaxError(message)
 
 
 class CombBxOffset(SyntaxRule):

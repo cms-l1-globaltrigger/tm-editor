@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2024-01-04
+### Added
+- Support for grammar revision 0.12 (CICADA and Topological Trigger)
+
 ## [0.15.4] - 2023-10-13
 ### Fixed
 - Show default icon if missing theme icon (#37).
