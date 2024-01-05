@@ -131,7 +131,7 @@ def calculateRange(specification, scales) -> RangeType:
         return 0.0, 1e8
     # CICADA score
     if specification.type == tmGrammar.CSCORE:
-        return 0.0, 1e8
+        return 0.0, 255.0
     raise RuntimeError(f"Invalid cut type: {specification.type}")
 
 
@@ -239,6 +239,7 @@ class RangeSpinBox(QtWidgets.QDoubleSpinBox):
         """Returns nearest neighbor of value in range."""
         step = self.singleStep()
         return round(value / step) * step
+
 
 # -----------------------------------------------------------------------------
 #  Inout widget classes
@@ -418,76 +419,6 @@ class RangeWidget(InputWidget):
         cut.minimum = self.minimumSpinBox.value()
         cut.maximum = self.maximumSpinBox.value()
         cut.data = ""
-
-class CicadaWidget(InputWidget):
-    """Provides range entries."""
-
-    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
-        super().__init__(specification, scales, parent)
-        self.setupUi()
-        self.initRange()
-
-    def setupUi(self):
-        # Create labels
-        self.minimumLabel = QtWidgets.QLabel(self.tr("Integer"), self)
-        self.minimumLabel.setObjectName("minimumLabel")
-        self.maximumLabel = QtWidgets.QLabel(self.tr("Decimal"), self)
-        self.maximumLabel.setObjectName("maximumLabel")
-        # Create minimum input widget
-        self.minimumSpinBox = RangeSpinBox(self)
-        self.minimumSpinBox.setObjectName("minimumSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.minimumSpinBox.sizePolicy().hasHeightForWidth())
-        self.minimumSpinBox.setSizePolicy(sizePolicy)
-        self.minimumSpinBox.setSingleStep(self.specification.range_step)
-        self.minimumSpinBox.setDecimals(self.specification.range_precision)
-        if self.specification.range_unit:
-            self.minimumSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
-        # Create maximum input widget
-        self.maximumSpinBox = RangeSpinBox(self)
-        self.maximumSpinBox.setObjectName("maximumSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.maximumSpinBox.sizePolicy().hasHeightForWidth())
-        self.maximumSpinBox.setSizePolicy(sizePolicy)
-        self.maximumSpinBox.setSingleStep(self.specification.range_step)
-        self.maximumSpinBox.setDecimals(self.specification.range_precision)
-        if self.specification.range_unit:
-            self.maximumSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
-        # Create layout
-        layout = QtWidgets.QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.minimumLabel, 0, 0)
-        layout.addWidget(self.minimumSpinBox, 0, 1)
-        layout.addWidget(self.maximumLabel, 1, 0)
-        layout.addWidget(self.maximumSpinBox, 1, 1)
-        layout.addItem(createVerticalSpacerItem())
-        self.setLayout(layout)
-
-    def initRange(self):
-        """Set range for inputs."""
-        minimum, maximum = calculateRange(self.specification, self.scales)
-        self.minimumSpinBox.setRange(minimum, maximum)
-        self.maximumSpinBox.setRange(minimum, maximum)
-        minimum = self.minimumSpinBox.minimum()
-        maximum = self.maximumSpinBox.maximum()
-        self.minimumSpinBox.setValue(minimum)
-        self.maximumSpinBox.setValue(maximum)
-
-    def loadCut(self, cut):
-        """Initialize widget from cut item."""
-        self.minimumSpinBox.setValue(float(cut.minimum))
-        self.maximumSpinBox.setValue(float(cut.maximum))
-
-    def updateCut(self, cut):
-        """Update existing cut from inputs."""
-        cut.minimum = self.minimumSpinBox.value()
-        cut.maximum = self.maximumSpinBox.value()
-        cut.data = ""
-
 
 class InfiniteRangeWidget(InputWidget):
     """Provides range entries with infinity option."""
@@ -669,6 +600,55 @@ class ThresholdWidget(InputWidget):
         self.thresholdSpinBox.setSizePolicy(sizePolicy)
         self.thresholdSpinBox.setSingleStep(self.specification.range_step)
         self.thresholdSpinBox.setDecimals(self.specification.range_precision)
+        self.thresholdSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
+        # Create layout
+        layout = QtWidgets.QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.thresholdLabel, 0, 0)
+        layout.addWidget(self.thresholdSpinBox, 0, 1)
+        layout.addItem(createVerticalSpacerItem())
+        self.setLayout(layout)
+
+    def initRange(self):
+        """Set range for inputs."""
+        minimum, maximum = calculateRange(self.specification, self.scales)
+        self.thresholdSpinBox.setRange(minimum, maximum)
+        minimum = self.thresholdSpinBox.minimum()
+        self.thresholdSpinBox.setValue(minimum)
+
+    def loadCut(self, cut):
+        """Initialize widget from cut item."""
+        self.thresholdSpinBox.setValue(float(cut.minimum))
+
+    def updateCut(self, cut):
+        """Update existing cut from inputs."""
+        cut.minimum = self.thresholdSpinBox.value()
+        cut.maximum = 0.
+        cut.data = ""
+
+
+class CicadaWidget(InputWidget):
+    """Provides a single threshold entry, using only cut minimum."""
+
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
+        super().__init__(specification, scales, parent)
+        self.setupUi()
+        self.initRange()
+
+    def setupUi(self):
+        # Create labels
+        self.thresholdLabel = QtWidgets.QLabel(self.tr("CSCORE"), self)
+        self.thresholdLabel.setObjectName("thresholdLabel")
+        # Create threshold input widget
+        self.thresholdSpinBox = RangeSpinBox(self)
+        self.thresholdSpinBox.setObjectName("thresholdSpinBox")
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.thresholdSpinBox.sizePolicy().hasHeightForWidth())
+        self.thresholdSpinBox.setSizePolicy(sizePolicy)
+        self.thresholdSpinBox.setSingleStep(1/2**8)
+        self.thresholdSpinBox.setDecimals(8)
         self.thresholdSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
         # Create layout
         layout = QtWidgets.QGridLayout()
