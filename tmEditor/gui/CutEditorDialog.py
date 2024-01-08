@@ -123,15 +123,15 @@ def calculateRange(specification, scales) -> RangeType:
     # Slices
     if specification.type == tmGrammar.SLICE:
         return ObjectCollectionRanges[specification.object]
-    # Anomaly score
+    # Anomaly score (18 bits)
     if specification.type == tmGrammar.ASCORE:
-        return 0.0, 1e8
-    # Topological score
+        return 0.0, 2**18
+    # Topological score (16 bits)
     if specification.type == tmGrammar.TSCORE:
-        return 0.0, 1e8
-    # CICADA score
+        return 0.0, 2**16
+    # CICADA score (AD Integer = 8 bits)
     if specification.type == tmGrammar.CSCORE:
-        return 0.0, 255.0
+        return 0.0, 2**8
     raise RuntimeError(f"Invalid cut type: {specification.type}")
 
 
@@ -627,55 +627,6 @@ class ThresholdWidget(InputWidget):
         cut.data = ""
 
 
-class CicadaWidget(InputWidget):
-    """Provides a single threshold entry, using only cut minimum."""
-
-    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
-        super().__init__(specification, scales, parent)
-        self.setupUi()
-        self.initRange()
-
-    def setupUi(self):
-        # Create labels
-        self.thresholdLabel = QtWidgets.QLabel(self.tr("CSCORE"), self)
-        self.thresholdLabel.setObjectName("thresholdLabel")
-        # Create threshold input widget
-        self.thresholdSpinBox = RangeSpinBox(self)
-        self.thresholdSpinBox.setObjectName("thresholdSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(1)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.thresholdSpinBox.sizePolicy().hasHeightForWidth())
-        self.thresholdSpinBox.setSizePolicy(sizePolicy)
-        self.thresholdSpinBox.setSingleStep(1/2**8)
-        self.thresholdSpinBox.setDecimals(8)
-        self.thresholdSpinBox.setSuffix(" {0}".format(self.specification.range_unit))
-        # Create layout
-        layout = QtWidgets.QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.thresholdLabel, 0, 0)
-        layout.addWidget(self.thresholdSpinBox, 0, 1)
-        layout.addItem(createVerticalSpacerItem())
-        self.setLayout(layout)
-
-    def initRange(self):
-        """Set range for inputs."""
-        minimum, maximum = calculateRange(self.specification, self.scales)
-        self.thresholdSpinBox.setRange(minimum, maximum)
-        minimum = self.thresholdSpinBox.minimum()
-        self.thresholdSpinBox.setValue(minimum)
-
-    def loadCut(self, cut):
-        """Initialize widget from cut item."""
-        self.thresholdSpinBox.setValue(float(cut.minimum))
-
-    def updateCut(self, cut):
-        """Update existing cut from inputs."""
-        cut.minimum = self.thresholdSpinBox.value()
-        cut.maximum = 0.
-        cut.data = ""
-
-
 class MaximumWidget(InputWidget):
     """Provides a maximum only entriy."""
 
@@ -919,7 +870,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.INDEX: ScaleWidget,
         tmGrammar.ASCORE: ThresholdWidget,
         tmGrammar.TSCORE: ThresholdWidget,
-        tmGrammar.CSCORE: CicadaWidget,
+        tmGrammar.CSCORE: ThresholdWidget,
         # Function cuts
         tmGrammar.CHGCOR: SingleJoiceWidget,
         tmGrammar.DETA: RangeWidget,
