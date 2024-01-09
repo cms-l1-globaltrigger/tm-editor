@@ -129,7 +129,7 @@ def calculateRange(specification, scales) -> RangeType:
     # Topological score (16 bits)
     if specification.type == tmGrammar.TSCORE:
         return 0.0, 2**16
-    # CICADA score (AD Integer = 8 bits)
+    # CICADA score (AD Integer = 8 bits [precision CICADA-CICADA-CicadaInteger])
     if specification.type == tmGrammar.CSCORE:
         return 0.0, 2**8
     raise RuntimeError(f"Invalid cut type: {specification.type}")

@@ -368,8 +368,8 @@ CutSpecs = CutSpecificationPool(
         range_step=1,
         count_minimum=1,
         count_maximum=1,
-        title="Anomaly score",
-        description="Threshold score for Anomaly Detection Trigger (18 bits). Maximum value 2**18 (262144)"
+        title="Anomaly Detection Trigger score",
+        description="Threshold for Anomaly Detection Trigger score (18 bits). Maximum value 2**18 (262144)"
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.TSCORE),
@@ -379,8 +379,8 @@ CutSpecs = CutSpecificationPool(
         range_step=1,
         count_minimum=1,
         count_maximum=1,
-        title="Topological score",
-        description="Threshold score for Topological Trigger (16 bits). Maximum value 2**16 (65536)"
+        title="Topological Trigger score",
+        description="Threshold for Topological Trigger score (16 bits). Maximum value 2**16 (65536)"
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.CICADA, tmGrammar.CSCORE),
@@ -390,8 +390,8 @@ CutSpecs = CutSpecificationPool(
         range_step=1/2**8,
         count_minimum=1,
         count_maximum=1,
-        title="CICADA score",
-        description="Threshold score for CICADA AD Trigger. Step size = 1/2**8 (0.00390625), where 8 is bitwidth of precision CICADA-CICADA-CicadaDecimal. Maximum value 256."
+        title="CICADA Trigger Anomaly Detection score",
+        description="Threshold for CICADA Anomaly Detection Trigger score. Step size = 1/2**8 (0.00390625), where 8 is bitwidth of precision CICADA-CICADA-CicadaDecimal. Maximum value 256 (2**8, where 8 is bitwidth of precision CICADA-CICADA-CicadaInteger)."
     ),
     CutSpecification(
         name=tmGrammar.CHGCOR,
