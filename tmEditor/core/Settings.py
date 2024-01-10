@@ -27,6 +27,14 @@ ContentsURL = "https://cern.ch/globaltrigger/upgrade/tme/userguide"
 Empty = ""
 """Empty string entry."""
 
+PrecCicadaDec = 8 
+"""Precision Cicada AD decimal part. TO DO: get value from scale PRECISION-CICADA-CICADA-CicadaDecimal!!!"""
+CscoreStepSize = 1/2**PrecCicadaDec 
+
+PrecCicadaInt = 8 
+"""Precision Cicada AD integer part (used only for "description"). TO DO: get value from scale PRECISION-CICADA-CICADA-CicadaInteger!!!"""
+CscoreMaxVal = 2**PrecCicadaInt 
+
 CutSpecs = CutSpecificationPool(
     CutSpecification(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.UPT),
@@ -386,12 +394,13 @@ CutSpecs = CutSpecificationPool(
         name=CutSpecification.join(tmGrammar.CICADA, tmGrammar.CSCORE),
         object=tmGrammar.CICADA,
         type=tmGrammar.CSCORE,
-        range_precision=8,
-        range_step=1/2**8,
+        range_precision=PrecCicadaDec,
+        range_step=CscoreStepSize,
         count_minimum=1,
         count_maximum=1,
         title="CICADA Trigger Anomaly Detection score",
-        description="Threshold for CICADA Anomaly Detection Trigger score. Step size = 1/2**8 (0.00390625), where 8 is bitwidth of precision CICADA-CICADA-CicadaDecimal. Maximum value 256 (2**8, where 8 is bitwidth of precision CICADA-CICADA-CicadaInteger)."
+        description=f"Threshold for CICADA Anomaly Detection Trigger score. Step size = 1/2**{PrecCicadaDec} ({CscoreStepSize}), where {PrecCicadaDec} is n_bits value of PRECISION CICADA-CICADA-CicadaDecimal.<br/>Maximum value = {CscoreMaxVal} (2**{PrecCicadaInt}, where {PrecCicadaInt} is n_bits value of PRECISION CICADA-CICADA-CicadaInteger).<br/><br/>" \
+        f"<strong>Example:</strong> <pre>CICADA[CICADA-CSCORE_4p273]</pre>"
     ),
     CutSpecification(
         name=tmGrammar.CHGCOR,

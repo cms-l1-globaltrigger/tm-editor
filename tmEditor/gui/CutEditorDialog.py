@@ -42,6 +42,7 @@ kName: str = "name"
 kNumber: str = "number"
 kType: str = "type"
 kObject: str = "object"
+kNbits: str = "n_bits"
 
 ObjectCollectionRanges = {
     tmGrammar.MU: (0, 7),
@@ -129,9 +130,13 @@ def calculateRange(specification, scales) -> RangeType:
     # Topological score (16 bits)
     if specification.type == tmGrammar.TSCORE:
         return 0.0, 2**16
-    # CICADA score (AD Integer = 8 bits [precision CICADA-CICADA-CicadaInteger])
+    # CICADA score ΑD Integer part (8 bits)
     if specification.type == tmGrammar.CSCORE:
-        return 0.0, 2**8
+        def isPrecCicadaInt(scale): # filter
+            return scale[kObject] == "PRECISION" and scale[kType] == "CICADA-CICADA-CicadaInteger"
+        for scale in filter(isPrecCicadaInt, scales.scales):
+            precCicadaInt = int(scale[kNbits])
+        return 0.0, 2**precCicadaInt
     raise RuntimeError(f"Invalid cut type: {specification.type}")
 
 
