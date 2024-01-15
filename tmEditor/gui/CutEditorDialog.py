@@ -230,7 +230,7 @@ class RangeSpinBox(QtWidgets.QDoubleSpinBox):
         super().setMinimum(self.nearest(minimum))
 
     def setMaximum(self, maximum):
-        super().setMaxnimum(self.nearest(maximum))
+        super().setMaximum(self.nearest(maximum))
 
     def setRange(self, minimum, maximum):
         super().setRange(self.nearest(minimum), self.nearest(maximum))
