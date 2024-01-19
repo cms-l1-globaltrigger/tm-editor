@@ -27,14 +27,6 @@ ContentsURL = "https://cern.ch/globaltrigger/upgrade/tme/userguide"
 Empty = ""
 """Empty string entry."""
 
-PrecCicadaDec = 8 
-"""Precision Cicada AD decimal part. TO DO: get value from scale PRECISION-CICADA-CICADA-CicadaDecimal!!!"""
-CscoreStepSize = 1/2**PrecCicadaDec 
-
-PrecCicadaInt = 8 
-"""Precision Cicada AD integer part (used only for "description"). TO DO: get value from scale PRECISION-CICADA-CICADA-CicadaInteger!!!"""
-CscoreMaxVal = 2**PrecCicadaInt 
-
 CutSpecs = CutSpecificationPool(
     CutSpecification(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.UPT),
@@ -391,16 +383,31 @@ CutSpecs = CutSpecificationPool(
         description="Threshold for Topological Trigger score (16 bits). Maximum value 2**16 (65536)"
     ),
     CutSpecification(
+        name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.TMODEL),
+        object=tmGrammar.TOPO,
+        type=tmGrammar.TMODEL,
+        count_minimum=1,
+        count_maximum=1,
+        title="Topological Trigger model",
+        description="Name of Topological Trigger model",
+        data_exclusive=True,
+        data={
+            "hhmu": "HH-Mu",
+            "hhele": "HH-Ele",
+            "hhhad": "HH-Had"
+        }
+    ),
+    CutSpecification(
         name=CutSpecification.join(tmGrammar.CICADA, tmGrammar.CSCORE),
         object=tmGrammar.CICADA,
         type=tmGrammar.CSCORE,
-        range_precision=PrecCicadaDec,
-        range_step=CscoreStepSize,
+        range_precision=8,
+        range_step=1/2**8,
         count_minimum=1,
         count_maximum=1,
         title="CICADA Trigger Anomaly Detection score",
-        description=f"Threshold for CICADA Anomaly Detection Trigger score. Step size = 1/2**{PrecCicadaDec} ({CscoreStepSize}), where {PrecCicadaDec} is n_bits value of PRECISION CICADA-CICADA-CicadaDecimal.<br/>Maximum value = {CscoreMaxVal} (2**{PrecCicadaInt}, where {PrecCicadaInt} is n_bits value of PRECISION CICADA-CICADA-CicadaInteger).<br/><br/>" \
-        f"<strong>Example:</strong> <pre>CICADA[CICADA-CSCORE_4p273]</pre>"
+        description="Threshold for CICADA Anomaly Detection Trigger score. Step size = 1/2**8 (0.00390625), where 8 is bitwidth of CICADA AD Decimal part.<br/>Maximum value = 256 (2**8, where where 8 is bitwidth of CICADA AD Integer part.<br/><br/>" \
+        "<strong>Example:</strong> <pre>CICADA[CICADA-CSCORE_4p273]</pre>"
     ),
     CutSpecification(
         name=tmGrammar.CHGCOR,

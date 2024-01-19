@@ -208,12 +208,14 @@ class RequiredObjectCuts(SyntaxRule):
                         raise AlgorithmSyntaxError(message)
                 if token.startswith(tmGrammar.TOPO):
                     o = self.toObjectItem(token)
-                    tscore_count = 0
+                    tcuts_count = 0
                     for cut in o.cuts:
                         if cut.startswith(tmGrammar.TOPO + "-" + tmGrammar.TSCORE):
-                            tscore_count += 1
-                    if tscore_count != 1:
-                        message = f"TOPO object requires exactly one TSCORE cut. Invalid expression near {token!r}"
+                            tcuts_count += 1
+                        if cut.startswith(tmGrammar.TOPO + "-" + tmGrammar.TMODEL):
+                            tcuts_count += 1
+                    if tcuts_count != 2:
+                        message = f"TOPO object requires exactly one TSCORE and one TMODEL cut. Invalid expression near {token!r}"
                         raise AlgorithmSyntaxError(message)
                 if token.startswith(tmGrammar.CICADA):
                     o = self.toObjectItem(token)
@@ -408,7 +410,7 @@ class InvarientMass3(SyntaxRule):
             objects = functionObjects(token)
             types = {object.type for object in objects}
             if len(types) != 1:
-                message = f"Invarient mass for three objects functions require only muons or only calorimeter objects.\n" \
+                message = f"Invariant mass for three objects functions require only muons or only calorimeter objects.\n" \
                           f"Invalid expression near {token!r}"
                 raise AlgorithmSyntaxError(message, token)
 

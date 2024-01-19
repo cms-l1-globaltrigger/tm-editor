@@ -102,6 +102,7 @@ ObjectCutTypes = (
     tmGrammar.ASCORE,
     # For topological trigger
     tmGrammar.TSCORE,
+    tmGrammar.TMODEL,
     # For CICADA trigger
     tmGrammar.CSCORE,
 )

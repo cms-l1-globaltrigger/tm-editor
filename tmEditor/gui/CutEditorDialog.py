@@ -875,6 +875,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.INDEX: ScaleWidget,
         tmGrammar.ASCORE: ThresholdWidget,
         tmGrammar.TSCORE: ThresholdWidget,
+        tmGrammar.TMODEL: SingleJoiceWidget,
         tmGrammar.CSCORE: ThresholdWidget,
         # Function cuts
         tmGrammar.CHGCOR: SingleJoiceWidget,
