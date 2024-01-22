@@ -127,9 +127,9 @@ def calculateRange(specification, scales) -> RangeType:
     # Anomaly score (18 bits)
     if specification.type == tmGrammar.ASCORE:
         return 0.0, 2**18
-    # Topological score (16 bits)
+    # Topological score (different models, max. 32 bits)
     if specification.type == tmGrammar.TSCORE:
-        return 0.0, 2**16
+        return 0.0, 2**32
     # CICADA score - ΑD Integer part (bits from precision scale)
     if specification.type == tmGrammar.CSCORE:
         def isPrecCscore(scale):

@@ -380,7 +380,7 @@ CutSpecs = CutSpecificationPool(
         count_minimum=1,
         count_maximum=1,
         title="Topological Trigger score",
-        description="Threshold for Topological Trigger score (16 bits). Maximum value 2**16 (65536)"
+        description="Threshold for Topological Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296)"
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.TMODEL),
