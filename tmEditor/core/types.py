@@ -72,8 +72,8 @@ SignalTypes = (
     tmGrammar.MUS2,
     tmGrammar.MUSOOT0,
     tmGrammar.MUSOOT1,
-    # Anomaly detection trigger
-    tmGrammar.ADT,
+    # AXOL1TL - Anomaly detection trigger
+    tmGrammar.AXOL1TL,
     # Topological trigger
     tmGrammar.TOPO,
     # CICADA trigger

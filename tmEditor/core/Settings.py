@@ -361,15 +361,15 @@ CutSpecs = CutSpecificationPool(
         description=""
     ),
     CutSpecification(
-        name=CutSpecification.join(tmGrammar.ADT, tmGrammar.ASCORE),
-        object=tmGrammar.ADT,
+        name=CutSpecification.join(tmGrammar.AXOL1TL, tmGrammar.ASCORE),
+        object=tmGrammar.AXOL1TL,
         type=tmGrammar.ASCORE,
         range_precision=0,
         range_step=1,
         count_minimum=1,
         count_maximum=1,
-        title="Anomaly Detection Trigger score",
-        description="Threshold for Anomaly Detection Trigger score (18 bits). Maximum value 2**18 (262144)"
+        title="AXOL1TL - Anomaly Detection Trigger score",
+        description="Threshold for AXOL1TL - Anomaly Detection Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296)"
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.TSCORE),

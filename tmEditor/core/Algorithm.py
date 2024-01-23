@@ -267,7 +267,7 @@ class Algorithm:
 class Cut:
     """Cut container class."""
 
-    RegExCutName = re.compile(r"^([A-Z\-]+_)([a-zA-Z\d_]+)$")
+    RegExCutName = re.compile(r"^([A-Z0-9\-]+_)([a-zA-Z\d_]+)$")
 
     def __init__(self, name: str, object: str, type: str, minimum=0.0, maximum=0.0, data: Optional[str] = None,
                  comment: Optional[str] = None) -> None:

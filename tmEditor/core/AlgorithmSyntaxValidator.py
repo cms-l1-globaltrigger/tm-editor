@@ -197,14 +197,14 @@ class RequiredObjectCuts(SyntaxRule):
     def validate(self, tokens: List[str]) -> None:
         for token in tokens:
             if isObject(token):
-                if token.startswith(tmGrammar.ADT):
+                if token.startswith(tmGrammar.AXOL1TL):
                     o = self.toObjectItem(token)
                     ascore_count = 0
                     for cut in o.cuts:
-                        if cut.startswith(tmGrammar.ADT + "-" + tmGrammar.ASCORE):
+                        if cut.startswith(tmGrammar.AXOL1TL + "-" + tmGrammar.ASCORE):
                             ascore_count += 1
                     if ascore_count != 1:
-                        message = f"ADT object requires exactly one ASCORE cut. Invalid expression near {token!r}"
+                        message = f"AXOL1TL object requires exactly one ASCORE cut. Invalid expression near {token!r}"
                         raise AlgorithmSyntaxError(message)
                 if token.startswith(tmGrammar.TOPO):
                     o = self.toObjectItem(token)

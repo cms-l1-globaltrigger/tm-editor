@@ -124,9 +124,9 @@ def calculateRange(specification, scales) -> RangeType:
     # Slices
     if specification.type == tmGrammar.SLICE:
         return ObjectCollectionRanges[specification.object]
-    # Anomaly score (18 bits)
+    # Anomaly score (different models, max. 32 bits)
     if specification.type == tmGrammar.ASCORE:
-        return 0.0, 2**18
+        return 0.0, 2**32
     # Topological score (different models, max. 32 bits)
     if specification.type == tmGrammar.TSCORE:
         return 0.0, 2**32
