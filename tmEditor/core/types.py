@@ -100,6 +100,7 @@ ObjectCutTypes = (
     tmGrammar.INDEX,
     # For anomaly detection trigger
     tmGrammar.ASCORE,
+    tmGrammar.AMODEL,
     # For topological trigger
     tmGrammar.TSCORE,
     tmGrammar.TMODEL,

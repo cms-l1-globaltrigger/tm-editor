@@ -217,6 +217,17 @@ class RequiredObjectCuts(SyntaxRule):
                     if tcuts_count != 2:
                         message = f"TOPO object requires exactly one TSCORE and one TMODEL cut. Invalid expression near {token!r}"
                         raise AlgorithmSyntaxError(message)
+                if token.startswith(tmGrammar.AXOL1TL):
+                    o = self.toObjectItem(token)
+                    tcuts_count = 0
+                    for cut in o.cuts:
+                        if cut.startswith(tmGrammar.AXOL1TL + "-" + tmGrammar.ASCORE):
+                            tcuts_count += 1
+                        if cut.startswith(tmGrammar.AXOL1TL + "-" + tmGrammar.AMODEL):
+                            tcuts_count += 1
+                    if tcuts_count != 2:
+                        message = f"AXOL1TL object requires exactly one ASCORE and one AMODEL cut. Invalid expression near {token!r}"
+                        raise AlgorithmSyntaxError(message)
                 if token.startswith(tmGrammar.CICADA):
                     o = self.toObjectItem(token)
                     cscore_count = 0

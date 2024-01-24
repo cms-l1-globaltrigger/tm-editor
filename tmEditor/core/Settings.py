@@ -372,7 +372,18 @@ CutSpecs = CutSpecificationPool(
         count_minimum=1,
         count_maximum=1,
         title="AXOL1TL - Anomaly Detection Trigger score",
-        description="Threshold for AXOL1TL - Anomaly Detection Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296)"
+        description="Threshold for AXOL1TL - Anomaly Detection Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296)<br/>Only valid with an additional AMODEL cut.<br/><br/>" \
+        "<strong>Example:</strong> <pre>AXOL1TL[AXOL1TL-ASCORE_1234]</pre>"
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.AXOL1TL, tmGrammar.AMODEL),
+        object=tmGrammar.AXOL1TL,
+        type=tmGrammar.AMODEL,
+        count_minimum=1,
+        count_maximum=1,
+        title="AXOL1TL Trigger model",
+        description=f"Name of AXOL1TL Trigger model <a href=\"{ModelsURL}\">.<br/>See available Models</a>.<br/>Only valid with an additional ASCORE cut.<br/><br/>" \
+        "<strong>Example:</strong> <pre>AXOL1TL[AXOL1TL-AMODEL_v1]</pre>"
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.TSCORE),
