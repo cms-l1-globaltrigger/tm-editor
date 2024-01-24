@@ -5,7 +5,7 @@ import logging
 import re
 from typing import List, Optional, Tuple
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets 
 
 import tmGrammar
 
@@ -42,7 +42,6 @@ kName: str = "name"
 kNumber: str = "number"
 kType: str = "type"
 kObject: str = "object"
-kNbits: str = "n_bits"
 
 ObjectCollectionRanges = {
     tmGrammar.MU: (0, 7),
@@ -632,6 +631,44 @@ class ThresholdWidget(InputWidget):
         cut.data = ""
 
 
+class KeyWidget(InputWidget):
+    """Provides a line edit entry for keys (eg. TOPO models)."""
+
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
+        super().__init__(specification, scales, parent)
+        self.setupUi()
+
+    def setupUi(self):
+        # Create labels
+        self.keyLabel = QtWidgets.QLabel(self.tr("Key"), self)
+        self.keyLabel.setObjectName("keyLabel")
+        # Create threshold input widget
+        self.keyLineEdit = QtWidgets.QLineEdit()
+        self.keyLineEdit.setObjectName("keyLineEdit")
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.keyLineEdit.sizePolicy().hasHeightForWidth())
+        self.keyLineEdit.setSizePolicy(sizePolicy)
+        # Create layout
+        layout = QtWidgets.QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.keyLabel, 0, 0)
+        layout.addWidget(self.keyLineEdit, 0, 1)
+        layout.addItem(createVerticalSpacerItem())
+        self.setLayout(layout)
+        validator = QtGui.QRegExpValidator(QtCore.QRegExp("[a-z0-9_]*"))
+        self.keyLineEdit.setValidator(validator)
+        
+    def loadCut(self, cut):
+        """Initialize widget from cut item."""
+        self.keyLineEdit.setText(cut.data)
+
+    def updateCut(self, cut):
+        """Update existing cut from inputs."""
+        cut.data = self.keyLineEdit.text()
+
+
 class MaximumWidget(InputWidget):
     """Provides a maximum only entriy."""
 
@@ -875,7 +912,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.INDEX: ScaleWidget,
         tmGrammar.ASCORE: ThresholdWidget,
         tmGrammar.TSCORE: ThresholdWidget,
-        tmGrammar.TMODEL: SingleJoiceWidget,
+        tmGrammar.TMODEL: KeyWidget,
         tmGrammar.CSCORE: ThresholdWidget,
         # Function cuts
         tmGrammar.CHGCOR: SingleJoiceWidget,
@@ -924,6 +961,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         self.textBrowser = QtWidgets.QTextBrowser(self)
         self.textBrowser.setObjectName("textBrowser")
         self.textBrowser.setMinimumWidth(220)
+        self.textBrowser.setOpenExternalLinks(True)
         self.textBrowser.setReadOnly(True)
         # Comment
         self.commentLabel = QtWidgets.QLabel("Comment", self)

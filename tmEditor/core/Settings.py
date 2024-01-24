@@ -27,6 +27,9 @@ ContentsURL = "https://cern.ch/globaltrigger/upgrade/tme/userguide"
 Empty = ""
 """Empty string entry."""
 
+ModelsURL = "https://globaltrigger.web.cern.ch/upgrade/tme/models"
+"""Web URL models description for TMODEL and AMODEL."""
+
 CutSpecs = CutSpecificationPool(
     CutSpecification(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.UPT),
@@ -380,7 +383,8 @@ CutSpecs = CutSpecificationPool(
         count_minimum=1,
         count_maximum=1,
         title="Topological Trigger score",
-        description="Threshold for Topological Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296)"
+        description="Threshold for Topological Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296).<br/>Only valid with an additional TMODEL cut.<br/><br/>" \
+        "<strong>Example:</strong> <pre>TOPO[TOPO-TSCORE_1234]</pre>"
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.TMODEL),
@@ -389,13 +393,8 @@ CutSpecs = CutSpecificationPool(
         count_minimum=1,
         count_maximum=1,
         title="Topological Trigger model",
-        description="Name of Topological Trigger model",
-        data_exclusive=True,
-        data={
-            "hhmu": "HH-Mu",
-            "hhele": "HH-Ele",
-            "hhhad": "HH-Had"
-        }
+        description=f"Name of Topological Trigger model <a href=\"{ModelsURL}\">.<br/>See available Models</a>.<br/>Only valid with an additional TSCORE cut.<br/><br/>" \
+        "<strong>Example:</strong> <pre>TOPO[TOPO-TMODEL_hh_ele_v1]</pre>"
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.CICADA, tmGrammar.CSCORE),
