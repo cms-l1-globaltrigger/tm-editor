@@ -37,7 +37,7 @@ kStep = "step"
 kType = "type"
 kET = "ET"
 kCOUNT = "COUNT"
-kCicadaPrecScaleType = "CICADA-Cscore"
+kCicadaPrecScaleType = "CICADA-CicadaCscoreValues"
 
 # -----------------------------------------------------------------------------
 #  Object capabilites
