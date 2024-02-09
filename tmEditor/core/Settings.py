@@ -382,7 +382,7 @@ CutSpecs = CutSpecificationPool(
         count_minimum=1,
         count_maximum=1,
         title="AXOL1TL Trigger model",
-        description=f"Name of AXOL1TL Trigger model <a href=\"{ModelsURL}\">.<br/>See available Models</a>.<br/>Only valid with an additional ASCORE cut.<br/><br/>" \
+        description=f"Name of AXOL1TL Trigger model <a href=\"{ModelsURL}\"><br/>- see available Models</a>.<br/>Only valid with an additional ASCORE cut.<br/><br/>" \
         "<strong>Example:</strong> <pre>AXOL1TL[AXOL1TL-AMODEL_v1]</pre>"
     ),
     CutSpecification(
@@ -404,7 +404,7 @@ CutSpecs = CutSpecificationPool(
         count_minimum=1,
         count_maximum=1,
         title="Topological Trigger model",
-        description=f"Name of Topological Trigger model <a href=\"{ModelsURL}\">.<br/>See available Models</a>.<br/>Only valid with an additional TSCORE cut.<br/><br/>" \
+        description=f"Name of Topological Trigger model <a href=\"{ModelsURL}\"><br/>- see available Models</a>.<br/>Only valid with an additional TSCORE cut.<br/><br/>" \
         "<strong>Example:</strong> <pre>TOPO[TOPO-TMODEL_hh_ele_v1]</pre>"
     ),
     CutSpecification(
