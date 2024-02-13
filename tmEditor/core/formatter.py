@@ -71,7 +71,7 @@ def fCutData(cut) -> str:
                 return "[{0}]".format(int(cut.minimum))
             else:
                 return "[{0}-{1}]".format(int(cut.minimum), int(cut.maximum))
-        elif cut.type == tmGrammar.TMODEL or cut.type == tmGrammar.AMODEL:
+        elif cut.type == tmGrammar.MODEL:
             return "{0}".format(cut.data)
         else:
             entries = [entry.strip() for entry in cut.data.split(",")]

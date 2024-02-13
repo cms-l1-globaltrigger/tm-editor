@@ -123,11 +123,8 @@ def calculateRange(specification, scales) -> RangeType:
     # Slices
     if specification.type == tmGrammar.SLICE:
         return ObjectCollectionRanges[specification.object]
-    # Anomaly score (different models, max. 32 bits)
-    if specification.type == tmGrammar.ASCORE:
-        return 0.0, 2**32
-    # Topological score (different models, max. 32 bits)
-    if specification.type == tmGrammar.TSCORE:
+    # NN score (different models, max. 32 bits)
+    if specification.type == tmGrammar.SCORE:
         return 0.0, 2**32
     # CICADA score - ΑD Integer part (bits from precision scale)
     if specification.type == tmGrammar.CSCORE:
@@ -910,10 +907,8 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.IP: MultipleJoiceWidget,
         tmGrammar.SLICE: SliceWidget,
         tmGrammar.INDEX: ScaleWidget,
-        tmGrammar.ASCORE: ThresholdWidget,
-        tmGrammar.AMODEL: KeyWidget,
-        tmGrammar.TSCORE: ThresholdWidget,
-        tmGrammar.TMODEL: KeyWidget,
+        tmGrammar.SCORE: ThresholdWidget,
+        tmGrammar.MODEL: KeyWidget,
         tmGrammar.CSCORE: ThresholdWidget,
         # Function cuts
         tmGrammar.CHGCOR: SingleJoiceWidget,

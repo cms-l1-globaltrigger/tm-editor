@@ -28,7 +28,7 @@ Empty = ""
 """Empty string entry."""
 
 ModelsURL = "https://globaltrigger.web.cern.ch/upgrade/tme/models"
-"""Web URL models description for TMODEL and AMODEL."""
+"""Web URL models description for NN MODELs."""
 
 CutSpecs = CutSpecificationPool(
     CutSpecification(
@@ -364,48 +364,48 @@ CutSpecs = CutSpecificationPool(
         description=""
     ),
     CutSpecification(
-        name=CutSpecification.join(tmGrammar.AXOL1TL, tmGrammar.ASCORE),
-        object=tmGrammar.AXOL1TL,
-        type=tmGrammar.ASCORE,
+        name=CutSpecification.join(tmGrammar.AXO, tmGrammar.SCORE),
+        object=tmGrammar.AXO,
+        type=tmGrammar.SCORE,
         range_precision=0,
         range_step=1,
         count_minimum=1,
         count_maximum=1,
-        title="AXOL1TL - Anomaly Detection Trigger score",
-        description="Threshold for AXOL1TL - Anomaly Detection Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296)<br/>Only valid with an additional AMODEL cut.<br/><br/>" \
-        "<strong>Example:</strong> <pre>AXOL1TL[AXOL1TL-ASCORE_1234]</pre>"
+        title="AXO - AXOL1TL Trigger score",
+        description="Threshold for AXO - AXOL1TL Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296)<br/>Only valid with an additional MODEL cut.<br/><br/>" \
+        "<strong>Example:</strong> <pre>AXO[AXO-SCORE_1234]</pre>"
     ),
     CutSpecification(
-        name=CutSpecification.join(tmGrammar.AXOL1TL, tmGrammar.AMODEL),
-        object=tmGrammar.AXOL1TL,
-        type=tmGrammar.AMODEL,
+        name=CutSpecification.join(tmGrammar.AXO, tmGrammar.MODEL),
+        object=tmGrammar.AXO,
+        type=tmGrammar.MODEL,
         count_minimum=1,
         count_maximum=1,
         title="AXOL1TL Trigger model",
-        description=f"Name of AXOL1TL Trigger model <a href=\"{ModelsURL}\"><br/>- see available Models</a>.<br/>Only valid with an additional ASCORE cut.<br/><br/>" \
-        "<strong>Example:</strong> <pre>AXOL1TL[AXOL1TL-AMODEL_v1]</pre>"
+        description=f"Name of AXOL1TL Trigger model <a href=\"{ModelsURL}\"><br/>- see available Models</a>.<br/>Only valid with an additional SCORE cut.<br/><br/>" \
+        "<strong>Example:</strong> <pre>AXO[AXO-MODEL_v1]</pre>"
     ),
     CutSpecification(
-        name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.TSCORE),
+        name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.SCORE),
         object=tmGrammar.TOPO,
-        type=tmGrammar.TSCORE,
+        type=tmGrammar.SCORE,
         range_precision=0,
         range_step=1,
         count_minimum=1,
         count_maximum=1,
         title="Topological Trigger score",
-        description="Threshold for Topological Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296).<br/>Only valid with an additional TMODEL cut.<br/><br/>" \
-        "<strong>Example:</strong> <pre>TOPO[TOPO-TSCORE_1234]</pre>"
+        description="Threshold for Topological Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296).<br/>Only valid with an additional MODEL cut.<br/><br/>" \
+        "<strong>Example:</strong> <pre>TOPO[TOPO-SCORE_1234]</pre>"
     ),
     CutSpecification(
-        name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.TMODEL),
+        name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.MODEL),
         object=tmGrammar.TOPO,
-        type=tmGrammar.TMODEL,
+        type=tmGrammar.MODEL,
         count_minimum=1,
         count_maximum=1,
         title="Topological Trigger model",
-        description=f"Name of Topological Trigger model <a href=\"{ModelsURL}\"><br/>- see available Models</a>.<br/>Only valid with an additional TSCORE cut.<br/><br/>" \
-        "<strong>Example:</strong> <pre>TOPO[TOPO-TMODEL_hh_ele_v1]</pre>"
+        description=f"Name of Topological Trigger model <a href=\"{ModelsURL}\"><br/>- see available Models</a>.<br/>Only valid with an additional SCORE cut.<br/><br/>" \
+        "<strong>Example:</strong> <pre>TOPO[TOPO-MODEL_hh_ele_v1]</pre>"
     ),
     CutSpecification(
         name=CutSpecification.join(tmGrammar.CICADA, tmGrammar.CSCORE),
