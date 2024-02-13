@@ -123,6 +123,9 @@ def calculateRange(specification, scales) -> RangeType:
     # Slices
     if specification.type == tmGrammar.SLICE:
         return ObjectCollectionRanges[specification.object]
+    # Anomaly score
+    if specification.type == tmGrammar.ASCORE:
+        return 0.0, 1e8
     # NN score (different models, max. 32 bits)
     if specification.type == tmGrammar.SCORE:
         return 0.0, 2**32
@@ -907,6 +910,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.IP: MultipleJoiceWidget,
         tmGrammar.SLICE: SliceWidget,
         tmGrammar.INDEX: ScaleWidget,
+        tmGrammar.ASCORE: ThresholdWidget,
         tmGrammar.SCORE: ThresholdWidget,
         tmGrammar.MODEL: KeyWidget,
         tmGrammar.CSCORE: ThresholdWidget,

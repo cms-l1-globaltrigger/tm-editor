@@ -364,6 +364,18 @@ CutSpecs = CutSpecificationPool(
         description=""
     ),
     CutSpecification(
+        name=CutSpecification.join(tmGrammar.ADT, tmGrammar.ASCORE),
+        object=tmGrammar.ADT,
+        type=tmGrammar.ASCORE,
+        range_precision=0,
+        range_step=1,
+        count_minimum=1,
+        count_maximum=1,
+        title="Anomaly score",
+        description="Threshold score for Anomaly Detection Trigger. Maximum value 10**8 (100000000).<br/><br/>" \
+        "<strong>Example:</strong> <pre>ADT[ADT-ASCORE_1234]</pre>"
+    ),
+    CutSpecification(
         name=CutSpecification.join(tmGrammar.AXO, tmGrammar.SCORE),
         object=tmGrammar.AXO,
         type=tmGrammar.SCORE,

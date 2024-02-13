@@ -197,14 +197,34 @@ class RequiredObjectCuts(SyntaxRule):
     def validate(self, tokens: List[str]) -> None:
         for token in tokens:
             if isObject(token):
-                if token.startswith(tmGrammar.AXO):
+                if token.startswith(tmGrammar.ADT):
                     o = self.toObjectItem(token)
                     ascore_count = 0
                     for cut in o.cuts:
-                        if cut.startswith(tmGrammar.AXO + "-" + tmGrammar.SCORE):
+                        if cut.startswith(tmGrammar.ADT + "-" + tmGrammar.ASCORE):
                             ascore_count += 1
                     if ascore_count != 1:
-                        message = f"AXO object requires exactly one SCORE cut. Invalid expression near {token!r}"
+                        message = f"ADT object requires exactly one ASCORE cut. Invalid expression near {token!r}"
+                        raise AlgorithmSyntaxError(message)
+                #if token.startswith(tmGrammar.AXO):
+                    #o = self.toObjectItem(token)
+                    #ascore_count = 0
+                    #for cut in o.cuts:
+                        #if cut.startswith(tmGrammar.AXO + "-" + tmGrammar.SCORE):
+                            #ascore_count += 1
+                    #if ascore_count != 1:
+                        #message = f"AXO object requires exactly one SCORE cut. Invalid expression near {token!r}"
+                        #raise AlgorithmSyntaxError(message)
+                if token.startswith(tmGrammar.AXO):
+                    o = self.toObjectItem(token)
+                    tcuts_count = 0
+                    for cut in o.cuts:
+                        if cut.startswith(tmGrammar.AXO + "-" + tmGrammar.SCORE):
+                            tcuts_count += 1
+                        if cut.startswith(tmGrammar.AXO + "-" + tmGrammar.MODEL):
+                            tcuts_count += 1
+                    if tcuts_count != 2:
+                        message = f"AXO object requires exactly one SCORE and one MODEL cut. Invalid expression near {token!r}"
                         raise AlgorithmSyntaxError(message)
                 if token.startswith(tmGrammar.TOPO):
                     o = self.toObjectItem(token)
@@ -216,17 +236,6 @@ class RequiredObjectCuts(SyntaxRule):
                             tcuts_count += 1
                     if tcuts_count != 2:
                         message = f"TOPO object requires exactly one SCORE and one MODEL cut. Invalid expression near {token!r}"
-                        raise AlgorithmSyntaxError(message)
-                if token.startswith(tmGrammar.AXO):
-                    o = self.toObjectItem(token)
-                    tcuts_count = 0
-                    for cut in o.cuts:
-                        if cut.startswith(tmGrammar.AXO + "-" + tmGrammar.SCORE):
-                            tcuts_count += 1
-                        if cut.startswith(tmGrammar.AXO + "-" + tmGrammar.MODEL):
-                            tcuts_count += 1
-                    if tcuts_count != 2:
-                        message = f"AXO object requires exactly one SCORE and one MODEL cut. Invalid expression near {token!r}"
                         raise AlgorithmSyntaxError(message)
                 if token.startswith(tmGrammar.CICADA):
                     o = self.toObjectItem(token)

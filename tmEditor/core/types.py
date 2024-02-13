@@ -72,6 +72,8 @@ SignalTypes = (
     tmGrammar.MUS2,
     tmGrammar.MUSOOT0,
     tmGrammar.MUSOOT1,
+    # Anomaly detection trigger
+    tmGrammar.ADT,
     # AXOL1TL trigger
     tmGrammar.AXO,
     # Topological trigger
@@ -98,6 +100,8 @@ ObjectCutTypes = (
     tmGrammar.SLICE,
     # For muons
     tmGrammar.INDEX,
+    # For anomaly detection trigger
+    tmGrammar.ASCORE,
     # For NN triggers
     tmGrammar.SCORE,
     tmGrammar.MODEL,
