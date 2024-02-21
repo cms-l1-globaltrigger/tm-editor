@@ -132,7 +132,7 @@ def calculateRange(specification, scales) -> RangeType:
     # CICADA score - ΑD Integer part (bits from precision scale)
     if specification.type == tmGrammar.CSCORE:
         def isPrecCscore(scale):
-            return scale[kObject] == "PRECISION" and scale[kType] == "CICADA-CICADA-CscoreValues"
+            return scale[kObject] == "PRECISION" and scale[kType] == "CICADA-CScore"
         for scale in filter(isPrecCscore, scales.scales): 
             return 0.0, int(float(scale[kMaximum]))
         return 0.0, 0.0
