@@ -5,13 +5,13 @@ import logging
 import re
 from typing import List, Optional, Tuple
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import tmGrammar
 
 from tmEditor.core.types import FunctionCutTypes
 from tmEditor.core.Algorithm import Cut
-from tmEditor.core import toolbox
+from tmEditor.core import html, toolbox
 
 from tmEditor.core.Algorithm import (
     calculateDRRange,
@@ -39,6 +39,7 @@ kData: str = "data"
 kMaximum: str = "maximum"
 kMinimum: str = "minimum"
 kName: str = "name"
+kNBits: str = "n_bits"
 kNumber: str = "number"
 kType: str = "type"
 kObject: str = "object"
@@ -126,8 +127,31 @@ def calculateRange(specification, scales) -> RangeType:
     # Anomaly score
     if specification.type == tmGrammar.ASCORE:
         return 0.0, 1e8
+    # NN score (different models, max. 32 bits)
+    if specification.type == tmGrammar.SCORE:
+        return 0.0, 2**32
+    # CICADA score
+    if specification.type == tmGrammar.CSCORE:
+        def isCScore(scale):
+            return scale[kObject] == tmGrammar.CICADA and scale[kType] == tmGrammar.CSCORE
+        for scale in filter(isCScore, scales.scales):
+            minimum = float(scale[kMinimum])
+            maximum = float(scale[kMaximum])
+            return minimum, maximum
+        return 0.0, 2**8  # TODO fallback
     raise RuntimeError(f"Invalid cut type: {specification.type}")
 
+def calculateStep(specification, scales) -> float:
+    """Calculate dynamic or static range step for cut (experimental)."""
+    # CICADA score
+    if specification.type == tmGrammar.CSCORE:
+        def isPrecisionCScore(scale):
+            return scale[kObject] == "PRECISION" and scale[kType] == f"{tmGrammar.CICADA}-{tmGrammar.CSCORE}"
+        for scale in filter(isPrecisionCScore, scales.scales):
+            n_bits = float(scale[kNBits])
+            return 1 / (2**n_bits)
+        return specification.range_step
+    return specification.range_step
 
 # -----------------------------------------------------------------------------
 #  Exception classes
@@ -219,7 +243,7 @@ class RangeSpinBox(QtWidgets.QDoubleSpinBox):
         super().setMinimum(self.nearest(minimum))
 
     def setMaximum(self, maximum):
-        super().setMaxnimum(self.nearest(maximum))
+        super().setMaximum(self.nearest(maximum))
 
     def setRange(self, minimum, maximum):
         super().setRange(self.nearest(minimum), self.nearest(maximum))
@@ -233,6 +257,7 @@ class RangeSpinBox(QtWidgets.QDoubleSpinBox):
         """Returns nearest neighbor of value in range."""
         step = self.singleStep()
         return round(value / step) * step
+
 
 # -----------------------------------------------------------------------------
 #  Inout widget classes
@@ -412,7 +437,6 @@ class RangeWidget(InputWidget):
         cut.minimum = self.minimumSpinBox.value()
         cut.maximum = self.maximumSpinBox.value()
         cut.data = ""
-
 
 class InfiniteRangeWidget(InputWidget):
     """Provides range entries with infinity option."""
@@ -607,6 +631,8 @@ class ThresholdWidget(InputWidget):
         """Set range for inputs."""
         minimum, maximum = calculateRange(self.specification, self.scales)
         self.thresholdSpinBox.setRange(minimum, maximum)
+        step = calculateStep(self.specification, self.scales)
+        self.thresholdSpinBox.setSingleStep(step)
         minimum = self.thresholdSpinBox.minimum()
         self.thresholdSpinBox.setValue(minimum)
 
@@ -619,6 +645,45 @@ class ThresholdWidget(InputWidget):
         cut.minimum = self.thresholdSpinBox.value()
         cut.maximum = 0.
         cut.data = ""
+
+
+class KeyWidget(InputWidget):
+    """Provides a line edit entry for keys (eg. TOPO models)."""
+
+    def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
+        super().__init__(specification, scales, parent)
+        self.setupUi()
+
+    def setupUi(self):
+        # Create labels
+        self.keyLabel = QtWidgets.QLabel(self.tr("Key"), self)
+        self.keyLabel.setObjectName("keyLabel")
+        # Create threshold input widget
+        self.keyLineEdit = QtWidgets.QLineEdit()
+        self.keyLineEdit.setObjectName("keyLineEdit")
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.keyLineEdit.sizePolicy().hasHeightForWidth())
+        self.keyLineEdit.setSizePolicy(sizePolicy)
+        # Create layout
+        layout = QtWidgets.QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.keyLabel, 0, 0)
+        layout.addWidget(self.keyLineEdit, 0, 1)
+        layout.addWidget(QtWidgets.QLabel("Allowed input: a-z, 0-9, _"), 1, 1)
+        layout.addItem(createVerticalSpacerItem())
+        self.setLayout(layout)
+        validator = QtGui.QRegExpValidator(QtCore.QRegExp("[a-z0-9_]*"))
+        self.keyLineEdit.setValidator(validator)
+
+    def loadCut(self, cut):
+        """Initialize widget from cut item."""
+        self.keyLineEdit.setText(cut.data)
+
+    def updateCut(self, cut):
+        """Update existing cut from inputs."""
+        cut.data = self.keyLineEdit.text()
 
 
 class MaximumWidget(InputWidget):
@@ -863,6 +928,9 @@ class CutEditorDialog(QtWidgets.QDialog):
         tmGrammar.SLICE: SliceWidget,
         tmGrammar.INDEX: ScaleWidget,
         tmGrammar.ASCORE: ThresholdWidget,
+        tmGrammar.SCORE: ThresholdWidget,
+        tmGrammar.MODEL: KeyWidget,
+        tmGrammar.CSCORE: ThresholdWidget,
         # Function cuts
         tmGrammar.CHGCOR: SingleJoiceWidget,
         tmGrammar.DETA: RangeWidget,
@@ -910,6 +978,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         self.textBrowser = QtWidgets.QTextBrowser(self)
         self.textBrowser.setObjectName("textBrowser")
         self.textBrowser.setMinimumWidth(220)
+        self.textBrowser.setOpenExternalLinks(True)
         self.textBrowser.setReadOnly(True)
         # Comment
         self.commentLabel = QtWidgets.QLabel("Comment", self)
@@ -1056,22 +1125,27 @@ class CutEditorDialog(QtWidgets.QDialog):
         self.textBrowser.setHtml(self.tr("Select a cut type..."))
         item = self.currentTreeItem()
         if item and item.spec:
-            description = []
-            description = ["<h3>{0} cut</h3>{1}".format(item.spec.title, item.spec.description)]
+            description = [
+                html.h3([item.spec.title, " cut"]),
+                item.spec.description,
+            ]
             if item.spec.functions:
-                description.append("<h4>Compatible functions:</h4>")
-                description.append("<ul>")
+                description.append(html.h4("Compatible functions:"))
+                items = []
                 for function in item.spec.functions:
                     # ignore depricated mass function
                     if function not in [tmGrammar.mass]:
-                        description.append("<li><span style=\"color:blue;font-weight:bold;\">{0}</span>{{ ... }}[{1}_N, ...]</li>".format(function, item.spec.type))
-                description.append("</ul>")
+                        items.append(html.li([
+                            html.span(function, style="color:blue;font-weight:bold;"),
+                            f"{{ ... }}[{item.spec.type}_N, ...]",
+                        ]))
+                description.append(html.ul(items))
             if item.spec.objects:
-                description.append("<h4>Compatible object types:</h4>")
-                description.append("<ul>")
+                description.append(html.h4("Compatible object types:"))
+                items = []
                 for obj in item.spec.objects:
-                    description.append("<li><span>{0}</span></li>".format(obj))
-                description.append("</ul>")
+                    items.append(html.li(html.span(obj)))
+                description.append(html.ul(items))
             self.textBrowser.setHtml("".join(description))
 
     @QtCore.pyqtSlot()

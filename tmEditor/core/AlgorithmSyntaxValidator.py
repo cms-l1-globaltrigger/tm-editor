@@ -206,6 +206,46 @@ class RequiredObjectCuts(SyntaxRule):
                     if ascore_count != 1:
                         message = f"ADT object requires exactly one ASCORE cut. Invalid expression near {token!r}"
                         raise AlgorithmSyntaxError(message)
+                #if token.startswith(tmGrammar.AXO):
+                    #o = self.toObjectItem(token)
+                    #ascore_count = 0
+                    #for cut in o.cuts:
+                        #if cut.startswith(tmGrammar.AXO + "-" + tmGrammar.SCORE):
+                            #ascore_count += 1
+                    #if ascore_count != 1:
+                        #message = f"AXO object requires exactly one SCORE cut. Invalid expression near {token!r}"
+                        #raise AlgorithmSyntaxError(message)
+                if token.startswith(tmGrammar.AXO):
+                    o = self.toObjectItem(token)
+                    tcuts_count = 0
+                    for cut in o.cuts:
+                        if cut.startswith(tmGrammar.AXO + "-" + tmGrammar.SCORE):
+                            tcuts_count += 1
+                        if cut.startswith(tmGrammar.AXO + "-" + tmGrammar.MODEL):
+                            tcuts_count += 1
+                    if tcuts_count != 2:
+                        message = f"AXO object requires exactly one SCORE and one MODEL cut. Invalid expression near {token!r}"
+                        raise AlgorithmSyntaxError(message)
+                if token.startswith(tmGrammar.TOPO):
+                    o = self.toObjectItem(token)
+                    tcuts_count = 0
+                    for cut in o.cuts:
+                        if cut.startswith(tmGrammar.TOPO + "-" + tmGrammar.SCORE):
+                            tcuts_count += 1
+                        if cut.startswith(tmGrammar.TOPO + "-" + tmGrammar.MODEL):
+                            tcuts_count += 1
+                    if tcuts_count != 2:
+                        message = f"TOPO object requires exactly one SCORE and one MODEL cut. Invalid expression near {token!r}"
+                        raise AlgorithmSyntaxError(message)
+                if token.startswith(tmGrammar.CICADA):
+                    o = self.toObjectItem(token)
+                    cscore_count = 0
+                    for cut in o.cuts:
+                        if cut.startswith(tmGrammar.CICADA + "-" + tmGrammar.CSCORE):
+                            cscore_count += 1
+                    if cscore_count != 1:
+                        message = f"CICADA object requires exactly one CSCORE cut. Invalid expression near {token!r}"
+                        raise AlgorithmSyntaxError(message)
 
 
 class CombBxOffset(SyntaxRule):
@@ -390,7 +430,7 @@ class InvarientMass3(SyntaxRule):
             objects = functionObjects(token)
             types = {object.type for object in objects}
             if len(types) != 1:
-                message = f"Invarient mass for three objects functions require only muons or only calorimeter objects.\n" \
+                message = f"Invariant mass for three objects functions require only muons or only calorimeter objects.\n" \
                           f"Invalid expression near {token!r}"
                 raise AlgorithmSyntaxError(message, token)
 

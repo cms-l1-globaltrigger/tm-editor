@@ -37,6 +37,7 @@ kStep = "step"
 kType = "type"
 kET = "ET"
 kCOUNT = "COUNT"
+kCicadaPrecScaleType = "CICADA-CScore"
 
 # -----------------------------------------------------------------------------
 #  Object capabilites
@@ -221,10 +222,13 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         for index, name in enumerate(ExtendedTypes):
             if name not in objects:
                 continue # ignore if not in init list
-            self.typeComboBox.addItem(miniIcon(name.lower()), name)
+            self.typeComboBox.addItem(miniIcon(name.lower()), name)                
             if name in ObjectTypes:
                 if not self.getScale(name): # on missing scale (editing outdated XML?)
                     self.typeComboBox.setItemEnabled(index, False)
+            if name == tmGrammar.CICADA:
+                if not self.getPrecScale(kCicadaPrecScaleType):
+                    self.typeComboBox.setItemEnabled(index, False)             
 
     def initCuts(self):
         """Initialize list of checkable cuts."""
@@ -255,6 +259,13 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         scales = list(filter(lambda item: item[kObject] == objectType, self.menu().scales.scales))
         # Get only threshold/count scales
         return (list(filter(lambda item: item[kType] in (kET, kCOUNT, ), scales)) or [None])[0]
+
+    def getPrecScale(self, scaleType):
+        """Returns scale for object or None if not found."""
+        # Get only scales of object type
+        scales = list(filter(lambda item: item[kObject] == "PRECISION", self.menu().scales.scales))
+        # Get only threshold/count scales
+        return (list(filter(lambda item: item[kType] in (scaleType), scales)) or [None])[0]
 
     def updateFilter(self, text):
         """Update cut filter."""

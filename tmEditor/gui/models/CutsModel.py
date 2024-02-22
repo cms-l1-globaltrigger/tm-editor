@@ -34,8 +34,8 @@ def maximumCallback(item):
     if item.type == tmGrammar.TBPT:
         # There is no maximum for TBPT
         return ""
-    if item.type == tmGrammar.ASCORE:
-        # There is no maximum for ASCORE
+    if (item.type == tmGrammar.SCORE) or (item.type == tmGrammar.CSCORE):
+        # There is no maximum for SCORE and CSCORE
         return ""
     return item.maximum
 

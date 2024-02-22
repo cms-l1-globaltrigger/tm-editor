@@ -27,6 +27,9 @@ ContentsURL = "https://cern.ch/globaltrigger/upgrade/tme/userguide"
 Empty = ""
 """Empty string entry."""
 
+ModelsURL = "https://globaltrigger.web.cern.ch/upgrade/tme/models"
+"""Web URL models description for NN MODELs."""
+
 CutSpecs = CutSpecificationPool(
     CutSpecification(
         name=CutSpecification.join(tmGrammar.MU, tmGrammar.UPT),
@@ -369,7 +372,81 @@ CutSpecs = CutSpecificationPool(
         count_minimum=1,
         count_maximum=1,
         title="Anomaly score",
-        description="Threshold score for Anomaly Detection Trigger."
+        description=(
+            "<p>Threshold score for Anomaly Detection Trigger. Maximum value 10^8 (100000000).</p>"
+            "<p><strong>Example:</strong> <pre>ADT[ADT-ASCORE_1234]</pre></p>"
+        )
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.AXO, tmGrammar.SCORE),
+        object=tmGrammar.AXO,
+        type=tmGrammar.SCORE,
+        range_precision=0,
+        range_step=1,
+        count_minimum=1,
+        count_maximum=1,
+        title="AXOL1TL Trigger score",
+        description=(
+            "<p>Threshold for AXO - AXOL1TL Trigger score (max. 32 bits), because of different models. Maximum value 2^32 (4294967296)</p>"
+            "<p>Only valid with an additional MODEL cut.</p>"
+            "<p><strong>Example:</strong> <pre>AXO[AXO-SCORE_1234]</pre></p>"
+        )
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.AXO, tmGrammar.MODEL),
+        object=tmGrammar.AXO,
+        type=tmGrammar.MODEL,
+        count_minimum=1,
+        count_maximum=1,
+        title="AXOL1TL Trigger model",
+        description=(
+            f"<p>Name of AXOL1TL Trigger model, see <a href=\"{ModelsURL}\">available Models</a>.</p>"
+            "<p>Only valid with an additional SCORE cut.</p>"
+            "<p><strong>Example:</strong> <pre>AXO[AXO-MODEL_v1]</pre></p>"
+        )
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.SCORE),
+        object=tmGrammar.TOPO,
+        type=tmGrammar.SCORE,
+        range_precision=0,
+        range_step=1,
+        count_minimum=1,
+        count_maximum=1,
+        title="Topological Trigger score",
+        description=(
+            "<p>Threshold for Topological Trigger score (max. 32 bits), because of different models. Maximum value 2^32 (4294967296).</p>"
+            "<p>Only valid with an additional MODEL cut.</p>"
+            "<p><strong>Example:</strong> <pre>TOPO[TOPO-SCORE_1234]</pre></p>"
+        )
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.TOPO, tmGrammar.MODEL),
+        object=tmGrammar.TOPO,
+        type=tmGrammar.MODEL,
+        count_minimum=1,
+        count_maximum=1,
+        title="Topological Trigger model",
+        description=(
+            f"<p>Name of Topological Trigger model, see <a href=\"{ModelsURL}\">available Models</a>.</p>"
+            "<p>Only valid with an additional SCORE cut.</p>"
+            "<p><strong>Example:</strong> <pre>TOPO[TOPO-MODEL_hh_ele_v1]</pre><p>"
+        )
+    ),
+    CutSpecification(
+        name=CutSpecification.join(tmGrammar.CICADA, tmGrammar.CSCORE),
+        object=tmGrammar.CICADA,
+        type=tmGrammar.CSCORE,
+        range_precision=8,
+        range_step=1 / (2**8),  # TODO fallback
+        count_minimum=1,
+        count_maximum=1,
+        title="CICADA Trigger Anomaly Detection score",
+        description=(
+            "<p>Threshold for CICADA Anomaly Detection Trigger score. Step size = 1/2^8 (0.00390625), where 8 is bitwidth of CICADA AD Decimal part.</p>"
+            "<p>Maximum value = 256 (2^8, where where 8 is bitwidth of CICADA AD Integer part.</p>"
+            "<p><strong>Example:</strong> <pre>CICADA[CICADA-CSCORE_4p273]</pre></p>"
+        )
     ),
     CutSpecification(
         name=tmGrammar.CHGCOR,
@@ -378,8 +455,10 @@ CutSpecs = CutSpecificationPool(
         objects=[tmGrammar.MU],
         functions=[tmGrammar.comb, tmGrammar.dist, tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_upt, tmGrammar.mass_inv_dr, tmGrammar.mass_inv_3],
         title="Charge correlation",
-        description="Applies charge correlation restriction to combinations of two or more muon objects. It can be applied to functions comb, dist, mass_inv and mass_trv.<br/><br/>" \
-                    "<strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre>",
+        description=(
+            "<p>Applies charge correlation restriction to combinations of two or more muon objects. It can be applied to functions comb, dist, mass_inv and mass_trv.</p>"
+            "<p><strong>Example:</strong> <pre>comb{MU20, MU20}[CHGCOR_OS]</pre></p>"
+        ),
         data_exclusive=True,
         data={
             "ls": "like sign",
@@ -395,8 +474,10 @@ CutSpecs = CutSpecificationPool(
         range_precision=3,
         range_step=0.001,
         title="Delta eta",
-        description="Applies delta eta restriction to combination of two objects.<br/><br/>" \
-                    "<strong>Example:</strong> <pre>dist{MU20, MU20}[DETA_SAMPLE]</pre>"
+        description=(
+            "<p>Applies delta eta restriction to combination of two objects.</p>"
+            "<p><strong>Example:</strong> <pre>dist{MU20, MU20}[DETA_SAMPLE]</pre></p>"
+        )
     ),
     CutSpecification(
         name=tmGrammar.DPHI,
@@ -408,8 +489,10 @@ CutSpecs = CutSpecificationPool(
         range_step=0.001,
         range_unit="rad",
         title="Delta phi",
-        description="Applies delta phi restriction to combination of two objects.<br/><br/>" \
-                    "<strong>Example:</strong> <pre>dist{MU20, MU20}[DPHI_SAMPLE]</pre>"
+        description=(
+            "<p>Applies delta phi restriction to combination of two objects.</p>"
+            "<p><strong>Example:</strong> <pre>dist{MU20, MU20}[DPHI_SAMPLE]</pre></p>"
+        )
     ),
     CutSpecification(
         name=tmGrammar.DR,
@@ -420,9 +503,11 @@ CutSpecs = CutSpecificationPool(
         range_precision=1,
         range_step=0.1,
         title="Delta-R",
-        description="Applies delta-R restriction to combination of two objects.<br/><br/>" \
-                    "&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span><br/><br/>" \
-                    "<strong>Example:</strong> <pre>dist{MU20, MU20}[DR_SAMPLE]</pre>"
+        description=(
+            "<p>Applies delta-R restriction to combination of two objects.</p>"
+            "<p>&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span></p>"
+            "<p><strong>Example:</strong> <pre>dist{MU20, MU20}[DR_SAMPLE]</pre></p>"
+        )
     ),
     CutSpecification(
         name=tmGrammar.MASS,
@@ -434,12 +519,14 @@ CutSpecs = CutSpecificationPool(
         range_step=0.2,
         range_unit="GeV",
         title="Invariant or Transverse mass",
-        description="Applies invariant or transverse mass restriction to combination of two (or three) objects depending on the applied function.<br/><br/>" \
-                    "Calculation of invariant mass:<br/><br/>" \
-                    "M<sub>0</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
-                    "Calculation of transverse mass:<br/><br/>" \
-                    "M<sub>T</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (1 - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
-                    "<strong>Example:</strong> <pre>mass_inv{MU20, MU20}[MASS_Z]</pre>"
+        description=(
+            "<p>Applies invariant or transverse mass restriction to combination of two (or three) objects depending on the applied function.</p>"
+            "<p>Calculation of invariant mass:</p>"
+            "<p>M<sub>0</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span></p>"
+            "<p>Calculation of transverse mass:</p>"
+            "<p>M<sub>T</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (1 - cos(&Delta;&phi;))&nbsp;</span></p>"
+            "<p><strong>Example:</strong> <pre>mass_inv{MU20, MU20}[MASS_Z]</pre></p>"
+        )
     ),
     CutSpecification(
         name=tmGrammar.MASSUPT,
@@ -451,10 +538,12 @@ CutSpecs = CutSpecificationPool(
         range_step=0.2,
         range_unit="GeV",
         title="Invariant mass for muon unconstrained pt",
-        description="Applies invariant mass restriction to combination of two objects.<br/><br/>" \
-                    "Calculation of invariant mass:<br/><br/>" \
-                    "M<sub>0</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>upt1</em> <em>upt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span><br/><br/>" \
-                    "<strong>Example:</strong> <pre>mass_inv_upt{MU20, MU20}[MASSUPT_Z]</pre>"
+        description=(
+            "<p>Applies invariant mass restriction to combination of two objects.</p>"
+            "<p>Calculation of invariant mass:</p>"
+            "<p>M<sub>0</sub> = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>upt1</em> <em>upt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))&nbsp;</span></p>"
+            "<p><strong>Example:</strong> <pre>mass_inv_upt{MU20, MU20}[MASSUPT_Z]</pre></p>"
+        )
     ),
     CutSpecification(
         name=tmGrammar.MASSDR,
@@ -466,10 +555,12 @@ CutSpecs = CutSpecificationPool(
         range_step=0.2,
         range_unit="GeV",
         title="Invariant mass divided by delta-R",
-        description="Applies invariant mass divided by delta-R restriction of two objects.<br/><br/>" \
-                    "Calculation of invariant mass/delta-R:<br/><br/>" \
-                    "M<sub>0</sub>/&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))</span>/&Delta;R<br/><br/>" \
-                    "<strong>Example:</strong> <pre>mass_inv_dr{MU20, MU20}[MASSDR_X]</pre>"
+        description=(
+            "<p>Applies invariant mass divided by delta-R restriction of two objects.</p>"
+            "<p>Calculation of invariant mass/delta-R:</p>"
+            "<p>M<sub>0</sub>/&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;2 <em>pt1</em> <em>pt2</em> (cosh(&Delta;&eta;) - cos(&Delta;&phi;))</span>/&Delta;R</p>"
+            "<p><strong>Example:</strong> <pre>mass_inv_dr{MU20, MU20}[MASSDR_X]</pre></p>"
+        )
     ),
     CutSpecification(
         name=tmGrammar.TBPT,
@@ -481,8 +572,10 @@ CutSpecs = CutSpecificationPool(
         range_step=0.1,
         range_unit="GeV",
         title="Two body Pt",
-        description="Applies two body Pt (energy of origin object) threshold to combination of two objects.<br/><br/>"
-                    "<strong>Example:</strong> <pre>mass_inv{MU20, MU20}[MASS_Z, TBPT_A]</pre>"
+        description=(
+            "<p>Applies two body Pt (energy of origin object) threshold to combination of two objects.</p>"
+            "<p><strong>Example:</strong> <pre>mass_inv{MU20, MU20}[MASS_Z, TBPT_A]</pre></p>"
+        )
     ),
     CutSpecification(
         name=tmGrammar.ORMDETA,
@@ -493,8 +586,10 @@ CutSpecs = CutSpecificationPool(
         range_precision=3,
         range_step=0.001,
         title="Delta eta",
-        description="Applies delta eta overlap removal restriction to combination of two/three objects.<br/><br/>" \
-                    "<strong>Example:</strong> <pre>comb_orm{TAU0, TAU0, JET0}[ORMDETA_SAMPLE]</pre>"
+        description=(
+            "<p>Applies delta eta overlap removal restriction to combination of two/three objects.</p>"
+            "<p><strong>Example:</strong> <pre>comb_orm{TAU0, TAU0, JET0}[ORMDETA_SAMPLE]</pre></p>"
+        )
     ),
     CutSpecification(
         name=tmGrammar.ORMDPHI,
@@ -506,8 +601,10 @@ CutSpecs = CutSpecificationPool(
         range_step=0.001,
         range_unit="rad",
         title="Delta phi",
-        description="Applies delta phi overlap removal restriction to combination of two/three objects.<br/><br/>" \
-                    "<strong>Example:</strong> <pre>comb_orm{TAU0, TAU0, JET0}[ORMDPHI_SAMPLE]</pre>"
+        description=(
+            "<p>Applies delta phi overlap removal restriction to combination of two/three objects.</p>"
+            "<p><strong>Example:</strong> <pre>comb_orm{TAU0, TAU0, JET0}[ORMDPHI_SAMPLE]</pre></p>"
+        )
     ),
     CutSpecification(
         name=tmGrammar.ORMDR,
@@ -518,8 +615,10 @@ CutSpecs = CutSpecificationPool(
         range_precision=1,
         range_step=0.1,
         title="Delta-R Overlap Removal",
-        description="Applies delta-R overlap removal restriction to combination of two/three objects.<br/><br/>" \
-                    "&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span><br/><br/>" \
-                    "<strong>Example:</strong> <pre>comb_orm{TAU0, TAU0, JET0}[ORMDR_SAMPLE]</pre>"
+        description=(
+            "<p>Applies delta-R overlap removal restriction to combination of two/three objects.</p>"
+            "<p>&Delta;R = &radic;<span style=\"text-decoration:overline;\">&nbsp;&Delta;&eta;&sup2; + &Delta;&phi;&sup2;&nbsp;</span></p>"
+            "<p><strong>Example:</strong> <pre>comb_orm{TAU0, TAU0, JET0}[ORMDR_SAMPLE]</pre></p>"
+        )
     ),
 )
