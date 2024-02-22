@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.16.0] - 2024-02-13
 ### Added
-- Support for grammar revision 0.12 - AXOL1TL trigger (AXO) with models, CICADA and Topological Trigger (TOPO) with models.
+- Support for grammar revision 0.12 (#41).
+- Topological trigger (TOPO) with MODEL and SCALE cut (#42).
+- AXOL1TL trigger (AXO) with MODEL and SCALE cut (#43)
+- CICADA trigger with CSCORE cut (#44).
 
 ## [0.15.4] - 2023-10-13
 ### Fixed
