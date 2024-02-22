@@ -87,7 +87,7 @@ def fCutLabel(cut) -> str:
     if cut.data:
         data = fCutData(cut)
         return "{0} ({1})".format(cut.name, data)
-    elif cut.type == tmGrammar.TBPT:
+    elif cut.type in [tmGrammar.TBPT, tmGrammar.SCORE, tmGrammar.ASCORE, tmGrammar.CSCORE]:
         threshold = fCutValue(cut.minimum)
         return "{0} (>= {1})".format(cut.name, threshold)
     else:
