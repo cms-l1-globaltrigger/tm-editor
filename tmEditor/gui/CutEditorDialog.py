@@ -11,7 +11,7 @@ import tmGrammar
 
 from tmEditor.core.types import FunctionCutTypes
 from tmEditor.core.Algorithm import Cut
-from tmEditor.core import toolbox
+from tmEditor.core import html, toolbox
 
 from tmEditor.core.Algorithm import (
     calculateDRRange,
@@ -1125,22 +1125,27 @@ class CutEditorDialog(QtWidgets.QDialog):
         self.textBrowser.setHtml(self.tr("Select a cut type..."))
         item = self.currentTreeItem()
         if item and item.spec:
-            description = []
-            description = ["<h3>{0} cut</h3>{1}".format(item.spec.title, item.spec.description)]
+            description = [
+                html.h3([item.spec.title, " cut"]),
+                item.spec.description,
+            ]
             if item.spec.functions:
-                description.append("<h4>Compatible functions:</h4>")
-                description.append("<ul>")
+                description.append(html.h4("Compatible functions:"))
+                items = []
                 for function in item.spec.functions:
                     # ignore depricated mass function
                     if function not in [tmGrammar.mass]:
-                        description.append("<li><span style=\"color:blue;font-weight:bold;\">{0}</span>{{ ... }}[{1}_N, ...]</li>".format(function, item.spec.type))
-                description.append("</ul>")
+                        items.append(html.li([
+                            html.span(function, style="color:blue;font-weight:bold;"),
+                            f"{{ ... }}[{item.spec.type}_N, ...]",
+                        ]))
+                description.append(html.ul(items))
             if item.spec.objects:
-                description.append("<h4>Compatible object types:</h4>")
-                description.append("<ul>")
+                description.append(html.h4("Compatible object types:"))
+                items = []
                 for obj in item.spec.objects:
-                    description.append("<li><span>{0}</span></li>".format(obj))
-                description.append("</ul>")
+                    items.append(html.li(html.span(obj)))
+                description.append(html.ul(items))
             self.textBrowser.setHtml("".join(description))
 
     @QtCore.pyqtSlot()
