@@ -671,6 +671,7 @@ class KeyWidget(InputWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.keyLabel, 0, 0)
         layout.addWidget(self.keyLineEdit, 0, 1)
+        layout.addWidget(QtWidgets.QLabel("Allowed input: a-z, 0-9, _"), 1, 1)
         layout.addItem(createVerticalSpacerItem())
         self.setLayout(layout)
         validator = QtGui.QRegExpValidator(QtCore.QRegExp("[a-z0-9_]*"))
