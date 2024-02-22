@@ -239,7 +239,7 @@ class BottomWidget(QtWidgets.QWidget):
         if cut.data:
             datalist = []
             # TODO HACK transitional backward compatibility
-            if cut.type == tmGrammar.SLICE:
+            if cut.type in [tmGrammar.SLICE]:
                 if cut.data:
                     cut.minimum = float(cut.data.split(",")[0].strip())
                     cut.maximum = float(cut.data.split(",")[-1].strip())
@@ -248,6 +248,8 @@ class BottomWidget(QtWidgets.QWidget):
                 else:
                     data = "[{}-{}]".format(int(cut.minimum), int(cut.maximum))
                 content.append(self.tr("<p><strong>Range:</strong> {}</p>".format(data)))
+            elif cut.type in [tmGrammar.MODEL]:
+                content.append(self.tr("<p><strong>Model:</strong> {}</p>").format(cut.data))
             else:
                 content.append(self.tr("<p><strong>Options:</strong></p>"))
                 if cut.type == tmGrammar.CHGCOR: # HACK
@@ -260,8 +262,10 @@ class BottomWidget(QtWidgets.QWidget):
                     else:
                         datalist.append(self.tr("<li>[{}] {}</li>").format(key, data_[key]))
                 content.append(self.tr("<p><ul>{}</ul></p>").format("".join(datalist)))
-        elif cut.type == tmGrammar.TBPT:
+        elif cut.type in [tmGrammar.TBPT]:
             content.append(self.tr("<p><strong>Threshold:</strong> {}</p>").format(formatter.fCutValue(cut.minimum)))
+        elif cut.type in [tmGrammar.SCORE, tmGrammar.ASCORE, tmGrammar.CSCORE]:
+            content.append(self.tr("<p><strong>Score:</strong> {}</p>").format(formatter.fCutValue(cut.minimum)))
         else:
             content.append(self.tr("<p><strong>Minimum:</strong> {}</p>").format(formatter.fCutValue(cut.minimum)))
             content.append(self.tr("<p><strong>Maximum:</strong> {}</p>").format(formatter.fCutValue(cut.maximum)))
