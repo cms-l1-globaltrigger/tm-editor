@@ -5,7 +5,7 @@ import logging
 import re
 from typing import List, Optional, Tuple
 
-from PyQt5 import QtCore, QtGui, QtWidgets 
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import tmGrammar
 
@@ -39,6 +39,7 @@ kData: str = "data"
 kMaximum: str = "maximum"
 kMinimum: str = "minimum"
 kName: str = "name"
+kNBits: str = "n_bits"
 kNumber: str = "number"
 kType: str = "type"
 kObject: str = "object"
@@ -129,15 +130,28 @@ def calculateRange(specification, scales) -> RangeType:
     # NN score (different models, max. 32 bits)
     if specification.type == tmGrammar.SCORE:
         return 0.0, 2**32
-    # CICADA score - ΑD Integer part (bits from precision scale)
+    # CICADA score
     if specification.type == tmGrammar.CSCORE:
-        def isPrecCscore(scale):
-            return scale[kObject] == "PRECISION" and scale[kType] == "CICADA-CScore"
-        for scale in filter(isPrecCscore, scales.scales): 
-            return 0.0, int(float(scale[kMaximum]))
-        return 0.0, 0.0
+        def isCScore(scale):
+            return scale[kObject] == tmGrammar.CICADA and scale[kType] == tmGrammar.CSCORE
+        for scale in filter(isCScore, scales.scales):
+            minimum = float(scale[kMinimum])
+            maximum = float(scale[kMaximum])
+            return minimum, maximum
+        return 0.0, 2**8  # TODO fallback
     raise RuntimeError(f"Invalid cut type: {specification.type}")
 
+def calculateStep(specification, scales) -> float:
+    """Calculate dynamic or static range step for cut (experimental)."""
+    # CICADA score
+    if specification.type == tmGrammar.CSCORE:
+        def isPrecisionCScore(scale):
+            return scale[kObject] == "PRECISION" and scale[kType] == f"{tmGrammar.CICADA}-{tmGrammar.CSCORE}"
+        for scale in filter(isPrecisionCScore, scales.scales):
+            n_bits = float(scale[kNBits])
+            return 1 / (2**n_bits)
+        return specification.range_step
+    return specification.range_step
 
 # -----------------------------------------------------------------------------
 #  Exception classes
@@ -617,6 +631,8 @@ class ThresholdWidget(InputWidget):
         """Set range for inputs."""
         minimum, maximum = calculateRange(self.specification, self.scales)
         self.thresholdSpinBox.setRange(minimum, maximum)
+        step = calculateStep(self.specification, self.scales)
+        self.thresholdSpinBox.setSingleStep(step)
         minimum = self.thresholdSpinBox.minimum()
         self.thresholdSpinBox.setValue(minimum)
 
@@ -659,7 +675,7 @@ class KeyWidget(InputWidget):
         self.setLayout(layout)
         validator = QtGui.QRegExpValidator(QtCore.QRegExp("[a-z0-9_]*"))
         self.keyLineEdit.setValidator(validator)
-        
+
     def loadCut(self, cut):
         """Initialize widget from cut item."""
         self.keyLineEdit.setText(cut.data)

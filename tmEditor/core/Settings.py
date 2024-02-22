@@ -372,7 +372,7 @@ CutSpecs = CutSpecificationPool(
         count_minimum=1,
         count_maximum=1,
         title="Anomaly score",
-        description="Threshold score for Anomaly Detection Trigger. Maximum value 10**8 (100000000).<br/><br/>" \
+        description="Threshold score for Anomaly Detection Trigger. Maximum value 10^8 (100000000).<br/><br/>" \
         "<strong>Example:</strong> <pre>ADT[ADT-ASCORE_1234]</pre>"
     ),
     CutSpecification(
@@ -384,7 +384,7 @@ CutSpecs = CutSpecificationPool(
         count_minimum=1,
         count_maximum=1,
         title="AXO - AXOL1TL Trigger score",
-        description="Threshold for AXO - AXOL1TL Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296)<br/>Only valid with an additional MODEL cut.<br/><br/>" \
+        description="Threshold for AXO - AXOL1TL Trigger score (max. 32 bits), because of different models. Maximum value 2^32 (4294967296)<br/>Only valid with an additional MODEL cut.<br/><br/>" \
         "<strong>Example:</strong> <pre>AXO[AXO-SCORE_1234]</pre>"
     ),
     CutSpecification(
@@ -406,7 +406,7 @@ CutSpecs = CutSpecificationPool(
         count_minimum=1,
         count_maximum=1,
         title="Topological Trigger score",
-        description="Threshold for Topological Trigger score (max. 32 bits), because of different models. Maximum value 2**32 (4294967296).<br/>Only valid with an additional MODEL cut.<br/><br/>" \
+        description="Threshold for Topological Trigger score (max. 32 bits), because of different models. Maximum value 2^32 (4294967296).<br/>Only valid with an additional MODEL cut.<br/><br/>" \
         "<strong>Example:</strong> <pre>TOPO[TOPO-SCORE_1234]</pre>"
     ),
     CutSpecification(
@@ -424,11 +424,11 @@ CutSpecs = CutSpecificationPool(
         object=tmGrammar.CICADA,
         type=tmGrammar.CSCORE,
         range_precision=8,
-        range_step=1/2**8,
+        range_step=1 / (2**8),
         count_minimum=1,
         count_maximum=1,
         title="CICADA Trigger Anomaly Detection score",
-        description="Threshold for CICADA Anomaly Detection Trigger score. Step size = 1/2**8 (0.00390625), where 8 is bitwidth of CICADA AD Decimal part.<br/>Maximum value = 256 (2**8, where where 8 is bitwidth of CICADA AD Integer part.<br/><br/>" \
+        description="Threshold for CICADA Anomaly Detection Trigger score. Step size = 1/2^8 (0.00390625), where 8 is bitwidth of CICADA AD Decimal part.<br/>Maximum value = 256 (2^8, where where 8 is bitwidth of CICADA AD Integer part.<br/><br/>" \
         "<strong>Example:</strong> <pre>CICADA[CICADA-CSCORE_4p273]</pre>"
     ),
     CutSpecification(
