@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2024-05-13
+### Added
+- Support calo comb function for more than 4 objects.
+
 ## [0.16.0] - 2024-02-13
 ### Added
 - Support for grammar revision 0.12 (#41).
@@ -404,7 +408,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support most of the algorithm expression language features.
 
-[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.16.0...HEAD
+[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.0...HEAD
+[0.17.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.16.0...0.17.0
 [0.16.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.4...0.16.0
 [0.15.4]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.3...0.15.4
 [0.15.3]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.2...0.15.3
