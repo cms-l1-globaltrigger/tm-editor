@@ -20,6 +20,7 @@
     <file alias="icons/htm.svg">share/tm-editor/icons/13x13/esums.svg</file>
     <file alias="icons/ettem.svg">share/tm-editor/icons/13x13/esums.svg</file>
     <file alias="icons/etmhf.svg">share/tm-editor/icons/13x13/esums.svg</file>
+    <file alias="icons/htmhf.svg">share/tm-editor/icons/13x13/esums.svg</file>
     <file alias="icons/mbt0hfm.svg">share/tm-editor/icons/13x13/minbias.svg</file>
     <file alias="icons/mbt1hfm.svg">share/tm-editor/icons/13x13/minbias.svg</file>
     <file alias="icons/mbt0hfp.svg">share/tm-editor/icons/13x13/minbias.svg</file>
