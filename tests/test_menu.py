@@ -12,7 +12,7 @@ from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.Algorithm import functionObjects, functionCuts, functionObjectsCuts
 from tmEditor.core.Algorithm import objectCuts
 
-UTM_VERSION: str = "0.12.0"
+UTM_VERSION: str = "0.13.0"
 
 
 class TestMenu:
