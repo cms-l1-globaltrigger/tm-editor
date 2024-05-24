@@ -8,8 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.17.0] - 2024-05-16
 ### Added
-- Support for HTMHF.
-- Support for comb function with more than 4 objects.
+- Support for HTMHF (#46).
+- Support for comb function with more than 4 objects (#47).
 
 ## [0.16.0] - 2024-02-13
 ### Added
