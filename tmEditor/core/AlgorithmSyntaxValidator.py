@@ -8,6 +8,7 @@ Usage example
 
 """
 
+import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Iterable, List
 
@@ -74,7 +75,10 @@ class SyntaxValidator:
     def validate(self, expression: str) -> None:
         tokens: List[str] = self.tokenize(expression)
         for rule in self.rules:
-            rule.validate(tokens)
+            try:
+                rule.validate(tokens)
+            except Exception as exc:
+                logging.exception(exc)
 
     def addRule(self, cls) -> None:
         """Add a syntx rule class. Creates and tores an instance of the class."""
@@ -108,6 +112,7 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
         super().__init__(menu)
         self.addRule(BasicSyntax)
         self.addRule(CombBxOffset)
+        self.addRule(CombMultiThresholds)
         self.addRule(ChargeCorrelation)
         self.addRule(ObjectThresholds)
         self.addRule(RequiredObjectCuts)
@@ -269,6 +274,41 @@ class CombBxOffset(SyntaxRule):
                 if int(objects[i].bx_offset) != int(objects[0].bx_offset):
                     message = f"All object requirements of function {name}{{...}} must be of same bunch crossing offset.\n" \
                               f"Invalid expression near {token!r}"  # TODO differentiate!
+                    raise AlgorithmSyntaxError(message, token)
+
+
+class CombMultiThresholds(SyntaxRule):
+    """Validates that all objects of a combination function with more then 4 objects require same thresholds."""
+
+    def validate(self, tokens: List[str]) -> None:
+        for token in tokens:
+            if not isFunction(token):
+                continue
+            name = token.split("{")[0].strip()  # fetch function name, eg "dist{...}[...]"
+            if name not in (tmGrammar.comb, ):
+                continue
+            f = tmGrammar.Function_Item()
+            if not tmGrammar.Function_parser(token, f):
+                raise AlgorithmSyntaxError(f.message)
+            obj_tokens = []
+            objects = []
+            for obj_token in tmGrammar.Function_getObjects(f):
+                if isObject(obj_token):
+                    obj_tokens.append(obj_token)
+                    objects.append(toObject(obj_token))
+            if len(obj_tokens) <= 4:
+                continue
+            obj_cuts = functionObjectsCuts(token)
+            thresholds = set()
+            for i in range(len(objects)):
+                thresholds.add(objects[i].threshold)
+                if len(thresholds) > 1:
+                    message = f"All object thresholds of function {name}{{...}} must be identical, if assigning more then 4 objects.\n" \
+                              f"Invalid expression near {obj_tokens[i]!r}"
+                    raise AlgorithmSyntaxError(message, token)
+                if obj_cuts[i]:
+                    message = f"All objects of function {name}{{...}} must not use additioanl cuts, if assigning more then 4 objects.\n" \
+                              f"Invalid expression near {obj_tokens[i]!r}"
                     raise AlgorithmSyntaxError(message, token)
 
 
