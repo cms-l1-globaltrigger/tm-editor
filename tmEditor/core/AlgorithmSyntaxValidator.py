@@ -8,7 +8,6 @@ Usage example
 
 """
 
-import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Iterable, List
 
@@ -75,10 +74,7 @@ class SyntaxValidator:
     def validate(self, expression: str) -> None:
         tokens: List[str] = self.tokenize(expression)
         for rule in self.rules:
-            try:
-                rule.validate(tokens)
-            except Exception as exc:
-                logging.exception(exc)
+            rule.validate(tokens)
 
     def addRule(self, cls) -> None:
         """Add a syntx rule class. Creates and tores an instance of the class."""
