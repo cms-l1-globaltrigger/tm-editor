@@ -297,6 +297,10 @@ class CombMultiThresholds(SyntaxRule):
             obj_cuts = functionObjectsCuts(token)
             thresholds = set()
             for i in range(len(objects)):
+                if objects[i].type not in [tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU]:
+                    message = f"All objects of function {name}{{...}} must be of type EG, JET or TAU.\n" \
+                              f"Invalid expression near {obj_tokens[i]!r}"
+                    raise AlgorithmSyntaxError(message, token)
                 thresholds.add(objects[i].threshold)
                 if len(thresholds) > 1:
                     message = f"All object thresholds of function {name}{{...}} must be identical, if assigning more then 4 objects.\n" \
