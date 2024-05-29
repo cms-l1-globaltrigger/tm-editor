@@ -108,6 +108,7 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
         super().__init__(menu)
         self.addRule(BasicSyntax)
         self.addRule(CombBxOffset)
+        self.addRule(CombMultiThresholds)
         self.addRule(ChargeCorrelation)
         self.addRule(ObjectThresholds)
         self.addRule(RequiredObjectCuts)
@@ -272,6 +273,45 @@ class CombBxOffset(SyntaxRule):
                     raise AlgorithmSyntaxError(message, token)
 
 
+class CombMultiThresholds(SyntaxRule):
+    """Validates that all objects of a combination function with more then 4 objects require same thresholds."""
+
+    def validate(self, tokens: List[str]) -> None:
+        for token in tokens:
+            if not isFunction(token):
+                continue
+            name = token.split("{")[0].strip()  # fetch function name, eg "dist{...}[...]"
+            if name not in (tmGrammar.comb, ):
+                continue
+            f = tmGrammar.Function_Item()
+            if not tmGrammar.Function_parser(token, f):
+                raise AlgorithmSyntaxError(f.message)
+            obj_tokens = []
+            objects = []
+            for obj_token in tmGrammar.Function_getObjects(f):
+                if isObject(obj_token):
+                    obj_tokens.append(obj_token)
+                    objects.append(toObject(obj_token))
+            if len(obj_tokens) <= 4:
+                continue
+            obj_cuts = functionObjectsCuts(token)
+            thresholds = set()
+            for i in range(len(objects)):
+                if objects[i].type not in [tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU]:
+                    message = f"All objects of function {name}{{...}} must be of type EG, JET or TAU.\n" \
+                              f"Invalid expression near {obj_tokens[i]!r}"
+                    raise AlgorithmSyntaxError(message, token)
+                thresholds.add(objects[i].threshold)
+                if len(thresholds) > 1:
+                    message = f"All object thresholds of function {name}{{...}} must be identical, if assigning more then 4 objects.\n" \
+                              f"Invalid expression near {obj_tokens[i]!r}"
+                    raise AlgorithmSyntaxError(message, token)
+                if obj_cuts[i]:
+                    message = f"All objects of function {name}{{...}} must not use additional cuts, if assigning more then 4 objects.\n" \
+                              f"Invalid expression near {obj_tokens[i]!r}"
+                    raise AlgorithmSyntaxError(message, token)
+
+
 class ChargeCorrelation(SyntaxRule):
     """Validates that all objects of a function are of type muon if applying a CHGCOR cut."""
 
@@ -409,10 +449,10 @@ class TransverseMass(SyntaxRule):
             objects = functionObjects(token)
             nonEtaCount = 0
             for obj in objects:
-                if obj.type in (tmGrammar.ETM, tmGrammar.ETMHF, tmGrammar.HTM):
+                if obj.type in (tmGrammar.ETM, tmGrammar.ETMHF, tmGrammar.HTM, tmGrammar.HTMHF):
                     nonEtaCount += 1
             if nonEtaCount < 1:
-                message = f"Transverse mass functions require at least one object requirement without an eta component (ETM, ETMHF, HTM).\n" \
+                message = f"Transverse mass functions require at least one object requirement without an eta component (ETM, ETMHF, HTM, HTMHF).\n" \
                           f"Invalid expression near {token!r}"
                 raise AlgorithmSyntaxError(message, token)
 
