@@ -307,7 +307,7 @@ class CombMultiThresholds(SyntaxRule):
                               f"Invalid expression near {obj_tokens[i]!r}"
                     raise AlgorithmSyntaxError(message, token)
                 if obj_cuts[i]:
-                    message = f"All objects of function {name}{{...}} must not use additioanl cuts, if assigning more then 4 objects.\n" \
+                    message = f"All objects of function {name}{{...}} must not use additional cuts, if assigning more then 4 objects.\n" \
                               f"Invalid expression near {obj_tokens[i]!r}"
                     raise AlgorithmSyntaxError(message, token)
 
