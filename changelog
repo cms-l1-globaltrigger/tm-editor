@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2024-06-12
+### Fixed
+- Loading XML menus with grammar version 0.13.
+- Dependency conflict with tox (requiring packaging>=23.2).
+
 ## [0.17.0] - 2024-05-16
 ### Added
 - Support for HTMHF (#46).
@@ -409,7 +414,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support most of the algorithm expression language features.
 
-[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.0...HEAD
+[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.1...HEAD
+[0.17.1]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.0...0.17.1
 [0.17.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.16.0...0.17.0
 [0.16.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.4...0.16.0
 [0.15.4]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.3...0.15.4

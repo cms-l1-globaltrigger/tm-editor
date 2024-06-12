@@ -73,7 +73,7 @@ class RemoteVersionInfo:
             if name:
                 if not uri:
                     uri = Settings.DefaultScaleSetUri.format(scale_set=name)
-                url = urljoin(baseurl, uri)
+            url = urljoin(baseurl, uri)
             self.scale_set_name = name
             self.scale_set_url = url
             # External signal set

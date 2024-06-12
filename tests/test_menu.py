@@ -6,7 +6,7 @@ import tmTable
 from tmGrammar import isGate as isOperator
 from tmGrammar import isObject, isFunction
 from tmEditor.core import XmlDecoder, XmlEncoder
-from tmEditor.core.Menu import Menu
+from tmEditor.core.Menu import Menu, GrammarVersion
 from tmEditor.core.Algorithm import Object, External, Cut, Algorithm
 from tmEditor.core.Algorithm import toObject, toExternal
 from tmEditor.core.Algorithm import functionObjects, functionCuts, functionObjectsCuts
@@ -125,3 +125,6 @@ class TestMenu:
     def test_version(self):
         assert tmGrammar.__version__ == UTM_VERSION
         assert tmTable.__version__ == UTM_VERSION
+
+    def test_grammar_version(self):
+        assert str(GrammarVersion) == "0.13"
