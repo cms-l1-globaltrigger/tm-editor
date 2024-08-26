@@ -6,14 +6,14 @@ from PyQt5 import QtCore
 
 import tmGrammar
 
-# HACK: overload with missing attributes.
-tmGrammar.ET = "ET"
-tmGrammar.PT = "PT"
-
 from tmEditor.core.formatter import fCutValue
 from .AbstractTableModel import AbstractTableModel
 
 __all__ = ['ScalesModel', ]
+
+# HACK: overload with missing attributes.
+tmGrammar.ET = "ET"
+tmGrammar.PT = "PT"
 
 # ------------------------------------------------------------------------------
 #  Keys

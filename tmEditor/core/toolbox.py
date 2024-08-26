@@ -83,7 +83,8 @@ def listcompress(values: list):
     """Returns compressed ranges for sortel list."""
     ranges: list = []
     for value in values:
-        if not ranges: ranges.append([value])
+        if not ranges:
+            ranges.append([value])
         elif value - ranges[-1][-1] > 1:
             ranges.append([value])
         else:

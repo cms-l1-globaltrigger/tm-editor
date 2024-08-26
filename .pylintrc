@@ -1,6 +1,0 @@
-[MASTER]
-
-extension-pkg-whitelist=PyQt5
-
-disable=invalid-name,
-        line-too-long

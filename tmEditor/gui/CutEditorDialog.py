@@ -200,7 +200,7 @@ class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
 
     def value(self, index=None):
         """Returns floating point value by bin index (upper or lower depending on mode)."""
-        if index == None:
+        if index is None:
             index = self.index
         return float(self.scale[index][self.mode])
 
