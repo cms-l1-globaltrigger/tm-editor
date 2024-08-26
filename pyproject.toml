@@ -1,3 +1,32 @@
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "tm-editor"
+description = "CMS Level-1 Trigger Menu Editor"
+authors = [
+    {name = "Bernhard Arnold", email = "bernhard.arnold@cern.ch"},
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "tm-python==0.13.0",
+    "Markdown==3.7",
+    "packaging==24.1",
+    "PyQt5==5.14.*",
+]
+classifiers = [
+    "Framework :: PyQt5",
+    "Programming Language :: Python :: 3",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/cms-l1-globaltrigger/tm-editor"
+
+[project.scripts]
+tm-editor = "tmEditor.__main__:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "tmEditor.__version__"}
