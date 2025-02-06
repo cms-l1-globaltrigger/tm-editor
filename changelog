@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2025-02-06
+### Added
+ - Support for Python 3.13.
+
+### Fixed
+ - Add algorithm button crashes (#52).
+
 ## [0.17.1] - 2024-06-12
 ### Fixed
 - Loading XML menus with grammar version 0.13.
@@ -414,7 +421,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support most of the algorithm expression language features.
 
-[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.1...HEAD
+[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.2...HEAD
+[0.17.2]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.1...0.17.2
 [0.17.1]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.0...0.17.1
 [0.17.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.16.0...0.17.0
 [0.16.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.15.4...0.16.0
