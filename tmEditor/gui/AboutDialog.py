@@ -14,6 +14,7 @@ __all__ = ["AboutDialog"]
 
 L1ApplicationAuthors = (
     (u"Bernhard Arnold", "bernhard.arnold@cern.ch"),
+    (u"Herbert Bergauer", "herbert.bergauer@cern.ch"),
 )
 L1ApplicationContributors = (
     (u"Manfred Jeitler", "manfred.jeitler@cern.ch"),

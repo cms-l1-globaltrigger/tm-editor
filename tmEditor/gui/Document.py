@@ -549,7 +549,11 @@ class Document(BaseDocument):
                     self.tr("Renamed algorithm <em>{}</em> to <em>{}</em> as the name is already used.").format(original_name, algorithm.name)
                 )
             if self.menu().algorithmByIndex(algorithm.index):
-                index = self.getUnusedAlgorithmIndices()[0]
+                unused_indices = self.getUnusedAlgorithmIndices()
+                if not unused_indices:
+                    raise RuntimeError(self.tr("Exceeding maximum number of allowed algorithms."))
+                    return
+                index = unused_indices[0]
                 QtWidgets.QMessageBox.information(
                     self,
                     self.tr("Relocating algorithm"),
@@ -578,9 +582,13 @@ class Document(BaseDocument):
             item.top.scrollTo(selectedeRows[0])
 
     def addAlgorithm(self, index, item):
+        available_indices = self.getUnusedAlgorithmIndices()
+        if not available_indices:
+            QtWidgets.QMessageBox.warning(self, self.tr("Error"), self.tr("Exceeding maximum number of {} algorithms.".format(MaxAlgorithms)))
+            return
         dialog = AlgorithmEditorDialog(self.menu(), self)
         dialog.setModal(True)
-        dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
+        dialog.setIndex(available_indices[0])
         dialog.setName(self.getUniqueAlgorithmName(self.tr("L1_Unnamed")))
         dialog.editor.setModified(False)
         dialog.exec_()
@@ -703,10 +711,14 @@ class Document(BaseDocument):
 
     @handleException
     def copyAlgorithm(self, index, item):
+        unused_indices = self.getUnusedAlgorithmIndices()
+        if not unused_indices:
+            QtWidgets.QMessageBox.warning(self, self.tr("Error"), self.tr("Exceeding maximum number of {} algorithms.".format(MaxAlgorithms)))
+            return
         algorithm = copy.deepcopy(self.menu().algorithms[index.row()])
         dialog = AlgorithmEditorDialog(self.menu(), self)
         dialog.setModal(True)
-        dialog.setIndex(self.getUnusedAlgorithmIndices()[0])
+        dialog.setIndex(unused_indices[0])
         dialog.setName(algorithm.name + "_copy")
         dialog.setExpression(algorithm.expression)
         dialog.editor.setModified(False)
