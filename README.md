@@ -1,12 +1,13 @@
-Trigger Menu Editor
-===================
+# Trigger Menu Editor
+
+CMS Level-1 Trigger Menu Editor
 
 ## Install
 
 Install using pip
 
 ```bash
-pip install --extra-index-url https://globaltrigger.web.cern.ch/pypi/ tm-editor
+pip install https://github.com/cms-l1-globaltrigger/tm-editor/archive/refs/tags/0.18.0.zip
 ```
 
 ## Build
@@ -27,12 +28,12 @@ tm-editor <filename|URL ...>
 
 Opening a local XML file:
 
-```
+```bash
 tm-editor L1Menu_Sample.xml
 ```
 
 Opening a remote XML resource:
 
-```
+```bash
 tm-editor http://example.com/L1Menu_Sample.xml
 ```
