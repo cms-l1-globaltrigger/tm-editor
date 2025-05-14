@@ -19,14 +19,20 @@ pyrcc5 resource/tmEditor.rcc -o tmEditor/tmeditor_rc.py
 
 ## Synopsis
 
-    $ tm-editor <filename|URL ...>
+```
+tm-editor <filename|URL ...>
+```
 
 ## Example
 
 Opening a local XML file:
 
-    $ tm-editor L1Menu_Sample.xml
+```
+tm-editor L1Menu_Sample.xml
+```
 
 Opening a remote XML resource:
 
-    $ tm-editor http://example.com/L1Menu_Sample.xml
+```
+tm-editor http://example.com/L1Menu_Sample.xml
+```
