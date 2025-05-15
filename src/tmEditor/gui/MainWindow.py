@@ -200,7 +200,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadRecentFiles(self) -> list[str]:
         """Returns recent files from application settings."""
-        return QtCore.QSettings().value("recent/files") or []  # type: ignore
+        filenames = QtCore.QSettings().value("recent/files", [], list)
+        if not isinstance(filenames, list):
+            filenames = []
+        return [str(filename) for filename in filenames]
 
     def storeRecentFiles(self, filenames: list[str]):
         """Store recent files to application settings."""
