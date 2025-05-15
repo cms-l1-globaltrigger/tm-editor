@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from tmEditor import tmeditor_rc
 from tmEditor.core.Menu import Menu

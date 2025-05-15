@@ -6,28 +6,28 @@ import tmGrammar
 
 __all__ = ["MaxAlgorithms", "CutSpecs"]
 
-MaxAlgorithms = 512
+MaxAlgorithms: int = 512
 """Maximum number of supported algorithms."""
 
-VersionUrl = "https://svnweb.cern.ch/trac/cactus/export/HEAD/trunk/cactusprojects/ugt/menu/version.json"
+VersionUrl: str = "https://svnweb.cern.ch/trac/cactus/export/HEAD/trunk/cactusprojects/ugt/menu/version.json"
 """Server side version and scale set information URL."""
 
-DefaultScaleSetUri = "scales/L1Menu_{scale_set}.xml"
+DefaultScaleSetUri: str = "scales/L1Menu_{scale_set}.xml"
 """Default URI format string for server side scale set XML files."""
 
-DefaultExtSignalSetUri = "cabling/L1Menu_{ext_signal_set}.xml"
+DefaultExtSignalSetUri: str = "cabling/L1Menu_{ext_signal_set}.xml"
 """Default URI format string for server side external signal set XML files."""
 
-DownloadSite = "https://cern.ch/globaltrigger/upgrade/tme/downloads"
+DownloadSite: str = "https://cern.ch/globaltrigger/upgrade/tme/downloads"
 """Web URL providing download information."""
 
-ContentsURL = "https://cern.ch/globaltrigger/upgrade/tme/userguide"
+ContentsURL: str = "https://cern.ch/globaltrigger/upgrade/tme/userguide"
 """Web URL hosting the user guide."""
 
-Empty = ""
+Empty: str = ""
 """Empty string entry."""
 
-ModelsURL = "https://globaltrigger.web.cern.ch/upgrade/tme/models"
+ModelsURL: str = "https://globaltrigger.web.cern.ch/upgrade/tme/models"
 """Web URL models description for NN MODELs."""
 
 CutSpecs = CutSpecificationPool(

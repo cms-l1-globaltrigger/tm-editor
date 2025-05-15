@@ -5,21 +5,26 @@ from typing import Optional
 
 import markdown
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
-from tmEditor import __version__, tmeditor_rc
-from tmGrammar import __version__ as utm_version
+from tmEditor import tmeditor_rc
+from tmEditor import __version__ as APP_VERSION
+from tmGrammar import __version__ as UTM_VERSION
 
 __all__ = ["AboutDialog"]
 
-L1ApplicationAuthors = (
-    (u"Bernhard Arnold", "bernhard.arnold@cern.ch"),
-    (u"Herbert Bergauer", "herbert.bergauer@cern.ch"),
-)
-L1ApplicationContributors = (
-    (u"Manfred Jeitler", "manfred.jeitler@cern.ch"),
-    (u"Vasile Ghete", "vasile.mihai.ghete@cern.ch"),
-)
+
+def readTextFile(filename: str) -> str:
+    """Read text file from resources."""
+    lines: list[str] = []
+    file = QtCore.QFile(filename)
+    if not file.open(QtCore.QIODevice.OpenModeFlag.ReadOnly | QtCore.QIODevice.OpenModeFlag.Text):
+        return ""
+    istream = QtCore.QTextStream(file)
+    while not istream.atEnd():
+        lines.append(istream.readLine())
+    return os.linesep.join(lines)
+
 
 class AboutDialog(QtWidgets.QDialog):
     """About dialog providing information on the application and credits."""
@@ -57,7 +62,7 @@ class AboutDialog(QtWidgets.QDialog):
         self.tabs.addTab(self.thanksTextEdit, self.tr("&Thanks to"))
 
         self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.addButton(QtWidgets.QDialogButtonBox.Close)
+        self.buttonBox.addButton(QtWidgets.QDialogButtonBox.StandardButton.Close)
         self.buttonBox.clicked.connect(self.close)
 
 
@@ -75,23 +80,11 @@ class AboutDialog(QtWidgets.QDialog):
             title,
             self.tr("Editor for CERN CMS Level-1 Trigger Menus.")
         ))
-        about = markdown.markdown("{}\n\nVersion **{}** (utm version {})".format(title, __version__, utm_version))
+        about = markdown.markdown("{}\n\nVersion **{}** (utm version {})".format(title, APP_VERSION, UTM_VERSION))
         self.aboutTextEdit.setText(about)
-        changelog = markdown.markdown(self._readfile(":changelog"))
+        changelog = markdown.markdown(readTextFile(":changelog"))
         self.changelogTextEdit.setHtml(changelog)
-        self.authorsTextEdit.setText(self._userlist(L1ApplicationAuthors))
-        self.thanksTextEdit.setText(self._userlist(L1ApplicationContributors))
-
-    def _userlist(self, userlist, separator="<br />"):
-        """Return HTML containing full name and email address of a user list tuple."""
-        return separator.join(["{} &lt;{}&gt;".format(name, email) for name, email in userlist])
-
-    def _readfile(self, filename: str) -> str:
-        lines = []
-        file = QtCore.QFile(filename)
-        if not file.open(QtCore.QIODevice.ReadOnly | QtCore.QIODevice.Text):
-            return ""
-        istream = QtCore.QTextStream(file)
-        while not istream.atEnd():
-            lines.append(istream.readLine())
-        return os.linesep.join(lines)
+        authors = readTextFile(":authors.txt")
+        self.authorsTextEdit.setText(authors)
+        contributors = readTextFile(":contributors.txt")
+        self.thanksTextEdit.setText(contributors)

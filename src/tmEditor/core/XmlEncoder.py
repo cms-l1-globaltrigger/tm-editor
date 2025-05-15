@@ -3,6 +3,7 @@
 import functools
 import logging
 import os
+from typing import Callable, Optional
 
 import tmTable
 
@@ -12,6 +13,7 @@ from .toolbox import safe_str, encode_labels
 from .TableHelper import TableHelper
 from .Queue import Queue
 from .AlgorithmFormatter import AlgorithmFormatter
+from .Menu import Menu
 
 kAncestorId = "ancestor_id"
 kBxOffset = "bx_offset"
@@ -43,20 +45,20 @@ kType = "type"
 kUUIDFirmware = "uuid_firmware"
 kUUIDMenu = "uuid_menu"
 
-DEFAULT_UUID = "00000000-0000-0000-0000-000000000000"
+DEFAULT_UUID: str = "00000000-0000-0000-0000-000000000000"
 """Empty UUID"""
 
-FORMAT_FLOAT = "+23.16E"
+FORMAT_FLOAT: str = "+23.16E"
 """Floating point string format."""
 
-FORMAT_INDEX = "d"
+FORMAT_INDEX: str = "d"
 """Algorithm index format."""
 
-FORMAT_BX_OFFSET = "+d"
+FORMAT_BX_OFFSET: str = "+d"
 """BX offset format, signed decimal."""
 
 
-def chdir(directory):
+def chdir(directory: str) -> Callable:  # TODO
     """Decorator, execute function inside a different directory."""
     def decorate(func):
         @functools.wraps(func)
@@ -80,16 +82,16 @@ def chdir(directory):
 
 class XmlEncoderError(Exception):
     """Exeption for XML encoder errors."""
-    def __init__(self, message):
+    def __init__(self, message: str) -> None:
         super().__init__(message)
 
 
 class XmlEncoderQueue(Queue):
 
-    def __init__(self, menu, filename):
+    def __init__(self, menu: Menu, filename: str) -> None:
         super().__init__()
-        self.menu = menu
-        self.filename = os.path.abspath(filename)
+        self.menu: Menu = menu
+        self.filename: str = os.path.abspath(filename)
         self.add_callback(self.run_prepare, "preparing writing to file")
         self.add_callback(self.run_process_info, "preparing menu info")
         self.add_callback(self.run_process_algorithms, "preparing algorithms")
@@ -99,7 +101,7 @@ class XmlEncoderQueue(Queue):
         self.add_callback(self.run_dump_xml, "writing XML file")
         self.add_callback(self.run_verify_dump, "verifying written file")
 
-    def run_prepare(self):
+    def run_prepare(self) -> None:
         """Write XML menu to *filename*. This regenerates the UUID."""
         logging.debug("preparing menu to write to `%s`", self.filename)
 
@@ -119,7 +121,7 @@ class XmlEncoderQueue(Queue):
         self.tables.extSignal = self.menu.extSignals
 
     @chdir(toolbox.getXsdDir())
-    def run_process_info(self):
+    def run_process_info(self) -> None:
         # Create a new menu instance.
         self.tables.menu = tmTable.Menu()
 
@@ -143,7 +145,7 @@ class XmlEncoderQueue(Queue):
         logging.debug("menu information: %s", dict(self.tables.menu.menu))
 
     @chdir(toolbox.getXsdDir())
-    def run_process_algorithms(self):
+    def run_process_algorithms(self) -> None:
         for algorithm in self.menu.algorithms:
             # Create algorithm row
             row = tmTable.Row()
@@ -164,7 +166,7 @@ class XmlEncoderQueue(Queue):
             self.tables.menu.algorithms.append(row)
 
     @chdir(toolbox.getXsdDir())
-    def run_process_objects(self):
+    def run_process_objects(self) -> None:
         for algorithm in self.menu.algorithms:
             # Objects
             if algorithm.name not in self.tables.menu.objects.keys():
@@ -192,7 +194,7 @@ class XmlEncoderQueue(Queue):
                 self.tables.menu.objects[algorithm.name] = self.tables.menu.objects[algorithm.name] + (row, )
 
     @chdir(toolbox.getXsdDir())
-    def run_process_externals(self):
+    def run_process_externals(self) -> None:
         for algorithm in self.menu.algorithms:
             # Externals
             if algorithm.name not in self.tables.menu.externals.keys():
@@ -217,7 +219,7 @@ class XmlEncoderQueue(Queue):
                 self.tables.menu.externals[algorithm.name] = self.tables.menu.externals[algorithm.name] + (row, )
 
     @chdir(toolbox.getXsdDir())
-    def run_process_cuts(self):
+    def run_process_cuts(self) -> None:
         for algorithm in self.menu.algorithms:
             # Cuts
             if algorithm.name not in self.tables.menu.cuts.keys():
@@ -253,12 +255,12 @@ class XmlEncoderQueue(Queue):
                 self.tables.menu.cuts[algorithm.name] = self.tables.menu.cuts[algorithm.name] + (row, )
 
     @chdir(toolbox.getXsdDir())
-    def run_dump_xml(self):
+    def run_dump_xml(self) -> None:
         # Write to XML file.
         logging.debug("writing XML file to %r", self.filename)
         self.tables.dump(self.filename)
 
-    def run_verify_dump(self):
+    def run_verify_dump(self) -> None:
         # WORKAROUND (check if file was written)
         if not os.path.isfile(self.filename):
             message = "failed to write to file {0!r}".format(self.filename)
@@ -266,6 +268,6 @@ class XmlEncoderQueue(Queue):
             raise XmlEncoderError(message)
 
 
-def dump(menu, filename):
+def dump(menu: Menu, filename: str) -> None:
     queue = XmlEncoderQueue(menu, filename)
     queue.exec_()

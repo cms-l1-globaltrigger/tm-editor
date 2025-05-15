@@ -3,7 +3,7 @@
 import logging
 import uuid
 import re
-from typing import List, Optional
+from typing import Optional
 
 from packaging.version import Version
 
@@ -27,10 +27,10 @@ class Menu:
 
     def __init__(self) -> None:
         self.menu = MenuInfo()
-        self.algorithms: List = []
-        self.cuts: List = []
-        self.objects: List = []
-        self.externals: List = []
+        self.algorithms: list = []
+        self.cuts: list = []
+        self.objects: list = []
+        self.externals: list = []
         self.scales = None
         self.extSignals = None
 

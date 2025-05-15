@@ -6,8 +6,8 @@ import signal
 import sys
 import os
 
-import PyQt5
-from PyQt5 import QtCore, QtWidgets
+import PySide6
+from PySide6 import QtCore, QtWidgets
 
 from . import __version__
 from .application import Application
@@ -55,7 +55,7 @@ def main() -> None:
     logging.basicConfig(format="%(levelname)s: %(message)s", level=level)
 
     # Diagnostic output.
-    logging.debug("%s version %s", PyQt5.__name__, QtCore.QT_VERSION_STR)
+    logging.debug("%s version %s", PySide6.__name__, QtCore.qVersion())
 
     app = Application()
     app.setRemoteTimeout(args.timeout)

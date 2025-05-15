@@ -17,9 +17,9 @@
 """
 
 import math
-from typing import List, Optional, Tuple
+from typing import Optional
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from tmEditor.core import formatter
 from tmEditor.core.Algorithm import toObject, toExternal
@@ -42,11 +42,8 @@ __all__ = [
     "PhiCutChart",
 ]
 
-# -----------------------------------------------------------------------------
-#  Functions
-# -----------------------------------------------------------------------------
 
-def richTextObjectsPreview(algorithm, parent):
+def richTextObjectsPreview(algorithm, parent) -> str:
     content = []
     objects = [toObject(obj) for obj in algorithm.objects()]
     objects = [obj for obj in objects if obj.type in ObjectTypes]
@@ -66,7 +63,7 @@ def richTextObjectsPreview(algorithm, parent):
     return "".join(content)
 
 
-def richTextSignalsPreview(algorithm, parent):
+def richTextSignalsPreview(algorithm, parent) -> str:
     content = []
     signals = [toObject(obj) for obj in algorithm.objects()]
     signals = [obj for obj in signals if obj.type in SignalTypes]
@@ -81,7 +78,7 @@ def richTextSignalsPreview(algorithm, parent):
     return "".join(content)
 
 
-def richTextExtSignalsPreview(algorithm, parent):
+def richTextExtSignalsPreview(algorithm, parent) -> str:
     content = []
     externals = [toExternal(ext) for ext in algorithm.externals()]
     if externals:
@@ -94,8 +91,8 @@ def richTextExtSignalsPreview(algorithm, parent):
     return "".join(content)
 
 
-def richTextCutsPreview(menu, algorithm, parent):
-    # List used cuts.
+def richTextCutsPreview(menu, algorithm, parent) -> str:
+    # list used cuts.
     content = []
     if algorithm.cuts():
         content.append(parent.tr("<p><strong>Cuts:</strong></p>"))
@@ -120,9 +117,6 @@ def toPoint(x: float, y: float) -> QtCore.QPoint:
 def toRect(x: float, y: float, w: float, h: float) -> QtCore.QRect:
     return QtCore.QRect(int(round(x)), int(round(y)), int(round(w)), int(round(h)))
 
-# -----------------------------------------------------------------------------
-#  Icon factories
-# -----------------------------------------------------------------------------
 
 def createIcon(name: str) -> QtGui.QIcon:
     """Factory function, creates a multi resolution gnome theme icon."""
@@ -146,14 +140,10 @@ def createIcon(name: str) -> QtGui.QIcon:
     return icon
 
 
-def miniIcon(name, size=13):
+def miniIcon(name: str, size: int = 13) -> QtGui.QIcon:
     """Returns mini icon to be used for items in list and tree views."""
     return QtGui.QIcon(QtGui.QIcon(f":/icons/{name}.svg").pixmap(size, size))
 
-
-# -----------------------------------------------------------------------------
-#  Legend label with icon on the right.
-# -----------------------------------------------------------------------------
 
 class IconLabel(QtWidgets.QWidget):
     """label with 16x16 pixel icon and text label on the left."""
@@ -163,7 +153,7 @@ class IconLabel(QtWidgets.QWidget):
         super().__init__(parent)
 
         self.iconLabel: QtWidgets.QLabel = QtWidgets.QLabel(self)
-        self.iconLabel.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.iconLabel.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
 
         self.textLabel: QtWidgets.QLabel = QtWidgets.QLabel(self)
 
@@ -182,9 +172,6 @@ class IconLabel(QtWidgets.QWidget):
         """Set displayed text."""
         self.textLabel.setText(text)
 
-# -----------------------------------------------------------------------------
-#  Selectable label.
-# -----------------------------------------------------------------------------
 
 class SelectableLabel(QtWidgets.QLabel):
 
@@ -192,14 +179,11 @@ class SelectableLabel(QtWidgets.QLabel):
         super().__init__(parent)
         self.setWordWrap(True)
         self.setTextInteractionFlags(
-            QtCore.Qt.LinksAccessibleByMouse |
-            QtCore.Qt.TextSelectableByKeyboard |
-            QtCore.Qt.TextSelectableByMouse
+            QtCore.Qt.TextInteractionFlag.LinksAccessibleByMouse |
+            QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard |
+            QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
         )
 
-# -----------------------------------------------------------------------------
-#  Prefixed spin box
-# -----------------------------------------------------------------------------
 
 class PrefixedSpinBox(QtWidgets.QSpinBox):
     """A decimal spin box with plus and minus sign prefix.
@@ -209,12 +193,9 @@ class PrefixedSpinBox(QtWidgets.QSpinBox):
         """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
 
-    def textFromValue(self, value):
+    def textFromValue(self, value: int) -> str:
         return format(value, "+d") # prefix integers also with plus sign
 
-# -----------------------------------------------------------------------------
-#  Read only line edit widget.
-# -----------------------------------------------------------------------------
 
 class ReadOnlyLineEdit(QtWidgets.QLineEdit):
     """Customized rad only line edit."""
@@ -228,18 +209,15 @@ class ReadOnlyLineEdit(QtWidgets.QLineEdit):
         self.setReadOnly(True)
         # Set background to parent widget background.
         palette = self.palette()
-        palette.setColor(QtGui.QPalette.Base, palette.color(QtGui.QPalette.Window))
+        palette.setColor(QtGui.QPalette.ColorRole.Base, palette.color(QtGui.QPalette.ColorRole.Window))
         self.setPalette(palette)
 
-# ------------------------------------------------------------------------------
-#  Text filter widget
-# ------------------------------------------------------------------------------
 
 class TextFilterWidget(QtWidgets.QWidget):
     """Filter text input to be combined with a view. Optional enable a left
     *spacer* that justifies the content to the right."""
 
-    textChanged = QtCore.pyqtSignal(str)
+    textChanged = QtCore.Signal(str)
 
     def __init__(self, spacer: bool = False, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
@@ -250,7 +228,7 @@ class TextFilterWidget(QtWidgets.QWidget):
         self.filterLineEdit.textChanged.connect(lambda text: self.textChanged.emit(text))
         hbox = QtWidgets.QHBoxLayout()
         if spacer:
-            hbox.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum))
+            hbox.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Minimum))
         hbox.addWidget(self.filterLabel)
         hbox.addWidget(self.filterLineEdit)
         self.setLayout(hbox)
@@ -260,9 +238,6 @@ class TextFilterWidget(QtWidgets.QWidget):
         margins.setBottom(1)
         hbox.setContentsMargins(margins)
 
-# -----------------------------------------------------------------------------
-#  Extended combo box widget.
-# -----------------------------------------------------------------------------
 
 class ComboBoxPlus(QtWidgets.QComboBox):
     """Enhanced combo box, permits to enable/disable items.
@@ -271,20 +246,14 @@ class ComboBoxPlus(QtWidgets.QComboBox):
     >>> widget.setItemEnabled(0, False)
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def setItemEnabled(self, index, enabled):
+    def setItemEnabled(self, index: int, enabled: bool) -> None:
         """Enables or disables item at *index*."""
         # HACK:
         # see http://theworldwideinternet.blogspot.co.at/2011/01/disabling-qcombobox-items.html
         # and also https://forum.qt.io/topic/27419/qcombobox-item-disable
         modelIndex = self.model().index(index, 0)
-        self.model().setData(modelIndex, QtCore.QVariant(33 if enabled else 0), QtCore.Qt.UserRole -1)
+        self.model().setData(modelIndex, (33 if enabled else 0), QtCore.Qt.ItemDataRole.UserRole -1)
 
-# -----------------------------------------------------------------------------
-#  Restricted line edit widget.
-# -----------------------------------------------------------------------------
 
 class RestrictedLineEdit(QtWidgets.QLineEdit):
     """Restricted line edit widget.
@@ -315,9 +284,10 @@ class RestrictedLineEdit(QtWidgets.QLineEdit):
         """@returns prefix, None if not set."""
         return self._prefix
 
-    def setRegexPattern(self, pattern):
+    def setRegexPattern(self, pattern: str, /) -> None:
         """Set regular expression pattern to guard user input."""
-        self.setValidator(QtGui.QRegExpValidator(QtCore.QRegExp(pattern), self))
+        regex = QtCore.QRegularExpression(pattern)
+        self.setValidator(QtGui.QRegularExpressionValidator(regex, self))
 
     def validate(self) -> None:
         """Validate user input."""
@@ -327,9 +297,6 @@ class RestrictedLineEdit(QtWidgets.QLineEdit):
             self.setText(self._prefix)
             self.textChanged.connect(self.validate)
 
-# -----------------------------------------------------------------------------
-#  Restricted plain text edit.
-# -----------------------------------------------------------------------------
 
 class RestrictedPlainTextEdit(QtWidgets.QPlainTextEdit):
     """Restricted plain text edit widget. Maximum length can be specified.
@@ -340,7 +307,7 @@ class RestrictedPlainTextEdit(QtWidgets.QPlainTextEdit):
         self.textChanged.connect(self.validate)
         self.setTabChangesFocus(True)
 
-    def setMaxLength(self, length: int) -> None:
+    def setMaxLength(self, length: int, /) -> None:
         """Set maximal input length."""
         self._maxLength = length
 
@@ -354,21 +321,18 @@ class RestrictedPlainTextEdit(QtWidgets.QPlainTextEdit):
             if len(self.toPlainText()) > self._maxLength:
                 self.textCursor().deletePreviousChar()
 
-# -----------------------------------------------------------------------------
-#  Custom integer list spin box
-# -----------------------------------------------------------------------------
 
 class ListSpinBox(QtWidgets.QSpinBox):
     """Custom spin box for a list of integers."""
 
-    def __init__(self, values: Optional[List[int]] = None, parent: Optional[QtWidgets.QWidget] = None) -> None:
+    def __init__(self, values: Optional[list[int]] = None, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setValues(values or [])
 
-    def values(self) -> List[int]:
+    def values(self) -> list[int]:
         return list(self._values)
 
-    def setValues(self, values: List[int]) -> None:
+    def setValues(self, values: list[int]) -> None:
         self._values = [int(value) for value in values]
         self._index = 0
         minimum = min(self._values)
@@ -407,9 +371,6 @@ class ListSpinBox(QtWidgets.QSpinBox):
         self._index = index
         return self.value(index)
 
-#
-# More complex widgets.
-#
 
 class EtaCutChart(QtWidgets.QWidget):
     """Graphical ETA cut representation."""
@@ -422,17 +383,17 @@ class EtaCutChart(QtWidgets.QWidget):
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
-        self._lower: int = 0
-        self._upper: int = 0
+        self._lower: float = 0
+        self._upper: float = 0
         self.setRange(-5, 5)
         self.setFixedSize(self.Margin * 2 + self.Length, self.Margin * 2 + self.Radius)
 
-    def setRange(self, lower: int, upper: int) -> None:
+    def setRange(self, lower: float, upper: float) -> None:
         """Set lower and upper bounding of range."""
         self._lower = lower
         self._upper = upper
 
-    def range(self) -> Tuple[int, int]:
+    def range(self) -> tuple[float, float]:
         """Returns tuple containing lower and upper bounding of range."""
         return self._lower, self._upper
 
@@ -454,11 +415,11 @@ class EtaCutChart(QtWidgets.QWidget):
         """Paint ETA cut graph on windget."""
         lower, upper = self.range()
         painter = QtGui.QPainter(self)
-        painter.setBrush(QtCore.Qt.white)
+        painter.setBrush(QtCore.Qt.GlobalColor.white)
         # Draw Background
         painter.drawRect(toRect(self.Margin, self.Margin, self.Length, self.Radius))
-        painter.setPen(QtGui.QPen(QtCore.Qt.transparent))
-        painter.setBrush(QtCore.Qt.red)
+        painter.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.transparent))
+        painter.setBrush(QtCore.Qt.GlobalColor.red)
         # Draw Polygon
         polygon = QtGui.QPolygon()
         polygon.append(toPoint(self.Margin + self.Length / 2, self.Margin + self.Radius))
@@ -470,8 +431,8 @@ class EtaCutChart(QtWidgets.QWidget):
         polygon.append(self.getPoint(lower))
         painter.drawPolygon(polygon)
         # Draw frames
-        painter.setPen(QtGui.QPen(QtCore.Qt.black))
-        painter.setBrush(QtCore.Qt.transparent)
+        painter.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.black))
+        painter.setBrush(QtCore.Qt.GlobalColor.transparent)
         painter.drawRect(toRect(self.Margin, self.Margin, self.Length / 2, self.Radius))
         painter.drawRect(toRect(self.Margin + self.Length / 2, self.Margin, self.Length / 2, self.Radius))
         painter.setFont(QtGui.QFont("Sans", self.FontSize))
@@ -490,29 +451,29 @@ class PhiCutChart(QtWidgets.QWidget):
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes optional reference to parent widget."""
         super().__init__(parent)
-        self._lower: int = 0
-        self._upper: int = 0
-        self.setRange(0, 360 * 16)
+        self._lower: float = 0.
+        self._upper: float = 0.
+        self.setRange(0., 360. * 16)
         self.setFixedSize((self.Margin + self.Radius) * 2, (self.Margin + self.Radius) * 2)
 
-    def setRange(self, lower: int, upper: int) -> None:
+    def setRange(self, lower: float, upper: float) -> None:
         """Set lower and upper bounding of range."""
         self._lower = lower
         self._upper = upper
 
-    def range(self) -> Tuple[int, int]:
+    def range(self) -> tuple[float, float]:
         """Returns tuple containing lower and upper bounding of range."""
         return self._lower, self._upper
 
     def paintEvent(self, event: QtCore.QEvent) -> None:
         """Paint PHI cut graph on windget."""
         painter = QtGui.QPainter(self)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         rectangle = toRect(self.Margin, self.Margin, self.Radius * 2, self.Radius * 2)
-        painter.setPen(QtGui.QPen(QtCore.Qt.transparent))
-        painter.setBrush(QtCore.Qt.white)
+        painter.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.transparent))
+        painter.setBrush(QtCore.Qt.GlobalColor.white)
         painter.drawPie(rectangle, 0, 360 * 16)
-        painter.setBrush(QtCore.Qt.red)
+        painter.setBrush(QtCore.Qt.GlobalColor.red)
         lower, upper = self.range()
         lower = int(round(math.degrees(lower)))
         upper = int(round(math.degrees(upper)))
@@ -520,8 +481,8 @@ class PhiCutChart(QtWidgets.QWidget):
             painter.drawPie(rectangle, lower * 16, (upper-lower) * 16)
         else:
             painter.drawPie(rectangle, lower * 16, (360 - lower + upper) * 16)
-        painter.setPen(QtGui.QPen(QtCore.Qt.black))
-        painter.setBrush(QtCore.Qt.transparent)
+        painter.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.black))
+        painter.setBrush(QtCore.Qt.GlobalColor.transparent)
         painter.drawArc(rectangle, 0, 360 * 16)
         painter.setFont(QtGui.QFont("Sans", self.FontSize))
         painter.drawText(toPoint(self.Radius * 2 + self.Margin + 2, (self.Margin + self.Radius) + self.FontSize / 2), u"0")

@@ -18,12 +18,12 @@ processing data ... 33 %
 saving data ... 66 %
 """
 
-from typing import Callable, List
+from typing import Callable
 
 
 class Callback:
 
-    def __init__(self, callback: Callable, message: str):
+    def __init__(self, callback: Callable, message: str) -> None:
         self.callback: Callable = callback
         self.message: str = message or ""
 
@@ -31,7 +31,7 @@ class Callback:
 class Queue:
 
     def __init__(self) -> None:
-        self.__callbacks: List[Callback] = []
+        self.__callbacks: list[Callback] = []
         self.__count: int = 0
         self.__message: str = ""
 

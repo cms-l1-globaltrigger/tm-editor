@@ -1,9 +1,9 @@
 """Bottom widget."""
 
 import re
-from typing import Optional
+from typing import Any, Optional
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 import tmGrammar
 
@@ -44,11 +44,8 @@ kStep = "step"
 kSystem = "system"
 kType = "type"
 
-# ------------------------------------------------------------------------------
-#  Helpers
-# ------------------------------------------------------------------------------
 
-def highlight(expression):
+def highlight(expression: str, /) -> str:
     """Simple rich text highlighter for algorithm expressions."""
     expression = AlgorithmFormatter.normalize(expression)
     for name in FunctionTypes:
@@ -65,24 +62,22 @@ def highlight(expression):
         )
     return expression
 
-def fPatchType(item):
+
+def fPatchType(item: dict[str, str]) -> str:
     """Patch muon type from ET to PT."""
     if item[kType] == tmGrammar.ET:
         if item[kObject] == tmGrammar.MU:
             return tmGrammar.PT
     return item[kType]
 
-# ------------------------------------------------------------------------------
-#  Toolbar widget, helper
-# ------------------------------------------------------------------------------
 
 class ToolbarWidget(QtWidgets.QWidget):
 
-    addTriggered = QtCore.pyqtSignal()
-    editTriggered = QtCore.pyqtSignal()
-    copyTriggered = QtCore.pyqtSignal()
-    removeTriggered = QtCore.pyqtSignal()
-    moveTriggered = QtCore.pyqtSignal()
+    addTriggered = QtCore.Signal()
+    editTriggered = QtCore.Signal()
+    copyTriggered = QtCore.Signal()
+    removeTriggered = QtCore.Signal()
+    moveTriggered = QtCore.Signal()
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
@@ -147,7 +142,7 @@ class BottomWidget(QtWidgets.QWidget):
         box = QtWidgets.QVBoxLayout()
         box.addWidget(self.etaCutChart)
         groupBox.setLayout(box)
-        groupBox.setAlignment(QtCore.Qt.AlignBottom)
+        groupBox.setAlignment(QtCore.Qt.AlignmentFlag.AlignBottom)
         etaCutLayout = QtWidgets.QVBoxLayout(self.etaCutWidget)
         etaCutLayout.setContentsMargins(5, 5, 5, 5)
         etaCutLayout.addWidget(groupBox)
@@ -165,7 +160,7 @@ class BottomWidget(QtWidgets.QWidget):
         box = QtWidgets.QVBoxLayout()
         box.addWidget(self.phiCutChart)
         groupBox.setLayout(box)
-        groupBox.setAlignment(QtCore.Qt.AlignBottom)
+        groupBox.setAlignment(QtCore.Qt.AlignmentFlag.AlignBottom)
         phiCutLayout = QtWidgets.QVBoxLayout(self.phiCutWidget)
         phiCutLayout.setContentsMargins(5, 5, 5, 5)
         phiCutLayout.addWidget(groupBox)
@@ -201,11 +196,11 @@ class BottomWidget(QtWidgets.QWidget):
         self.notice.setText("")
         self.notice.iconLabel.clear()
 
-    def setEtaCutChart(self, lower, upper):
+    def setEtaCutChart(self, lower: float, upper: float) -> None:
         self.etaCutChart.setRange(lower, upper)
         self.etaCutWidget.show()
 
-    def setPhiCutChart(self, lower, upper):
+    def setPhiCutChart(self, lower: float, upper: float) -> None:
         self.phiCutChart.setRange(lower, upper)
         self.phiCutWidget.show()
 
@@ -214,7 +209,7 @@ class BottomWidget(QtWidgets.QWidget):
 
     # Load params from item
 
-    def loadAlgorithm(self, algorithm, menu):
+    def loadAlgorithm(self, algorithm, menu) -> None:
         self.reset()
         # Format expression
         content = []
@@ -230,7 +225,7 @@ class BottomWidget(QtWidgets.QWidget):
         content.append(richTextCutsPreview(menu, algorithm, self))
         self.setText("".join(content))
 
-    def loadCut(self, cut, menu):
+    def loadCut(self, cut, menu) -> None:
         self.reset()
         content = []
         content.append(self.tr("<h2>{}</h2>").format(cut.name))
@@ -289,7 +284,7 @@ class BottomWidget(QtWidgets.QWidget):
         elif cut.type == tmGrammar.PHI:
             self.setPhiCutChart(float(cut.minimum), float(cut.maximum))
 
-    def loadObject(self, obj):
+    def loadObject(self, obj) -> None:
         self.reset()
         content = []
         content.append(self.tr("<h2>{}</h2>").format(obj.name))
@@ -304,7 +299,7 @@ class BottomWidget(QtWidgets.QWidget):
             content.append(self.tr("<p><code>{}</code></p>").format(obj.comment))
         self.setText("".join(content))
 
-    def loadExternal(self, menu, external):
+    def loadExternal(self, menu, external) -> None:
         self.reset()
         content = []
         content.append(self.tr("<h2>{}</h2>").format(external.name))
@@ -322,7 +317,7 @@ class BottomWidget(QtWidgets.QWidget):
             content.append(self.tr("<p><code>{}</code></p>").format(external.comment))
         self.setText("".join(content))
 
-    def loadScale(self, data): # TODO
+    def loadScale(self, data: dict[str, Any]) -> None: # TODO
         self.reset()
         content = []
         content.append(self.tr("<p><strong>Object:</strong> {}</p>").format(data[kObject]))
@@ -333,7 +328,7 @@ class BottomWidget(QtWidgets.QWidget):
         content.append(self.tr("<p><strong>Bitwidth:</strong> {}</p>").format(data[kNBits]))
         self.setText("".join(content))
 
-    def loadScaleType(self, name, data): # TODO
+    def loadScaleType(self, name: str, data: dict[str, Any]) -> None: # TODO
         self.reset()
         content = []
         content.append(self.tr("<h2>Scale {}</h2>").format(name))
@@ -342,7 +337,7 @@ class BottomWidget(QtWidgets.QWidget):
         content.append(self.tr("<p><strong>Maximum:</strong> {}</p>").format(formatter.fCutValue(data[kMaximum])))
         self.setText("".join(content))
 
-    def loadSignal(self, data): # TODO
+    def loadSignal(self, data: dict[str, Any]) -> None: # TODO
         self.reset()
         content = []
         content.append(self.tr("<h2>{}</h2>").format(data[kName]))

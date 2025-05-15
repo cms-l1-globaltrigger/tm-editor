@@ -1,7 +1,5 @@
 """Various specialized string formatting functions."""
 
-from typing import List
-
 import tmGrammar
 
 from .toolbox import listcompress
@@ -17,7 +15,7 @@ def fHex(value: int) -> str:
         return ""
 
 
-def fCompress(values: List[int]) -> str:
+def fCompress(values: list[int]) -> str:
     """Return compressed representation of ranges of an integer list.
     >>> fCompress([0,1,2,3,5,7,8,9])
     '0-3, 5, 7-9'

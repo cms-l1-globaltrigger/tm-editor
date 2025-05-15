@@ -1,8 +1,8 @@
 """Cuts model."""
 
-from typing import Optional
+from typing import Optional, Union
 
-from PyQt5 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 import tmGrammar
 
@@ -13,7 +13,8 @@ from tmEditor.core.Algorithm import calculateInvMassRange
 
 from .AbstractTableModel import AbstractTableModel
 
-__all__ = ['CutsModel', ]
+__all__ = ["CutsModel"]
+
 
 def maximumCallback(item):
     """Custom infinite value getter. Still a quick workaround."""
@@ -23,14 +24,14 @@ def maximumCallback(item):
         scale = spec.range_precision
         maximum = int(maximum * scale) / scale
         if item.maximum >= maximum:
-            return float('inf')
+            return float("inf")
     if item.type == tmGrammar.DR:
         spec = CutSpecs.query(type=item.type)[0]
         minimum, maximum = calculateDRRange()
         scale = spec.range_precision
         maximum = int(maximum * scale) / scale
         if item.maximum >= maximum: # HACK ...
-            return float('inf')
+            return float("inf")
     if item.type == tmGrammar.TBPT:
         # There is no maximum for TBPT
         return ""
@@ -39,9 +40,6 @@ def maximumCallback(item):
         return ""
     return item.maximum
 
-# ------------------------------------------------------------------------------
-#  Cuts model class
-# ------------------------------------------------------------------------------
 
 class CutsModel(AbstractTableModel):
     """Default cuts table model."""
@@ -51,29 +49,29 @@ class CutsModel(AbstractTableModel):
         self.menu = menu
         self.addColumnSpec("Name", lambda item: item.name)
         self.addColumnSpec("Type", lambda item: item.type)
-        self.addColumnSpec("Minimum", lambda item: item.minimum, fCutValue, self.AlignRight)
-        self.addColumnSpec("Maximum", maximumCallback, fCutValue, self.AlignRight)
+        self.addColumnSpec("Minimum", lambda item: item.minimum, format=fCutValue, textAlignment=self.AlignRight)
+        self.addColumnSpec("Maximum", maximumCallback, format=fCutValue, textAlignment=self.AlignRight)
         self.addColumnSpec("Data", lambda item: fCutData(item))
 
-    def data(self, index, role):
+    def data(self, index: Union[QtCore.QModelIndex, QtCore.QPersistentModelIndex], role: int = QtCore.Qt.ItemDataRole.DisplayRole) -> object:
         """Overloaded for experimental icon decoration."""
         if index.isValid():
-            if role == QtCore.Qt.FontRole:
+            if role == QtCore.Qt.ItemDataRole.FontRole:
                 cut = self.values[index.row()]
                 if cut.modified:
                     font = QtGui.QFont()
-                    font.setWeight(QtGui.QFont.Bold)
+                    font.setWeight(QtGui.QFont.Weight.Bold)
                     return font
         return super().data(index, role)
 
-    def insertRows(self, position, rows, parent=QtCore.QModelIndex()):
+    def insertRows(self, position: int, rows: int, parent: Union[QtCore.QModelIndex, QtCore.QPersistentModelIndex] = QtCore.QModelIndex()) -> bool:
         self.beginInsertRows(parent, position, position + rows - 1)
         for i in range(rows):
             self.values.append(None)
         self.endInsertRows()
         return True
 
-    def removeRows(self, position, rows, parent=QtCore.QModelIndex()):
+    def removeRows(self, position: int, rows: int, parent: Union[QtCore.QModelIndex, QtCore.QPersistentModelIndex] = QtCore.QModelIndex()) -> bool:
         self.beginRemoveRows(parent, position, position + rows - 1)
         for i in range(rows):
             value = self.values[position + i]

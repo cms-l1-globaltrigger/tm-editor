@@ -3,7 +3,7 @@
 import logging
 import math
 import re
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import tmGrammar
 
@@ -13,7 +13,7 @@ from .AlgorithmHelper import decode_threshold, encode_threshold
 
 __all__ = ["Algorithm"]
 
-RangeType = Tuple[float, float]
+RangeType = tuple[float, float]
 
 RegExObject = re.compile(r"({0})(?:\.(?:ge|eq)\.)?(\d+(?:p\d+)?)(?:[\+\-]\d+)?(?:\[[^\]]+\])?".format("|".join(ObjectTypes)))
 """Precompiled regular expression for matching object requirements."""
@@ -94,7 +94,7 @@ def toExternal(token: str) -> "External":
     )
 
 
-def functionObjects(token: str) -> List["Object"]:
+def functionObjects(token: str) -> list["Object"]:
     """Returns list of object dicts assigned to a function."""
     objects = []
     f = tmGrammar.Function_Item()
@@ -106,9 +106,9 @@ def functionObjects(token: str) -> List["Object"]:
     return objects
 
 
-def functionCuts(token: str) -> List:
+def functionCuts(token: str) -> list:
     """Returns list of cut names assigned to a function."""
-    cuts: List = []
+    cuts: list = []
     f = tmGrammar.Function_Item()
     if not tmGrammar.Function_parser(token, f):
         raise ValueError(token)
@@ -117,12 +117,12 @@ def functionCuts(token: str) -> List:
     return cuts
 
 
-def functionObjectsCuts(token: str) -> List[List[str]]:
+def functionObjectsCuts(token: str) -> list[list[str]]:
     """Returns lists of cuts assigned to function objects. Index ist object number.
     >>> functionObjectsCuts("comb{MU0[MU-QLTY_HQ,MU-ETA_2p1],MU0[MU-QLTY_OPEN]}")
     [['MU-QLTY_HQ,MU-ETA_2p1'], ['MU-QLTY_OPEN']]
     """
-    cuts: List[List[str]] = []
+    cuts: list[list[str]] = []
     f = tmGrammar.Function_Item()
     if not tmGrammar.Function_parser(token, f):
         raise ValueError(token)
@@ -132,7 +132,7 @@ def functionObjectsCuts(token: str) -> List[List[str]]:
     return cuts
 
 
-def objectCuts(token: str) -> List[str]:
+def objectCuts(token: str) -> list[str]:
     """Returns list of cut names assigned to an object."""
     o = tmGrammar.Object_Item()
     if not tmGrammar.Object_parser(token, o):
@@ -185,7 +185,7 @@ class Algorithm:
     RegExAlgorithmName = re.compile(r"^(L1_)([a-zA-Z\d_]+)$")
 
     def __init__(self, index: int, name: str, expression: str, comment: Optional[str] = None,
-                 labels: Optional[List[str]] = None) -> None:
+                 labels: Optional[list[str]] = None) -> None:
         self.index: int = index
         self.name: str = name
         self.expression: str = expression
@@ -201,14 +201,14 @@ class Algorithm:
         """Custom sorting by index, name and expression."""
         return (self.index, self.name, self.expression) < (item.index, item.name, item.expression)
 
-    def tokens(self) -> List[str]:
+    def tokens(self) -> list[str]:
         """Returns list of RPN tokens of algorithm expression. Note that paranthesis is not included in RPN."""
         tmGrammar.Algorithm_Logic.clear()
         if not tmGrammar.Algorithm_parser(self.expression):
             raise ValueError("Failed to parse algorithm expression")
         return list(tmGrammar.Algorithm_Logic.getTokens())
 
-    def objects(self) -> List[str]:
+    def objects(self) -> list[str]:
         """Returns list of object names used in the algorithm's expression."""
         objects = set()
         for token in self.tokens():
@@ -222,7 +222,7 @@ class Algorithm:
                         objects.add(object.name)
         return list(objects)
 
-    def externals(self) -> List[str]:
+    def externals(self) -> list[str]:
         """Returns list of external names used in the algorithm's expression."""
         externals = set()
         for token in self.tokens():
@@ -232,7 +232,7 @@ class Algorithm:
                     externals.add(external.name)
         return list(externals)
 
-    def cuts(self) -> List[str]:
+    def cuts(self) -> list[str]:
         """Returns list of cut names used in the algorithm's expression."""
         cuts = set()
         for token in self.tokens():

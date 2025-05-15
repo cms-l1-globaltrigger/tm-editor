@@ -13,7 +13,7 @@ Attaching a syntax hilighter to an text document is quite simple:
 
 from collections import namedtuple
 
-from PyQt5 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 import tmGrammar
 
@@ -21,33 +21,28 @@ from tmEditor.core.types import FunctionTypes
 
 __all__ = ["AlgorithmSyntaxHighlighter"]
 
-# -----------------------------------------------------------------------------
-#  Helper functions
-# -----------------------------------------------------------------------------
 
-def makeKeyword(key):
+def makeKeyword(key: str, /) -> str:
     return "\\b{key}\\b".format(key=key)
 
-# -----------------------------------------------------------------------------
-#  Algorithm syntax highlighter class
-# -----------------------------------------------------------------------------
+
+HighlightingRule = namedtuple("HighlightingRule", "format, pattern")
+"""Container for highlighting rules."""
+
 
 class AlgorithmSyntaxHighlighter(QtGui.QSyntaxHighlighter):
     """Syntax highighter class for algorithm expressions."""
 
-    HighlightingRule = namedtuple("HighlightingRule", "format, pattern")
-    """Container for highlighting rules."""
-
-    def __init__(self, document):
+    def __init__(self, document) -> None:
         """Attribute *document* requires a text document instance or a text
         edit widget instance to apply syntax highlighting on.
         """
         super().__init__(document)
-        self.highlightingRules = []
+        self.highlightingRules: list[HighlightingRule] = []
         # Keywords: AND, OR, XOR, NOT
         keywordFormat = QtGui.QTextCharFormat()
-        keywordFormat.setForeground(QtCore.Qt.darkBlue)
-        keywordFormat.setFontWeight(QtGui.QFont.Bold)
+        keywordFormat.setForeground(QtCore.Qt.GlobalColor.darkBlue)
+        keywordFormat.setFontWeight(QtGui.QFont.Weight.Bold)
         keywordPatterns = [
             makeKeyword(tmGrammar.AND),
             makeKeyword(tmGrammar.OR),
@@ -56,23 +51,24 @@ class AlgorithmSyntaxHighlighter(QtGui.QSyntaxHighlighter):
         ]
         for pattern in keywordPatterns:
             self.highlightingRules.append(
-                self.HighlightingRule(keywordFormat, QtCore.QRegExp(pattern)))
+                HighlightingRule(keywordFormat, QtCore.QRegularExpression(pattern)))
         # Highlight function names
         functionFormat = QtGui.QTextCharFormat()
-        functionFormat.setForeground(QtCore.Qt.blue)
-        functionFormat.setFontWeight(QtGui.QFont.Bold)
+        functionFormat.setForeground(QtCore.Qt.GlobalColor.blue)
+        functionFormat.setFontWeight(QtGui.QFont.Weight.Bold)
         tokens = "|".join(FunctionTypes)
-        rule = self.HighlightingRule(
+        rule = HighlightingRule(
             functionFormat,
-            QtCore.QRegExp("\\b{tokens}+(?=\\{{)".format(tokens=tokens))
+            QtCore.QRegularExpression("\\b{tokens}+(?=\\{{)".format(tokens=tokens))
         )
         self.highlightingRules.append(rule)
 
-    def highlightBlock(self, text):
+    def highlightBlock(self, text: str, /) -> None:
         for rule in self.highlightingRules:
-            expression = QtCore.QRegExp(rule.pattern)
-            index = expression.indexIn(text)
-            while index >= 0:
-                length = expression.matchedLength()
-                self.setFormat(index, length, rule.format)
-                index = expression.indexIn(text, index + length)
+            expression = QtCore.QRegularExpression(rule.pattern)  # TODO?
+            matchIterator = expression.globalMatch(text)
+            while matchIterator.hasNext():
+                match = matchIterator.next()
+                start = match.capturedStart()
+                length = match.capturedLength()
+                self.setFormat(start, length, rule.format)

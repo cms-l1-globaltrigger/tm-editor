@@ -4,7 +4,7 @@ import logging
 import signal
 import sys
 
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from .gui.MainWindow import MainWindow
 from . import __version__
@@ -47,10 +47,11 @@ class Application:
         settings = QtCore.QSettings()
         # Window size
         geometry = settings.value("window/geometry", QtCore.QByteArray(), QtCore.QByteArray)
-        if not self.window.restoreGeometry(geometry):
+        if isinstance(geometry, QtCore.QByteArray) and not self.window.restoreGeometry(geometry):
             self.window.resize(800, 600)
         state = settings.value("window/state", QtCore.QByteArray(), QtCore.QByteArray)
-        self.window.restoreState(state)
+        if isinstance(state, QtCore.QByteArray):
+            self.window.restoreState(state)
 
     def storeSettings(self) -> None:
         settings = QtCore.QSettings()

@@ -5,12 +5,13 @@ import logging
 import re
 from typing import List, Optional, Tuple
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 import tmGrammar
 
 from tmEditor.core.types import FunctionCutTypes
 from tmEditor.core.Algorithm import Cut
+from tmEditor.core.Menu import Menu
 from tmEditor.core import html, toolbox
 
 from tmEditor.core.Algorithm import (
@@ -28,11 +29,7 @@ from tmEditor.gui.CommonWidgets import (
 
 __all__ = ["CutEditorDialog"]
 
-RangeType = Tuple[float, float]
-
-# ------------------------------------------------------------------------------
-#  Keys
-# ------------------------------------------------------------------------------
+RangeType = tuple[float, float]
 
 kComment: str = "comment"
 kData: str = "data"
@@ -52,16 +49,9 @@ ObjectCollectionRanges = {
 }
 """Limits for slice cuts on object collections."""
 
-# -----------------------------------------------------------------------------
-#  Regular expressions
-# -----------------------------------------------------------------------------
-
 RegExFloatingPoint = re.compile(r"([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)")
 """Regular expression to match floating points."""
 
-# -----------------------------------------------------------------------------
-#  Helper functions
-# -----------------------------------------------------------------------------
 
 def getScale(scales, name: str) -> List:
     try:
@@ -72,8 +62,8 @@ def getScale(scales, name: str) -> List:
 
 def createVerticalSpacerItem(width: int = 0, height: int = 0):
     """Returns a new vertical QSpacerItem instance."""
-    horizontalPolicy = QtWidgets.QSizePolicy.MinimumExpanding
-    verticalPolicy = QtWidgets.QSizePolicy.MinimumExpanding
+    horizontalPolicy = QtWidgets.QSizePolicy.Policy.MinimumExpanding
+    verticalPolicy = QtWidgets.QSizePolicy.Policy.MinimumExpanding
     return QtWidgets.QSpacerItem(width, height, horizontalPolicy, verticalPolicy)
 
 
@@ -259,10 +249,6 @@ class RangeSpinBox(QtWidgets.QDoubleSpinBox):
         return round(value / step) * step
 
 
-# -----------------------------------------------------------------------------
-#  Inout widget classes
-# -----------------------------------------------------------------------------
-
 class InputWidget(QtWidgets.QWidget):
     """Abstract input widget.
 
@@ -275,11 +261,11 @@ class InputWidget(QtWidgets.QWidget):
         self.specification = specification
         self.scales = scales
 
-    def loadCut(self, cut):
+    def loadCut(self, cut: Cut) -> None:
         """Initialize widget from cut item."""
         raise NotImplementedError()
 
-    def updateCut(self, cut):
+    def updateCut(self, cut: Cut) -> None:
         """Update existing cut from inputs."""
         raise NotImplementedError()
 
@@ -289,10 +275,10 @@ class ScaleWidget(InputWidget):
 
     def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
-        self.setupUi()
+        self._setupUi()
         self.initRange()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         # Create labels
         self.minimumLabel = QtWidgets.QLabel(self.tr("Minimum"), self)
         self.minimumLabel.setObjectName("minimumLabel")
@@ -301,7 +287,7 @@ class ScaleWidget(InputWidget):
         # Create minimum input widget
         self.minimumSpinBox = ScaleSpinBox(ScaleSpinBox.MinimumMode, self)
         self.minimumSpinBox.setObjectName("minimumSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.minimumSpinBox.sizePolicy().hasHeightForWidth())
@@ -311,7 +297,7 @@ class ScaleWidget(InputWidget):
         # Create maximum input widget
         self.maximumSpinBox = ScaleSpinBox(ScaleSpinBox.MaximumMode, self)
         self.maximumSpinBox.setObjectName("maximumSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maximumSpinBox.sizePolicy().hasHeightForWidth())
@@ -337,7 +323,7 @@ class ScaleWidget(InputWidget):
         self.minimumSpinBox.valueChanged.connect(self.updateCharts)
         self.maximumSpinBox.valueChanged.connect(self.updateCharts)
 
-    def initRange(self):
+    def initRange(self) -> None:
         scale = getScale(self.scales, self.specification.name)
         self.minimumSpinBox.setScale(scale, self.specification.range_precision)
         self.maximumSpinBox.setScale(scale, self.specification.range_precision)
@@ -346,18 +332,18 @@ class ScaleWidget(InputWidget):
         self.minimumSpinBox.setValue(minimum)
         self.maximumSpinBox.setValue(maximum)
 
-    def loadCut(self, cut):
+    def loadCut(self, cut: Cut) -> None:
         """Initialize widget from cut item."""
         self.minimumSpinBox.setValue(float(cut.minimum))
         self.maximumSpinBox.setValue(float(cut.maximum))
 
-    def updateCut(self, cut):
+    def updateCut(self, cut: Cut) -> None:
         """Update existing cut from inputs."""
         cut.minimum = self.minimumSpinBox.value()
         cut.maximum = self.maximumSpinBox.value()
         cut.data = ""
 
-    def updateCharts(self):
+    def updateCharts(self) -> None:
         """Update optional charts for eta and phi."""
         if self.specification.type == tmGrammar.ETA:
             self.etaCutChart.setRange(self.minimumSpinBox.value(), self.maximumSpinBox.value())
@@ -374,10 +360,10 @@ class RangeWidget(InputWidget):
 
     def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
-        self.setupUi()
+        self._setupUi()
         self.initRange()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         # Create labels
         self.minimumLabel = QtWidgets.QLabel(self.tr("Minimum"), self)
         self.minimumLabel.setObjectName("minimumLabel")
@@ -386,7 +372,7 @@ class RangeWidget(InputWidget):
         # Create minimum input widget
         self.minimumSpinBox = RangeSpinBox(self)
         self.minimumSpinBox.setObjectName("minimumSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.minimumSpinBox.sizePolicy().hasHeightForWidth())
@@ -398,7 +384,7 @@ class RangeWidget(InputWidget):
         # Create maximum input widget
         self.maximumSpinBox = RangeSpinBox(self)
         self.maximumSpinBox.setObjectName("maximumSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maximumSpinBox.sizePolicy().hasHeightForWidth())
@@ -417,7 +403,7 @@ class RangeWidget(InputWidget):
         layout.addItem(createVerticalSpacerItem())
         self.setLayout(layout)
 
-    def initRange(self):
+    def initRange(self) -> None:
         """Set range for inputs."""
         minimum, maximum = calculateRange(self.specification, self.scales)
         self.minimumSpinBox.setRange(minimum, maximum)
@@ -427,12 +413,12 @@ class RangeWidget(InputWidget):
         self.minimumSpinBox.setValue(minimum)
         self.maximumSpinBox.setValue(maximum)
 
-    def loadCut(self, cut):
+    def loadCut(self, cut: Cut) -> None:
         """Initialize widget from cut item."""
         self.minimumSpinBox.setValue(float(cut.minimum))
         self.maximumSpinBox.setValue(float(cut.maximum))
 
-    def updateCut(self, cut):
+    def updateCut(self, cut: Cut) -> None:
         """Update existing cut from inputs."""
         cut.minimum = self.minimumSpinBox.value()
         cut.maximum = self.maximumSpinBox.value()
@@ -443,10 +429,10 @@ class InfiniteRangeWidget(InputWidget):
 
     def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
-        self.setupUi()
+        self._setupUi()
         self.initRange()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         # Create labels
         self.minimumLabel = QtWidgets.QLabel(self.tr("Minimum"), self)
         self.minimumLabel.setObjectName("minimumLabel")
@@ -455,7 +441,7 @@ class InfiniteRangeWidget(InputWidget):
         # Create minimum input widget
         self.minimumSpinBox = RangeSpinBox(self)
         self.minimumSpinBox.setObjectName("minimumSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.minimumSpinBox.sizePolicy().hasHeightForWidth())
@@ -466,7 +452,7 @@ class InfiniteRangeWidget(InputWidget):
         # Create maximum input widget
         self.maximumSpinBox = RangeSpinBox(self)
         self.maximumSpinBox.setObjectName("maximumSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maximumSpinBox.sizePolicy().hasHeightForWidth())
@@ -478,7 +464,7 @@ class InfiniteRangeWidget(InputWidget):
         self.infiniteCheckBox = QtWidgets.QCheckBox(self.tr("&Infinite open"), self)
         self.infiniteCheckBox.setObjectName("infiniteCheckBox")
         self.infiniteCheckBox.setChecked(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.infiniteCheckBox.sizePolicy().hasHeightForWidth())
@@ -496,7 +482,7 @@ class InfiniteRangeWidget(InputWidget):
         self.infiniteCheckBox.stateChanged.connect(self.updateInfinitiyOption)
         self.updateInfinitiyOption()
 
-    def initRange(self):
+    def initRange(self) -> None:
         """Set range for inputs."""
         minimum, maximum = calculateRange(self.specification, self.scales)
         self.minimumSpinBox.setRange(minimum, maximum)
@@ -506,7 +492,7 @@ class InfiniteRangeWidget(InputWidget):
         self.minimumSpinBox.setValue(minimum)
         self.maximumSpinBox.setValue(maximum)
 
-    def updateInfinitiyOption(self):
+    def updateInfinitiyOption(self) -> None:
         """Slot called if infinity check box is checked."""
         checked = self.infiniteCheckBox.isChecked()
         self.maximumSpinBox.setEnabled(not checked)
@@ -514,14 +500,14 @@ class InfiniteRangeWidget(InputWidget):
             maximum = self.maximumSpinBox.maximum()
             self.maximumSpinBox.setValue(maximum)
 
-    def loadCut(self, cut):
+    def loadCut(self, cut: Cut) -> None:
         """Initialize widget from cut item."""
         self.minimumSpinBox.setValue(float(cut.minimum))
         self.maximumSpinBox.setValue(float(cut.maximum))
         infinite = self.maximumSpinBox.value() >= self.maximumSpinBox.maximum()
         self.infiniteCheckBox.setChecked(infinite)
 
-    def updateCut(self, cut):
+    def updateCut(self, cut: Cut) -> None:
         """Update existing cut from inputs."""
         minimum = self.minimumSpinBox.value()
         maximum = self.maximumSpinBox.value()
@@ -537,10 +523,10 @@ class SliceWidget(InputWidget):
 
     def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
-        self.setupUi()
+        self._setupUi()
         self.initRange()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         # Create widgets
         self.beginLabel = QtWidgets.QLabel(self.tr("Begin"), self)
         self.beginLabel.setObjectName("beginLabel")
@@ -548,14 +534,14 @@ class SliceWidget(InputWidget):
         self.endLabel.setObjectName("endLabel")
         self.beginSpinBox = QtWidgets.QSpinBox(self)
         self.beginSpinBox.setObjectName("beginSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.beginSpinBox.sizePolicy().hasHeightForWidth())
         self.beginSpinBox.setSizePolicy(sizePolicy)
         self.endSpinBox = QtWidgets.QSpinBox(self)
         self.endSpinBox.setObjectName("endSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.endSpinBox.sizePolicy().hasHeightForWidth())
@@ -570,9 +556,11 @@ class SliceWidget(InputWidget):
         layout.addItem(createVerticalSpacerItem())
         self.setLayout(layout)
 
-    def initRange(self):
+    def initRange(self) -> None:
         """Set range for inputs."""
         minimum, maximum = calculateRange(self.specification, self.scales)
+        minimum = int(round(minimum))  # to integers
+        maximum = int(round(maximum))
         self.beginSpinBox.setRange(minimum, maximum)
         self.endSpinBox.setRange(minimum, maximum)
         minimum = self.beginSpinBox.minimum()
@@ -580,12 +568,12 @@ class SliceWidget(InputWidget):
         self.beginSpinBox.setValue(minimum)
         self.endSpinBox.setValue(maximum)
 
-    def loadCut(self, cut):
+    def loadCut(self, cut: Cut) -> None:
         """Initialize widget from cut item."""
-        self.beginSpinBox.setValue(int(cut.minimum))
-        self.endSpinBox.setValue(int(cut.maximum))
+        self.beginSpinBox.setValue(int(round(cut.minimum)))
+        self.endSpinBox.setValue(int(round(cut.maximum)))
 
-    def updateCut(self, cut):
+    def updateCut(self, cut: Cut) -> None:
         """Update existing cut from inputs."""
         begin = self.beginSpinBox.value()
         end = self.endSpinBox.value()
@@ -601,17 +589,17 @@ class ThresholdWidget(InputWidget):
 
     def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
-        self.setupUi()
+        self._setupUi()
         self.initRange()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         # Create labels
         self.thresholdLabel = QtWidgets.QLabel(self.tr("Threshold"), self)
         self.thresholdLabel.setObjectName("thresholdLabel")
         # Create threshold input widget
         self.thresholdSpinBox = RangeSpinBox(self)
         self.thresholdSpinBox.setObjectName("thresholdSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.thresholdSpinBox.sizePolicy().hasHeightForWidth())
@@ -627,7 +615,7 @@ class ThresholdWidget(InputWidget):
         layout.addItem(createVerticalSpacerItem())
         self.setLayout(layout)
 
-    def initRange(self):
+    def initRange(self) -> None:
         """Set range for inputs."""
         minimum, maximum = calculateRange(self.specification, self.scales)
         self.thresholdSpinBox.setRange(minimum, maximum)
@@ -636,11 +624,11 @@ class ThresholdWidget(InputWidget):
         minimum = self.thresholdSpinBox.minimum()
         self.thresholdSpinBox.setValue(minimum)
 
-    def loadCut(self, cut):
+    def loadCut(self, cut: Cut) -> None:
         """Initialize widget from cut item."""
         self.thresholdSpinBox.setValue(float(cut.minimum))
 
-    def updateCut(self, cut):
+    def updateCut(self, cut: Cut) -> None:
         """Update existing cut from inputs."""
         cut.minimum = self.thresholdSpinBox.value()
         cut.maximum = 0.
@@ -652,16 +640,16 @@ class KeyWidget(InputWidget):
 
     def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
-        self.setupUi()
+        self._setupUi()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         # Create labels
         self.keyLabel = QtWidgets.QLabel(self.tr("Key"), self)
         self.keyLabel.setObjectName("keyLabel")
         # Create threshold input widget
         self.keyLineEdit = QtWidgets.QLineEdit()
         self.keyLineEdit.setObjectName("keyLineEdit")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.keyLineEdit.sizePolicy().hasHeightForWidth())
@@ -674,14 +662,15 @@ class KeyWidget(InputWidget):
         layout.addWidget(QtWidgets.QLabel("Allowed input: a-z, 0-9, _"), 1, 1)
         layout.addItem(createVerticalSpacerItem())
         self.setLayout(layout)
-        validator = QtGui.QRegExpValidator(QtCore.QRegExp("[a-z0-9_]*"))
+        regex = QtCore.QRegularExpression(r"[a-z0-9_]*")
+        validator = QtGui.QRegularExpressionValidator(regex)
         self.keyLineEdit.setValidator(validator)
 
-    def loadCut(self, cut):
+    def loadCut(self, cut) -> None:
         """Initialize widget from cut item."""
         self.keyLineEdit.setText(cut.data)
 
-    def updateCut(self, cut):
+    def updateCut(self, cut) -> None:
         """Update existing cut from inputs."""
         cut.data = self.keyLineEdit.text()
 
@@ -691,17 +680,17 @@ class MaximumWidget(InputWidget):
 
     def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
-        self.setupUi()
+        self._setupUi()
         self.initRange()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         # Create labels
         self.maximumLabel = QtWidgets.QLabel(self.tr("Maximum"), self)
         self.maximumLabel.setObjectName("maximumLabel")
         # Create maximum input widget
         self.maximumSpinBox = RangeSpinBox(self)
         self.maximumSpinBox.setObjectName("maximumSpinBox")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maximumSpinBox.sizePolicy().hasHeightForWidth())
@@ -717,18 +706,18 @@ class MaximumWidget(InputWidget):
         layout.addItem(createVerticalSpacerItem())
         self.setLayout(layout)
 
-    def initRange(self):
+    def initRange(self) -> None:
         """Set range for inputs."""
         minimum, maximum = calculateRange(self.specification, self.scales)
         self.maximumSpinBox.setRange(minimum, maximum)
         minimum = self.maximumSpinBox.minimum()
         self.maximumSpinBox.setValue(minimum)
 
-    def loadCut(self, cut):
+    def loadCut(self, cut) -> None:
         """Initialize widget from cut item."""
         self.maximumSpinBox.setValue(float(cut.maximum))
 
-    def updateCut(self, cut):
+    def updateCut(self, cut) -> None:
         """Update existing cut from inputs."""
         cut.minimum = 0.
         cut.maximum = self.maximumSpinBox.value()
@@ -740,9 +729,9 @@ class MultipleJoiceWidget(InputWidget):
 
     def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
-        self.setupUi()
+        self._setupUi()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         # Create widgets
         self.scrollAreaLabel = QtWidgets.QLabel(self.tr("Data"), self)
         self.scrollAreaLabel.setObjectName("scrollAreaLabel")
@@ -758,30 +747,30 @@ class MultipleJoiceWidget(InputWidget):
         layout.addWidget(self.scrollArea)
         self.setLayout(layout)
 
-    def format_label(self, key, value):
+    def format_label(self, key, value) -> str:
         """Check box label formatter provided for overlaoding."""
-        return value
+        return format(value)
 
-    def createScrollAreaContent(self):
+    def createScrollAreaContent(self) -> QtWidgets.QWidget:
         widget = QtWidgets.QWidget(self)
         widget.setObjectName("widget")
         vbox = QtWidgets.QVBoxLayout()
         self.options = {}
         for key, value in self.sortedItems():
-            option = QtWidgets.QCheckBox(self.format_label(key, value), self)
-            option.data = key
+            option = QtWidgets.QCheckBox(self)
+            option.setText(self.format_label(key, value))
             vbox.addWidget(option)
             self.options[key] = option
         vbox.addItem(createVerticalSpacerItem())
         widget.setLayout(vbox)
         return widget
 
-    def sortedItems(self):
+    def sortedItems(self) -> list[tuple]:
         """Returns data items, sorted by keys."""
         items = self.specification.data.items()
         return sorted(items, key=lambda items: toolbox.natural_sort_key(items[0]))
 
-    def loadCut(self, cut):
+    def loadCut(self, cut) -> None:
         """Initialize widget from cut item."""
         tokens = [token.strip() for token in cut.data.split(",")]
         for token in tokens:
@@ -789,7 +778,7 @@ class MultipleJoiceWidget(InputWidget):
                 raise CutEditorError("Invalid cut data: {0}".format(token))
             self.options[token].setChecked(True)
 
-    def updateCut(self, cut):
+    def updateCut(self, cut) -> None:
         """Update existing cut from inputs."""
         tokens = []
         for key, value in self.sortedItems(): # order!
@@ -808,7 +797,7 @@ class MultipleJoiceIsoWidget(MultipleJoiceWidget):
     def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
 
-    def format_label(self, key, value):
+    def format_label(self, key, value) -> str:
         """Check box label formatter provided for overlaoding."""
         index = int(key)
         return f"[0b{index:02b}] {value}"
@@ -819,9 +808,9 @@ class SingleJoiceWidget(InputWidget):
 
     def __init__(self, specification, scales, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(specification, scales, parent)
-        self.setupUi()
+        self._setupUi()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         # Create widgets
         self.scrollAreaLabel = QtWidgets.QLabel(self.tr("Data"), self)
         self.scrollAreaLabel.setObjectName("scrollAreaLabel")
@@ -837,33 +826,32 @@ class SingleJoiceWidget(InputWidget):
         layout.addWidget(self.scrollArea)
         self.setLayout(layout)
 
-    def createScrollAreaContent(self):
+    def createScrollAreaContent(self) -> QtWidgets.QWidget:
         widget = QtWidgets.QWidget(self)
         widget.setObjectName("widget")
         vbox = QtWidgets.QVBoxLayout()
         self.options = {}
         for key, value in self.sortedItems():
             option = QtWidgets.QRadioButton(value, self)
-            option.data = key
             vbox.addWidget(option)
             self.options[key] = option
         vbox.addItem(createVerticalSpacerItem())
         widget.setLayout(vbox)
         return widget
 
-    def sortedItems(self):
+    def sortedItems(self) -> list:
         """Returns data items, sorted by keys."""
         items = self.specification.data.items()
         return sorted(items, key=lambda items: toolbox.natural_sort_key(items[0]))
 
-    def loadCut(self, cut):
+    def loadCut(self, cut) -> None:
         """Initialize widget from cut item."""
         token = cut.data.strip()
         if token not in self.options.keys():
             raise CutEditorError("Invalid cut data: {0}".format(token))
         self.options[token].setChecked(True)
 
-    def updateCut(self, cut):
+    def updateCut(self, cut) -> None:
         """Update existing cut from inputs."""
         token = None
         for key, button in self.options.items():
@@ -876,9 +864,22 @@ class SingleJoiceWidget(InputWidget):
         cut.maximum = 0.0
         cut.data = token
 
-# -----------------------------------------------------------------------------
-#  Inout widget classes
-# -----------------------------------------------------------------------------
+
+class CutTreeWidgetItem(QtWidgets.QTreeWidgetItem):
+    def __init__(self, spec, parent) -> None:
+        super().__init__(parent)
+        self.spec = spec
+        self.widget: Optional[QtWidgets.QWidget] = None
+
+    def name(self) -> str:
+        return self.text(0)
+
+    def setName(self, name: str, /) -> None:
+        self.setText(0, name)
+
+    def setWidget(self, widget: Optional[QtWidgets.QWidget], /) -> None:
+        self.widget = widget
+
 
 class CutTreeWidget(QtWidgets.QTreeWidget):
     """Tree widget displaying cut types hierarchical."""
@@ -886,36 +887,34 @@ class CutTreeWidget(QtWidgets.QTreeWidget):
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
 
-    def loadCutSpecs(self, specs):
+    def loadCutSpecs(self, specs) -> None:
         """Initialize tree widget using a list of cut specifications."""
         # TODO
         self.clear()
         for spec in specs:
-            pass
+            ...
 
-    def addRootItem(self, name, widget):
+    def addRootItem(self, name: str, widget: QtWidgets.QWidget) -> CutTreeWidgetItem:
         """Add new root item for tree widget."""
         # TODO
-        item = QtWidgets.QTreeWidgetItem(self)
-        item.setText(0, name)
-        item.spec = None
-        item.widget = widget
+        item = CutTreeWidgetItem(None, self)
+        item.setName(name)
+        item.setWidget(widget)
         return item
 
-    def addCutItem(self, parent, spec, widget):
+    def addCutItem(self, parent: CutTreeWidgetItem, spec, widget: QtWidgets.QWidget) -> CutTreeWidgetItem:
         """Add new cut item for tree widget."""
         # TODO
-        item = QtWidgets.QTreeWidgetItem(parent)
-        item.spec = spec # Attach cut spec to item data
-        item.setText(0, spec.type)
-        item.widget = widget
+        item = CutTreeWidgetItem(spec, parent)
+        item.setName(str(spec.type))
+        item.setWidget(widget)
         return item
 
 
 class CutEditorDialog(QtWidgets.QDialog):
     """Cut editor dialog."""
 
-    InputWidgetFactory = {
+    InputWidgetFactory: dict = {
         # Object cuts
         tmGrammar.UPT: InfiniteRangeWidget,
         tmGrammar.ETA: ScaleWidget,
@@ -946,15 +945,15 @@ class CutEditorDialog(QtWidgets.QDialog):
     }
     """Widget factory for different cut input types."""
 
-    def __init__(self, menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
+    def __init__(self, menu: Menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Create new dialog window."""
         super().__init__(parent)
-        self.menu = menu
-        self.copyMode = False
+        self.menu: Menu = menu
+        self.copyMode: bool = False
         self.loadedCut = None
-        self.setupUi()
+        self._setupUi()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         """Setup dialog window."""
         # Window
         self.setWindowTitle(self.tr("Cut Editor"))
@@ -962,7 +961,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         # Type selector
         self.treeWidget = CutTreeWidget(self)
         self.treeWidget.setObjectName("treeWidget")
-        self.treeWidget.setProperty("showDropIndicator", QtCore.QVariant(False))
+        self.treeWidget.setProperty("showDropIndicator", False)
         self.treeWidget.header().setVisible(False)
         # Stack widget
         self.stackWidget = QtWidgets.QStackedWidget(self)
@@ -988,10 +987,10 @@ class CutEditorDialog(QtWidgets.QDialog):
         # Buttons
         self.buttonBox = QtWidgets.QDialogButtonBox(self)
         self.buttonBox.setObjectName("buttonBox")
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.buttonBox.setStandardButtons(
-            QtWidgets.QDialogButtonBox.Cancel |
-            QtWidgets.QDialogButtonBox.Ok
+            QtWidgets.QDialogButtonBox.StandardButton.Cancel |
+            QtWidgets.QDialogButtonBox.StandardButton.Ok
         )
         # Layout
         layout = QtWidgets.QGridLayout()
@@ -1011,7 +1010,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         # Initial calls
         self.showSelectedCut()
 
-    def setupCuts(self, specifictions):
+    def setupCuts(self, specifictions) -> None:
         """Setup dialog by providing a list of cut specifications."""
         # Initialize tree widget
         self.treeWidget.loadCutSpecs(specifictions)
@@ -1020,43 +1019,45 @@ class CutEditorDialog(QtWidgets.QDialog):
             self.stackWidget.removeWidget(self.stackWidget.currentWidget())
         self.stackWidget.addWidget(QtWidgets.QWidget(self))
         # TODO
-        rootItems = {}
-        self._items = []
+        rootItems: dict = {}
+        self._items: list = []
         scales = self.menu.scales
-        for spec in specifictions:
-            # Check if item is disabled: { enabled: false } [optional]
-            if not spec.enabled:
-                continue
-            # Create root item key
-            key = spec.object
-            if spec.type in FunctionCutTypes:
-                key = "Functions" # Root entry for function cuts
-            # If key does not exist, create an empty entry
-            if key not in rootItems:
-                widget = self.stackWidget.widget(0)
-                rootItems[key] = self.treeWidget.addRootItem(key, widget)
-            root = rootItems[key]
-            # On missing scale (editing outdated XML?)
-            if spec.type in (tmGrammar.ETA, tmGrammar.PHI, tmGrammar.UPT, tmGrammar.INDEX):
-                if spec.name not in scales.bins:
-                    widget = self.stackWidget.widget(0)
-                    item = self.treeWidget.addCutItem(root, spec, widget) # TODO
-                    item.setDisabled(True)
+        if scales:
+            for spec in specifictions:
+                # Check if item is disabled: { enabled: false } [optional]
+                if not spec.enabled:
                     continue
-            # Create entry widget
-            widget = self.InputWidgetFactory[spec.type](spec, scales, self)
-            item = self.treeWidget.addCutItem(root, spec, widget)
-            # Add input form to stack
-            self.stackWidget.addWidget(item.widget)
-            self._items.append(item)
+                # Create root item key
+                key = spec.object
+                if spec.type in FunctionCutTypes:
+                    key = "Functions" # Root entry for function cuts
+                # If key does not exist, create an empty entry
+                if key not in rootItems:
+                    widget = self.stackWidget.widget(0)
+                    rootItems[key] = self.treeWidget.addRootItem(key, widget)
+                root = rootItems[key]
+                # On missing scale (editing outdated XML?)
+                if spec.type in (tmGrammar.ETA, tmGrammar.PHI, tmGrammar.UPT, tmGrammar.INDEX):
+                    if spec.name not in scales.bins:
+                        widget = self.stackWidget.widget(0)
+                        item = self.treeWidget.addCutItem(root, spec, widget) # TODO
+                        item.setDisabled(True)
+                        continue
+                # Create entry widget
+                widget = self.InputWidgetFactory[spec.type](spec, scales, self)
+                item = self.treeWidget.addCutItem(root, spec, widget)
+                # Add input form to stack
+                self.stackWidget.addWidget(item.widget)
+                self._items.append(item)
 
-    def loadCut(self, cut):
+    def loadCut(self, cut) -> None:
         """Initialize dialog from existing cut."""
         self.loadedCut = cut
         self.suffixLineEdit.setText(cut.suffix)
         self.suffixLineEdit.setEnabled(not list(filter(lambda algorithm: cut.name in algorithm.cuts(), self.menu.algorithms)))
         if self.copyMode:
             self.suffixLineEdit.setEnabled(True) # HACK overrule on copy
+        result: list = []
         if cut.isFunctionCut: # TODO not efficient
             result = list(filter(lambda item: item.spec.type == cut.type, self._items))
         else:
@@ -1065,34 +1066,38 @@ class CutEditorDialog(QtWidgets.QDialog):
             logging.debug("result %s", result)
             self.treeWidget.setCurrentItem(result[0])
             item = self.currentTreeItem()
-            item.widget.loadCut(cut)
+            if isinstance(item, CutTreeWidgetItem):
+                if isinstance(item.widget, InputWidget):
+                    item.widget.loadCut(cut)
         else:
             raise CutEditorError("Cut type not found: {0}".format(cut.type))
         self.commentTextEdit.setPlainText(cut.comment)
         self.treeWidget.setEnabled(False)
 
-    def updateCut(self, cut):
+    def updateCut(self, cut) -> None:
         """Update existing cut from dialog inputs."""
         item = self.currentTreeItem()
-        if not item or not item.spec: # No cut type selected (eg. parent nodes)
+        if not item or (isinstance(item, CutTreeWidgetItem) and not item.spec): # No cut type selected (eg. parent nodes)
             raise CutEditorError(
                 self.tr("No cut type selected.")
             )
-        item.widget.updateCut(cut)
-        cut.object = item.widget.specification.object
-        cut.type = item.widget.specification.type
-        suffix = self.suffixLineEdit.text()
-        cut.name = "{0}_{1}".format(cut.typename, suffix)
-        cut.comment = self.commentTextEdit.toPlainText()
-        cut.modified = True
+        if isinstance(item, CutTreeWidgetItem):
+            if isinstance(item.widget, InputWidget):
+                item.widget.updateCut(cut)
+                cut.object = item.widget.specification.object
+                cut.type = item.widget.specification.type
+                suffix = self.suffixLineEdit.text()
+                cut.name = "{0}_{1}".format(cut.typename, suffix)
+                cut.comment = self.commentTextEdit.toPlainText()
+                cut.modified = True
 
-    def newCut(self):
+    def newCut(self) -> Cut:
         """Create new cut from dialog inputs."""
         cut = Cut("", "", "") # Create empty cut
         self.updateCut(cut)
         return cut
 
-    def validateSuffix(self, cut):
+    def validateSuffix(self, cut: Cut) -> None:
         """Validate suffix, check for empty or duplicated name, raises a ValidationException on error."""
         # Empty suffix?
         if not len(self.suffixLineEdit.text()):
@@ -1108,23 +1113,23 @@ class CutEditorDialog(QtWidgets.QDialog):
                     self.tr("Suffix \"{0}\" is already used with a cut of type \"{1}\".").format(cut.suffix, cut.type)
                 )
 
-    def validate(self):
+    def validate(self) -> None:
         """Validate user entries."""
         cut = self.newCut()
         self.validateSuffix(cut) # TODO
 
-    def currentTreeItem(self):
+    def currentTreeItem(self) -> Optional[QtWidgets.QTreeWidgetItem]:
         """Returns current selected tree item."""
         items = self.treeWidget.selectedItems()
         if items:
             return items[0]
         return None
 
-    def updateDescription(self):
+    def updateDescription(self) -> None:
         """Update description text browser."""
         self.textBrowser.setHtml(self.tr("Select a cut type..."))
         item = self.currentTreeItem()
-        if item and item.spec:
+        if isinstance(item, CutTreeWidgetItem) and item.spec:
             description = [
                 html.h3([item.spec.title, " cut"]),
                 item.spec.description,
@@ -1148,16 +1153,17 @@ class CutEditorDialog(QtWidgets.QDialog):
                 description.append(html.ul(items))
             self.textBrowser.setHtml("".join(description))
 
-    @QtCore.pyqtSlot()
-    def showSelectedCut(self):
+    @QtCore.Slot()
+    def showSelectedCut(self) -> None:
         """Show input widget for selected cut type."""
         self.updateDescription()
         item = self.currentTreeItem()
-        if item:
-            self.stackWidget.setCurrentWidget(item.widget)
+        if isinstance(item, CutTreeWidgetItem):
+            if item.widget:
+                self.stackWidget.setCurrentWidget(item.widget)
 
-    @QtCore.pyqtSlot()
-    def accept(self):
+    @QtCore.Slot()
+    def accept(self) -> None:
         """Overloaded slot for accept()."""
         try:
             self.validate()
@@ -1167,7 +1173,7 @@ class CutEditorDialog(QtWidgets.QDialog):
         else:
             super().accept()
 
-    @QtCore.pyqtSlot()
-    def reject(self):
+    @QtCore.Slot()
+    def reject(self) -> None:
         """Overloaded slot for reject()."""
         super().reject()

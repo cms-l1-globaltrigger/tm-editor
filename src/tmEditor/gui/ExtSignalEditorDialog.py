@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from tmEditor.core.Algorithm import toExternal
 from tmEditor.core.AlgorithmHelper import AlgorithmHelper
@@ -13,10 +13,6 @@ from tmEditor.gui.CommonWidgets import PrefixedSpinBox, createIcon, miniIcon
 
 __all__ = ["ExtSignalEditorDialog"]
 
-# -----------------------------------------------------------------------------
-#  Keys
-# -----------------------------------------------------------------------------
-
 kEXT = "EXT"
 kName = "name"
 kSystem = "system"
@@ -24,9 +20,6 @@ kCable = "cable"
 kChannel = "channel"
 kLabel = "label"
 
-# -----------------------------------------------------------------------------
-#  External signal editor dialog class
-# -----------------------------------------------------------------------------
 
 class ExtSignalEditorDialog(QtWidgets.QDialog):
     """External signal editor dialog class."""
@@ -35,7 +28,7 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
         """Constructor, takes a reference to a menu and an optional parent."""
         super().__init__(parent)
         self.menu = menu
-        self.setupUi()
+        self._setupUi()
         # Connect signals
         self.signalComboBox.currentIndexChanged.connect(self.updateInfoText)
         self.offsetSpinBox.valueChanged.connect(self.updateInfoText)
@@ -44,14 +37,14 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
         # Initialize
         self.updateInfoText()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         self.setWindowIcon(createIcon("wizard-ext-signal"))
         self.setWindowTitle(self.tr("External Signal Editor"))
         self.resize(640, 280)
         self.signalLabel = QtWidgets.QLabel(self.tr("Signal"), self)
-        self.signalLabel.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
+        self.signalLabel.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Fixed)
         self.signalComboBox = QtWidgets.QComboBox(self)
-        self.signalComboBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
+        self.signalComboBox.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Fixed)
         for signal in self.menu.extSignals.extSignals:
             self.signalComboBox.addItem(miniIcon("ext"), "_".join((kEXT, signal[kName])))
         self.offsetSpinBox = PrefixedSpinBox(self)
@@ -60,9 +53,12 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
         self.offsetSpinBox.setSuffix(self.tr(" BX"))
         self.infoTextEdit = QtWidgets.QTextEdit(self)
         self.infoTextEdit.setReadOnly(True)
-        self.infoTextEdit.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Expanding)
+        self.infoTextEdit.setSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.buttonBox.setStandardButtons(
+            QtWidgets.QDialogButtonBox.StandardButton.Ok |
+            QtWidgets.QDialogButtonBox.StandardButton.Cancel
+        )
         layout = QtWidgets.QGridLayout()
         layout.addWidget(self.signalLabel, 0, 0)
         hbox = QtWidgets.QHBoxLayout()
@@ -73,14 +69,14 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
         layout.addWidget(self.buttonBox, 3, 0, 1, 3)
         self.setLayout(layout)
 
-    def name(self):
+    def name(self) -> str:
         """Returns external signal name."""
         return self.signalComboBox.currentText()
 
-    def bxOffset(self):
+    def bxOffset(self) -> int:
         return self.offsetSpinBox.value()
 
-    def expression(self):
+    def expression(self) -> str:
         """Returns object expression selected by the inputs."""
         expression = AlgorithmHelper()
         expression.addExtSignal(
@@ -89,7 +85,7 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
         )
         return AlgorithmFormatter.normalize(expression.serialize())
 
-    def updateInfoText(self):
+    def updateInfoText(self) -> None:
         """Update info box text."""
         name = toExternal(self.name()).signal_name
         for signal in filter(lambda signal: signal[kName] == name, self.menu.extSignals.extSignals):
@@ -110,7 +106,7 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
             self.infoTextEdit.setText("".join(text))
             break
 
-    def loadExtSignal(self, token):
+    def loadExtSignal(self, token) -> None:
         """Load dialog by values from external signal. Will raise a ValueError if string
         *token* is not a valid external signal.
         """

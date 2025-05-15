@@ -8,12 +8,12 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "tm-python @ https://github.com/cms-l1-globaltrigger/tm-python/archive/refs/tags/0.13.0.zip",
-    "Markdown==3.7",
-    "packaging==24.1",
-    "PyQt5==5.14.*",
+    "Markdown==3.8",
+    "packaging==25.0",
+    "PySide6==6.9.0",
 ]
 classifiers = [
-    "Framework :: PyQt5",
+    "Framework :: PySide6",
     "Programming Language :: Python :: 3",
 ]
 dynamic = ["version"]

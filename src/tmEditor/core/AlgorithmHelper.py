@@ -2,7 +2,7 @@
 
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, List, Optional
+from typing import Any, Iterable, Optional
 
 import tmGrammar
 
@@ -91,7 +91,7 @@ class ObjectHelper(Helper):
         self.comparison_operator = tmGrammar.GE if comparison_operator is None else comparison_operator
         self.threshold = threshold
         self.bx_offset: int = bx_offset
-        self.cuts: List = cuts or []
+        self.cuts: list = cuts or []
 
     def addCut(self, cut) -> "ObjectHelper":
         self.cuts.append(cut)
@@ -110,7 +110,7 @@ class SignalHelper(Helper):
     def __init__(self, type, bx_offset: int = 0, cuts=None) -> None:
         self.type = type
         self.bx_offset: int = bx_offset
-        self.cuts: List = cuts or []
+        self.cuts: list = cuts or []
 
     def addCut(self, cut) -> "SignalHelper":
         self.cuts.append(cut)
@@ -139,8 +139,8 @@ class FunctionHelper(Helper):
 
     def __init__(self, name: str, objects=None, cuts=None) -> None:
         self.name: str = name
-        self.objects: List = objects or []
-        self.cuts: List = cuts or []
+        self.objects: list = objects or []
+        self.cuts: list = cuts or []
 
     def addObject(self, type: str, threshold: float, bx_offset: int = 0, comparison_operator: Optional[str] = None, cuts=None) -> ObjectHelper:
         comparison_operator = tmGrammar.GE if comparison_operator is None else comparison_operator
@@ -160,8 +160,8 @@ class FunctionHelper(Helper):
 
 class AlgorithmHelper(Helper):
 
-    def __init__(self, expression: Optional[List] = None) -> None:
-        self.expression: List = expression or []
+    def __init__(self, expression: Optional[list] = None) -> None:
+        self.expression: list = expression or []
 
     def addOperator(self, operator: str) -> "AlgorithmHelper":
         helper = OperatorHelper(operator)

@@ -1,7 +1,7 @@
 """Object editor dialog."""
 from typing import Iterable, List, Optional
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 import tmGrammar
 
@@ -15,6 +15,8 @@ from tmEditor.core.types import SignalTypes
 from tmEditor.core.Algorithm import toObject, objectCuts
 from tmEditor.core.AlgorithmHelper import AlgorithmHelper
 from tmEditor.core.AlgorithmFormatter import AlgorithmFormatter
+
+from tmEditor.core.Menu import Menu
 
 # Common widgets
 from tmEditor.gui.CommonWidgets import PrefixedSpinBox
@@ -30,24 +32,24 @@ __all__ = ["ObjectEditorDialog"]
 #  Keys
 # -----------------------------------------------------------------------------
 
-kMinimum = "minimum"
-kMaximum = "maximum"
-kObject = "object"
-kStep = "step"
-kType = "type"
-kET = "ET"
-kCOUNT = "COUNT"
-kCicadaPrecScaleType = "CICADA-CScore"
+kMinimum: str = "minimum"
+kMaximum: str = "maximum"
+kObject: str = "object"
+kStep: str = "step"
+kType: str = "type"
+kET: str = "ET"
+kCOUNT: str = "COUNT"
+kCicadaPrecScaleType: str = "CICADA-CScore"
 
 # -----------------------------------------------------------------------------
 #  Object capabilites
 # -----------------------------------------------------------------------------
 
-ThresholdType = "threshold"
-CounterType = "counter"
-SignalType = "signal"
+ThresholdType: str = "threshold"
+CounterType: str = "counter"
+SignalType: str = "signal"
 
-ObjectCapabilities = {
+ObjectCapabilities: dict[str, dict[str, bool]] = {
     ThresholdType: {"scales": True, "threshold": True},
     CounterType: {"scales": True, "threshold": False},
     SignalType: {"scales": False, "threshold": False},
@@ -55,17 +57,17 @@ ObjectCapabilities = {
 
 ExtendedTypes = ObjectTypes + SignalTypes
 
-def getObjectType(objectType):
+def getObjectType(objectType) -> str:
     if objectType in ThresholdObjectTypes:
         return ThresholdType
     if objectType in CountObjectTypes:
         return ThresholdType
     if objectType in SignalTypes:
         return SignalType
-    return None
+    return ""
 
-def getObjectCapabilities(objectType):
-    return ObjectCapabilities.get(getObjectType(objectType))
+def getObjectCapabilities(objectType) -> dict[str, bool]:
+    return ObjectCapabilities.get(getObjectType(objectType), {})
 
 # -----------------------------------------------------------------------------
 #  Cut item class
@@ -74,12 +76,12 @@ def getObjectCapabilities(objectType):
 class CutItem(QtGui.QStandardItem):
     """A checkable cut standard item, to be inserted to a list model."""
 
-    def __init__(self, text, checked=False):
+    def __init__(self, text: str, checked: bool = False) -> None:
         super().__init__(text)
         self.setEditable(False)
         self.setCheckable(True)
         if checked:
-            self.setCheckState(QtCore.Qt.Checked)
+            self.setCheckState(QtCore.Qt.CheckState.Checked)
 
 # -----------------------------------------------------------------------------
 #  Object editor dialog class
@@ -88,13 +90,13 @@ class CutItem(QtGui.QStandardItem):
 class ObjectEditorDialog(QtWidgets.QDialog):
     """Object editor dialog class."""
 
-    def __init__(self, menu: object, parent: Optional[QtWidgets.QWidget] = None) -> None:
+    def __init__(self, menu: Menu, parent: Optional[QtWidgets.QWidget] = None) -> None:
         """Constructor, takes a reference to a menu and an optional parent.
         """
         super().__init__(parent)
         self.setMenu(menu)
         self.setObjectTypes(list(ExtendedTypes))
-        self.setupUi()
+        self._setupUi()
         self.initObjectList(self.objectTypes())
         self.initCuts()
         self.updateObjectType()
@@ -109,16 +111,16 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         # Initialize
         self.updateInfoText()
 
-    def setupUi(self):
+    def _setupUi(self) -> None:
         self.setWindowIcon(createIcon("wizard-object"))
         self.setWindowTitle(self.tr("Object Requirement Editor"))
         self.resize(640, 380)
 
         self.objectLabel = QtWidgets.QLabel(self.tr("Object"), self)
-        self.objectLabel.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
+        self.objectLabel.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Fixed)
 
         self.typeComboBox = ComboBoxPlus(self)
-        self.typeComboBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
+        self.typeComboBox.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Fixed)
 
         self.compareComboBox = QtWidgets.QComboBox(self)
         self.compareComboBox.addItem(">=", tmGrammar.GE)
@@ -132,22 +134,25 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         self.offsetSpinBox.setSuffix(self.tr(" BX"))
 
         self.cutLabel = QtWidgets.QLabel(self.tr("Cuts"), self)
-        self.cutLabel.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
+        self.cutLabel.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Fixed)
 
         self.cutListView = QtWidgets.QListView(self)
-        self.cutListView.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.cutListView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.cutListView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.cutListView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
 
-        self.filterWidget = TextFilterWidget(self)
+        self.filterWidget = TextFilterWidget(True, self)
 
         self.addCutButton = QtWidgets.QPushButton(createIcon("list-add"), self.tr("Add..."), self)
 
         self.infoTextEdit = QtWidgets.QTextEdit(self)
         self.infoTextEdit.setReadOnly(True)
-        self.infoTextEdit.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Expanding)
+        self.infoTextEdit.setSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Expanding)
 
         self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.buttonBox.setStandardButtons(
+            QtWidgets.QDialogButtonBox.StandardButton.Ok |
+            QtWidgets.QDialogButtonBox.StandardButton.Cancel
+        )
 
         layout = QtWidgets.QGridLayout(self)
         layout.addWidget(self.objectLabel, 0, 0)
@@ -166,23 +171,20 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         layout.addWidget(self.infoTextEdit, 0, 3, 3, 1)
         layout.addWidget(self.buttonBox, 3, 0, 1, 4)
 
-    def menu(self) -> object:
+    def menu(self) -> Menu:
         return self._menu
 
-    def setMenu(self, menu: object) -> None:
-        self._menu = menu
+    def setMenu(self, menu: Menu, /) -> None:
+        self._menu: Menu = menu
 
-    def objectTypes(self) -> List:
+    def objectTypes(self) -> list:
         return self._objectTypes
 
-    def setObjectTypes(self, types: Iterable) -> None:
+    def setObjectTypes(self, types: Iterable, /) -> None:
         self._objectTypes = list(types)
 
-    def updateObjectType(self):
+    def updateObjectType(self) -> None:
         """Update inputs according to selected object type."""
-
-        import logging
-
         objectType = self.objectType()
         objectCapabilities = getObjectCapabilities(objectType)
         if objectCapabilities.get("threshold"):
@@ -215,25 +217,25 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         self.initCuts()
         # Toggle cut creation button (disable if no cuts available for object type).
         specs = CutSpecs.query(object=self.objectType())
-        self.addCutButton.setEnabled(len(specs))
+        self.addCutButton.setEnabled(len(specs) != 0)
 
-    def initObjectList(self, objects):
+    def initObjectList(self, objects) -> None:
         """Initialize list of available objects. Ignores objects with no scales."""
         for index, name in enumerate(ExtendedTypes):
             if name not in objects:
                 continue # ignore if not in init list
-            self.typeComboBox.addItem(miniIcon(name.lower()), name)                
+            self.typeComboBox.addItem(miniIcon(name.lower()), name)
             if name in ObjectTypes:
                 if not self.getScale(name): # on missing scale (editing outdated XML?)
                     self.typeComboBox.setItemEnabled(index, False)
             if name == tmGrammar.CICADA:
                 if not self.getPrecScale(kCicadaPrecScaleType):
-                    self.typeComboBox.setItemEnabled(index, False)             
+                    self.typeComboBox.setItemEnabled(index, False)
 
-    def initCuts(self):
+    def initCuts(self) -> None:
         """Initialize list of checkable cuts."""
         self.cutModel = QtGui.QStandardItemModel(self)
-        self.cutModel._items = []
+        self.cutModel._items = []  # type: ignore
         for cut in sorted(self.menu().cuts, key=lambda cut: cut.name):
             if cut.object == self.objectType():
                 label = fCutLabel(cut)
@@ -241,13 +243,13 @@ class ObjectEditorDialog(QtWidgets.QDialog):
                 item.setData(cut)
                 if cut.modified:
                     font = item.font()
-                    font.setWeight(QtGui.QFont.Bold)
+                    font.setWeight(QtGui.QFont.Weight.Bold)
                     item.setFont(font)
                 self.cutModel.appendRow(item)
-                self.cutModel._items.append(item)
+                self.cutModel._items.append(item)  # type: ignore
         self.cutProxy = QtCore.QSortFilterProxyModel(self)
         self.cutProxy.setFilterKeyColumn(-1) # Filter all collumns
-        self.cutProxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self.cutProxy.setFilterCaseSensitivity(QtCore.Qt.CaseSensitivity.CaseInsensitive)
         self.cutProxy.setSourceModel(self.cutModel)
         self.cutModel.itemChanged.connect(self.updateInfoText)
         self.cutListView.setModel(self.cutProxy)
@@ -267,9 +269,11 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         # Get only threshold/count scales
         return (list(filter(lambda item: item[kType] in (scaleType), scales)) or [None])[0]
 
-    def updateFilter(self, text):
+    def updateFilter(self, text: str) -> None:
         """Update cut filter."""
-        self.cutListView.model().setFilterWildcard(text)
+        model = self.cutListView.model()
+        if isinstance(model, QtCore.QSortFilterProxyModel):
+            model.setFilterWildcard(text)
 
     def objectType(self) -> str:
         """Returns object type."""
@@ -279,18 +283,18 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         """Returns comparison operator."""
         return self.compareComboBox.itemData(self.compareComboBox.currentIndex())
 
-    def threshold(self):
+    def threshold(self) -> float:
         """Returns objects threshold."""
         return self.thresholdSpinBox.value()
 
-    def bxOffset(self):
+    def bxOffset(self) -> int:
         return self.offsetSpinBox.value()
 
     def selectedCuts(self) -> List[str]:
         """Retruns list of checked cut names."""
-        return [item.data().name for item in list(filter(lambda item: item.checkState() == QtCore.Qt.Checked, self.cutModel._items))]
+        return [item.data().name for item in list(filter(lambda item: item.checkState() == QtCore.Qt.CheckState.Checked, self.cutModel._items))]  # type: ignore
 
-    def expression(self):
+    def expression(self) -> str:
         """Returns object expression selected by the inputs."""
         expression = AlgorithmHelper()
         if self.objectType() in SignalTypes:
@@ -309,7 +313,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
             )
         return AlgorithmFormatter.normalize(expression.serialize())
 
-    def updateInfoText(self):
+    def updateInfoText(self) -> None:
         """Update info box text."""
         objectType = self.objectType()
         objectCapabilities = getObjectCapabilities(objectType)
@@ -329,23 +333,23 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         text.append(f"<p><pre>{expression}</pre></p>")
         self.infoTextEdit.setText("".join(text))
 
-    def loadObject(self, token):
+    def loadObject(self, token) -> None:
         """Load dialog by values from object. Will raise a ValueError if string
         *token* is not a valid object.
         """
         object_ = toObject(token)
         if object_.type not in self.objectTypes():
             raise ValueError("Invalid object type.")
-        object_.cuts = objectCuts(token)
+        object_.cuts = objectCuts(token)  # type: ignore
         self.typeComboBox.setCurrentIndex(self.typeComboBox.findText(object_.type))
         self.compareComboBox.setCurrentIndex(self.compareComboBox.findData(object_.comparison_operator))
         self.thresholdSpinBox.setValue(object_.decodeThreshold())
         self.offsetSpinBox.setValue(object_.bx_offset)
-        for cut in self.cutModel._items:
-            if cut.data().name in object_.cuts:
-                cut.setCheckState(QtCore.Qt.Checked)
+        for cut in self.cutModel._items:  # type: ignore
+            if cut.data().name in object_.cuts:  # type: ignore
+                cut.setCheckState(QtCore.Qt.CheckState.Checked)
 
-    def addCut(self):
+    def addCut(self) -> None:
         """Raise cut editor to add a new cut."""
         # Load cut settings only for selected object type
         dialog = CutEditorDialog(self.menu(), self)
@@ -353,7 +357,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         dialog.setupCuts(specs)
         dialog.setModal(True)
         dialog.exec_()
-        if dialog.result() != QtWidgets.QDialog.Accepted:
+        if dialog.result() != dialog.DialogCode.Accepted:
             return
         new_cut = dialog.newCut()
         self.menu().addCut(new_cut)
@@ -363,9 +367,9 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         self.initCuts()
         # TODO code refactoring!
         # Restore selected cuts and newly added one.
-        for cut in self.cutModel._items:
+        for cut in self.cutModel._items:  # type: ignore
             if cut.data().name in selectedCuts:
-                cut.setCheckState(QtCore.Qt.Checked)
+                cut.setCheckState(QtCore.Qt.CheckState.Checked)
             # Select newly added cut
             if cut.data().name == new_cut.name:
-                cut.setCheckState(QtCore.Qt.Checked)
+                cut.setCheckState(QtCore.Qt.CheckState.Checked)

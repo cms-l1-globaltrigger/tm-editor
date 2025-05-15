@@ -95,6 +95,8 @@
 
     <!-- Side files -->
     <file alias="changelog">../changelog</file>
+    <file alias="authors.txt">authors.txt</file>
+    <file alias="contributors.txt">contributors.txt</file>
 
   </qresource>
 </RCC>

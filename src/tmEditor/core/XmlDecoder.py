@@ -6,12 +6,13 @@ import re
 
 from packaging.version import Version
 from collections import namedtuple
+from typing import Optional
 
 import tmGrammar
 
-from tmEditor.core import Menu
-from tmEditor.core import Algorithm
-from tmEditor.core import types
+from . import Algorithm
+from . import types
+from .Menu import Menu, GrammarVersion
 
 from .toolbox import safe_str, decode_labels
 from .Queue import Queue
@@ -50,7 +51,7 @@ kUUIDMenu = "uuid_menu"
 MirgrationResult = namedtuple("MirgrationResult", "subject,param,before,after")
 
 
-def mirgrate_chgcor_cut(cut):
+def mirgrate_chgcor_cut(cut) -> Optional[MirgrationResult]:
     """Migrates old CHGCOR cut data specifications:
       "0" -> "ls"
       "1" -> "os"
@@ -68,7 +69,7 @@ def mirgrate_chgcor_cut(cut):
     return None
 
 
-def mirgrate_cut_object(cut):
+def mirgrate_cut_object(cut) -> Optional[MirgrationResult]:
     """Migrate obsolete object entries for function cuts."""
     object_ = cut.object
     if cut.type in types.FunctionCutTypes:
@@ -80,7 +81,7 @@ def mirgrate_cut_object(cut):
     return None
 
 
-def mirgrate_mass_function(algorithm):
+def mirgrate_mass_function(algorithm) -> Optional[MirgrationResult]:
     """Migrates old mass functions to newer mass_inv:
     "mass" -> "mass_inv"
     """
@@ -95,17 +96,17 @@ def mirgrate_mass_function(algorithm):
 
 class XmlDecoderError(Exception):
     """Exeption for XML decoder errors."""
-    def __init__(self, message):
+    def __init__(self, message: str) -> None:
         super().__init__(message)
 
 
 class XmlDecoderQueue(Queue):
 
-    def __init__(self, filename):
+    def __init__(self, filename: str) -> None:
         super().__init__()
-        self.filename = os.path.abspath(filename)
-        self.applied_mirgrations = []
-        self.menu = None
+        self.filename: str = os.path.abspath(filename)
+        self.applied_mirgrations: list = []
+        self.menu: Menu = Menu()
         self.add_callback(self.run_prepare, "check access rights")
         self.add_callback(self.run_load_xml, "loading XML file")
         self.add_callback(self.run_version_check, "checking versions")
@@ -118,14 +119,14 @@ class XmlDecoderQueue(Queue):
         self.add_callback(self.run_process_ext_signals, "loading external signals")
         self.add_callback(self.run_verify_menu, "verifying menu integrity")
 
-    def run_prepare(self):
+    def run_prepare(self) -> None:
         logging.debug("checking file access rights...")
         if not os.path.isfile(self.filename):
             message = "No such file or directory {0!r}".format(self.filename)
             logging.error(message)
             raise XmlDecoderError(message)
 
-    def run_load_xml(self):
+    def run_load_xml(self) -> None:
         logging.debug("Reading XML file from %r", self.filename)
         self.tables = TableHelper()
         warnings = self.tables.load(self.filename)
@@ -135,7 +136,7 @@ class XmlDecoderQueue(Queue):
             logging.error(message)
             raise XmlDecoderError(message)
 
-    def run_version_check(self):
+    def run_version_check(self) -> None:
         """Verify menu grammar version."""
         if kGrammarVersion not in self.tables.menu.menu.keys():
             message = "Missing grammar version, corrupted file?"
@@ -152,14 +153,13 @@ class XmlDecoderQueue(Queue):
             message = "Invalid grammar version `{0}`, corrupted file?".format(version)
             logging.error(message)
             raise XmlDecoderError(message)
-        if version > Menu.GrammarVersion:
-            message = "Unsupported grammar version {0} (requires <= {1})".format(version, Menu.GrammarVersion)
+        if version > GrammarVersion:
+            message = "Unsupported grammar version {0} (requires <= {1})".format(version, GrammarVersion)
             logging.error(message)
             raise XmlDecoderError(message)
 
-    def run_process_info(self):
+    def run_process_info(self) -> None:
         logging.debug("adding menu info...")
-        self.menu = Menu.Menu()
         self.menu.menu.name = safe_str(self.tables.menu.menu[kName], "menu name")
         self.menu.menu.comment = self.tables.menu.menu[kComment] if kComment in self.tables.menu.menu else ""
         self.menu.menu.uuid_menu = self.tables.menu.menu[kUUIDMenu]
@@ -167,7 +167,7 @@ class XmlDecoderQueue(Queue):
 
         logging.debug("loaded menu information: %s", self.menu.menu.__dict__)
 
-    def run_process_algorithms(self):
+    def run_process_algorithms(self) -> None:
         logging.debug("adding algorithms...")
         for row in [dict(row) for row in self.tables.menu.algorithms]:
             index = int(row[kIndex])
@@ -183,7 +183,7 @@ class XmlDecoderQueue(Queue):
             logging.debug("adding algorithm: %s", algorithm.__dict__)
             self.menu.addAlgorithm(algorithm)
 
-    def run_process_cuts(self):
+    def run_process_cuts(self) -> None:
         logging.debug("adding cuts...")
         for cuts in self.tables.menu.cuts.values():
             for row in [dict(row) for row in cuts]:
@@ -203,14 +203,14 @@ class XmlDecoderQueue(Queue):
                 if result:
                     self.applied_mirgrations.append(result)
                 if cut.type not in types.CutTypes:
-                    message = "Unsupported cut type {0} (grammar version <= {1})".format(cut.type, Menu.GrammarVersion)
+                    message = "Unsupported cut type {0} (grammar version <= {1})".format(cut.type, GrammarVersion)
                     logging.error(message)
                     raise XmlDecoderError(message)
                 if not self.menu.cutByName(cut.name):
                     logging.debug("adding cut: %s", cut.__dict__)
                     self.menu.addCut(cut)
 
-    def run_process_objects(self):
+    def run_process_objects(self) -> None:
         logging.debug("adding object requirements...")
         for objs in self.tables.menu.objects.values():
             for row in [dict(row) for row in objs]:
@@ -223,7 +223,7 @@ class XmlDecoderQueue(Queue):
                 obj = Algorithm.Object(name, type, threshold, comparison_operator, bx_offset, comment)
                 all_types = types.ObjectTypes + types.SignalTypes
                 if obj.type not in all_types:
-                    message = "Unsupported object type {0} (grammar version <= {1})".format(obj.type, Menu.GrammarVersion)
+                    message = "Unsupported object type {0} (grammar version <= {1})".format(obj.type, GrammarVersion)
                     logging.error(message)
                     raise XmlDecoderError(message)
                 if obj.type in types.ObjectTypes:
@@ -236,7 +236,7 @@ class XmlDecoderQueue(Queue):
                     logging.debug("adding object requirement: %s", obj.__dict__)
                     self.menu.addObject(obj)
 
-    def run_process_externals(self):
+    def run_process_externals(self) -> None:
         logging.debug("adding external signals...")
         ext_signal_names = [item[kName] for item in self.tables.extSignal.extSignals]
         ext_signal_set_name = self.tables.extSignal.extSignalSet[kName]
@@ -255,20 +255,20 @@ class XmlDecoderQueue(Queue):
                     logging.debug("adding external signal: %s", external.__dict__)
                     self.menu.addExternal(external)
 
-    def run_process_scales(self):
+    def run_process_scales(self) -> None:
         logging.debug("adding scales...")
         self.menu.scales = self.tables.scale
 
-    def run_process_ext_signals(self):
+    def run_process_ext_signals(self) -> None:
         logging.debug("adding external signal sets...")
         self.menu.extSignals = self.tables.extSignal
 
-    def run_verify_menu(self):
+    def run_verify_menu(self) -> None:
         logging.debug("verify menu integrity...")
         self.menu.validate()
 
 
-def load(filename):
+def load(filename: str) -> Optional[Menu]:
     """Read XML menu from *filename*. Returns menu object."""
     queue = XmlDecoderQueue(filename)
     queue.exec_()

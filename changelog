@@ -7,11 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.18.0] - 2024-08-26
+## [0.18.0] - 2025-05-15
+
+### Added
+- Type hints in all modules for enhanced mypy checks.
 
 ### Changed
 - Using ruff linter instead of flake8/pylint (#50).
 - Migrated to `pyproject.toml` config file, removed obsolete `setup.cfg` (#51).
+- Migrated to PySide6 (#54).
+
+### Fixed
+- Various potential bugs that lead to crashes.
 
 ## [0.17.2] - 2025-02-06
 

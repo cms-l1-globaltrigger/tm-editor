@@ -5,11 +5,11 @@ import os
 import platform
 import re
 import ssl
-from typing import Dict, List, Optional, Tuple
+from typing import Optional, Union
 
 from urllib.request import urlopen
 
-from PyQt5 import QtCore
+from PySide6 import QtCore
 
 import tmTable
 
@@ -28,22 +28,21 @@ __all__ = [
     "DownloadHelper"
 ]
 
-# -----------------------------------------------------------------------------
-#  Low level helper functions
-# -----------------------------------------------------------------------------
 
-def getenv(name: str) -> str:
+def getenv(name: str, /) -> str:
     """Get environment variable. Raises a RuntimeError exception if variable not set."""
     value = os.getenv(name)
     if value is None:
         raise RuntimeError(f"`{name}' environment not set")
     return value
 
+
 def getXsdDir() -> str:
     """Returns path for XSD files."""
     return tmTable.UTM_XSD_DIR
 
-def query(data: dict, **kwargs) -> list:
+
+def query(data: dict, /, **kwargs) -> list:
     """Perform dictionary query.
     >>> d = {"foo": 42, "bar": "baz"}
     >>> query(d, bar="baz")
@@ -53,16 +52,20 @@ def query(data: dict, **kwargs) -> list:
         return sum([entry[key] == value for key, value in kwargs.items()])
     return list(filter(lambda entry: lookup(entry, **kwargs), data))
 
-def natural_sort_key(s: str):
+
+_nsre = re.compile(r"([0-9]+)")
+
+
+def natural_sort_key(s: str, /) -> list:
     """Natural string sorting.
     >>> sorted("100 10 3b 2 1".split(), key=natural_sort_key)
     ['1', '2', '3b', '10', '100']
     """
-    _nsre = re.compile(r"([0-9]+)")
     return [int(text) if text.isdigit() else text.lower()
-            for text in re.split(_nsre, format(s))]
+            for text in re.split(_nsre, s)]
 
-def safe_str(s: str, attrname: str) -> str:
+
+def safe_str(s: str, /, attrname: str) -> str:
     """Returns safe version of string. The function strips:
      * whitespaces, tabulators
      * newlines, carriage returns
@@ -73,13 +76,15 @@ def safe_str(s: str, attrname: str) -> str:
         logging.warning("normalized %s: %r to %r", attrname, s, t)
     return t
 
-def listextent(values: list):
+
+def listextent(values: list) -> Union[int, tuple[int, int]]:
     """Retruns extent of sorted list."""
     if values[0] == values[-1]:
         return values[0]
     return values[0], values[-1]
 
-def listcompress(values: list):
+
+def listcompress(values: list) -> list:
     """Returns compressed ranges for sortel list."""
     ranges: list = []
     for value in values:
@@ -91,22 +96,21 @@ def listcompress(values: list):
             ranges[-1].append(value)
     return [listextent(values) for values in ranges]
 
-def decode_labels(s: str):
+
+def decode_labels(s: str, /) -> list[str]:
     """String to labels."""
     return sorted({label.strip() for label in s.split(",") if label.strip()})
 
-def encode_labels(labels, pretty: bool = False):
+
+def encode_labels(labels: list[str], /, pretty: bool = False) -> str:
     sep = ", " if pretty else ","
     return sep.join(sorted({label.strip() for label in labels if label.strip()}))
 
-# -----------------------------------------------------------------------------
-#  Cut settings class
-# -----------------------------------------------------------------------------
 
 class CutSpecificationPool:
     """Cut specification pool."""
     def __init__(self, *args) -> None:
-        self.specs: Tuple = args
+        self.specs: tuple = args
 
     def __len__(self) -> int:
         return len(self.specs)
@@ -114,15 +118,16 @@ class CutSpecificationPool:
     def __iter__(self):
         return iter(self.specs)
 
-    def query(self, **kwargs) -> List:
+    def query(self, **kwargs) -> list:
         """Query specifications by attributes and values.
         >>> pool.filter(object="MU", type="ISO")
         [CutSpecification instance at 0x...>]
         """
-        results: List = list(self.specs)
+        results: list = list(self.specs)
         for key, value in kwargs.items():
             results = list(filter(lambda spec: hasattr(spec, key) and getattr(spec, key) == value, results))
         return results
+
 
 class CutSpecification:
     """Cut specific settings.
@@ -143,30 +148,30 @@ class CutSpecification:
     """
 
     def __init__(self, name: str, object: str, type: str, count_minimum: int = 0,
-                 count_maximum: int = 1, objects: Optional[List[str]] = None,
-                 functions: Optional[List[str]] = None, range_precision: int = 0,
+                 count_maximum: int = 1, objects: Optional[list[str]] = None,
+                 functions: Optional[list[str]] = None, range_precision: int = 0,
                  range_step: float = 0, range_unit: Optional[str] = None,
-                 data: Optional[Dict] = None, data_exclusive: bool = False,
+                 data: Optional[dict] = None, data_exclusive: bool = False,
                  title: Optional[str] = None, description: Optional[str] = None,
-                 enabled: bool = True):
+                 enabled: bool = True) -> None:
         self.name: str = name
         self.object: str = object
         self.type: str = type
         self.count_maximum: int = count_maximum
         self.count_minimum: int = count_minimum
-        self.objects: List[str] = objects or []
-        self.functions: List[str] = functions or []
+        self.objects: list[str] = objects or []
+        self.functions: list[str] = functions or []
         self.range_precision: int = range_precision
         self.range_step: float = float(range_step)
         self.range_unit: str = range_unit or ""
-        self.data: Dict = data or {}
+        self.data: dict = data or {}
         self.data_exclusive: bool = data_exclusive
         self.title: str = title or ""
         self.description: str = description or ""
         self.enabled: bool = enabled
 
     @property
-    def data_sorted(self) -> List[str]:
+    def data_sorted(self) -> list[str]:
         """Returns sorted list of data dict values."""
         return [self.data[key] for key in sorted(self.data.keys())]
 
@@ -175,18 +180,15 @@ class CutSpecification:
         """Join object and type tokens to build a combined cut name."""
         return "-".join((object, type))
 
-# -----------------------------------------------------------------------------
-#  Remote file downloader
-# -----------------------------------------------------------------------------
 
 class DownloadHelper(QtCore.QObject):
     """Simple download helper class, utilized to fetch remote XML files."""
 
-    receivedChanged = QtCore.pyqtSignal(int)
-    finished = QtCore.pyqtSignal()
+    receivedChanged = QtCore.Signal(int)
+    finished = QtCore.Signal()
 
     def __init__(self, fp, parent: Optional[QtCore.QObject] = None) -> None:
-        super().__init__()
+        super().__init__(parent)
         self.fp = fp
         self.url = None
         self.contentLength: int = 0
@@ -194,7 +196,7 @@ class DownloadHelper(QtCore.QObject):
         self.receivedSize: int = 0
         self.blockSize: int = 1024 * 128
 
-    def urlopen(self, url, **kwargs):
+    def urlopen(self, url: str, **kwargs) -> None:
         # Workaround for MacOS SSL verification bug (affects python from homebrew and macport).
         if platform.system() == "Darwin":
             ctx = ssl.create_default_context()
@@ -203,21 +205,23 @@ class DownloadHelper(QtCore.QObject):
             kwargs["context"] = ctx
         # Open remote URL
         self.url = urlopen(url, **kwargs)
-        # Get byte size of remote content, either integer string or empty if not available.
-        self.contentLength = int(self.url.info().get("Content-Length", 0)) or 0
-        self.charset = self.url.info().get("charset", "utf-8")
+        if self.url:
+            # Get byte size of remote content, either integer string or empty if not available.
+            self.contentLength = int(self.url.info().get("Content-Length", 0)) or 0
+            self.charset = self.url.info().get("charset", "utf-8")
 
-    def __call__(self):
+    def __call__(self) -> None:
         """Use callback to update status while doenloading or return False to stop.
         """
         self.receivedSize = 0
         try:
-            while True:
-                buffer = self.url.read(self.blockSize)
-                if not buffer:
-                    break
-                self.receivedSize += len(buffer)
-                self.fp.write(buffer)  # TODO /breaks/ .decode(self.charset))
-                self.receivedChanged.emit(self.receivedSize)
+            if self.url:
+                while True:
+                    buffer = self.url.read(self.blockSize)
+                    if not buffer:
+                        break
+                    self.receivedSize += len(buffer)
+                    self.fp.write(buffer)  # TODO /breaks/ .decode(self.charset))
+                    self.receivedChanged.emit(self.receivedSize)
         finally:
             self.finished.emit()

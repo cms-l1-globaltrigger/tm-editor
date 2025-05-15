@@ -12,10 +12,10 @@ pip install https://github.com/cms-l1-globaltrigger/tm-editor/archive/refs/tags/
 
 ## Build
 
-Regenerate the PyQt5 resource module.
+Make sure to regenerate the PySide6 resource module.
 
 ```bash
-pyrcc5 resource/tmEditor.rcc -o tmEditor/tmeditor_rc.py
+pyside6-rcc resource/tmEditor.rcc -o src/tmEditor/tmeditor_rc.py
 ```
 
 ## Synopsis

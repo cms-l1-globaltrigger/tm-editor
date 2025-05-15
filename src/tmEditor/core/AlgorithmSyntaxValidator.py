@@ -9,7 +9,7 @@ Usage example
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Iterable, List
+from typing import Iterable
 
 import tmGrammar
 
@@ -60,7 +60,7 @@ class SyntaxRule(ABC):
         return item
 
     @abstractmethod
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         ...
 
 
@@ -69,10 +69,10 @@ class SyntaxValidator:
 
     def __init__(self, menu) -> None:
         self.menu = menu
-        self.rules: List[SyntaxRule] = []
+        self.rules: list[SyntaxRule] = []
 
     def validate(self, expression: str) -> None:
-        tokens: List[str] = self.tokenize(expression)
+        tokens: list[str] = self.tokenize(expression)
         for rule in self.rules:
             rule.validate(tokens)
 
@@ -80,7 +80,7 @@ class SyntaxValidator:
         """Add a syntx rule class. Creates and tores an instance of the class."""
         self.rules.append(cls(self))
 
-    def tokenize(self, expression: str) -> List[str]:
+    def tokenize(self, expression: str) -> list[str]:
         """Parses algorithm expression and returns list of RPN tokens."""
         # Make sure to clear static algorithm logic.
         tmGrammar.Algorithm_Logic.clear()
@@ -125,7 +125,7 @@ class AlgorithmSyntaxValidator(SyntaxValidator):
 class BasicSyntax(SyntaxRule):
     """Validates basic algorithm syntax."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         menu = self.validator.menu
         ext_signal_names = [item[kName] for item in menu.extSignals.extSignals]
         for token in tokens:
@@ -156,7 +156,7 @@ class BasicSyntax(SyntaxRule):
 class ObjectThresholds(SyntaxRule):
     """Validates object thresholds/counts."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         # TODO... better to use floating point representation and compare by string?!
         for token in tokens:
             # Validate object
@@ -195,7 +195,7 @@ class ObjectThresholds(SyntaxRule):
 
 class RequiredObjectCuts(SyntaxRule):
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         for token in tokens:
             if isObject(token):
                 if token.startswith(tmGrammar.ADT):
@@ -252,7 +252,7 @@ class RequiredObjectCuts(SyntaxRule):
 class CombBxOffset(SyntaxRule):
     """Validates that all objects of a combination function use the same BX offset."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue
@@ -276,7 +276,7 @@ class CombBxOffset(SyntaxRule):
 class CombMultiThresholds(SyntaxRule):
     """Validates that all objects of a combination function with more then 4 objects require same thresholds."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue
@@ -315,7 +315,7 @@ class CombMultiThresholds(SyntaxRule):
 class ChargeCorrelation(SyntaxRule):
     """Validates that all objects of a function are of type muon if applying a CHGCOR cut."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue
@@ -337,7 +337,7 @@ class ChargeCorrelation(SyntaxRule):
 class DistNrObjects(SyntaxRule):
     """Limit number of objects for distance function."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue
@@ -357,7 +357,7 @@ class DistNrObjects(SyntaxRule):
 class DistDeltaRange(SyntaxRule):
     """Validates that delta-eta/phi cut ranges does not exceed assigned objects limits."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         menu = self.validator.menu
         for token in tokens:
             if not isFunction(token):
@@ -396,7 +396,7 @@ class DistDeltaRange(SyntaxRule):
 class CutCount(SyntaxRule):
     """Limit number of cuts allowed to be assigned at once."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         for token in tokens:
             # Objects
             if isObject(token):
@@ -411,7 +411,7 @@ class CutCount(SyntaxRule):
                 counts = self.countCuts(functionCuts(token))
                 self.checkCutCount(token, counts)
 
-    def countCuts(self, names: Iterable[str]) -> Dict:
+    def countCuts(self, names: Iterable[str]) -> dict:
         """Returns dictionary with key of cut object/type pair and occurence as value."""
         menu = self.validator.menu
         counts = {}
@@ -424,7 +424,7 @@ class CutCount(SyntaxRule):
                 counts[key] += 1
         return counts
 
-    def checkCutCount(self, token: str, counts: Dict) -> None:
+    def checkCutCount(self, token: str, counts: dict) -> None:
         """Counts has to be a dictionary of format returned by countCuts()."""
         for key, count in counts.items():
             object_, type_ = key
@@ -439,7 +439,7 @@ class CutCount(SyntaxRule):
 class TransverseMass(SyntaxRule):
     """Validates transverse mass object requirements At least one non eta object is required."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue
@@ -460,7 +460,7 @@ class TransverseMass(SyntaxRule):
 class InvarientMass3(SyntaxRule):
     """Validates invariant mass of three objects requirements."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue
@@ -478,7 +478,7 @@ class InvarientMass3(SyntaxRule):
 class TwoBodyPtNrObjects(SyntaxRule):
     """Validates number of objects in combination with two body Pt cuts."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         menu = self.validator.menu
         for token in tokens:
             if not isFunction(token):
@@ -500,7 +500,7 @@ class TwoBodyPtNrObjects(SyntaxRule):
 class ImpactPrameter(SyntaxRule):
     """Impact parameter cut requires also a upt cut."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         for token in tokens:
             if isObject(token):
                 item = self.toObjectItem(token)
@@ -533,7 +533,7 @@ class ImpactPrameter(SyntaxRule):
 class OverlapRemoval(SyntaxRule):
     """Validates only calorimeter objects are used with overlap removal functions."""
 
-    def validate(self, tokens: List[str]) -> None:
+    def validate(self, tokens: list[str]) -> None:
         for token in tokens:
             if not isFunction(token):
                 continue

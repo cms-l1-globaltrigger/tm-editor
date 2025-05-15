@@ -8,12 +8,13 @@
 """
 
 from collections.abc import Iterable
+from typing import Callable
 
 __all__ = ["a", "code", "h1", "h2", "h3", "h4", "h5", "li", "ol", "p", "pre", "span", "strong", "ul"]
 
 
-def tag_factory(tag):
-    def tag_func(children=None, **attrs):
+def tag_factory(tag : str) -> Callable:
+    def tag_func(children=None, **attrs) -> str:
         if isinstance(children, (str, bytes, bytearray)):
             f_children = format(children)
         elif isinstance(children, Iterable):

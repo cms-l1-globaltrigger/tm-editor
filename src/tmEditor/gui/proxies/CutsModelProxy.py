@@ -1,27 +1,26 @@
 """Cuts proxy model."""
 
-from PyQt5 import QtCore
+from typing import Union
 
-__all__ = ['CutsModelProxy', ]
+from PySide6 import QtCore
 
-# -----------------------------------------------------------------------------
-#  Cuts model proxy
-# -----------------------------------------------------------------------------
+__all__ = ["CutsModelProxy"]
+
 
 class CutsModelProxy(QtCore.QSortFilterProxyModel):
     """Custom cuts sort/filter proxy."""
 
-    MinimumColumn = 3
-    MaximumColumn = 4
+    MinimumColumn: int = 3
+    MaximumColumn: int = 4
 
-    def lessThan(self, left, right):
+    def lessThan(self, left: Union[QtCore.QModelIndex, QtCore.QPersistentModelIndex], right: Union[QtCore.QModelIndex, QtCore.QPersistentModelIndex]) -> bool:
         """Custom cut sorting."""
         if left.column() in (self.MinimumColumn, self.MaximumColumn):
-            try:
-                return self.__toFloat(left) < self.__toFloat(right)
-            except ValueError:
-                pass
+            return self._toFloat(left) < self._toFloat(right)
         return super().lessThan(left, right)
 
-    def __toFloat(self, index):
-        return float(self.sourceModel().data(index, QtCore.Qt.DisplayRole))
+    def _toFloat(self, index: Union[QtCore.QModelIndex, QtCore.QPersistentModelIndex]) -> float:
+        try:
+            return float(self.sourceModel().data(index, QtCore.Qt.ItemDataRole.DisplayRole))
+        except (TypeError, ValueError):
+            return float("nan")

@@ -5,7 +5,7 @@ class AlgorithmSelectIndexDialog
 
 from typing import Optional
 
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from tmEditor.core.Settings import MaxAlgorithms
 
@@ -49,9 +49,11 @@ class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
         self.setWindowTitle(self.tr("Select Index"))
         self.resize(480, 300)
         # Button box with cancel button
-        self.buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setAutoDefault(False)
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.reject)
+        self.buttonBox = QtWidgets.QDialogButtonBox(self)
+        self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel)
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Cancel).setAutoDefault(False)
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.reject)
         # Layout to add Buttons
         gridLayout = QtWidgets.QGridLayout()
         gridLayout.setHorizontalSpacing(2)

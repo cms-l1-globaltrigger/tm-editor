@@ -23,29 +23,29 @@ kExtSignalSet = "ext_signal_set"
 class RemoteVersionInfo:
     """Helper class for retrieving remote server side version info."""
 
-    def __init__(self, url=None):
+    def __init__(self, url=None) -> None:
         self.name = None
         self.version = None
-        self.scale_set_name = None
-        self.scale_set_url = None
-        self.ext_signal_set_name = None
-        self.ext_signal_set_url = None
+        self.scale_set_name = ""
+        self.scale_set_url = ""
+        self.ext_signal_set_name = ""
+        self.ext_signal_set_url = ""
         if url:
             self.read_version(url)
 
     @property
-    def is_valid(self):
+    def is_valid(self) -> bool:
         if self.name:
             if self.version:
                 return True
         return False
 
-    def read_url(self, url):
+    def read_url(self, url: str) -> str:
         r = urlopen(url)
         charset = r.info().get("charset") or "utf-8"
         return r.read().decode(charset)
 
-    def read_version(self, url):
+    def read_version(self, url: str) -> None:
         """Retrieve version information from remote server. Returns empty dict on error."""
         try:
             logging.debug("reading version information from: %s", url)
@@ -55,7 +55,7 @@ class RemoteVersionInfo:
         except (URLError, HTTPError):
             logging.warning("unable to retrieve version information from: %s", url)
 
-    def load_json(self, data):
+    def load_json(self, data: dict) -> None:
         """Load data from JSON dict."""
         baseurl = os.path.dirname(Settings.VersionUrl)
         application = data.get("application")

@@ -13,7 +13,7 @@ Cascade an algorithm expression to increase human readability:
 >>> AlgorithmFormatter.expand(expression)
 """
 
-from typing import List, Optional
+from typing import Optional
 
 import tmGrammar
 
@@ -43,15 +43,15 @@ class AlgorithmFormatter:
     Spaces = (" ", "\t", "\r", "\n")
 
     @staticmethod
-    def tokenize(expression: str) -> List[str]:
+    def tokenize(expression: str) -> list[str]:
         """Robust algorithm expression tokenization, splitting expression in
         objects, functions, cuts and paranthesis.
 
         >>> tokenize("comb{MU20[MU-ISO_1],MU10}")
         ['comb', '{', 'MU20', '[', 'MU-ISO_1', ']', ',', 'MU10', '}']
         """
-        tokens: List[str] = []
-        token: List[str] = []
+        tokens: list[str] = []
+        token: list[str] = []
         for char in expression:
             # Ignore spaces, append optional previous token.
             if char in AlgorithmFormatter.Spaces:
@@ -73,7 +73,7 @@ class AlgorithmFormatter:
         return tokens
 
     @staticmethod
-    def sanitize(expression: str) -> List[str]:
+    def sanitize(expression: str) -> list[str]:
         """Returns sanitized tokens auto correcting some frequent mistakes, like
         lower case operators, upper case function names, and removes occurences
         of multiple commas and trailing commas.
@@ -81,7 +81,7 @@ class AlgorithmFormatter:
         >>> tokens = sanitize("MU10 and COMB{JET20, ,JET10, }")
         ['MU10', 'AND', 'comb', '{', 'JET20', ',', 'JET10', '}']
         """
-        tokens: List[str] = []
+        tokens: list[str] = []
         for token in AlgorithmFormatter.tokenize(expression):
             # Make sure operators are upper case.
             if token.upper() in AlgorithmFormatter.Operators:
@@ -145,7 +145,7 @@ class AlgorithmFormatter:
         # Returns indent according to current
         def indent():
             return ws * tabwidth * level
-        result: List[str] = []
+        result: list[str] = []
         previous = None
         # Track paranthesis levels.
         in_function = False

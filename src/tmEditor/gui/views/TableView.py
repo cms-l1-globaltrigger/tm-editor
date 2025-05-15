@@ -2,11 +2,10 @@
 
 from typing import Optional
 
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
-# ------------------------------------------------------------------------------
-#  Common table view widget
-# ------------------------------------------------------------------------------
+__all__ = ["TableView"]
+
 
 class TableView(QtWidgets.QTableView):
     """Common sortable table view wiget."""
@@ -15,18 +14,18 @@ class TableView(QtWidgets.QTableView):
         super().__init__(parent)
 
         self.setShowGrid(False)
-        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setAlternatingRowColors(True)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Preferred)
 
         horizontalHeader = self.horizontalHeader()
         horizontalHeader.setHighlightSections(False)
-        horizontalHeader.setSectionResizeMode(QtWidgets.QHeaderView.Interactive)
+        horizontalHeader.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Interactive)
         horizontalHeader.setStretchLastSection(True)
 
         verticalHeader = self.verticalHeader()
-        verticalHeader.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+        verticalHeader.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
         verticalHeader.setDefaultSectionSize(20)
         verticalHeader.hide()
 
@@ -38,5 +37,7 @@ class TableView(QtWidgets.QTableView):
         index = self.selectedIndexes()
         if index:
             # Use the assigned proxy model to map the index.
-            return self.model().mapToSource(index[0])  # type: ignore
+            model = self.model()
+            if isinstance(model, QtCore.QSortFilterProxyModel):
+                return model.mapToSource(index[0])
         return None
