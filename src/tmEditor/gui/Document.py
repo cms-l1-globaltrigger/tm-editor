@@ -368,7 +368,7 @@ class Document(BaseDocument):
         dialog = QtWidgets.QProgressDialog(self)
         dialog.setWindowTitle(self.tr("Saving..."))
         dialog.setCancelButton(None)
-        dialog.setWindowModality(QtCore.Qt.WindowModal)
+        dialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         dialog.resize(260, dialog.height())
         dialog.show()
         QtWidgets.QApplication.processEvents()
@@ -405,7 +405,7 @@ class Document(BaseDocument):
         if not len(items):
             return None, None
         item = items[0]
-        if isinstance(item.top, QtWidgets.QTableView):
+        if isinstance(item.top, TableView):
             index = item.top.currentMappedIndex()
             return index, item
         return None, item
