@@ -28,10 +28,6 @@ from tmEditor.gui.CutEditorDialog import CutEditorDialog
 
 __all__ = ["ObjectEditorDialog"]
 
-# -----------------------------------------------------------------------------
-#  Keys
-# -----------------------------------------------------------------------------
-
 kMinimum: str = "minimum"
 kMaximum: str = "maximum"
 kObject: str = "object"
@@ -40,10 +36,6 @@ kType: str = "type"
 kET: str = "ET"
 kCOUNT: str = "COUNT"
 kCicadaPrecScaleType: str = "CICADA-CScore"
-
-# -----------------------------------------------------------------------------
-#  Object capabilites
-# -----------------------------------------------------------------------------
 
 ThresholdType: str = "threshold"
 CounterType: str = "counter"
@@ -57,6 +49,7 @@ ObjectCapabilities: dict[str, dict[str, bool]] = {
 
 ExtendedTypes = ObjectTypes + SignalTypes
 
+
 def getObjectType(objectType) -> str:
     if objectType in ThresholdObjectTypes:
         return ThresholdType
@@ -66,12 +59,10 @@ def getObjectType(objectType) -> str:
         return SignalType
     return ""
 
+
 def getObjectCapabilities(objectType) -> dict[str, bool]:
     return ObjectCapabilities.get(getObjectType(objectType), {})
 
-# -----------------------------------------------------------------------------
-#  Cut item class
-# -----------------------------------------------------------------------------
 
 class CutItem(QtGui.QStandardItem):
     """A checkable cut standard item, to be inserted to a list model."""
@@ -83,9 +74,6 @@ class CutItem(QtGui.QStandardItem):
         if checked:
             self.setCheckState(QtCore.Qt.CheckState.Checked)
 
-# -----------------------------------------------------------------------------
-#  Object editor dialog class
-# -----------------------------------------------------------------------------
 
 class ObjectEditorDialog(QtWidgets.QDialog):
     """Object editor dialog class."""

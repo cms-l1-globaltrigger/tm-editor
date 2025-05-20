@@ -143,16 +143,10 @@ def calculateStep(specification, scales) -> float:
         return specification.range_step
     return specification.range_step
 
-# -----------------------------------------------------------------------------
-#  Exception classes
-# -----------------------------------------------------------------------------
 
 class CutEditorError(Exception):
     pass
 
-# -----------------------------------------------------------------------------
-#  Scale spin box widgets
-# -----------------------------------------------------------------------------
 
 class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
     """Custom spin box for scales lookup table."""
@@ -219,9 +213,6 @@ class ScaleSpinBox(QtWidgets.QDoubleSpinBox):
         self.index = result
         return self.value(self.index)
 
-# -----------------------------------------------------------------------------
-#  Range spin box class
-# -----------------------------------------------------------------------------
 
 class RangeSpinBox(QtWidgets.QDoubleSpinBox):
     """Custom spin box for fixed stepped ranges."""

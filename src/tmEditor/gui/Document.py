@@ -33,10 +33,6 @@ from tmEditor.gui.CommonWidgets import createIcon
 
 __all__ = ["Document"]
 
-# ------------------------------------------------------------------------------
-#  Keys
-# ------------------------------------------------------------------------------
-
 kCable = "cable"
 kChannel = "channel"
 kData = "data"
@@ -141,11 +137,7 @@ class Document(BaseDocument):
 
     def __init__(self, filename: str, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(filename, parent)
-        # Attributes
-        self.loadMenu(filename)
-        # Layout
-        self.setContentsMargins(0, 0, 0, 0)
-        #
+        self.readMenu(filename)  # TODO
         self._pages: List = []
         # Filter bar
         self.filterWidget = TextFilterWidget(True, self)
@@ -192,6 +184,7 @@ class Document(BaseDocument):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
+        self.setContentsMargins(0, 0, 0, 0)
 
     def createNavigationTree(self):
         self.navigationTreeWidget = QtWidgets.QTreeWidget(self)
@@ -210,9 +203,8 @@ class Document(BaseDocument):
 
     def createMenuPage(self):
         menuView = MenuWidget(self)
-        menuView.loadMenu(self.menu())
-        menuView.nameLineEdit.setText(self.menu().menu.name)
-        menuView.commentTextEdit.setPlainText(self.menu().menu.comment)
+        menuView.setName(self.menu().menu.name)
+        menuView.setComment(self.menu().menu.comment)
         menuView.modified.connect(self.onModified)
         self.menuPage = self.addPage(self.tr("Menu"), menuView)
 
@@ -284,10 +276,10 @@ class Document(BaseDocument):
         self.setModified(True)
         self.modified.emit()
 
-    def menu(self):
+    def menu(self) -> Menu:
         return self._menu
 
-    def loadMenu(self, filename: str) -> None:
+    def readMenu(self, filename: str) -> None:
         """Load menu from filename, setup new document."""
         self.setFilename(filename)
         self.setName(os.path.basename(self.filename()))
@@ -316,6 +308,7 @@ class Document(BaseDocument):
             dialog.close()
             raise
         self._menu = queue.menu
+        self.setModified(False)
         if queue.applied_mirgrations:
             msgBox = QtWidgets.QMessageBox(self)
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Information)
@@ -342,9 +335,8 @@ class Document(BaseDocument):
             msgBox.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             msgBox.setDefaultButton(QtWidgets.QMessageBox.StandardButton.Ok)
             msgBox.exec_()
-        self.setModified(False)
 
-    def saveMenu(self, filename: Optional[str] = None) -> None:
+    def writeMenu(self, filename: str) -> None:
         """Save menu to filename."""
         # Warn before loosing cuts
         orphans = self._menu.orphanedCuts()
@@ -360,10 +352,9 @@ class Document(BaseDocument):
                 self.tr("Found orphaned cut"),
                 self.tr("There is one orphaned cut (<em>{0}</em>) that will be lost as it can't be saved to the XML file!").format(orphans[0])
             )
-        filename = filename or self.filename()
         # Update meta information
-        self._menu.menu.name = self.menuPage.top.nameLineEdit.text()
-        self._menu.menu.comment = self.menuPage.top.commentTextEdit.toPlainText()
+        self._menu.menu.name = self.menuPage.top.name()
+        self._menu.menu.comment = self.menuPage.top.comment()
         # Process dialog
         dialog = QtWidgets.QProgressDialog(self)
         dialog.setWindowTitle(self.tr("Saving..."))
@@ -390,7 +381,8 @@ class Document(BaseDocument):
         # Update document
         self.setFilename(filename)
         self.setName(os.path.basename(filename))
-        self.menuPage.top.loadMenu(self.menu())
+        self.menuPage.top.setName(self._menu.menu.name)
+        self.menuPage.top.setComment(self._menu.menu.comment)
         self.setModified(False)
         index, item = self.getSelection()
         try:
@@ -459,10 +451,13 @@ class Document(BaseDocument):
             item.bottom.toolbar.moveButton.hide()
         if item is self.menuPage:
             lines = []
-            lines.append(self.tr("<p><strong>Scale Set:</strong> {}</p>").format(self.menu().scales.scaleSet[kName]))
-            lines.append(self.tr("<p><strong>External Signal Set:</strong> {}</p>").format(self.menu().extSignals.extSignalSet[kName]))
-            lines.append(self.tr("<p><strong>Menu UUID:</strong> {}</p>").format(self.menu().menu.uuid_menu))
-            lines.append(self.tr("<p><strong>Grammar Version:</strong> {}</p>").format(self.menu().menu.grammar_version))
+            menu = self.menu()
+            if menu.scales:
+                lines.append(self.tr("<p><strong>Scale Set:</strong> {}</p>").format(menu.scales.scaleSet[kName]))
+            if menu.extSignals:
+                lines.append(self.tr("<p><strong>External Signal Set:</strong> {}</p>").format(menu.extSignals.extSignalSet[kName]))
+            lines.append(self.tr("<p><strong>Menu UUID:</strong> {}</p>").format(menu.menu.uuid_menu))
+            lines.append(self.tr("<p><strong>Grammar Version:</strong> {}</p>").format(menu.menu.grammar_version))
             item.bottom.setText("".join(lines))
             item.bottom.toolbar.setButtonsEnabled(False)
         elif index and item and isinstance(item.top, TableView): # ignores menu view
@@ -940,15 +935,17 @@ class MenuWidget(QtWidgets.QScrollArea):
         self.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         self.setWidget(widget)
 
-    def loadMenu(self, menu: Menu) -> None:
-        """Load input values from menu."""
-        self.nameLineEdit.setText(menu.menu.name)
-        self.commentTextEdit.setPlainText(menu.menu.comment)
+    def name(self) -> str:
+        return self.nameLineEdit.text()
 
-    def updateMenu(self, menu: Menu) -> None:
-        """Update menu with values from inputs."""
-        menu.menu.name = self.nameLineEdit.text()
-        menu.menu.comment = self.commentTextEdit.toPlainText()
+    def setName(self, name: str) -> None:
+        self.nameLineEdit.setText(name)
+
+    def comment(self) -> str:
+        return self.commentTextEdit.toPlainText()
+
+    def setComment(self, comment: str) -> None:
+        self.commentTextEdit.setPlainText(comment)
 
     @QtCore.Slot()
     def onModified(self) -> None:

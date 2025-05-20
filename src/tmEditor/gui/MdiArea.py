@@ -9,9 +9,6 @@ from tmEditor.gui.Document import Document
 
 __all__ = ["MdiArea"]
 
-# -----------------------------------------------------------------------------
-#  MDI Area class
-# -----------------------------------------------------------------------------
 
 class MdiArea(QtWidgets.QTabWidget):
     """A tab widget based MDI area widget."""
@@ -83,7 +80,7 @@ class MdiArea(QtWidgets.QTabWidget):
                 if reply == QtWidgets.QMessageBox.StandardButton.Cancel:
                     return False
                 if reply == QtWidgets.QMessageBox.StandardButton.Save:
-                    document.saveMenu()
+                    document.writeMenu(document.filename())
         self.removeTab(index)
         return True
 

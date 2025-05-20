@@ -108,9 +108,6 @@ class ToolbarWidget(QtWidgets.QWidget):
         self.removeButton.setEnabled(enabled)
         self.moveButton.setEnabled(enabled)
 
-# ------------------------------------------------------------------------------
-#  Bottom preview widget
-# ------------------------------------------------------------------------------
 
 class BottomWidget(QtWidgets.QWidget):
     """Widget displayed below table view showing previews of selected items."""

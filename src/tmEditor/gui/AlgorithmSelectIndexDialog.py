@@ -14,9 +14,6 @@ from tmEditor.gui.CommonWidgets import IconLabel, createIcon
 
 __all__ = ["AlgorithmSelectIndexDialog"]
 
-# -----------------------------------------------------------------------------
-#  Helper functions
-# -----------------------------------------------------------------------------
 
 def map_expand(indices):
     return [index in indices for index in range(MaxAlgorithms)]
@@ -29,9 +26,6 @@ def match_pattern(a, b):
             return False
     return True
 
-# -----------------------------------------------------------------------------
-#  Algorithm select index dialog.
-# -----------------------------------------------------------------------------
 
 class AlgorithmSelectIndexDialog(QtWidgets.QDialog):
     """Dialog for graphical selection of algorithm index.

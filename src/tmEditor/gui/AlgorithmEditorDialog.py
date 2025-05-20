@@ -42,10 +42,6 @@ from tmEditor.gui.CommonWidgets import createIcon
 
 __all__ = ["AlgorithmEditorDialog"]
 
-# ------------------------------------------------------------------------------
-#  Keys
-# ------------------------------------------------------------------------------
-
 kName = "name"
 
 ContentsURL = "https://cern.ch/globaltrigger/upgrade/tme/userguide#create-algorithms"

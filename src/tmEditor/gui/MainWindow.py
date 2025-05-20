@@ -178,9 +178,14 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.Slot()
     def updateStatusBarCounters(self) -> None:
         """Update status bar with data of current MDI document."""
+        algorithms = self.tr("--")
+        cuts = self.tr("--")
         document = self.mdiArea.currentDocument()
-        algorithms = len(document.menu().algorithms) if document else self.tr("--")
-        cuts = len(document.menu().cuts) if document else self.tr("--")
+        if document:
+            menu = document.menu()
+            if menu:
+                algorithms = format(len(menu.algorithms))
+                cuts = format(len(menu.cuts))
         self.statusAlgorithms.setText(self.tr("Algorithms: {0}").format(algorithms))
         self.statusCuts.setText(self.tr("Cuts: {0}").format(cuts))
 
@@ -370,54 +375,58 @@ class MainWindow(QtWidgets.QMainWindow):
         """Import algorithms from another XML file."""
         path = os.getcwd() # Default is user home dir on desktop environments.
         document = self.mdiArea.currentDocument()
-        if document:
-            path = os.path.dirname(document.filename())
-            filenameAndFilter = QtWidgets.QFileDialog.getOpenFileName(
-                self,
-                self.tr("Import file..."), path,
-                self.tr("L1-Trigger Menus (*{0})").format(XmlFileExtension)
-            )
-            filename = filenameAndFilter[0]
-            if filename:
-                try:
-                    dialog = ImportDialog(filename, document.menu(), self)
-                except AlgorithmSyntaxError as exc:
-                    QtWidgets.QMessageBox.critical(
-                        self,
-                        self.tr("Import error"),
-                        format(exc)
-                    )
-                    return
-                except (XmlDecoderError, RuntimeError, ValueError) as exc:
-                    QtWidgets.QMessageBox.critical(
-                        self,
-                        self.tr("Import error"),
-                        format(exc)
-                    )
-                    return
-                dialog.setModal(True)
-                dialog.exec_()
-                if dialog.result() != dialog.DialogCode.Accepted:
-                    return
-                # Import cuts and algorithms.
-                try:
-                    document = self.mdiArea.currentDocument()
-                    if document:
-                        document.importCuts(dialog.cuts)
-                        document.importAlgorithms(dialog.algorithms)
-                except (RuntimeError, ValueError) as exc:
-                    QtWidgets.QMessageBox.critical(
-                        self,
-                        self.tr("Import error"),
-                        format(exc)
-                    )
+        if not document:
+            return
+        menu = document.menu()
+        if not menu:
+            return
+        path = os.path.dirname(document.filename())
+        filenameAndFilter = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            self.tr("Import file..."), path,
+            self.tr("L1-Trigger Menus (*{0})").format(XmlFileExtension)
+        )
+        filename = filenameAndFilter[0]
+        if filename:
+            try:
+                dialog = ImportDialog(filename, menu, self)
+            except AlgorithmSyntaxError as exc:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    self.tr("Import error"),
+                    format(exc)
+                )
+                return
+            except (XmlDecoderError, RuntimeError, ValueError) as exc:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    self.tr("Import error"),
+                    format(exc)
+                )
+                return
+            dialog.setModal(True)
+            dialog.exec_()
+            if dialog.result() != dialog.DialogCode.Accepted:
+                return
+            # Import cuts and algorithms.
+            try:
+                document = self.mdiArea.currentDocument()
+                if document:
+                    document.importCuts(dialog.cuts)
+                    document.importAlgorithms(dialog.algorithms)
+            except (RuntimeError, ValueError) as exc:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    self.tr("Import error"),
+                    format(exc)
+                )
 
     @QtCore.Slot()
     def onSave(self) -> None:
         document = self.mdiArea.currentDocument()
         if document:
             try:
-                document.saveMenu()
+                document.writeMenu(document.filename())
                 self.mdiArea.setTabText(self.mdiArea.currentIndex(), document.name())
             except Exception as exc:
                 logger.exception(exc)
@@ -444,7 +453,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     filename = "".join((filename, XmlFileExtension))
                 if document:
                     try:
-                        document.saveMenu(filename)
+                        document.writeMenu(filename)
                         # TODO
                         self.mdiArea.setTabText(self.mdiArea.currentIndex(), document.name())
                         self.insertRecentFile(os.path.realpath(document.filename()))

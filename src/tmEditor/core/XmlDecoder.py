@@ -18,10 +18,6 @@ from .toolbox import safe_str, decode_labels
 from .Queue import Queue
 from .TableHelper import TableHelper
 
-# -----------------------------------------------------------------------------
-#  Keys
-# -----------------------------------------------------------------------------
-
 kBxOffset = "bx_offset"
 kCable = "cable"
 kChannel = "channel"

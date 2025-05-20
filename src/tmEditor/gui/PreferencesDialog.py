@@ -6,9 +6,6 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 __all__ = ["PreferencesDialog"]
 
-# -----------------------------------------------------------------------------
-#  Preferences dialog class
-# -----------------------------------------------------------------------------
 
 class PreferencesDialog(QtWidgets.QDialog):
     """Preferences dialog providing settings for the application."""

@@ -15,9 +15,6 @@ from PySide6 import QtCore, QtWidgets
 
 __all__ = ["OpenUrlDialog"]
 
-# -----------------------------------------------------------------------------
-#  Open URL dialog class
-# -----------------------------------------------------------------------------
 
 class OpenUrlDialog(QtWidgets.QDialog):
     """Dialog providing an URL input field."""

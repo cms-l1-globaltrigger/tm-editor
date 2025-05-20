@@ -40,7 +40,7 @@ class ImportDialog(QtWidgets.QDialog):
         self.cuts: list = []
         self.baseMenu: Menu = menu
 
-        self.loadMenu(filename)
+        self.readMenu(filename)
         self.validateMenu()
 
         # Important: sort out all duplicate algorithms !
@@ -66,7 +66,7 @@ class ImportDialog(QtWidgets.QDialog):
         self.tableView.setStyleSheet("#importDialogTabelView { border: 0; }")
         self.tableView.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
         if self.menu:
-            model = AlgorithmsModel(self.menu, self)
+            model = AlgorithmsModel(self.menu.algorithms, self)
             proxyModel = QtCore.QSortFilterProxyModel(self)
             proxyModel.setFilterKeyColumn(-1) # Filter all collumns
             proxyModel.setFilterCaseSensitivity(QtCore.Qt.CaseSensitivity.CaseInsensitive)
@@ -94,7 +94,7 @@ class ImportDialog(QtWidgets.QDialog):
         if isinstance(model, QtCore.QSortFilterProxyModel):
             model.setFilterWildcard(text)
 
-    def loadMenu(self, filename: str) -> None:
+    def readMenu(self, filename: str) -> None:
         """Load XML menu from file."""
         dialog = QtWidgets.QProgressDialog(self)
         dialog.setWindowTitle(self.tr("Loading..."))
