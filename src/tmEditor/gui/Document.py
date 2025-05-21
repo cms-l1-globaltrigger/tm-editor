@@ -112,6 +112,7 @@ class BaseDocument(QtWidgets.QWidget):
     def setModified(self, modified: bool, /) -> None:
         self._modified = bool(modified)
 
+
 class Document(BaseDocument):
     """Menu document container widget used by MDI area.
 
@@ -138,27 +139,42 @@ class Document(BaseDocument):
     def __init__(self, filename: str, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(filename, parent)
         self.readMenu(filename)  # TODO
-        self._pages: List = []
+
+        # Navigation tree
+        self.navigationTreeWidget = QtWidgets.QTreeWidget(self)
+        self.navigationTreeWidget.headerItem().setHidden(True)
+        self.navigationTreeWidget.setObjectName("navigationTreeWidget")
+        self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee; }")
+        self.navigationTreeWidget.itemSelectionChanged.connect(self.updateTop)
+
         # Filter bar
         self.filterWidget = TextFilterWidget(True, self)
         self.filterWidget.textChanged.connect(self.setFilterText)
+
         # Stacks
         self.topStack = QtWidgets.QStackedWidget(self)
-        # Create table views.
-        self.createNavigationTree()
-        self.createBottomWidget()
+
+        # Bottom widget
+        self.bottomWidget = BottomWidget(self)
+        self.bottomWidget.toolbar.addTriggered.connect(self.addItem)
+        self.bottomWidget.toolbar.editTriggered.connect(self.editItem)
+        self.bottomWidget.toolbar.copyTriggered.connect(self.copyItem)
+        self.bottomWidget.toolbar.removeTriggered.connect(self.removeItem)
+        self.bottomWidget.toolbar.moveTriggered.connect(self.moveItems)
+
+        # Pages
         self.createMenuPage()
         self.createAlgorithmsPage()
         self.createCutsPage()
         self.createScalesPage()
         self.createScaleBinsPages()
         self.createExtSignalsPage()
+
         # Finsish navigation setup.
         self.navigationTreeWidget.expandItem(self.menuPage)
         self.navigationTreeWidget.setCurrentItem(self.menuPage)
 
         # Splitters
-
         self.vsplitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal, self)
         self.vsplitter.setHandleWidth(1)
         self.vsplitter.setContentsMargins(0, 0, 0, 0)
@@ -178,6 +194,7 @@ class Document(BaseDocument):
         self.vsplitter.setStretchFactor(0, 0)
         self.vsplitter.setStretchFactor(1, 1)
         self.vsplitter.setSizes([200, 600])
+
         # Layout
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.vsplitter)
@@ -186,25 +203,11 @@ class Document(BaseDocument):
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
 
-    def createNavigationTree(self):
-        self.navigationTreeWidget = QtWidgets.QTreeWidget(self)
-        self.navigationTreeWidget.headerItem().setHidden(True)
-        self.navigationTreeWidget.setObjectName("navigationTreeWidget")
-        self.navigationTreeWidget.setStyleSheet("#navigationTreeWidget { border: 0; background: #eee; }")
-        self.navigationTreeWidget.itemSelectionChanged.connect(self.updateTop)
-
-    def createBottomWidget(self):
-        self.bottomWidget = BottomWidget(self)
-        self.bottomWidget.toolbar.addTriggered.connect(self.addItem)
-        self.bottomWidget.toolbar.editTriggered.connect(self.editItem)
-        self.bottomWidget.toolbar.copyTriggered.connect(self.copyItem)
-        self.bottomWidget.toolbar.removeTriggered.connect(self.removeItem)
-        self.bottomWidget.toolbar.moveTriggered.connect(self.moveItems)
-
     def createMenuPage(self):
+        menu = self.menu()
         menuView = MenuWidget(self)
-        menuView.setName(self.menu().menu.name)
-        menuView.setComment(self.menu().menu.comment)
+        menuView.setName(menu.menu.name)
+        menuView.setComment(menu.menu.comment)
         menuView.modified.connect(self.onModified)
         self.menuPage = self.addPage(self.tr("Menu"), menuView)
 
@@ -235,9 +238,10 @@ class Document(BaseDocument):
         self.extSignalsPage = self.addPage(self.tr("External Signals"), tableView)
 
     def createScaleBinsPages(self):
+        menu = self.menu()
         self.scalesTypePages = {}
-        for scale in self.menu().scales.bins.keys():
-            model = BinsModel(self.menu(), scale, self)
+        for scale in menu.scales.bins.keys():
+            model = BinsModel(menu, scale, self)
             tableView = self.newProxyTableView(f"{scale}TableView", model)
             self.scalesTypePages[scale] = self.addPage(fScale(scale), tableView, self.scalesPage)
 
@@ -255,21 +259,20 @@ class Document(BaseDocument):
         tableView.selectionModel().selectionChanged.connect(self.updateBottom)
         return tableView
 
-    def addPage(self, name, top=None, parent: Optional[QtWidgets.QTreeWidgetItem] = None):
+    def addPage(self, name, topWidget: QtWidgets.QWidget, parent: Optional[QtWidgets.QTreeWidgetItem] = None):
         """Add page consisting of navigation tree entry, top and bottom widget."""
-        page = PageItem(name, top, self.bottomWidget, parent)
+        page = PageItem(name, topWidget, self.bottomWidget, parent)
         if parent is None:
             self.navigationTreeWidget.addTopLevelItem(page)
-        if 0 > self.topStack.indexOf(top):
-            self.topStack.addWidget(top)
-        self._pages.append(page)
+        if 0 > self.topStack.indexOf(topWidget):
+            self.topStack.addWidget(topWidget)
         return page
 
     def setFilterText(self, text):
         index, item = self.getSelection()
         excludedPages = [self.menuPage, ]
         if item not in excludedPages:
-            item.top.model().setFilterFixedString(text)
+            item.topWidget.model().setFilterFixedString(text)
 
     @QtCore.Slot()
     def onModified(self) -> None:
@@ -353,8 +356,8 @@ class Document(BaseDocument):
                 self.tr("There is one orphaned cut (<em>{0}</em>) that will be lost as it can't be saved to the XML file!").format(orphans[0])
             )
         # Update meta information
-        self._menu.menu.name = self.menuPage.top.name()
-        self._menu.menu.comment = self.menuPage.top.comment()
+        self._menu.menu.name = self.menuPage.topWidget.name()
+        self._menu.menu.comment = self.menuPage.topWidget.comment()
         # Process dialog
         dialog = QtWidgets.QProgressDialog(self)
         dialog.setWindowTitle(self.tr("Saving..."))
@@ -381,12 +384,12 @@ class Document(BaseDocument):
         # Update document
         self.setFilename(filename)
         self.setName(os.path.basename(filename))
-        self.menuPage.top.setName(self._menu.menu.name)
-        self.menuPage.top.setComment(self._menu.menu.comment)
+        self.menuPage.topWidget.setName(self._menu.menu.name)
+        self.menuPage.topWidget.setComment(self._menu.menu.comment)
         self.setModified(False)
         index, item = self.getSelection()
         try:
-            item.top.update()  # TODO
+            item.topWidget.update()  # TODO
         except Exception:
             ...
         self.updateBottom()
@@ -397,15 +400,17 @@ class Document(BaseDocument):
         if not len(items):
             return None, None
         item = items[0]
-        if isinstance(item.top, TableView):
-            index = item.top.currentMappedIndex()
-            return index, item
+        if isinstance(item, PageItem):
+            if isinstance(item.topWidget, TableView):
+                index = item.topWidget.currentMappedIndex()
+                return index, item
         return None, item
 
     def getUnusedAlgorithmIndices(self) -> list:
         """"""
+        menu = self.menu()
         free = [i for i in range(MaxAlgorithms)]
-        for algorithm in self.menu().algorithms:
+        for algorithm in menu.algorithms:
             if int(algorithm.index) in free:
                 free.remove(int(algorithm.index))
         return free
@@ -415,22 +420,21 @@ class Document(BaseDocument):
         find an unused basename with number suffix. Worst case returns just the
         basename.
         """
-        if basename is None:
+        if not basename:
             basename = "L1_Unnamed"
         name = basename
-        if self.menu().algorithmByName(name):
-            # Default name is already used, try to find a derivate
-            for i in range(2, MaxAlgorithms):
-                name = "{0}_{1}".format(basename, i)
-                if not self.menu().algorithmByName(name):
-                    return name # got unused name!
-        return basename # no clue...
+        suffix = 0
+        menu = self.menu()
+        while menu.algorithmByName(name):
+            suffix += 1
+            name = f"{basename}_{suffix}"
+        return name
 
     def updateTop(self) -> None:
         index, item = self.getSelection()
-        if item and hasattr(item.top, "sortByColumn"):
-            item.top.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
-        self.topStack.setCurrentWidget(item.top)
+        if item and hasattr(item.topWidget, "sortByColumn"):
+            item.topWidget.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
+        self.topStack.setCurrentWidget(item.topWidget)
         excludedPages = [self.menuPage, ]
         self.filterWidget.setEnabled(item not in excludedPages)
         self.filterWidget.setVisible(item not in excludedPages)
@@ -439,107 +443,109 @@ class Document(BaseDocument):
         self.updateBottom()
 
     def updateBottom(self) -> None:
+        menu = self.menu()
         index, item = self.getSelection()
         # Generic preview...
-        if hasattr(item.bottom, "reset"):
-            item.bottom.reset()
+        if hasattr(item.bottomWidget, "reset"):
+            item.bottomWidget.reset()
         self.bottomWidget.show()
         if item is self.algorithmsPage:
-            item.bottom.toolbar.moveButton.show()
-            item.bottom.toolbar.moveButton.setEnabled(True)
+            item.bottomWidget.toolbar.moveButton.show()
+            item.bottomWidget.toolbar.moveButton.setEnabled(True)
         else:
-            item.bottom.toolbar.moveButton.hide()
+            item.bottomWidget.toolbar.moveButton.hide()
         if item is self.menuPage:
             lines = []
-            menu = self.menu()
             if menu.scales:
                 lines.append(self.tr("<p><strong>Scale Set:</strong> {}</p>").format(menu.scales.scaleSet[kName]))
             if menu.extSignals:
                 lines.append(self.tr("<p><strong>External Signal Set:</strong> {}</p>").format(menu.extSignals.extSignalSet[kName]))
             lines.append(self.tr("<p><strong>Menu UUID:</strong> {}</p>").format(menu.menu.uuid_menu))
             lines.append(self.tr("<p><strong>Grammar Version:</strong> {}</p>").format(menu.menu.grammar_version))
-            item.bottom.setText("".join(lines))
-            item.bottom.toolbar.setButtonsEnabled(False)
-        elif index and item and isinstance(item.top, TableView): # ignores menu view
-            data = item.top.model().sourceModel().values[index.row()]  # type: ignore
-            rows = len(item.top.selectionModel().selectedRows())
+            item.bottomWidget.setText("".join(lines))
+            item.bottomWidget.toolbar.setButtonsEnabled(False)
+        elif index and item and isinstance(item.topWidget, TableView): # ignores menu view
+            data = item.topWidget.model().sourceModel().values[index.row()]  # type: ignore
+            rows = len(item.topWidget.selectionModel().selectedRows())
 
             # Disable edit/copy buttons on multiple selections
             if rows > 1:
-                item.bottom.toolbar.setButtonsEnabled(False)
-                item.bottom.toolbar.removeButton.setEnabled(True)
+                item.bottomWidget.toolbar.setButtonsEnabled(False)
+                item.bottomWidget.toolbar.removeButton.setEnabled(True)
                 if item is self.algorithmsPage:
-                    item.bottom.toolbar.moveButton.setEnabled(True)
+                    item.bottomWidget.toolbar.moveButton.setEnabled(True)
             else:
-                item.bottom.toolbar.setButtonsEnabled(True)
+                item.bottomWidget.toolbar.setButtonsEnabled(True)
 
             if item is self.algorithmsPage:
                 if 1 < rows:
-                    item.bottom.setText(self.tr("<p>Selected {} algorithms.</p>").format(rows))
+                    item.bottomWidget.setText(self.tr("<p>Selected {} algorithms.</p>").format(rows))
                 else:
-                    item.bottom.loadAlgorithm(data, self.menu())
+                    item.bottomWidget.loadAlgorithm(data, menu)
             elif item is self.cutsPage:
                 if 1 < rows:
-                    item.bottom.setText(self.tr("<p>Selected {} cuts.</p>").format(rows))
+                    item.bottomWidget.setText(self.tr("<p>Selected {} cuts.</p>").format(rows))
                 else:
-                    item.bottom.loadCut(data, self.menu())
+                    item.bottomWidget.loadCut(data, menu)
             elif item is self.scalesPage:
                 if 1 < rows:
-                    item.bottom.setText(self.tr("<p>Selected {} scale sets.</p>").format(rows))
+                    item.bottomWidget.setText(self.tr("<p>Selected {} scale sets.</p>").format(rows))
                 else:
-                    item.bottom.loadScale(data)
+                    item.bottomWidget.loadScale(data)
             elif item in self.scalesTypePages.values():
                 if 1 < rows:
-                    item.bottom.setText(self.tr("<p>Selected {} scale bins.</p>").format(rows))
+                    item.bottomWidget.setText(self.tr("<p>Selected {} scale bins.</p>").format(rows))
                 else:
-                    item.bottom.loadScaleType(item.name, data)
+                    item.bottomWidget.loadScaleType(item.name, data)
             elif item is self.extSignalsPage:
                 if 1 < rows:
-                    item.bottom.setText(self.tr("<p>Selected {} external signals.</p>").format(rows))
+                    item.bottomWidget.setText(self.tr("<p>Selected {} external signals.</p>").format(rows))
                 else:
-                    item.bottom.loadSignal(data)
+                    item.bottomWidget.loadSignal(data)
         else:
-            item.bottom.reset()
-            item.bottom.setText(self.tr("<p>Nothing selected...</p>"))
-            item.bottom.toolbar.setButtonsEnabled(False)
-        item.bottom.clearNotice()
-        item.bottom.toolbar.hide()
-        #item.bottom.setText("")
+            item.bottomWidget.reset()
+            item.bottomWidget.setText(self.tr("<p>Nothing selected...</p>"))
+            item.bottomWidget.toolbar.setButtonsEnabled(False)
+        item.bottomWidget.clearNotice()
+        item.bottomWidget.toolbar.hide()
+        #item.bottomWidget.setText("")
         if item is self.algorithmsPage:
-            item.bottom.toolbar.show()
+            item.bottomWidget.toolbar.show()
         elif item is self.cutsPage:
             # Experimental - enable only possible controls
-            item.bottom.toolbar.show()
-            item.bottom.toolbar.removeButton.setEnabled(False)
+            item.bottomWidget.toolbar.show()
+            item.bottomWidget.toolbar.removeButton.setEnabled(False)
             if index:
-                item.bottom.toolbar.removeButton.setEnabled(True)
-                cut = self.menu().cuts[index.row()]
+                item.bottomWidget.toolbar.removeButton.setEnabled(True)
+                cut = menu.cuts[index.row()]
                 # Disable edit and remove button for cuts already used in algorithms
-                for algorithm in self.menu().algorithms:
+                for algorithm in menu.algorithms:
                     if cut.name in algorithm.cuts():
-                        item.bottom.toolbar.removeButton.setEnabled(False)
+                        item.bottomWidget.toolbar.removeButton.setEnabled(False)
                         break
         else:
-            item.bottom.toolbar.hide()
+            item.bottomWidget.toolbar.hide()
 
     def importCuts(self, cuts) -> None:
         """Import cuts from another menu, ignores if cut already present."""
+        menu = self.menu()
         for cut in cuts:
-            if not self.menu().cutByName(cut.name):
+            if not menu.cutByName(cut.name):
                 cut.modified = True
-                self.menu().addCut(cut)
+                menu.addCut(cut)
         # HACK
-        updateModel(self.cutsPage.top.model(), self)
+        updateModel(self.cutsPage.topWidget.model(), self)
 
     def importAlgorithms(self, algorithms) -> None:
         """Import algorithms from another menu."""
+        menu = self.menu()
         for algorithm in algorithms:
             for cut in algorithm.cuts():
-                if not self.menu().cutByName(cut):
+                if not menu.cutByName(cut):
                     raise RuntimeError(self.tr(f"Missing cut {cut}, unable to to import algorithm {algorithm.name}"))
             import_index = 0
             original_name = algorithm.name
-            while self.menu().algorithmByName(algorithm.name):
+            while menu.algorithmByName(algorithm.name):
                 name = f"{original_name}_import{import_index}"
                 algorithm.name = name
                 import_index += 1
@@ -549,7 +555,7 @@ class Document(BaseDocument):
                     self.tr("Renamed algorithm"),
                     self.tr("Renamed algorithm <em>{}</em> to <em>{}</em> as the name is already used.").format(original_name, algorithm.name)
                 )
-            if self.menu().algorithmByIndex(algorithm.index):
+            if menu.algorithmByIndex(algorithm.index):
                 unused_indices = self.getUnusedAlgorithmIndices()
                 if not unused_indices:
                     raise RuntimeError(self.tr("Exceeding maximum number of allowed algorithms."))
@@ -562,11 +568,11 @@ class Document(BaseDocument):
                 )
                 algorithm.index = int(index)
             algorithm.modified = True
-            self.menu().addAlgorithm(algorithm)
-            self.menu().extendReferenced(algorithm)
+            menu.addAlgorithm(algorithm)
+            menu.extendReferenced(algorithm)
         # HACK
-        updateModel(self.algorithmsPage.top.model(), self)
-        self.algorithmsPage.top.resizeColumnsToContents()
+        updateModel(self.algorithmsPage.topWidget.model(), self)
+        self.algorithmsPage.topWidget.resizeColumnsToContents()
 
     def addItem(self) -> None:
         try:
@@ -577,25 +583,26 @@ class Document(BaseDocument):
                 self.addCut(index, item)
         except RuntimeError as exc:
             QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(exc))
-        item.top.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
-        selectedeRows = item.top.selectionModel().selectedRows()
+        item.topWidget.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
+        selectedeRows = item.topWidget.selectionModel().selectedRows()
         if selectedeRows:
-            item.top.scrollTo(selectedeRows[0])
+            item.topWidget.scrollTo(selectedeRows[0])
 
     def addAlgorithm(self, index, item) -> None:
+        menu = self.menu()
         available_indices = self.getUnusedAlgorithmIndices()
         if not available_indices:
             QtWidgets.QMessageBox.warning(self, self.tr("Error"), self.tr("Exceeding maximum number of {} algorithms.".format(MaxAlgorithms)))
             return
-        dialog = AlgorithmEditorDialog(self.menu(), self)
+        dialog = AlgorithmEditorDialog(menu, self)
         dialog.setModal(True)
         dialog.setIndex(available_indices[0])
         dialog.setName(self.getUniqueAlgorithmName(self.tr("L1_Unnamed")))
         dialog.editor.setModified(False)
         dialog.exec_()
         # HACK
-        updateModel(self.cutsPage.top.model(), self)
-        if dialog.result() != QtWidgets.QDialog.DialogCode.Accepted:
+        updateModel(self.cutsPage.topWidget.model(), self)
+        if dialog.result() != dialog.DialogCode.Accepted:
             return
         self.setModified(True)
         algorithm = Algorithm(
@@ -606,44 +613,45 @@ class Document(BaseDocument):
         )
         algorithm.modified = True
         for name in algorithm.cuts():
-            if not list(filter(lambda item: item.name == name, self.menu().cuts)):
-                raise RuntimeError("NO SUCH CUT AVAILABLE")
-        self.menu().addAlgorithm(algorithm)
-        self.menu().extendReferenced(self.menu().algorithmByName(algorithm.name)) # IMPORTANT: add/update new objects!
+            if not list(filter(lambda item: item.name == name, menu.cuts)):
+                raise RuntimeError(f"No such cut in menu: {name}")
+        menu.addAlgorithm(algorithm)
+        menu.extendReferenced(menu.algorithmByName(algorithm.name)) # IMPORTANT: add/update new objects!
         # HACK
-        updateModel(item.top.model(), self)
-        self.algorithmsPage.top.resizeColumnsToContents()
+        updateModel(item.topWidget.model(), self)
+        self.algorithmsPage.topWidget.resizeColumnsToContents()
         # REBUILD INDEX
         self.updateBottom()
         self.modified.emit()
         # Select new entry TODO: better to implement insertRow in model!
-        proxy = item.top.model()
+        proxy = item.topWidget.model()
         for row in range(proxy.rowCount()):
             index = proxy.index(row, 1)
             if index.data() == algorithm.name:
-                item.top.setCurrentIndex(index)
+                item.topWidget.setCurrentIndex(index)
                 break
 
     def addCut(self, index, item) -> None:
-        dialog = CutEditorDialog(self.menu(), self)
+        menu = self.menu()
+        dialog = CutEditorDialog(menu, self)
         dialog.setupCuts(Settings.CutSpecs)
         dialog.setModal(True)
         dialog.exec_()
-        if dialog.result() != QtWidgets.QDialog.DialogCode.Accepted:
+        if dialog.result() != dialog.DialogCode.Accepted:
             return
         cut = dialog.newCut()
-        self.menu().addCut(cut)
+        menu.addCut(cut)
         # HACK
-        updateModel(self.cutsPage.top.model(), self)
+        updateModel(self.cutsPage.topWidget.model(), self)
         self.updateBottom()
         self.setModified(True)
         self.modified.emit()
         # Select new entry TODO: better to implement insertRow in model!
-        proxy = item.top.model()
+        proxy = item.topWidget.model()
         for row in range(proxy.rowCount()):
             index = proxy.index(row, 0)
             if index.data() == cut.name:
-                item.top.setCurrentIndex(index)
+                item.topWidget.setCurrentIndex(index)
                 break
 
     def editItem(self) -> None:
@@ -656,42 +664,51 @@ class Document(BaseDocument):
             self.updateBottom()
         except RuntimeError as exc:
             QtWidgets.QMessageBox.warning(self, self.tr("Error"), format(exc))
-        item.top.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
-        selectedeRows = item.top.selectionModel().selectedRows()
+        item.topWidget.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
+        selectedeRows = item.topWidget.selectionModel().selectedRows()
         if selectedeRows:
-            item.top.scrollTo(selectedeRows[0])
+            item.topWidget.scrollTo(selectedeRows[0])
 
     def editAlgorithm(self, index, item) -> None:
-        algorithm = self.menu().algorithms[index.row()]
-        dialog = AlgorithmEditorDialog(self.menu(), self)
+        menu = self.menu()
+        try:
+            algorithm = menu.algorithms[index.row()]
+        except IndexError:
+            logging.error(f"No algorithm with index: {index.row()}")
+            return
+        dialog = AlgorithmEditorDialog(menu, self)
         dialog.setModal(True)
         dialog.loadAlgorithm(algorithm)
         dialog.editor.setModified(False)
         dialog.exec_()
         # HACK
-        updateModel(self.cutsPage.top.model(), self)
-        if dialog.result() != QtWidgets.QDialog.DialogCode.Accepted:
+        updateModel(self.cutsPage.topWidget.model(), self)
+        if dialog.result() != dialog.DialogCode.Accepted:
             return
         self.setModified(True)
         algorithm.modified = True
         dialog.updateAlgorithm(algorithm)
         for name in algorithm.cuts():
-            if not list(filter(lambda item: item.name == name, self.menu().cuts)):
-                raise RuntimeError("NO SUCH CUT AVAILABLE") # TODO
-        # REBUILD INDEX
+            if not list(filter(lambda item: item.name == name, menu.cuts)):
+                raise RuntimeError(f"No such cut defined: {name}")
+        # Rebuild index
         self.updateBottom()
         self.modified.emit()
-        self.menu().extendReferenced(algorithm)
+        menu.extendReferenced(algorithm)
 
-    @handleException
     def editCut(self, index, item) -> None:
-        cut = self.menu().cuts[index.row()]
-        dialog = CutEditorDialog(self.menu(), self)
+        menu = self.menu()
+        try:
+            cut = menu.cuts[index.row()]
+        except IndexError:
+            logging.error(f"No cut with index: {index.row()}")
+            return
+        dialog = CutEditorDialog(menu, self)
         dialog.setupCuts(Settings.CutSpecs)
         dialog.setModal(True)
         dialog.loadCut(cut)
         dialog.exec_()
-        if dialog.result() != QtWidgets.QDialog.DialogCode.Accepted:
+        if dialog.result() != dialog.DialogCode.Accepted:
             return
         self.setModified(True)
         dialog.updateCut(cut)
@@ -705,19 +722,20 @@ class Document(BaseDocument):
             self.copyAlgorithm(index, item)
         if item is self.cutsPage:
             self.copyCut(index, item)
-        item.top.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
-        selectedeRows = item.top.selectionModel().selectedRows()
+        item.topWidget.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
+        selectedeRows = item.topWidget.selectionModel().selectedRows()
         if selectedeRows:
-            item.top.scrollTo(selectedeRows[0])
+            item.topWidget.scrollTo(selectedeRows[0])
 
     @handleException
     def copyAlgorithm(self, index, item) -> None:
+        menu = self.menu()
         unused_indices = self.getUnusedAlgorithmIndices()
         if not unused_indices:
             QtWidgets.QMessageBox.warning(self, self.tr("Error"), self.tr("Exceeding maximum number of {} algorithms.".format(MaxAlgorithms)))
             return
-        algorithm = copy.deepcopy(self.menu().algorithms[index.row()])
-        dialog = AlgorithmEditorDialog(self.menu(), self)
+        algorithm = copy.deepcopy(menu.algorithms[index.row()])
+        dialog = AlgorithmEditorDialog(menu, self)
         dialog.setModal(True)
         dialog.setIndex(unused_indices[0])
         dialog.setName(algorithm.name + "_copy")
@@ -725,7 +743,7 @@ class Document(BaseDocument):
         dialog.editor.setModified(False)
         dialog.exec_()
         # HACK
-        updateModel(self.cutsPage.top.model(), self)
+        updateModel(self.cutsPage.topWidget.model(), self)
         if dialog.result() != QtWidgets.QDialog.DialogCode.Accepted:
             return
         algorithm.expression = dialog.expression()
@@ -733,164 +751,173 @@ class Document(BaseDocument):
         algorithm.name = dialog.name()
         algorithm.modified = True
         for name in algorithm.cuts():
-            if not list(filter(lambda item: item.name == name, self.menu().cuts)):
+            if not list(filter(lambda item: item.name == name, menu.cuts)):
                 raise RuntimeError("NO SUCH CUT AVAILABLE") # TODO
         for name in algorithm.externals():
-            if not list(filter(lambda item: item.name == name, self.menu().externals)):
+            if not list(filter(lambda item: item.name == name, menu.externals)):
                 raise RuntimeError("NO SUCH EXTERNAL AVAILABLE") # TODO
-        self.menu().algorithms.append(algorithm)
+        menu.addAlgorithm(algorithm)
         # HACK
-        updateModel(item.top.model(), self)
+        updateModel(item.topWidget.model(), self)
         # REBUILD INDEX
         self.updateBottom()
         self.modified.emit()
         self.setModified(True)
         for name in algorithm.objects():
-            if not list(filter(lambda item: item.name == name, self.menu().objects)):
-                self.menu().addObject(toObject(name))
+            if not list(filter(lambda item: item.name == name, menu.objects)):
+                menu.addObject(toObject(name))
         # Select new entry TODO: better to implement insertRow in model!
-        proxy = item.top.model()
+        proxy = item.topWidget.model()
         for row in range(proxy.rowCount()):
             index = proxy.index(row, 1)
             if index.data() == algorithm.name:
-                item.top.setCurrentIndex(index)
+                item.topWidget.setCurrentIndex(index)
                 break
 
     @handleException
     def copyCut(self, index, item) -> None:
-        dialog = CutEditorDialog(self.menu(), self)
+        menu = self.menu()
+        dialog = CutEditorDialog(menu, self)
         dialog.copyMode = True # TODO TODO TODO
         dialog.setupCuts(Settings.CutSpecs)
         dialog.setModal(True)
-        dialog.loadCut(self.menu().cuts[index.row()])
+        dialog.loadCut(menu.cuts[index.row()])
         suffix = "{0}{1}".format(dialog.suffixLineEdit.text(), self.tr("_copy"))
         dialog.suffixLineEdit.setText(suffix)
         dialog.exec_()
         if dialog.result() != QtWidgets.QDialog.DialogCode.Accepted:
             return
         cut = dialog.newCut()
-        self.menu().addCut(cut)
+        menu.addCut(cut)
         # HACK
-        updateModel(self.cutsPage.top.model(), self)
+        updateModel(self.cutsPage.topWidget.model(), self)
         self.updateBottom()
         self.setModified(True)
         self.modified.emit()
         # Select new entry TODO: better to implement insertRow in model!
-        proxy = item.top.model()
+        proxy = item.topWidget.model()
         for row in range(proxy.rowCount()):
             index = proxy.index(row, 0)
             if index.data() == cut.name:
-                item.top.setCurrentIndex(index)
+                item.topWidget.setCurrentIndex(index)
                 break
 
     @handleException
     def removeItem(self) -> None:
-        index, item = self.getSelection()
-        # Removing algorithm item
+        _, item = self.getSelection()
         if item is self.algorithmsPage:
-            confirm = True
-            while item.top.selectionModel().hasSelection():
-                rows = item.top.selectionModel().selectedRows()
-                row = rows[0]
-                algorithm = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
-                if confirm:
-                    result = QtWidgets.QMessageBox.question(
-                        self,
-                        self.tr("Remove algorithm"),
-                        self.tr("Do you want to remove algorithm <strong>{0}, {1}</strong> from the menu?").format(algorithm.name, algorithm.index),
-                        QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.YesToAll | QtWidgets.QMessageBox.StandardButton.Abort if len(rows) > 1 else QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.Abort
-                    )
-                    if result == QtWidgets.QMessageBox.StandardButton.Abort:
-                        break
-                    elif result == QtWidgets.QMessageBox.StandardButton.YesToAll:
-                        confirm = False
-                item.top.model().removeRows(row.row(), 1)
-            selection = item.top.selectionModel()
-            selection.setCurrentIndex(selection.currentIndex(), QtCore.QItemSelectionModel.SelectionFlag.Select | QtCore.QItemSelectionModel.SelectionFlag.Rows)
-            # Removing orphaned objects.
-            for name in self.menu().orphanedObjects():
-                object = self.menu().objectByName(name)
-                self.menu().objects.remove(object)
-            # REBUILD INDEX
-            self.updateBottom()
-            self.modified.emit()
-            self.setModified(True)
-
-        # Removing cut item
+            self.removeSelectedAlgorithms()
         elif item is self.cutsPage:
-            confirm = True
-            while item.top.selectionModel().hasSelection():
-                rows = item.top.selectionModel().selectedRows()
-                row = rows[0]
-                cut = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
-                for algorithm in self.menu().algorithms:
-                    if cut.name in algorithm.cuts():
-                        QtWidgets.QMessageBox.warning(
-                            self,
-                            self.tr("Cut is used"),
-                            self.tr("Cut {0} is used by algorithm {1} an can not be removed. Remove the corresponding algorithm first.").format(cut.name, algorithm.name)
-                        )
-                        return
-                if confirm:
-                    result = QtWidgets.QMessageBox.question(
+            self.removeSelectedCuts()
+        # REBUILD INDEX
+        self.updateBottom()
+        self.modified.emit()
+        self.setModified(True)
+
+    def removeSelectedAlgorithms(self) -> None:
+        menu = self.menu()
+        confirm = True
+        item = self.algorithmsPage
+        while item.topWidget.selectionModel().hasSelection():
+            rows = item.topWidget.selectionModel().selectedRows()
+            row = rows[0]
+            algorithm = item.topWidget.model().sourceModel().values[item.topWidget.model().mapToSource(row).row()]
+            if confirm:
+                result = QtWidgets.QMessageBox.question(
+                    self,
+                    self.tr("Remove algorithm"),
+                    self.tr("Do you want to remove algorithm <strong>{0}, {1}</strong> from the menu?").format(algorithm.name, algorithm.index),
+                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.YesToAll | QtWidgets.QMessageBox.StandardButton.Abort if len(rows) > 1 else QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.Abort
+                )
+                if result == QtWidgets.QMessageBox.StandardButton.Abort:
+                    break
+                elif result == QtWidgets.QMessageBox.StandardButton.YesToAll:
+                    confirm = False
+            item.topWidget.model().removeRows(row.row(), 1)
+        selection = item.topWidget.selectionModel()
+        selection.setCurrentIndex(selection.currentIndex(), QtCore.QItemSelectionModel.SelectionFlag.Select | QtCore.QItemSelectionModel.SelectionFlag.Rows)
+        # Removing orphaned objects.
+        orphanedObjects = []
+        for name in menu.orphanedObjects():
+            object_ = menu.objectByName(name)
+            orphanedObjects.append(object_)
+        for object_ in orphanedObjects:
+            if object_ in menu.objects:
+                menu.objects.remove(object_)
+
+    def removeSelectedCuts(self) -> None:
+        menu = self.menu()
+        item = self.cutsPage
+        confirm = True
+        while item.topWidget.selectionModel().hasSelection():
+            rows = item.topWidget.selectionModel().selectedRows()
+            row = rows[0]
+            cut = item.topWidget.model().sourceModel().values[item.topWidget.model().mapToSource(row).row()]
+            for algorithm in menu.algorithms:
+                if cut.name in algorithm.cuts():
+                    QtWidgets.QMessageBox.warning(
                         self,
-                        self.tr("Remove cut"),
-                        self.tr("Do you want to remove cut <strong>{0}</strong> from the menu?").format(cut.name),
-                        QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.YesToAll | QtWidgets.QMessageBox.StandardButton.Abort if len(rows) > 1 else QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.Abort
+                        self.tr("Cut is used"),
+                        self.tr("Cut {0} is used by algorithm {1} an can not be removed. Remove the corresponding algorithm first.").format(cut.name, algorithm.name)
                     )
-                    if result == QtWidgets.QMessageBox.StandardButton.Abort:
-                        break
-                    elif result == QtWidgets.QMessageBox.StandardButton.YesToAll:
-                        confirm = False
-                item.top.model().removeRows(row.row(), 1)
-            selection = item.top.selectionModel()
-            selection.setCurrentIndex(selection.currentIndex(), QtCore.QItemSelectionModel.SelectionFlag.Select | QtCore.QItemSelectionModel.SelectionFlag.Rows)
-            # REBUILD INDEX
-            self.updateBottom()
-            self.modified.emit()
-            self.setModified(True)
+                    return
+            if confirm:
+                result = QtWidgets.QMessageBox.question(
+                    self,
+                    self.tr("Remove cut"),
+                    self.tr("Do you want to remove cut <strong>{0}</strong> from the menu?").format(cut.name),
+                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.YesToAll | QtWidgets.QMessageBox.StandardButton.Abort if len(rows) > 1 else QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.Abort
+                )
+                if result == QtWidgets.QMessageBox.StandardButton.Abort:
+                    break
+                elif result == QtWidgets.QMessageBox.StandardButton.YesToAll:
+                    confirm = False
+            item.topWidget.model().removeRows(row.row(), 1)
+        selection = item.topWidget.selectionModel()
+        selection.setCurrentIndex(selection.currentIndex(), QtCore.QItemSelectionModel.SelectionFlag.Select | QtCore.QItemSelectionModel.SelectionFlag.Rows)
 
     @handleException
     def moveItems(self) -> None:
+        menu = self.menu()
         item = self.algorithmsPage
         indices = []
-        if item.top.selectionModel().hasSelection():
-            rows = item.top.selectionModel().selectedRows()
+        if item.topWidget.selectionModel().hasSelection():
+            rows = item.topWidget.selectionModel().selectedRows()
             for row in rows:
-                algorithm = item.top.model().sourceModel().values[item.top.model().mapToSource(row).row()]
+                algorithm = item.topWidget.model().sourceModel().values[item.topWidget.model().mapToSource(row).row()]
                 indices.append(algorithm.index)
-        reserved = [i for i in range(MaxAlgorithms) if self.menu().algorithmByIndex(i) is not None]
+        reserved = [i for i in range(MaxAlgorithms) if menu.algorithmByIndex(i) is not None]
         dialog = AlgorithmSelectIndexDialog(self)
         dialog.setup(reserved, indices)
         dialog.setModal(True)
         if dialog.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             logging.debug("moving algorithms:")
             for k, v in dialog.mapping.items():
-                algorithm = self.menu().algorithmByIndex(k)
+                algorithm = menu.algorithmByIndex(k)
                 logging.debug("%s => %s", algorithm.index, v)
                 assert algorithm.index == k
                 algorithm.index = v
                 algorithm.modified = True
             self.setModified(True)
             self.modified.emit()
-            item.top.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
-            selectedeRows = item.top.selectionModel().selectedRows()
+            item.topWidget.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
+            selectedeRows = item.topWidget.selectionModel().selectedRows()
             if selectedeRows:
-                item.top.scrollTo(selectedeRows[0])
+                item.topWidget.scrollTo(selectedeRows[0])
         self.update()
 
 
 class PageItem(QtWidgets.QTreeWidgetItem):
     """Custom QTreeWidgetItem holding references to top and bottom widgets."""
 
-    def __init__(self, name: str, top: Optional[QtWidgets.QWidget] = None,
-                 bottom: Optional[QtWidgets.QWidget] = None,
+    def __init__(self, name: str, topWidget: QtWidgets.QWidget,
+                 bottomWidget: QtWidgets.QWidget,
                  parent: Optional[QtWidgets.QTreeWidgetItem] = None) -> None:
         super().__init__(parent)  # type: ignore
         self.setText(0, name)
         self.name: str = name
-        self.top = top
-        self.bottom = bottom
+        self.topWidget: QtWidgets.QWidget = topWidget
+        self.bottomWidget: QtWidgets.QWidget = bottomWidget
         if not isinstance(parent, PageItem):
             # Hilight root items in bold text.
             font = self.font(0)
