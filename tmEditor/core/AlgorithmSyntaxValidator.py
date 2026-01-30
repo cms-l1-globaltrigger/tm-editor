@@ -449,10 +449,10 @@ class TransverseMass(SyntaxRule):
             objects = functionObjects(token)
             nonEtaCount = 0
             for obj in objects:
-                if obj.type in (tmGrammar.ETM, tmGrammar.ETMHF, tmGrammar.HTM, tmGrammar.HTMHF):
+                if obj.type in (tmGrammar.ETM, tmGrammar.ETMHF, tmGrammar.HTM, tmGrammar.HTMHF, tmGrammar.NETETMHF):
                     nonEtaCount += 1
             if nonEtaCount < 1:
-                message = f"Transverse mass functions require at least one object requirement without an eta component (ETM, ETMHF, HTM, HTMHF).\n" \
+                message = f"Transverse mass functions require at least one object requirement without an eta component (ETM, ETMHF, HTM, HTMHF, NETETMHF).\n" \
                           f"Invalid expression near {token!r}"
                 raise AlgorithmSyntaxError(message, token)
 

@@ -32,6 +32,7 @@ ThresholdObjectTypes = (
     tmGrammar.ETTEM,
     tmGrammar.ETMHF,
     tmGrammar.HTMHF,
+    tmGrammar.NETETMHF,
 )
 """Ordered list of ET threshold type object names."""
 
@@ -141,6 +142,7 @@ ThresholdCutNames = (
     kSeparator.join((tmGrammar.ETTEM, tmGrammar.ET)),
     kSeparator.join((tmGrammar.ETMHF, tmGrammar.ET)),
     kSeparator.join((tmGrammar.HTMHF, tmGrammar.ET)),
+    kSeparator.join((tmGrammar.NETETMHF, tmGrammar.ET)),
 )
 """Ordered list of threshold cut names."""
 
@@ -180,6 +182,7 @@ ObjectScaleMap = {
     tmGrammar.ETTEM: kET,
     tmGrammar.ETMHF: kET,
     tmGrammar.HTMHF: kET,
+    tmGrammar.NETETMHF: kET,
     tmGrammar.MBT0HFP: kCOUNT,
     tmGrammar.MBT1HFP: kCOUNT,
     tmGrammar.MBT0HFM: kCOUNT,

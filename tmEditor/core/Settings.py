@@ -374,6 +374,16 @@ CutSpecs = CutSpecificationPool(
         description=""
     ),
     CutSpecification(
+        name=CutSpecification.join(tmGrammar.NETETMHF, tmGrammar.PHI),
+        object=tmGrammar.NETETMHF,
+        type=tmGrammar.PHI,
+        range_precision=3,
+        count_maximum=2,
+        range_unit="rad",
+        title="Net Missing energy HF phi",
+        description=""
+    ),
+    CutSpecification(
         name=CutSpecification.join(tmGrammar.ADT, tmGrammar.ASCORE),
         object=tmGrammar.ADT,
         type=tmGrammar.ASCORE,
@@ -523,7 +533,7 @@ CutSpecs = CutSpecificationPool(
         name=tmGrammar.MASS,
         object=Empty,
         type=tmGrammar.MASS,
-        objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF, tmGrammar.HTMHF],
+        objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF, tmGrammar.HTMHF, tmGrammar.NETETMHF],
         functions=[tmGrammar.mass, tmGrammar.mass_inv, tmGrammar.mass_inv_3, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
         range_precision=1,
         range_step=0.2,
@@ -576,7 +586,7 @@ CutSpecs = CutSpecificationPool(
         name=tmGrammar.TBPT,
         object=Empty,
         type=tmGrammar.TBPT,
-        objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF, tmGrammar.HTMHF],
+        objects=[tmGrammar.MU, tmGrammar.EG, tmGrammar.JET, tmGrammar.TAU, tmGrammar.ETM, tmGrammar.HTM, tmGrammar.ETMHF, tmGrammar.HTMHF, tmGrammar.NETETMHF],
         functions=[tmGrammar.comb, tmGrammar.comb_orm, tmGrammar.dist, tmGrammar.dist_orm, tmGrammar.mass_inv, tmGrammar.mass_inv_upt, tmGrammar.mass_inv_orm, tmGrammar.mass_trv],
         range_precision=1,
         range_step=0.1,
