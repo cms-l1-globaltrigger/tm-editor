@@ -6,51 +6,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.17.2] - 2025-02-06
+## [0.18.0] - 2026-01-30
+
 ### Added
- - Support for Python 3.13.
+
+- Support for grammar revision 0.14 (#55).
+- Support for Python 3.14.
+
+### Changed
+
+- Renamed `changelog` to `CHANGELOG.md`
+
+### Removed
+
+- Support for Python 3.6, 3.7, 3.8.
+- Obsolete `requirements.txt` file.
+
+## [0.17.2] - 2025-02-06
+
+### Added
+
+- Support for Python 3.13.
 
 ### Fixed
- - Add algorithm button crashes (#52).
+
+- Add algorithm button crashes (#52).
 
 ## [0.17.1] - 2024-06-12
+
 ### Fixed
+
 - Loading XML menus with grammar version 0.13.
 - Dependency conflict with tox (requiring packaging>=23.2).
 
 ## [0.17.0] - 2024-05-16
+
 ### Added
+
 - Support for HTMHF (#46).
 - Support for comb function with more than 4 objects (#47).
 
 ## [0.16.0] - 2024-02-13
+
 ### Added
+
 - Support for grammar revision 0.12 (#41).
 - Topological trigger (TOPO) with MODEL and SCALE cut (#42).
 - AXOL1TL trigger (AXO) with MODEL and SCALE cut (#43)
 - CICADA trigger with CSCORE cut (#44).
 
 ## [0.15.4] - 2023-10-13
+
 ### Fixed
+
 - Show default icon if missing theme icon (#37).
 
 ## [0.15.3] - 2023-04-24
+
 ### Fixed
+
 - Bug preventing entering/editing ETA and PHI cut ranges for non muon objects.
 
 ## [0.15.2] - 2023-03-29
+
 ### Changed
+
 - Depends on PyQt5 5.14
 
 ### Fixed
+
 - Issue with Qt plugform plugin xcb.
 
 ## [0.15.1] - 2023-03-29
+
 ### Fixed
+
 - Crash on add/edit external signal in algorithm editor.
 
 ## [0.15.0] - 2023-03-16
+
 ### Added
+
 - Support for grammar revision 0.11
 - Additional muon shower signal (MUS2).
 - Muon index cut (MU-INDEX).
@@ -59,41 +95,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated testing using tox and mypy.
 
 ### Changed
+
 - Replaced deprecated `distutils.version.StrictVersion` (since Python 3.10) with `packaging.version.Version`.
 - Depends on PyQt5 5.15
 - Depends on utm 0.11.2
 
 ### Fixed
+
 - Font issue in code editor on MacOS.
 - Various issues related to PyQt5 on Python 3.11
 
 ## [0.14.0] - 2021-12-06
+
 ### Added
+
 - Support for grammar revision 0.10
 - Displaced jet cut.
 
 ### Changed
+
 - Depends on utm 0.10.0
 
 ## [0.13.0] - 2021-09-23
+
 ### Added
+
 - Support for grammar revision 0.9
 - Muon shower signal requirements.
 
 ### Changed
+
 - Using utm 0.9.1 release.
 
 ## Fixed
+
 - Typo in MASSDR cut description.
 - New website location.
 
 ## [0.12.1] - 2021-01-15
+
 ### Fixed
+
 - Missing cuts in function editor for mass_inv_upt.
 - Load dialog at startup.
 
 ## [0.12.0] - 2020-07-15
+
 ### Added
+
 - Support for grammar revision 0.8
 - Unconstrained pt cut for muons.
 - Impact parameter cut for muons.
@@ -102,90 +151,121 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Invariant mass for three objects function.
 
 ## [0.11.2] - 2020-07-15
+
 ### Changed
+
 - Using utm 0.7.5 release.
 
 ## [0.11.1] - 2020-01-08
+
 ### Changed
+
 - Using utm 0.7.4 release.
 
 ## [0.11.0] - 2019-11-27
+
 ### Changed
+
 - Support for up to 5 eta cuts.
 
 ### Fixed
+
 - Issues with LinuxMint default icon themes
 
 ## [0.10.0] - 2019-10-14
+
 ### Added
 - Valid python package structure.
 - About Qt menu option.
 - Markdown support for About dialog.
 
 ### Changed
+
 - Changelog format.
 
 ### Removed
+
 - "--export-xml" and "--info" command line arguments.
 
 ## [0.9.0] - 2018-09-17
+
 ### Added
+
 - Support for grammar revision 0.7
 - Asymmetry object requirements.
 - Centrality signal requirements.
 
 ## [0.8.1] - 2018-04-12
+
 ### Fixed
+
 - Crashing application when entering non existent cut names in algorithm editor.
 
 ## [0.8.0] - 2017-06-27
+
 ### Added
+
 - Recent files history to file menu.
 - Move index for multiple selected algorithms.
 - Migration details dialog to inspect applied changes to the menu.
 
 ### Changed
+
 - Improved formatting of cuts and various visual improvements.
 - Improved cut editor dialog.
 - Improved preferences dialog.
 
 ### Fixed
+
 - DPHI cut range (now limited to Pi).
 - Function cut object attribute (not used for function cuts).
 
 ## [0.7.4] - 2017-05-31
+
 ### Changed
+
 - Re-sizable open from URL dialog.
 - manpage file.
 
 ### Fixed
+
 - Isolation cut type descriptions.
 - CHGCOR patch for old menus using outdated notations.
 
 ## [0.7.3] - 2017-05-16
+
 ### Removed
+
 - Removed function mass_trv_orm lacking any valid use case.
 
 ### Fixed
+
 - Validation rules for two body Pt cuts (only for two objects).
 - Available objects in function editor dialog.
 - Import dialog, fore to select at least one algorithm to import.
 
 ## [0.7.2] - 2017-05-08
+
 ### Changed
+
 - Descriptions and various minor visual improvements.
 
 ### Fixed
+
 - Available cuts in function editor.
 - Validation of transverse mass functions.
 - Limits for object requirement slice cuts.
 
 ## [0.7.1] - 2017-05-05
+
 ### Fixed
+
 - Available cuts in function editor.
 
 ## [0.7.0] - 2017-04-03
+
 ### Added
+
 - Support for grammar revision 0.6
 - Invariant/transverse mass functions (mass_inv, mass_trv).
 - Two body Pt cut for mass functions (TBPT).
@@ -195,233 +275,313 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overlap removal cuts for overlap removal functions.
 
 ### Changed
+
 - Cut editor dialog.
 
 ## [0.6.0] - 2017-05-22
+
 ### Added
+
 - Highlighting modified algorithms and cuts in main table views.
 
 ### Changed
+
 - Message bar in algorithm editor.
 - Formatting of cut data and various visual improvements.
 
 ### Removed
+
 - Obsolete information from status bar.
 
 ## [0.5.1] - 2017-02-07
+
 ### Added
+
 - Missing CHGCOR support for dist and mass functions.
 
 ### Changed
 - Limiting number cuts to be assigned.
 
 ## [0.5.0] - 2017-01-13
+
 ### Added
+
 - Fallback modes for Python2 and/or PyQt4.
 - Support for ETMHF-PHI cuts.
 - Toolbar actions for editing expressions in algorithm editor.
 - Creating new cuts from object and function editor dialogs.
 
 ### Changed
+
 - Ported application to Python3 and PyQt5.
 - Algorithm expression formatting.
 - Expression error messages for function editor dialog.
 - Icon sets, added fallback icons for MacOS.
 
 ## [0.4.0] - 2016-11-29
+
 ### Added
+
 - External signal editor dialog.
 
 ### Changed
+
 - Verbose reading and writing of XML files.
 - Algorithm editor dialog.
 - Icon sets.
 
 ## [0.3.2] - 2016-11-22
+
 ### Added
+
 - Additional file integrity checks.
 
 ## [0.3.1] - 2016-11-22
+
 ### Changed
+
 - Adjusted input range for DPHI cuts.
 
 ## [0.3.0] - 2016-11-21
+
 ### Fixed
+
 - Broken makefile.
 
 ## [0.3.0] - 2016-11-02
+
 ### Added
+
 - "--export-xml" command line argument.
 
 ### Changed
+
 - Code re-organisation.
 - Consistency checks on load.
 - Algorithm function editor.
 
 ## [0.2.0] - 2016-10-07
+
 ### Added
+
 - Consistency checks on load.
 - Terminating application using SIG_INT (Ctrl+C) from the terminal.
 
 ### Changed
+
 - Code re-organisation.
 - Algorithm preview.
 - Algorithm function editor.
 - Icon sets.
 
 ### Fixed
+
 - Valid range for DETA cuts.
 - Auto correction for MASS cut range inputs.
 
 ## [0.1.17] - 2016-09-29
+
 ### Added
+
 - Support for TOWDERCOUNT triggers.
 
 ## [0.1.16] - 2016-09-16
+
 ### Fixed
+
 - Writing invalid CHGCOR cut values.
 
 ## [0.1.15] - 2016-09-09
+
 ### Added
+
 - Reset n_modules and module_id/module_index of algorithms on load/save.
 - External signals ignored by object editor.
 
 ### Changed
+
 - Preferences dialog.
 
 ## [0.1.14] - 2016-08-01
+
 ### Added
+
 - Function editor dialog.
 - Insert/edit object/function actions to algorithm editor.
 - Preferences dialog.
 
 ### Changed
+
 - Code re-organization.
 
 ### Removed
+
 - Object wizard from algorithm editor.
 
 ### Fixed
+
 - Duplicated cuts on import from other menu.
 
 ## [0.1.13] - 2016-07-28
+
 ### Fixed
+
 - Cut editor (creating new ETA/PHI cuts, duplicate names).
 - Muon charge and charge correlation cut data sets (again).
 
 ## [0.1.12] - 2016-01-09
+
 ### Added
+
 - Support for ETTEM/ETMHF triggers.
 
 ### Fixed
+
 - Algorithm editor, creating functions was prevented by an error.
 - Various bugs in algorithm/cut/object editor dialogs.
 
 ## [0.1.11] - 2016-04-28
+
 ### Added
+
 - Support for MinBias triggers.
 - Displaying scale set and external signal set in menu overview.
 
 ### Removed
+
 - Restriction preventing duplicated expressions.
 
 ### Fixed
+
 - Muon charge and charge correlation cut data sets.
 
 ## [0.1.10] - 2016-01-14
+
 ### Added
+
 - Support for XOR operator.
 - Filter inputs for various tables.
 - Object requirement wizard to algorithm editor.
 - Help in algorithm and cut editor dialog.
 
 ### Changed
+
 - Algorithm editor, changes dialog.
 
 ### Fixed
+
 - Algorithm expression formatting.
 
 ## [0.1.9] - 2016-01-12
+
 ### Added
+
 - Eta and phi diagrams in cut preview.
 - Handling external signals with EXT prefix as specified.
 - More informative previews for algorithms.
 
 ### Changed
+
 - Algorithm editor, listing externals signals from scale set too.
 
 ## [0.1.8] - 2015-11-17
+
 ### Added
+
 - Exclusive data selection for cuts (MU-CHG and CHGCOR).
 - Optional units for cut range values.
 - Sortable proxies for table views.
 
 ### Changed
+
 - Disabled support for Eg/Jet/Tau-QLTY cuts (not implemented in hardware).
 - Visual improvements for table views and description areas.
 
 ### Removed
+
 - Obsolete tempfile environment module.
 
 ## [0.1.7] - 2015-11-12
+
 ### Added
+
 - Algorithms from another XML document (experimental).
 - Selection and removal of multiple algorithms and cuts at once.
 
 ### Changed
+
 - Open URL dialog, including download progress bar.
 - Algorithm editor, including graphical index selection and a more reliable
   undo/redo queue.
 
 ## [0.1.6] - 2015-11-06
+
 ### Added
+
 - Experimental support for DETA/DPHI/DR/MASS cuts in cut editor.
 
 ### Fixed
+
 - Accidental duplication of objects an loading from XML file.
 - Error preventing saving menus with certain new algorithms.
 - Broken error message of algorithm syntax validator.
 
 ## [0.1.5] - 2015-08-25
+
 ### Changed
+
 - Reworked delta-Eta/Phi/R cut mechanism.
 - Extended configuration file (cuts, referencing python objects in JSON file).
 
 ## [0.1.4] - 2015-08-20
+
 ### Added
+
 - Creation/editing for data type cuts.
 
 ## [0.1.3] - 2015-08-19
+
 ### Added
+
 - Hex encodings for scale numbers (technical bins).
 
 ## [0.1.2] - 2015-08-13
+
 ### Added
+
 - Comment field to cut editor dialog.
 - Menu name and description page.
 
 ### Changed
+
 - Safe-as action adding .xml suffix if missing.
 
 ### Fixed
+
 - Broken signal in document class.
 - Automatic .xml suffixing on save-as action.
 
 ## [0.1.1] - 2015-08-05
+
 ### Added
+
 - Open from URL dialog.
 - Algorithm syntax validator.
 - manpage file.
 
 ### Changed
+
 - Path location on open and safe as actions.
 - Algorithm editor dialog.
 
 ## [0.1.0] - 2015-08-04
+
 ### Added
+
 - Support most of the algorithm expression language features.
 
-[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.2...HEAD
+[Unreleased]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.18.0...HEAD
+[0.18.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.2...0.18.0
 [0.17.2]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.1...0.17.2
 [0.17.1]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.17.0...0.17.1
 [0.17.0]: https://github.com/cms-l1-globaltrigger/tm-editor/compare/0.16.0...0.17.0

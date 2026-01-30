@@ -3,11 +3,8 @@ Trigger Menu Editor
 
 ## Install
 
-Install using pip (>= 19.0)
-
 ```bash
-pip install --upgrade pip
-pip install git+https://github.com/cms-l1-globaltrigger/tm-editor.git@0.17.2
+pip install --extra-index-url https://globaltrigger.web.cern.ch/pypi tm-editor
 ```
 
 ## Build
