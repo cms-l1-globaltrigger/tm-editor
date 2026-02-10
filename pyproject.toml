@@ -1,3 +1,35 @@
+[project]
+name = "tm-editor"
+dynamic = ["version"]
+description = "CMS Level-1 Trigger Menu Editor"
+readme = "README.md"
+license = { text = "GPLv3" }
+authors = [
+  { name = "Bernhard Arnold", email = "bernhard.arnold@cern.ch" }
+]
+urls = { Homepage = "https://github.com/cms-l1-globaltrigger/tm-vhdlproducer" }
+classifiers = [
+  "Topic :: Utilities"
+]
+requires-python = ">=3.9"
+dependencies = [
+    "tm-table~=0.14.1",
+    "tm-grammar~=0.14.1",
+    "Markdown~=3.7",
+    "packaging~=23.2",
+    "PyQt5~=5.14.0"
+]
+
+[project.scripts]
+tm-editor = "emEditor.__main__:main"
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = { attr = "tmEditor.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+namespaces = false

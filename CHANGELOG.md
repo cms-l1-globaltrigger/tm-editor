@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Migrated project configuration to `pyproject.toml`.
 - Renamed `changelog` to `CHANGELOG.md`
 - Fixed Ruff linting issues.
 
