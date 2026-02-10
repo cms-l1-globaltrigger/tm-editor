@@ -127,4 +127,4 @@ class TestMenu:
         assert tmTable.__version__ == UTM_VERSION
 
     def test_grammar_version(self):
-        assert str(GrammarVersion) == "0.13"
+        assert str(GrammarVersion) == "0.14"
