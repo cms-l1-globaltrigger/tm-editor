@@ -173,8 +173,8 @@ class FunctionEditorDialog(QtWidgets.QDialog):
         if description:
             text.append(f"<p>{description}</p>")
         if hasOverlapRemoval(functionType):
-            text.append(f"<p>The <em>last</em> object requirement must be of a different type, applying the overlap removal on the <em>preceding</em> object requirement(s).</p>")
-        text.append(f"<h4>Preview</h4>")
+            text.append("<p>The <em>last</em> object requirement must be of a different type, applying the overlap removal on the <em>preceding</em> object requirement(s).</p>")
+        text.append("<h4>Preview</h4>")
         text.append(f"<p><pre>{expression}</pre></p>")
         self.infoTextEdit.setText("".join(text))
 

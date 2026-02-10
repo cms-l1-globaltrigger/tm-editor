@@ -4,8 +4,7 @@ import sys
 
 from PyQt5 import QtWidgets
 
-from tmEditor import tmeditor_rc
-from tmEditor.core.Menu import Menu
+from tmEditor import tmeditor_rc  # noqa: F401
 from tmEditor.core import XmlDecoder
 from tmEditor.gui.AlgorithmEditorDialog import AlgorithmEditorDialog
 

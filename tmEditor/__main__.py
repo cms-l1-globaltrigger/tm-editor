@@ -2,12 +2,9 @@
 
 import argparse
 import logging
-import signal
-import sys
-import os
 
 import PyQt5
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore
 
 from . import __version__
 from .application import Application

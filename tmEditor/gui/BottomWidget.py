@@ -22,7 +22,7 @@ from tmEditor.gui.CommonWidgets import richTextExtSignalsPreview
 from tmEditor.gui.CommonWidgets import richTextCutsPreview
 from tmEditor.gui.CommonWidgets import createIcon
 
-from tmEditor import tmeditor_rc
+from tmEditor import tmeditor_rc  # noqa: F401
 
 __all__ = ["BottomWidget"]
 

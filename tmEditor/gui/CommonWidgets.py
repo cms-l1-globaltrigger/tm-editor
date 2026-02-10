@@ -381,7 +381,8 @@ class ListSpinBox(QtWidgets.QSpinBox):
 
     def value(self, index: Optional[int] = None) -> int:
         """Returns bins floating point value by LUT index (upper or lower depending on mode)."""
-        if index is None: index = self._index
+        if index is None:
+            index = self._index
         return self._values[index]
 
     def minimum(self) -> int:

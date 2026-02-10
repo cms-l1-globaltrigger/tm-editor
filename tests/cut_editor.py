@@ -4,11 +4,10 @@ import sys
 
 from PyQt5 import QtWidgets
 
-from tmEditor import tmeditor_rc
+from tmEditor import tmeditor_rc  # noqa: F401
 from tmEditor.core import XmlDecoder
 from tmEditor.core.Algorithm import Cut
 from tmEditor.core.Settings import CutSpecs
-from tmEditor.core.Menu import Menu
 from tmEditor.gui.CutEditorDialog import CutEditorDialog
 
 

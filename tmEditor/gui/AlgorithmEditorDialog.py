@@ -569,12 +569,12 @@ class AlgorithmEditor(QtWidgets.QMainWindow):
         # If selection does not start at begin of document
         if start > 0:
             # Check previous character and add required whitespace
-            if not ref[start - 1] in " [\t\r\n":
+            if ref[start - 1] not in " [\t\r\n":
                 text = " " + text
         # If selection does not end at end of document
         if end < (len(ref) - 1):
             # Check following character and add required whitespace
-            if not ref[end] in " ,][\t\r\n":
+            if ref[end] not in " ,][\t\r\n":
                 text = text + " "
         cursor.insertText(text)
         self.textEdit.ensureCursorVisible()

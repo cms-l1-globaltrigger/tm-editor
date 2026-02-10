@@ -7,7 +7,7 @@ import markdown
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from tmEditor import __version__, tmeditor_rc
+from tmEditor import __version__, tmeditor_rc  # noqa: F401
 from tmGrammar import __version__ as utm_version
 
 __all__ = ["AboutDialog"]

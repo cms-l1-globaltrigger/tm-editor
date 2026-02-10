@@ -3,7 +3,6 @@
 import logging
 import copy
 import os
-import threading
 from typing import List, Optional
 
 from PyQt5 import QtCore, QtWidgets
@@ -17,9 +16,9 @@ from tmEditor.core.XmlEncoder import XmlEncoderError
 from tmEditor.core.XmlDecoder import XmlDecoderError
 
 # Models and proxies for table views
-from tmEditor.gui.models import *
-from tmEditor.gui.proxies import *
-from tmEditor.gui.views import *
+from tmEditor.gui.models import CutsModel, ExtSignalsModel, AlgorithmsModel, BinsModel, ScalesModel
+from tmEditor.gui.proxies import CutsModelProxy, ScalesModelProxy
+from tmEditor.gui.views import TableView
 
 from tmEditor.gui.CutEditorDialog import CutEditorDialog
 from tmEditor.gui.AlgorithmEditorDialog import AlgorithmEditorDialog
@@ -309,7 +308,7 @@ class Document(BaseDocument):
                     callback()
                     dialog.setValue(queue.progress())
                     QtWidgets.QApplication.processEvents()
-            except XmlDecoderError as exc:
+            except XmlDecoderError:
                 raise
         except Exception:
             dialog.close()

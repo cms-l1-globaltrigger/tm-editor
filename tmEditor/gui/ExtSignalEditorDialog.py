@@ -99,13 +99,13 @@ class ExtSignalEditorDialog(QtWidgets.QDialog):
             label = signal[kLabel] if kLabel in signal else ""
             expression = self.expression()
             text = []
-            text.append(f"<h3>External Signal Requirement</h3>")
+            text.append("<h3>External Signal Requirement</h3>")
             text.append(f"<p>System: {system}</p>")
             text.append(f"<p>Cable: {cable}</p>")
             text.append(f"<p>Channel: {channel}</p>")
             if label:
                 text.append(f"<p>Label: {label}</p>")
-            text.append(f"<h4>Preview</h4>")
+            text.append("<h4>Preview</h4>")
             text.append(f"<p><pre>{expression}</pre></p>")
             self.infoTextEdit.setText("".join(text))
             break

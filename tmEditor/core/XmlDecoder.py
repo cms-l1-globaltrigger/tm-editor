@@ -232,7 +232,7 @@ class XmlDecoderQueue(Queue):
                         message = "Object type {0!r} assigned to algorithm {1!r} {2!r} is missing in scales set {3!r}".format(obj.type, algorithm.index, algorithm.name, self.tables.scale.scaleSet[kName])
                         logging.error(message)
                         raise XmlDecoderError(message)
-                if not obj in self.menu.objects:
+                if obj not in self.menu.objects:
                     logging.debug("adding object requirement: %s", obj.__dict__)
                     self.menu.addObject(obj)
 

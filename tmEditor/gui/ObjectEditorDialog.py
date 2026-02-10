@@ -180,9 +180,6 @@ class ObjectEditorDialog(QtWidgets.QDialog):
 
     def updateObjectType(self):
         """Update inputs according to selected object type."""
-
-        import logging
-
         objectType = self.objectType()
         objectCapabilities = getObjectCapabilities(objectType)
         if objectCapabilities.get("threshold"):
@@ -222,13 +219,13 @@ class ObjectEditorDialog(QtWidgets.QDialog):
         for index, name in enumerate(ExtendedTypes):
             if name not in objects:
                 continue # ignore if not in init list
-            self.typeComboBox.addItem(miniIcon(name.lower()), name)                
+            self.typeComboBox.addItem(miniIcon(name.lower()), name)
             if name in ObjectTypes:
                 if not self.getScale(name): # on missing scale (editing outdated XML?)
                     self.typeComboBox.setItemEnabled(index, False)
             if name == tmGrammar.CICADA:
                 if not self.getPrecScale(kCicadaPrecScaleType):
-                    self.typeComboBox.setItemEnabled(index, False)             
+                    self.typeComboBox.setItemEnabled(index, False)
 
     def initCuts(self):
         """Initialize list of checkable cuts."""
@@ -325,7 +322,7 @@ class ObjectEditorDialog(QtWidgets.QDialog):
             elif objectType in CountObjectTypes:
                 text.append(f"<p>Valid count: {minimum:.0f} - {maximum:.0f}</p>")
         expression = self.expression()
-        text.append(f"<h4>Preview</h4>")
+        text.append("<h4>Preview</h4>")
         text.append(f"<p><pre>{expression}</pre></p>")
         self.infoTextEdit.setText("".join(text))
 
