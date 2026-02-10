@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.scripts]
-tm-editor = "emEditor.__main__:main"
+tm-editor = "tmEditor.__main__:main"
 
 [build-system]
 requires = ["setuptools"]
